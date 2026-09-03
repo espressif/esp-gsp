@@ -1,0 +1,72 @@
+version: 1.1.0
+targets:
+- esp32c3
+- esp32s3
+- esp32p4
+- esp32s31
+- esp32c5
+- esp32c6
+description: Espressif Graphics Scene Processor, an ahead-of-time compiled UI 
+  framework for ESP-IDF.
+dependencies:
+  espressif/esp_lcd_touch:
+    version: ^1
+    public: true
+    registry_url: https://components.espressif.com
+  idf: '>=6.0'
+  espressif/freetype:
+    version: ^2.14.2
+    registry_url: https://components.espressif.com
+  espressif/esp_new_jpeg:
+    version: 1.*
+    registry_url: https://components.espressif.com
+  espressif/esp_display_present:
+    version: ==1.0.1
+files:
+  include:
+  - README_CN.md
+  - .gspc_version
+  - examples/hello_world/**/*
+  - examples/showcase/**/*
+  - examples/common/**/*
+  - examples/benchmark/**/*
+  - examples/widgets/**/*
+  exclude:
+  - src/**/*
+  - priv_include/**/*
+  - components/**/*
+  - artifacts/**/*
+  - .gitlab-ci.yml
+  - .pre-commit-config.yaml
+  - .gitattributes
+  - .gitignore
+  - .gitmodules
+  - examples/**/*
+  - formats/**/*
+  - config/**/*
+  - ci/**/*
+  - .ci-build/**/*
+  - build/**/*
+  - build-*/**/*
+  - .pytest_cache/**/*
+  - '**/.pytest_cache/**/*'
+  - '**/__pycache__/**'
+  - '**/*.pyc'
+  - .codewhale/**/*
+  - .vscode/**/*
+  - tools/**/*
+  - skills/**/*
+  - docs/_generator/**/*
+  - docs/en/reference/binary-format.md
+  - docs/zh-Hans/reference/binary-format.md
+  - prebuilt/sim/**/*
+  - adapters/headless/**/*
+  - adapters/sdl/**/*
+  - adapters/web/**/*
+  - include/esp_gsp_sim.h
+  - include/gsp/sim/**/*
+  - cmake/esp_gsp_project_config_host.c.in
+  - cmake/gsp_portable_targets.cmake
+url: https://github.com/espressif/esp-gsp
+repository: https://github.com/espressif/esp-gsp.git
+issues: https://github.com/espressif/esp-gsp/issues

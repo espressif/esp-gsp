@@ -1,0 +1,3 @@
+# ESP32-S3: 320x240 SPI panel. Load after
+# sdkconfig.defaults.esp32s3 so this interface wins.
+CONFIG_EXAMPLE_LCD_INTERFACE_SPI_WITH_PSRAM=y

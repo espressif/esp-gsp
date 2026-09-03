@@ -1,0 +1,1 @@
+{"screen":"widget_chart","w":480,"h":320,"screen_bg":"#101827","objects":[{"type":"chart","parent":-1,"name":"telemetry","x":42,"y":45,"w":396,"h":220,"points":[12,28,20,54,43,78,62,92,70,86,58,74],"grid_lines":4,"bg_color":"#142033","fg_color":"#38BDF8","border_color":"#2D425F","border_width":1,"radius":10}]}

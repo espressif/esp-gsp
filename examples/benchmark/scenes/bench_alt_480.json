@@ -1,0 +1,39 @@
+{
+  "screen": "bench_alt",
+  "w": 480,
+  "h": 800,
+  "screen_bg": "#3A1818",
+  "objects": [
+    {
+      "type": "container",
+      "parent": -1,
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 800,
+      "bg_color": "#3A1818"
+    },
+    {
+      "type": "container",
+      "parent": 0,
+      "x": 60,
+      "y": 100,
+      "w": 360,
+      "h": 600,
+      "bg_color": "#602828",
+      "radius": 18,
+      "border_color": "#C06060",
+      "border_width": 3
+    },
+    {
+      "type": "container",
+      "parent": 1,
+      "x": 24,
+      "y": 24,
+      "w": 48,
+      "h": 48,
+      "bg_color": "#C06060",
+      "radius": 24
+    }
+  ]
+}

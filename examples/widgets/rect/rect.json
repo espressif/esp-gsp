@@ -1,0 +1,1 @@
+{"screen":"widget_rect","w":480,"h":320,"screen_bg":"#101827","objects":[{"type":"rect","parent":-1,"name":"panel","x":70,"y":55,"w":340,"h":210,"bg_color":"#1D4ED8","border_color":"#93C5FD","border_width":4,"radius":24,"opacity":232}]}

@@ -1,0 +1,432 @@
+/* Generated at configure time from this template. */
+#include "sdkconfig.h"
+#include "gsp/gsp_config.h"
+
+static const esp_gsp_project_config_t s_project_config = {
+    .schema_version = ESP_GSP_CONFIG_SCHEMA_VERSION,
+    .abi_version = ESP_GSP_CONFIG_ABI_VERSION,
+    .field_count = ESP_GSP_CONFIG_FIELD_COUNT,
+    .policy = {
+#ifdef CONFIG_ESP_GSP_ACCEL_SYNC_TIMEOUT_MS
+        .accel_sync_timeout_ms = CONFIG_ESP_GSP_ACCEL_SYNC_TIMEOUT_MS,
+#else
+        .accel_sync_timeout_ms = 500,
+#endif
+#ifdef CONFIG_ESP_GSP_ACCEL_MIN_BLIT_PIXELS
+        .accel_min_blit_pixels = CONFIG_ESP_GSP_ACCEL_MIN_BLIT_PIXELS,
+#else
+        .accel_min_blit_pixels = 8192,
+#endif
+#ifdef CONFIG_ESP_GSP_PPA_MIN_FILL_PIXELS
+        .ppa_min_fill_pixels = CONFIG_ESP_GSP_PPA_MIN_FILL_PIXELS,
+#else
+        .ppa_min_fill_pixels = 32768,
+#endif
+#ifdef CONFIG_ESP_GSP_PPA_MIN_BLEND_PIXELS
+        .ppa_min_blend_pixels = CONFIG_ESP_GSP_PPA_MIN_BLEND_PIXELS,
+#else
+        .ppa_min_blend_pixels = 8192,
+#endif
+#ifdef CONFIG_ESP_GSP_PPA_RUNTIME_SCALE
+        .ppa_runtime_scale = 1,
+#else
+        .ppa_runtime_scale = 0,
+#endif
+#ifdef CONFIG_ESP_GSP_PPA_MIN_SCALE_PIXELS
+        .ppa_min_scale_pixels = CONFIG_ESP_GSP_PPA_MIN_SCALE_PIXELS,
+#else
+        .ppa_min_scale_pixels = 32768,
+#endif
+#ifdef CONFIG_ESP_GSP_PPA_FILL_MAX_SPAN_PIXELS
+        .ppa_fill_max_span_pixels = CONFIG_ESP_GSP_PPA_FILL_MAX_SPAN_PIXELS,
+#else
+        .ppa_fill_max_span_pixels = 524288,
+#endif
+#ifdef CONFIG_ESP_GSP_IMAGE_CACHE_SHORTAGE_RETRIES
+        .image_cache_shortage_retries = CONFIG_ESP_GSP_IMAGE_CACHE_SHORTAGE_RETRIES,
+#else
+        .image_cache_shortage_retries = 3,
+#endif
+#ifdef CONFIG_ESP_GSP_IMAGE_CACHE_AUTO_MIN_BYTES
+        .image_cache_auto_min_bytes = CONFIG_ESP_GSP_IMAGE_CACHE_AUTO_MIN_BYTES,
+#else
+        .image_cache_auto_min_bytes = 65536,
+#endif
+#ifdef CONFIG_ESP_GSP_IMAGE_CACHE_AUTO_MAX_BYTES
+        .image_cache_auto_max_bytes = CONFIG_ESP_GSP_IMAGE_CACHE_AUTO_MAX_BYTES,
+#else
+        .image_cache_auto_max_bytes = 4194304,
+#endif
+#ifdef CONFIG_ESP_GSP_IMAGE_CACHE_HOST_DEFAULT_BYTES
+        .image_cache_host_default_bytes = CONFIG_ESP_GSP_IMAGE_CACHE_HOST_DEFAULT_BYTES,
+#else
+        .image_cache_host_default_bytes = 2097152,
+#endif
+#ifdef CONFIG_ESP_GSP_ENABLE_IMAGE_CACHE
+        .enable_image_cache = 1,
+#else
+        .enable_image_cache = 0,
+#endif
+#ifdef CONFIG_ESP_GSP_ENABLE_TRANSITION_SNAPSHOTS
+        .enable_transition_snapshots = 1,
+#else
+        .enable_transition_snapshots = 0,
+#endif
+#ifdef CONFIG_ESP_GSP_RENDER_TASK_STACK_PSRAM
+        .render_task_stack_psram = 1,
+#else
+        .render_task_stack_psram = 0,
+#endif
+#ifdef CONFIG_ESP_GSP_RENDER_TASK_STACK_SIZE
+        .render_task_stack_size = CONFIG_ESP_GSP_RENDER_TASK_STACK_SIZE,
+#else
+        .render_task_stack_size = 12288,
+#endif
+#ifdef CONFIG_ESP_GSP_RENDER_TASK_STACK_SIZE_FREETYPE
+        .render_task_stack_size_freetype = CONFIG_ESP_GSP_RENDER_TASK_STACK_SIZE_FREETYPE,
+#else
+        .render_task_stack_size_freetype = 24576,
+#endif
+#ifdef CONFIG_ESP_GSP_RENDER_TASK_PRIORITY
+        .render_task_priority = CONFIG_ESP_GSP_RENDER_TASK_PRIORITY,
+#else
+        .render_task_priority = 4,
+#endif
+#ifdef CONFIG_ESP_GSP_ENABLE_ASYNC_DECODE
+        .enable_async_decode = 1,
+#else
+        .enable_async_decode = 0,
+#endif
+#ifdef CONFIG_ESP_GSP_DECODE_TASK_STACK_PSRAM
+        .decode_task_stack_psram = 1,
+#else
+        .decode_task_stack_psram = 0,
+#endif
+#ifdef CONFIG_ESP_GSP_DECODE_TASK_STACK_SIZE
+        .decode_task_stack_size = CONFIG_ESP_GSP_DECODE_TASK_STACK_SIZE,
+#else
+        .decode_task_stack_size = 4096,
+#endif
+#ifdef CONFIG_ESP_GSP_DECODE_TASK_PRIORITY
+        .decode_task_priority = CONFIG_ESP_GSP_DECODE_TASK_PRIORITY,
+#else
+        .decode_task_priority = 3,
+#endif
+#ifdef CONFIG_ESP_GSP_DECODE_TASK_IDLE_POLL_MS
+        .decode_task_idle_poll_ms = CONFIG_ESP_GSP_DECODE_TASK_IDLE_POLL_MS,
+#else
+        .decode_task_idle_poll_ms = 100,
+#endif
+#if defined(CONFIG_ESP_GSP_ANIM_FRAME_MEMORY_AUTO)
+        .anim_frame_memory = 0,
+#elif defined(CONFIG_ESP_GSP_ANIM_FRAME_MEMORY_INTERNAL)
+        .anim_frame_memory = 1,
+#elif defined(CONFIG_ESP_GSP_ANIM_FRAME_MEMORY_SPIRAM)
+        .anim_frame_memory = 2,
+#else
+        .anim_frame_memory = 0,
+#endif
+#ifdef CONFIG_ESP_GSP_ANIM_MAX_FRAME_BYTES
+        .anim_max_frame_bytes = CONFIG_ESP_GSP_ANIM_MAX_FRAME_BYTES,
+#else
+        .anim_max_frame_bytes = 16777216,
+#endif
+#ifdef CONFIG_ESP_GSP_ANIM_INTERNAL_FRAME_MAX_BYTES
+        .anim_internal_frame_max_bytes = CONFIG_ESP_GSP_ANIM_INTERNAL_FRAME_MAX_BYTES,
+#else
+        .anim_internal_frame_max_bytes = 65536,
+#endif
+#ifdef CONFIG_ESP_GSP_ACTIVE_TICK_MS
+        .active_tick_ms = CONFIG_ESP_GSP_ACTIVE_TICK_MS,
+#else
+        .active_tick_ms = 10,
+#endif
+#ifdef CONFIG_ESP_GSP_IDLE_POLL_MS
+        .idle_poll_ms = CONFIG_ESP_GSP_IDLE_POLL_MS,
+#else
+        .idle_poll_ms = 100,
+#endif
+#ifdef CONFIG_ESP_GSP_POINTER_POLL_MS
+        .pointer_poll_ms = CONFIG_ESP_GSP_POINTER_POLL_MS,
+#else
+        .pointer_poll_ms = 33,
+#endif
+#ifdef CONFIG_ESP_GSP_TOUCH_RELEASE_CONFIRM_POLLS
+        .touch_release_confirm_polls = CONFIG_ESP_GSP_TOUCH_RELEASE_CONFIRM_POLLS,
+#else
+        .touch_release_confirm_polls = 2,
+#endif
+#ifdef CONFIG_ESP_GSP_SCROLL_VELOCITY_WINDOW_MS
+        .scroll_velocity_window_ms = CONFIG_ESP_GSP_SCROLL_VELOCITY_WINDOW_MS,
+#else
+        .scroll_velocity_window_ms = 100,
+#endif
+#ifdef CONFIG_ESP_GSP_SCROLL_RELEASE_GRACE_MS
+        .scroll_release_grace_ms = CONFIG_ESP_GSP_SCROLL_RELEASE_GRACE_MS,
+#else
+        .scroll_release_grace_ms = 100,
+#endif
+#ifdef CONFIG_ESP_GSP_SCROLL_STOP_SPEED_PX_S
+        .scroll_stop_speed_px_s = CONFIG_ESP_GSP_SCROLL_STOP_SPEED_PX_S,
+#else
+        .scroll_stop_speed_px_s = 20,
+#endif
+#ifdef CONFIG_ESP_GSP_SCROLL_MIN_FLING_SPEED_PX_S
+        .scroll_min_fling_speed_px_s = CONFIG_ESP_GSP_SCROLL_MIN_FLING_SPEED_PX_S,
+#else
+        .scroll_min_fling_speed_px_s = 160,
+#endif
+#ifdef CONFIG_ESP_GSP_SCROLL_MAX_RELEASE_SPEED_PX_S
+        .scroll_max_release_speed_px_s = CONFIG_ESP_GSP_SCROLL_MAX_RELEASE_SPEED_PX_S,
+#else
+        .scroll_max_release_speed_px_s = 6000,
+#endif
+#ifdef CONFIG_ESP_GSP_SCROLL_DECAY_MS
+        .scroll_decay_ms = CONFIG_ESP_GSP_SCROLL_DECAY_MS,
+#else
+        .scroll_decay_ms = 325,
+#endif
+#ifdef CONFIG_ESP_GSP_SCROLL_MAX_TICK_MS
+        .scroll_max_tick_ms = CONFIG_ESP_GSP_SCROLL_MAX_TICK_MS,
+#else
+        .scroll_max_tick_ms = 100,
+#endif
+#ifdef CONFIG_ESP_GSP_SCROLL_SNAP_RESPONSE_MS
+        .scroll_snap_response_ms = CONFIG_ESP_GSP_SCROLL_SNAP_RESPONSE_MS,
+#else
+        .scroll_snap_response_ms = 40,
+#endif
+#ifdef CONFIG_ESP_GSP_SWIPE_VELOCITY_WINDOW_MS
+        .swipe_velocity_window_ms = CONFIG_ESP_GSP_SWIPE_VELOCITY_WINDOW_MS,
+#else
+        .swipe_velocity_window_ms = 80,
+#endif
+#ifdef CONFIG_ESP_GSP_SWIPE_RELEASE_GRACE_MS
+        .swipe_release_grace_ms = CONFIG_ESP_GSP_SWIPE_RELEASE_GRACE_MS,
+#else
+        .swipe_release_grace_ms = 350,
+#endif
+#ifdef CONFIG_ESP_GSP_SWIPE_SETTLE_MIN_MS
+        .swipe_settle_min_ms = CONFIG_ESP_GSP_SWIPE_SETTLE_MIN_MS,
+#else
+        .swipe_settle_min_ms = 80,
+#endif
+#ifdef CONFIG_ESP_GSP_SWIPE_SETTLE_BASE_MS
+        .swipe_settle_base_ms = CONFIG_ESP_GSP_SWIPE_SETTLE_BASE_MS,
+#else
+        .swipe_settle_base_ms = 110,
+#endif
+#ifdef CONFIG_ESP_GSP_SWIPE_SETTLE_DISTANCE_MS
+        .swipe_settle_distance_ms = CONFIG_ESP_GSP_SWIPE_SETTLE_DISTANCE_MS,
+#else
+        .swipe_settle_distance_ms = 90,
+#endif
+#ifdef CONFIG_ESP_GSP_SWIPE_SETTLE_MAX_MS
+        .swipe_settle_max_ms = CONFIG_ESP_GSP_SWIPE_SETTLE_MAX_MS,
+#else
+        .swipe_settle_max_ms = 220,
+#endif
+#ifdef CONFIG_ESP_GSP_SWIPE_SETTLE_SPEED_REDUCTION_MS
+        .swipe_settle_speed_reduction_ms = CONFIG_ESP_GSP_SWIPE_SETTLE_SPEED_REDUCTION_MS,
+#else
+        .swipe_settle_speed_reduction_ms = 60,
+#endif
+#ifdef CONFIG_ESP_GSP_SWIPE_SETTLE_MAX_SPEED_REDUCTION_MS
+        .swipe_settle_max_speed_reduction_ms = CONFIG_ESP_GSP_SWIPE_SETTLE_MAX_SPEED_REDUCTION_MS,
+#else
+        .swipe_settle_max_speed_reduction_ms = 120,
+#endif
+#ifdef CONFIG_ESP_GSP_PAGE_FLOW_SETTLE_MS
+        .page_flow_settle_ms = CONFIG_ESP_GSP_PAGE_FLOW_SETTLE_MS,
+#else
+        .page_flow_settle_ms = 220,
+#endif
+#ifdef CONFIG_ESP_GSP_STACK_VIEW_SETTLE_MS
+        .stack_view_settle_ms = CONFIG_ESP_GSP_STACK_VIEW_SETTLE_MS,
+#else
+        .stack_view_settle_ms = 220,
+#endif
+#ifdef CONFIG_ESP_GSP_DRAWER_SETTLE_MS
+        .drawer_settle_ms = CONFIG_ESP_GSP_DRAWER_SETTLE_MS,
+#else
+        .drawer_settle_ms = 180,
+#endif
+#ifdef CONFIG_ESP_GSP_BOOLEAN_TWEEN_MS
+        .boolean_tween_ms = CONFIG_ESP_GSP_BOOLEAN_TWEEN_MS,
+#else
+        .boolean_tween_ms = 130,
+#endif
+#ifdef CONFIG_ESP_GSP_TAP_SLOP_PX
+        .tap_slop_px = CONFIG_ESP_GSP_TAP_SLOP_PX,
+#else
+        .tap_slop_px = 16,
+#endif
+#ifdef CONFIG_ESP_GSP_DRAG_START_PX
+        .drag_start_px = CONFIG_ESP_GSP_DRAG_START_PX,
+#else
+        .drag_start_px = 24,
+#endif
+#ifdef CONFIG_ESP_GSP_SWIPE_FLICK_PX
+        .swipe_flick_px = CONFIG_ESP_GSP_SWIPE_FLICK_PX,
+#else
+        .swipe_flick_px = 12,
+#endif
+#ifdef CONFIG_ESP_GSP_SCENE_SWIPE_MIN_FLING_PX
+        .scene_swipe_min_fling_px = CONFIG_ESP_GSP_SCENE_SWIPE_MIN_FLING_PX,
+#else
+        .scene_swipe_min_fling_px = 32,
+#endif
+#ifdef CONFIG_ESP_GSP_COMPONENT_SWIPE_COMMIT_DIVISOR
+        .component_swipe_commit_divisor = CONFIG_ESP_GSP_COMPONENT_SWIPE_COMMIT_DIVISOR,
+#else
+        .component_swipe_commit_divisor = 4,
+#endif
+#ifdef CONFIG_ESP_GSP_SCENE_SWIPE_COMMIT_DIVISOR
+        .scene_swipe_commit_divisor = CONFIG_ESP_GSP_SCENE_SWIPE_COMMIT_DIVISOR,
+#else
+        .scene_swipe_commit_divisor = 5,
+#endif
+#ifdef CONFIG_ESP_GSP_SWIPE_VELOCITY_NUMERATOR
+        .swipe_velocity_numerator = CONFIG_ESP_GSP_SWIPE_VELOCITY_NUMERATOR,
+#else
+        .swipe_velocity_numerator = 3,
+#endif
+#ifdef CONFIG_ESP_GSP_SWIPE_VELOCITY_DENOMINATOR
+        .swipe_velocity_denominator = CONFIG_ESP_GSP_SWIPE_VELOCITY_DENOMINATOR,
+#else
+        .swipe_velocity_denominator = 5,
+#endif
+#ifdef CONFIG_ESP_GSP_DRAWER_EDGE_SLOP_PX
+        .drawer_edge_slop_px = CONFIG_ESP_GSP_DRAWER_EDGE_SLOP_PX,
+#else
+        .drawer_edge_slop_px = 24,
+#endif
+    },
+    .capacity = {
+#ifdef CONFIG_ESP_GSP_MAX_SCENES
+        .max_scenes = CONFIG_ESP_GSP_MAX_SCENES,
+#else
+        .max_scenes = 8,
+#endif
+#ifdef CONFIG_ESP_GSP_MAX_TIMERS
+        .max_timers = CONFIG_ESP_GSP_MAX_TIMERS,
+#else
+        .max_timers = 8,
+#endif
+#ifdef CONFIG_ESP_GSP_MAX_WIDGETS
+        .max_widgets = CONFIG_ESP_GSP_MAX_WIDGETS,
+#else
+        .max_widgets = 16,
+#endif
+#ifdef CONFIG_ESP_GSP_MAX_ANIMATIONS
+        .max_animations = CONFIG_ESP_GSP_MAX_ANIMATIONS,
+#else
+        .max_animations = 32,
+#endif
+#ifdef CONFIG_ESP_GSP_MAX_LISTS
+        .max_lists = CONFIG_ESP_GSP_MAX_LISTS,
+#else
+        .max_lists = 5,
+#endif
+#ifdef CONFIG_ESP_GSP_LIST_MAX_SLOTS
+        .list_max_slots = CONFIG_ESP_GSP_LIST_MAX_SLOTS,
+#else
+        .list_max_slots = 0,
+#endif
+#ifdef CONFIG_ESP_GSP_LIST_TEXT_SLOTS
+        .list_text_slots = CONFIG_ESP_GSP_LIST_TEXT_SLOTS,
+#else
+        .list_text_slots = 0,
+#endif
+#ifdef CONFIG_ESP_GSP_COMPONENT_INSTANCES
+        .component_instances = CONFIG_ESP_GSP_COMPONENT_INSTANCES,
+#else
+        .component_instances = 8,
+#endif
+#ifdef CONFIG_ESP_GSP_STACK_VIEW_MAX_DEPTH
+        .stack_view_max_depth = CONFIG_ESP_GSP_STACK_VIEW_MAX_DEPTH,
+#else
+        .stack_view_max_depth = 8,
+#endif
+#ifdef CONFIG_ESP_GSP_COMPONENT_OVERLAY_COMMANDS
+        .component_overlay_commands = CONFIG_ESP_GSP_COMPONENT_OVERLAY_COMMANDS,
+#else
+        .component_overlay_commands = 32,
+#endif
+#ifdef CONFIG_ESP_GSP_DIRTY_RECT_CAPACITY
+        .dirty_rect_capacity = CONFIG_ESP_GSP_DIRTY_RECT_CAPACITY,
+#else
+        .dirty_rect_capacity = 32,
+#endif
+#ifdef CONFIG_ESP_GSP_CANVAS_SLOTS
+        .canvas_slots = CONFIG_ESP_GSP_CANVAS_SLOTS,
+#else
+        .canvas_slots = 2,
+#endif
+#ifdef CONFIG_ESP_GSP_MAX_ASSET_ANIMS
+        .max_asset_anims = CONFIG_ESP_GSP_MAX_ASSET_ANIMS,
+#else
+        .max_asset_anims = 4,
+#endif
+#ifdef CONFIG_ESP_GSP_TEXT_SLOTS
+        .text_slots = CONFIG_ESP_GSP_TEXT_SLOTS,
+#else
+        .text_slots = 0,
+#endif
+#ifdef CONFIG_ESP_GSP_DEFAULT_DYNAMIC_IMAGE_SLOTS
+        .default_dynamic_image_slots = CONFIG_ESP_GSP_DEFAULT_DYNAMIC_IMAGE_SLOTS,
+#else
+        .default_dynamic_image_slots = 0,
+#endif
+#ifdef CONFIG_ESP_GSP_FREETYPE_CACHE_GLYPHS
+        .freetype_cache_glyphs = CONFIG_ESP_GSP_FREETYPE_CACHE_GLYPHS,
+#else
+        .freetype_cache_glyphs = 32,
+#endif
+#ifdef CONFIG_ESP_GSP_FREETYPE_GLYPH_MAX_PX
+        .freetype_glyph_max_px = CONFIG_ESP_GSP_FREETYPE_GLYPH_MAX_PX,
+#else
+        .freetype_glyph_max_px = 40,
+#endif
+#ifdef CONFIG_ESP_GSP_ACCEL_MAX_DRIVERS
+        .accel_max_drivers = CONFIG_ESP_GSP_ACCEL_MAX_DRIVERS,
+#else
+        .accel_max_drivers = 4,
+#endif
+#ifdef CONFIG_ESP_GSP_ACCEL_MAX_PENDING_BLITS
+        .accel_max_pending_blits = CONFIG_ESP_GSP_ACCEL_MAX_PENDING_BLITS,
+#else
+        .accel_max_pending_blits = 4,
+#endif
+#ifdef CONFIG_ESP_GSP_IMAGE_CACHE_ENTRIES
+        .image_cache_entries = CONFIG_ESP_GSP_IMAGE_CACHE_ENTRIES,
+#else
+        .image_cache_entries = 16,
+#endif
+#ifdef CONFIG_ESP_GSP_CONTEXT_DEFAULT_GLYPH_RUNS
+        .context_default_glyph_runs = CONFIG_ESP_GSP_CONTEXT_DEFAULT_GLYPH_RUNS,
+#else
+        .context_default_glyph_runs = 0,
+#endif
+#ifdef CONFIG_ESP_GSP_CONTEXT_DEFAULT_INSTANCES
+        .context_default_instances = CONFIG_ESP_GSP_CONTEXT_DEFAULT_INSTANCES,
+#else
+        .context_default_instances = 0,
+#endif
+#ifdef CONFIG_ESP_GSP_INSTANCE_STATES_PER_SLOT
+        .instance_states_per_slot = CONFIG_ESP_GSP_INSTANCE_STATES_PER_SLOT,
+#else
+        .instance_states_per_slot = 8,
+#endif
+#ifdef CONFIG_ESP_GSP_QUEUE_DEPTH
+        .queue_depth = CONFIG_ESP_GSP_QUEUE_DEPTH,
+#else
+        .queue_depth = 24,
+#endif
+    },
+};
+
+const esp_gsp_project_config_t *esp_gsp_project_config(void)
+{
+    return &s_project_config;
+}

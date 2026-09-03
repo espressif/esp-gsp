@@ -1,0 +1,801 @@
+# SPDX-FileCopyrightText: 2026 Espressif Systems (Shanghai) CO LTD
+#
+# SPDX-License-Identifier: LicenseRef-Espressif-Modified-MIT
+#
+# ESP-GSP project configuration. The independent project bridge converts these
+# values into esp_gsp_project_config_t; library sources never read CONFIG_* or
+# an ESP_GSP_CONFIG_* compatibility alias. Non-ESP-IDF builds use the generated
+# host bridge with the same schema defaults.
+
+menu "ESP-GSP"
+
+config ESP_GSP_PREBUILT_COMPONENT
+    bool
+    default y
+    help
+        Packaging changes this hidden marker to y. Library build capabilities
+        are published as read-only ESP_GSP_BUILD_CAP_* constants instead of
+        Kconfig controls; project runtime defaults remain configurable through
+        the consumer-side bridge.
+
+menu "Capacity and feature limits"
+
+menu "Core object and component pools"
+
+config ESP_GSP_MAX_SCENES
+    int "Maximum number of scenes held in gsp_ui_core_t"
+    default 8
+    range 1 32
+    help
+        Upper bound of the scenes[] array inside gsp_ui_core_t. Each
+        scene embeds a gsp_context_t (~1 KB), so this is the single
+        largest resident block of the UI core. Bundles with more scenes
+        than this are truncated at init (a warning is logged); size it
+        to the largest bundle the product can load.
+
+config ESP_GSP_MAX_TIMERS
+    int "Maximum simultaneous application timers"
+    default 8
+    range 1 32
+    help
+        Timer slot pool in gsp_ui_core_t. Timer registration fails
+        (ESP_GSP_ERR_LIMIT_EXCEEDED) when the pool is full.
+
+config ESP_GSP_MAX_WIDGETS
+    int "Maximum simultaneous template-widget instances"
+    default 16
+    range 1 255
+    help
+        The handle index width is derived from this value, up to the
+        uint8_t-backed pool limit of 255. The remaining handle bits hold
+        a recycling generation. Each slot costs about 20 bytes.
+
+config ESP_GSP_MAX_ANIMATIONS
+    int "Maximum concurrent runtime animations"
+    default 32
+    range 0 128
+    help
+        esp_gsp_anim_slot_t pool in gsp_ui_core_t (~56 B per slot).
+        Exhaustion degrades gracefully (legacy tween) and logs.
+
+config ESP_GSP_MAX_LISTS
+    int "Maximum simultaneous List/Wheel components"
+    default 5
+    range 1 16
+    help
+        List pool, list driver extensions and the chrome overlay storage
+        all scale with this. Each list can additionally allocate
+        run_buffers on the heap (see ESP_GSP_LIST_TEXT_SLOTS), so this
+        is a multiplier for list working memory.
+
+config ESP_GSP_LIST_MAX_SLOTS
+    int "Row slots per visible list viewport"
+    default 0
+    range 0 64
+    help
+        AUTO (0) does not additionally restrict gspc: the compiler uses
+        the library capability (64), writes the exact scene requirement N
+        into GSPB, and runtime allocates N rows. A non-zero project value
+        is an explicit upper bound and generation fails when it is below N.
+
+config ESP_GSP_LIST_TEXT_SLOTS
+    int "Dynamic text slots per list template row"
+    default 0
+    range 0 16
+    help
+        AUTO (0) uses the requirement derived from authored row templates.
+        A non-zero value explicitly reserves at least that many shaped-text
+        slots per visible row.
+
+config ESP_GSP_COMPONENT_INSTANCES
+    int "Transient component-instance pool"
+    default 8
+    range 1 32
+    help
+        Simultaneous transient behaviors (a drag plus landing tweens),
+        not authored component count. Exhaustion degrades gracefully
+        and logs the capacity.
+
+config ESP_GSP_STACK_VIEW_MAX_DEPTH
+    int "Maximum StackView navigation depth"
+    default 8
+    range 1 64
+    help
+        Maximum authored capacity of one StackView. The persistent
+        component extension stores one uint16_t page id per level, and
+        every transient component-instance slot reserves an extension
+        large enough for this limit.
+
+endmenu
+
+menu "Renderer and frame-planning capacity"
+
+config ESP_GSP_COMPONENT_OVERLAY_COMMANDS
+    int "Base component overlay command capacity"
+    default 32
+    range 2 128
+    help
+        Resident overlay commands available to component chrome before
+        the two commands reserved for each List/Wheel fade. Each command
+        costs about 40 bytes. Exhaustion drops later overlay commands and
+        logs the configured capacity.
+
+config ESP_GSP_DIRTY_RECT_CAPACITY
+    int "Dirty rectangles retained per frame"
+    default 32
+    range 4 128
+    help
+        Shared capacity for scene dirty storage, portable frame planning
+        and the ESP-LCD presenter damage contract. Each persistent frame
+        loop keeps two arrays at about 16 bytes per entry. When the set is
+        full, GSP compacts it or promotes the frame to a full redraw.
+        This is a project policy, not a scene-derived AUTO requirement.
+
+endmenu
+
+menu "Canvas, text, image, and font pools"
+
+config ESP_GSP_CANVAS_SLOTS
+    int "External frame-sink (canvas) targets"
+    default 2
+    range 1 8
+    help
+        Concurrent esp_gsp_canvas_* bindings.
+
+config ESP_GSP_MAX_ASSET_ANIMS
+    int "Compiled per-scene animation slots"
+    default 4
+    range 1 16
+    help
+        gsp_anim_t entries auto-played per scene; each holds patch
+        rects and frame views (~400 B).
+
+config ESP_GSP_TEXT_SLOTS
+    int "Default dynamic-text shaping slots"
+    default 0
+    range 0 128
+    help
+        AUTO (0) uses the GSPB requirement. A non-zero project value reserves
+        at least that many slots; each slot costs about 386 bytes of heap.
+
+config ESP_GSP_DEFAULT_DYNAMIC_IMAGE_SLOTS
+    int "Default simultaneous runtime image targets"
+    default 0
+    range 0 256
+    help
+        AUTO (0) uses the GSPB requirement. Applications that deliberately
+        disable runtime images use esp_gsp_config_set() with value zero, which
+        is distinguishable through the override bitset.
+
+config ESP_GSP_FREETYPE_CACHE_GLYPHS
+    int "Default FreeType glyph cache entries"
+    default 32
+    range 1 512
+    help
+        Default FreeType cache capacity. Override one UI instance with
+        esp_gsp_config_set() and ESP_GSP_FIELD_FREETYPE_CACHE_GLYPHS.
+        Pixel storage is entries * glyph_max_px * glyph_max_px bytes.
+
+config ESP_GSP_FREETYPE_GLYPH_MAX_PX
+    int "Default maximum FreeType glyph width and height"
+    default 40
+    range 8 256
+    help
+        Default maximum cached glyph dimension. Override one UI instance with
+        esp_gsp_config_set() and ESP_GSP_FIELD_FREETYPE_GLYPH_MAX_PX.
+        Memory grows quadratically; glyphs larger than this bound cannot be
+        cached by the dynamic-font fallback.
+
+endmenu
+
+endmenu
+
+menu "Project runtime defaults"
+
+menu "Rendering acceleration"
+
+config ESP_GSP_ACCEL_MAX_DRIVERS
+    int "Maximum registered acceleration backends"
+    default 4
+    range 1 16
+    help
+        Maximum number of hardware or software acceleration drivers kept in
+        the runtime registry. Increase only when the application registers
+        more independent backends at the same time.
+
+config ESP_GSP_ACCEL_MAX_PENDING_BLITS
+    int "Maximum asynchronous accelerator blits in flight"
+    default 4
+    range 1 16
+    help
+        Shared generic/PPA/DMA2D batching limit. Higher values may improve
+        overlap but reserve more internal bookkeeping and transaction slots.
+
+config ESP_GSP_ACCEL_SYNC_TIMEOUT_MS
+    int "Accelerator completion timeout in milliseconds"
+    default 500
+    range 1 10000
+    help
+        Maximum wait for an asynchronous accelerator operation to complete.
+        A timeout reports a backend failure instead of blocking the render
+        task indefinitely.
+
+config ESP_GSP_ACCEL_MIN_BLIT_PIXELS
+    int "Minimum pixels for accelerated copy"
+    default 8192
+    range 0 1048576
+    help
+        Copy regions smaller than this remain on the software path because
+        accelerator setup can cost more than the copy. Zero allows every
+        eligible copy to use an accelerator.
+
+config ESP_GSP_PPA_MIN_FILL_PIXELS
+    int "Minimum pixels for PPA fill"
+    default 32768
+    range 0 1048576
+    help
+        Fill regions below this size stay on the software renderer. Tune only
+        from same-board measurements; zero permits every eligible fill.
+
+config ESP_GSP_PPA_MIN_BLEND_PIXELS
+    int "Minimum pixels for PPA blend/fade"
+    default 8192
+    range 0 1048576
+    help
+        Blend or fade regions below this size stay on the software renderer.
+        Tune only from same-board measurements; zero permits every eligible
+        blend.
+
+config ESP_GSP_PPA_RUNTIME_SCALE
+    bool "Enable PPA SRM for runtime image scaling"
+    default n
+    help
+        Opt in to hardware bilinear filtering for large, fully visible,
+        opaque RGB565/RGB888 STORE images. The existing software renderer
+        uses nearest-neighbour sampling, so keep this disabled when exact
+        pixel compatibility is required.
+
+config ESP_GSP_PPA_MIN_SCALE_PIXELS
+    int "Minimum destination pixels for runtime PPA scaling"
+    default 32768
+    range 0 1048576
+    depends on ESP_GSP_PPA_RUNTIME_SCALE
+    help
+        Destination images below this size keep software scaling so PPA setup
+        does not dominate small operations. Zero permits every eligible scale.
+
+config ESP_GSP_PPA_FILL_MAX_SPAN_PIXELS
+    int "Maximum pixels in one PPA fill span"
+    default 524288
+    range 1024 16777216
+    help
+        Splits very large PPA fills into bounded spans. Lower values reduce the
+        duration of one submitted operation; higher values reduce setup count.
+
+endmenu
+
+menu "Runtime pools and image cache"
+
+config ESP_GSP_IMAGE_CACHE_ENTRIES
+    int "Default decoded-image cache entry count"
+    default 16
+    range 0 512
+    help
+        Metadata entry default for a scene image cache. GSP automatically
+        raises this when the compiled startup set plus runtime image slots
+        requires more entries, so lowering it never truncates that set.
+
+config ESP_GSP_IMAGE_CACHE_SHORTAGE_RETRIES
+    int "Image-cache allocation shortage retries"
+    default 3
+    range 0 16
+    help
+        Number of cache-budget eviction/retry rounds after an image surface
+        allocation fails. Higher values may recover fragmented memory at the
+        cost of additional decode latency.
+
+config ESP_GSP_CONTEXT_DEFAULT_GLYPH_RUNS
+    int "Default low-level context glyph-run slots"
+    default 0
+    range 0 1024
+    help
+        AUTO (0) uses the versioned GSPB requirements. A non-zero value is an
+        explicit project capacity and startup fails if the bundle needs more.
+
+config ESP_GSP_CONTEXT_DEFAULT_INSTANCES
+    int "Default shared template instance slots per scene"
+    default 0
+    range 0 256
+    help
+        AUTO (0) uses the template and visible-row requirement stored in the
+        GSPB. A non-zero value explicitly reserves at least that many slots;
+        startup fails if it is below the bundle requirement.
+
+config ESP_GSP_INSTANCE_STATES_PER_SLOT
+    int "Runtime state values reserved per template instance"
+    default 8
+    range 1 64
+    help
+        Default state capacity for every runtime template instance. Each
+        state is about 16 bytes. gsp_add_bundle passes the value to gspc,
+        so a template needing more states is rejected at build time; blobs
+        compiled elsewhere are still checked when instantiated.
+
+config ESP_GSP_IMAGE_CACHE_AUTO_MIN_BYTES
+    int "Minimum automatic image-cache budget with PSRAM"
+    default 65536
+    range 0 16777216
+    help
+        Floor used only when PSRAM has enough reachable free space. Zero
+        removes the floor. This is a budget, not an eager allocation.
+
+config ESP_GSP_IMAGE_CACHE_AUTO_MAX_BYTES
+    int "Maximum automatic image-cache budget"
+    default 4194304
+    range 0 67108864
+    help
+        Cap for the automatically derived cross-scene decoded-image budget.
+        Zero removes the cap. Explicit API/generated budgets still win.
+
+config ESP_GSP_IMAGE_CACHE_HOST_DEFAULT_BYTES
+    int "Non-ESP automatic image-cache budget"
+    default 2097152
+    range 0 67108864
+    help
+        Default used where heap-capability discovery is unavailable, such as
+        host integrations. This is a budget, not an eager allocation.
+
+endmenu
+
+config ESP_GSP_ENABLE_IMAGE_CACHE
+    bool "Enable decoded-image cache by default"
+    default y
+    help
+        Runtime product setting. Disable to use bounded region decoding.
+        The prebuilt archive still contains both implementations.
+
+config ESP_GSP_ENABLE_TRANSITION_SNAPSHOTS
+    bool "Enable full-screen transition snapshots"
+    default y
+    help
+        Runtime product setting. Disable to select the lower-memory
+        transition path. The prebuilt archive supports both paths.
+
+menu "Runtime tasks"
+
+menu "Render task"
+
+config ESP_GSP_RENDER_TASK_STACK_PSRAM
+    bool "Allocate render task stack in PSRAM"
+    default n
+    depends on SPIRAM && FREERTOS_SUPPORT_STATIC_ALLOCATION
+    select FREERTOS_TASK_CREATE_ALLOW_EXT_MEM
+    help
+        Moves the render task stack to PSRAM, saving 12 KiB of internal SRAM
+        by default, or 24 KiB with FreeType. Runtime startup fails if the
+        configured stack cannot be allocated from PSRAM. PSRAM stacks cannot
+        be used while the flash cache is disabled. Keep the default if render
+        callbacks may access flash, NVS or filesystems.
+        Applications that require those operations can dispatch them to an
+        internal-stack task or initialize espressif/esp_flash_dispatcher.
+
+config ESP_GSP_RENDER_TASK_STACK_SIZE
+    int "Render task stack size in bytes"
+    default 12288
+    range 4096 65536
+    help
+        Default used when esp_gsp_esp_lcd_config_t.task_stack_size is zero
+        and dynamic FreeType is not attached. Lower only after checking the
+        task's stack high-water mark on every enabled renderer/codec path.
+
+config ESP_GSP_RENDER_TASK_STACK_SIZE_FREETYPE
+    int "Render task stack size with FreeType in bytes"
+    default 24576
+    range 8192 65536
+    help
+        Default render stack when a runtime TTF/OTF face is attached.
+
+config ESP_GSP_RENDER_TASK_PRIORITY
+    int "Default render task priority"
+    default 4
+    range 1 24
+    help
+        Used when the platform API priority is zero. The asynchronous decode
+        task defaults one priority below this value.
+
+endmenu
+
+menu "Background decode task"
+
+config ESP_GSP_ENABLE_ASYNC_DECODE
+    bool "Enable background image decode task"
+    default y
+    help
+        Creates a decode worker when the current scene has an image cache.
+        Disabling saves its stack and RTOS objects but moves decode work to
+        the render-task fallback and may increase frame latency.
+
+config ESP_GSP_DECODE_TASK_STACK_PSRAM
+    bool "Allocate decode task stack in PSRAM"
+    default n
+    depends on ESP_GSP_ENABLE_ASYNC_DECODE && SPIRAM
+    depends on FREERTOS_SUPPORT_STATIC_ALLOCATION
+    select FREERTOS_TASK_CREATE_ALLOW_EXT_MEM
+    help
+        Moves the background decode task stack to PSRAM, saving 4 KiB of
+        internal SRAM with the default stack size. The worker remains disabled
+        if its stack cannot be allocated from PSRAM. PSRAM stacks cannot be
+        used while the flash cache is disabled.
+        Applications that require Flash operations from decode callbacks can
+        dispatch them to an internal-stack task or initialize
+        espressif/esp_flash_dispatcher.
+
+config ESP_GSP_DECODE_TASK_STACK_SIZE
+    int "Decode task stack size in bytes"
+    default 4096
+    range 2048 32768
+    depends on ESP_GSP_ENABLE_ASYNC_DECODE
+    help
+        Stack reserved for the background decoder. Lower only after measuring
+        the high-water mark with every enabled image format and callback path.
+
+config ESP_GSP_DECODE_TASK_PRIORITY
+    int "Standalone decode task default priority"
+    default 3
+    range 1 24
+    depends on ESP_GSP_ENABLE_ASYNC_DECODE
+    help
+        Used by direct gsp_decode_task_start() callers. The high-level
+        ESP-IDF runtime derives its worker priority from the render task.
+
+config ESP_GSP_DECODE_TASK_IDLE_POLL_MS
+    int "Decode worker idle poll interval in milliseconds"
+    default 100
+    range 1 10000
+    depends on ESP_GSP_ENABLE_ASYNC_DECODE
+    help
+        How often an idle decode worker wakes when no job notification is
+        pending. Lower values reduce fallback wake latency at higher idle cost.
+
+endmenu
+
+endmenu
+
+menu "Animation and transitions"
+
+choice ESP_GSP_ANIM_FRAME_MEMORY
+    prompt "Animation frame memory preference"
+    default ESP_GSP_ANIM_FRAME_MEMORY_AUTO
+    help
+        Chooses the preferred heap for decoded runtime animation frames. AUTO
+        uses ESP_GSP_ANIM_INTERNAL_FRAME_MAX_BYTES; every mode falls back to
+        the other reachable heap when the preferred allocation fails.
+
+config ESP_GSP_ANIM_FRAME_MEMORY_AUTO
+    bool "Automatic by frame size"
+
+config ESP_GSP_ANIM_FRAME_MEMORY_INTERNAL
+    bool "Prefer internal SRAM"
+
+config ESP_GSP_ANIM_FRAME_MEMORY_SPIRAM
+    bool "Prefer PSRAM"
+
+endchoice
+
+config ESP_GSP_ANIM_MAX_FRAME_BYTES
+    int "Maximum bytes in one runtime animation frame"
+    default 16777216
+    range 1024 67108864
+    help
+        Safety and functional limit checked before allocating runtime-supplied
+        animation frame buffers and decode scratch. Compiled animation assets
+        remain bounded by their validated resource metadata and reachable heap.
+
+config ESP_GSP_ANIM_INTERNAL_FRAME_MAX_BYTES
+    int "Maximum animation frame preferred in SRAM"
+    default 65536
+    range 0 16777216
+    depends on ESP_GSP_ANIM_FRAME_MEMORY_AUTO
+    help
+        AUTO mode prefers SRAM at or below this size and PSRAM above it.
+        Zero sends every non-empty animation surface to PSRAM first. Every
+        mode falls back to the other heap when the preferred heap is full.
+
+endmenu
+
+endmenu
+
+menu "Scheduling and interaction"
+
+menu "Runtime cadence and command queue"
+
+config ESP_GSP_QUEUE_DEPTH
+    int "Platform command queue depth"
+    default 24
+    range 4 128
+    help
+        esp_gsp_cmd_t queue entries (xQueueCreate) and the per-frame
+        release-callback stack arrays in the ESP-IDF runtime.
+
+config ESP_GSP_ACTIVE_TICK_MS
+    int "Active render-loop tick in milliseconds"
+    default 10
+    range 1 1000
+    help
+        Loop cadence while a finger, animation or scroll momentum keeps the
+        UI active. Lower values improve temporal resolution at higher CPU cost.
+
+config ESP_GSP_IDLE_POLL_MS
+    int "Default idle application poll in milliseconds"
+    default 100
+    range 1 10000
+    help
+        Default application-service interval while the UI has no active input,
+        animation or momentum. Larger values reduce idle wakeups but delay
+        polling-only application work.
+
+config ESP_GSP_POINTER_POLL_MS
+    int "Active pointer polling interval in milliseconds"
+    default 33
+    range 1 1000
+    help
+        Touch-controller polling interval while pointer input is active.
+        Smaller values improve input sampling at higher bus and CPU cost.
+
+config ESP_GSP_TOUCH_RELEASE_CONFIRM_POLLS
+    int "Empty touch polls required to confirm release"
+    default 2
+    range 1 8
+    help
+        Higher values tolerate intermittent empty controller reports but add
+        pointer-release latency in polling mode. Interrupt mode consumes only
+        fresh IRQ reports and treats a fresh empty report as release.
+
+endmenu
+
+menu "Scroll physics"
+
+config ESP_GSP_SCROLL_VELOCITY_WINDOW_MS
+    int "Scroll release velocity window in milliseconds"
+    default 100
+    range 10 1000
+    help
+        Only pointer samples inside this recent time window contribute to the
+        release velocity. A shorter window reacts faster; a longer one smooths
+        noisy motion.
+
+config ESP_GSP_SCROLL_RELEASE_GRACE_MS
+    int "Scroll release motion grace in milliseconds"
+    default 100
+    range 0 1000
+    help
+        Motion older than this interval before release is ignored for starting
+        a coast. Zero requires motion in the release sample itself.
+
+config ESP_GSP_SCROLL_STOP_SPEED_PX_S
+    int "Scroll coast stop speed in pixels per second"
+    default 20
+    range 1 1000
+    help
+        Existing inertial scrolling stops after its absolute velocity falls
+        below this threshold.
+
+config ESP_GSP_SCROLL_MIN_FLING_SPEED_PX_S
+    int "Minimum release speed that starts a coast, in pixels per second"
+    default 160
+    range 0 5000
+    help
+        Releases slower than this stop where the finger left off instead
+        of coasting, matching the fling threshold phones apply. Keep it
+        well above the coast stop speed, which only ends an existing
+        coast. The default corresponds to crossing the default 16-pixel
+        tap slop over the 100 ms velocity window, so motion beyond the
+        slop can coast without making a slow drag coast. Set to 0 to let
+        any measurable release speed coast.
+
+config ESP_GSP_SCROLL_MAX_RELEASE_SPEED_PX_S
+    int "Maximum scroll release speed in pixels per second"
+    default 6000
+    range 100 50000
+    help
+        Clamps the initial coast velocity so noisy or sparse touch samples
+        cannot launch an unbounded scroll.
+
+config ESP_GSP_SCROLL_DECAY_MS
+    int "Scroll velocity decay time in milliseconds"
+    default 325
+    range 10 5000
+    help
+        Time constant used to decay inertial scroll velocity. Larger values
+        coast longer; smaller values stop sooner.
+
+config ESP_GSP_SCROLL_MAX_TICK_MS
+    int "Maximum integrated scroll tick in milliseconds"
+    default 100
+    range 1 1000
+    help
+        Caps one physics integration step after scheduler stalls or delayed
+        frames, preventing a single update from jumping too far.
+
+config ESP_GSP_SCROLL_SNAP_RESPONSE_MS
+    int "List row snap response time in milliseconds"
+    default 40
+    range 1 1000
+    help
+        Response time used when a List or Wheel settles onto its nearest row.
+        Lower values snap more aggressively.
+
+endmenu
+
+menu "Swipe and component motion"
+
+config ESP_GSP_SWIPE_VELOCITY_WINDOW_MS
+    int "Page-swipe velocity window in milliseconds"
+    default 80
+    range 10 1000
+    help
+        Recent pointer interval used to estimate page-swipe release velocity.
+        Shorter windows favor the last motion; longer windows smooth input.
+
+config ESP_GSP_SWIPE_RELEASE_GRACE_MS
+    int "Page-swipe release motion grace in milliseconds"
+    default 350
+    range 0 2000
+    help
+        Maximum age of motion that can still influence a swipe release. A
+        shorter value makes pauses before release cancel fling momentum.
+
+config ESP_GSP_SWIPE_SETTLE_MIN_MS
+    int "Minimum page-swipe settle time in milliseconds"
+    default 80
+    range 1 2000
+    help
+        Lower bound for the velocity- and distance-derived page settle time.
+
+config ESP_GSP_SWIPE_SETTLE_BASE_MS
+    int "Base page-swipe settle time in milliseconds"
+    default 110
+    range 1 2000
+    help
+        Fixed part of the page settle duration before distance and velocity
+        adjustments are applied.
+
+config ESP_GSP_SWIPE_SETTLE_DISTANCE_MS
+    int "Distance-dependent page-swipe settle time in milliseconds"
+    default 90
+    range 0 2000
+    help
+        Maximum distance-proportional contribution to page settle duration.
+
+config ESP_GSP_SWIPE_SETTLE_MAX_MS
+    int "Maximum page-swipe settle time in milliseconds"
+    default 220
+    range 1 5000
+    help
+        Upper bound for the final page settle duration.
+
+config ESP_GSP_SWIPE_SETTLE_SPEED_REDUCTION_MS
+    int "Swipe settle speed reduction scale in milliseconds"
+    default 60
+    range 0 2000
+    help
+        Scale of the duration reduction applied as release speed increases.
+
+config ESP_GSP_SWIPE_SETTLE_MAX_SPEED_REDUCTION_MS
+    int "Maximum swipe settle speed reduction in milliseconds"
+    default 120
+    range 0 2000
+    help
+        Maximum amount that release velocity may subtract from settle time.
+
+config ESP_GSP_PAGE_FLOW_SETTLE_MS
+    int "Legacy PageFlow settle duration in milliseconds"
+    default 220
+    range 1 5000
+    help
+        Compatibility duration used by PageFlow paths that do not receive the
+        adaptive swipe timing result.
+
+config ESP_GSP_STACK_VIEW_SETTLE_MS
+    int "Default StackView settle duration in milliseconds"
+    default 220
+    range 1 5000
+    help
+        Default push/pop transition duration for StackView navigation.
+
+config ESP_GSP_DRAWER_SETTLE_MS
+    int "Drawer settle duration in milliseconds"
+    default 180
+    range 1 5000
+    help
+        Default duration used to finish opening or closing a Drawer after the
+        pointer is released.
+
+config ESP_GSP_BOOLEAN_TWEEN_MS
+    int "Toggle/checkbox knob tween duration in milliseconds"
+    default 130
+    range 1 5000
+    help
+        Retained visual tween duration for Toggle and Checkbox state changes.
+
+endmenu
+
+menu "Gesture thresholds"
+
+config ESP_GSP_TAP_SLOP_PX
+    int "Tap classification slop in pixels"
+    default 16
+    range 0 128
+    help
+        Absolute-pixel tap window; panel noise and touch resolution
+        differ per product. Scaled touch controllers may need a
+        different value.
+
+config ESP_GSP_DRAG_START_PX
+    int "Drag / gesture start threshold in pixels"
+    default 24
+    range 0 256
+    help
+        Distance a finger must move before a drag, scroll or swipe
+        gesture starts.
+
+config ESP_GSP_SWIPE_FLICK_PX
+    int "Flick commit distance in pixels"
+    default 12
+    range 0 256
+    help
+        Recent pointer movement (sum of the last ~3 samples) above
+        this commits a page swipe regardless of drag distance.
+
+config ESP_GSP_SCENE_SWIPE_MIN_FLING_PX
+    int "Scene swipe minimum fling distance in pixels"
+    default 32
+    range 0 512
+    help
+        Fallback velocity/fling gate for scene navigation.
+
+config ESP_GSP_COMPONENT_SWIPE_COMMIT_DIVISOR
+    int "Component swipe distance divisor"
+    default 4
+    range 2 16
+    help
+        A component PageFlow swipe commits after approximately one divided by
+        this value of its viewport, unless the flick rule commits it earlier.
+
+config ESP_GSP_SCENE_SWIPE_COMMIT_DIVISOR
+    int "Scene swipe distance divisor"
+    default 5
+    range 2 16
+    help
+        A scene swipe commits after approximately one divided by this value of
+        the viewport, unless the fling rule commits it earlier.
+
+config ESP_GSP_SWIPE_VELOCITY_NUMERATOR
+    int "Swipe settle velocity numerator"
+    default 3
+    range 1 16
+    help
+        Numerator of the release-velocity contribution used by adaptive swipe
+        settling. Adjust together with ESP_GSP_SWIPE_VELOCITY_DENOMINATOR.
+
+config ESP_GSP_SWIPE_VELOCITY_DENOMINATOR
+    int "Swipe settle velocity denominator"
+    default 5
+    range 1 32
+    help
+        Denominator of the release-velocity contribution used by adaptive
+        swipe settling. Larger values reduce the velocity effect.
+
+config ESP_GSP_DRAWER_EDGE_SLOP_PX
+    int "Drawer edge activation slop in pixels"
+    default 24
+    range 0 256
+    help
+        Maximum distance from the configured screen edge at which a closed
+        Drawer may begin an edge-drag gesture. Zero requires the exact edge.
+
+endmenu
+
+endmenu
+
+endmenu

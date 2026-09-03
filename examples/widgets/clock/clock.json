@@ -1,0 +1,1 @@
+{"screen":"widget_clock","w":480,"h":320,"screen_bg":"#101827","objects":[{"type":"clock","parent":-1,"name":"local_time","x":130,"y":30,"w":220,"h":220,"hour_angle":305,"minute_angle":120,"second_angle":218,"hour_color":"#F8FAFC","minute_color":"#BAE6FD","second_color":"#FB7185","tick_color":"#64748B","bg_color":"#172235","border_color":"#334A68","border_width":2,"radius":110}]}

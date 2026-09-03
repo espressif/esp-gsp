@@ -1,0 +1,310 @@
+# Configuration Reference
+
+Start with the generated `gsp_<symbol>_config()` result and
+`ESP_GSP_ESP_LCD_CONFIG_INIT()`. Zero-valued optional fields select framework
+defaults unless this document says otherwise. For callback views and other
+public data structures, see the
+[Application structure guide](../guide/application-structures.md).
+
+## Bundle configuration
+
+`esp_gsp_config_t` describes one compiled UI. The generated configuration
+already supplies the bundle bytes, component directories, and JSON-derived
+minimum requirements. Do not copy capacity and policy values into structure
+members: all of them use `esp_gsp_config_set()` and stable field IDs.
+
+| Field | Zero/default behavior | Set it when |
+|---|---|---|
+| `struct_size` | generated/config initializer sets the current structure size | never set it manually to another value |
+| `schema_version` | initializer selects the current schema | never change it; mismatches are rejected |
+| `abi_version` | initializer selects the current ABI | never change it; 0.1.x objects must be rebuilt |
+| `reserved_config` | zero | reserved for a future ABI revision |
+| `overrides` | eight empty inline entries and no extension table | normally leave it to `esp_gsp_config_set()`; bind a caller-owned read-only extension table only when more than eight fields differ |
+| `bundle`, `bundle_size` | supplied by the generated configuration | constructing an advanced configuration without the generated header |
+| `font_catalog` | no external shared font catalog | a launcher has opened a catalog used by bundles linked with external fonts |
+| `directories`, `directory_count` | supplied by the generated configuration | constructing an advanced configuration that uses component-key APIs |
+| `ttf`, `ttf_size` | no runtime outline-font fallback | using `gsp_add_bundle(DYNAMIC_FONT ...)` or an advanced caller-owned font blob |
+| `disable_swipe` | multi-scene horizontal swipe remains enabled unless the scene disables it | the whole UI must reject scene swipes |
+| `disable_bundle_crc` | bundle and nested resource/font CRCs are verified | trusted build-time assets live in a container or partition that is verified separately; structural and per-scene checks still run |
+| `image_cache_bytes` | target-derived decoded-image budget | simultaneously visible decoded images require a measured larger or smaller budget |
+
+### One per-instance configuration API
+
+Use Kconfig for firmware-wide defaults and JSON for authored scene demand.
+Only values that differ for one UI instance need code:
+
+```c
+esp_gsp_config_t config = gsp_product_config();
+
+assert(esp_gsp_config_set(
+           &config, ESP_GSP_FIELD_CONTEXT_DEFAULT_INSTANCES, 24) ==
+       ESP_GSP_CONFIG_SET_OK);
+assert(esp_gsp_config_set(
+           &config, ESP_GSP_FIELD_DEFAULT_DYNAMIC_IMAGE_SLOTS, 8) ==
+       ESP_GSP_CONFIG_SET_OK);
+```
+
+This is the only normal per-instance policy/capacity path. It validates field
+ownership and range immediately. Library-layout fields such as
+`ESP_GSP_FIELD_TEXT_CAPACITY` are read-only and return
+`ESP_GSP_CONFIG_SET_INVALID_FIELD`; inspect their generated
+`ESP_GSP_BUILD_CAP_*` constants instead.
+
+The resolver applies one deterministic order:
+
+```text
+project Kconfig -> GSPB JSON requirement -> esp_gsp_config_set() -> library cap
+```
+
+`DEFAULT_DYNAMIC_IMAGE_SLOTS` counts active logical targets, not all product
+images. `CONTEXT_DEFAULT_INSTANCES` counts simultaneously live template
+copies, including visible recycled List/Grid rows and application-created
+widgets. The compiler records authored demand automatically; override only the
+additional peak created exclusively by application code. Too-small values and
+values above a library cap fail explicitly instead of truncating content.
+
+`gsp_add_bundle(IMAGE_CACHE_BYTES ...)` sets `image_cache_bytes` in the
+generated configuration so one budget applies at compile time and at runtime.
+
+Left unset, the runtime derives it from the reachable heap: it covers the
+compiled startup set, keeps the remaining headroom for runtime images whenever
+`dynamic_image_slots` is non-zero, and never exceeds what the heap can serve,
+including the heap's largest currently allocatable block. This matters on a
+fragmented PSRAM heap: total free bytes alone do not guarantee that one decoded
+surface can be allocated. An unreachable budget stops eviction and turns every
+miss into an allocation failure. A startup set larger than the reachable budget
+is logged and the excess decodes lazily instead of failing initialization; the
+preparation pass stops at the budget rather than evicting what it has already
+decoded, which would make the scene re-decode an image every frame.
+
+A decode that fails for lack of room leaves the image requestable and it
+retries by itself once other images are released, so a transient shortage
+shows a placeholder rather than a permanently blank image. Those retries are
+bounded per shortage: an exhausted heap stops being retried until pixels are
+actually released, at which point every failed image gets a fresh attempt.
+Malformed payloads stay failed, since retrying cannot fix them.
+
+### More than eight application overrides
+
+Kconfig is the normal choice for firmware-wide defaults. Application
+overrides are for values that differ between ESP-GSP instances or are chosen
+at runtime. The first eight entries are stored inline. For additional settings,
+bind a caller-owned, read-only table before creating the app:
+
+```c
+static const esp_gsp_config_override_entry_t extra_gsp_config[] = {
+    { .field_id = ESP_GSP_FIELD_SCROLL_DECAY_MS, .value = 400 },
+    { .field_id = ESP_GSP_FIELD_SCROLL_MAX_TICK_MS, .value = 80 },
+    { .field_id = ESP_GSP_FIELD_SWIPE_SETTLE_MAX_MS, .value = 240 },
+};
+
+esp_gsp_config_t config = gsp_product_config();
+esp_gsp_config_set_result_t result = esp_gsp_config_override_bind_external(
+    &config.overrides, extra_gsp_config,
+    sizeof(extra_gsp_config) / sizeof(extra_gsp_config[0]));
+assert(result == ESP_GSP_CONFIG_SET_OK);
+```
+
+The table must remain alive and unchanged until `gsp_app_create()` returns;
+static storage as above is the simplest safe choice. Field IDs are stable and
+must not be duplicated between inline and external entries. The bind helper
+validates IDs, ranges and duplicates before accepting the table.
+
+### Decoded images across scenes
+
+A scene's compiled images are decoded before the scene becomes visible, so a
+scene never appears with placeholders that pop in afterwards. To keep that
+affordable, a scene that leaves the screen keeps its decoded images and
+returning to it costs no decode. The total held across all scenes is capped at
+the value of `image_cache_bytes`, or at the figure a zero setting derives. Over
+the cap the least recently visited inactive scenes are released first, so a
+target with room for one scene pays one synchronous decode per switch and holds
+one scene's worth of pixels, exactly as it would without retention.
+
+An animated scene change is the one point where two scenes are resident at
+once, because the transition composites both. Applications that cannot afford
+that peak should navigate with `ESP_GSP_NO_TRANSITION`.
+
+When `ESP_GSP_FIELD_ENABLE_IMAGE_CACHE` is set to zero, compressed QOI and
+RLE-family resources decode by region. Runtime-published PNG and JPEG images
+require the decoded-image cache and are rejected in this mode.
+
+## ESP-LCD configuration
+
+`esp_gsp_esp_lcd_config_t` binds the UI to one display target and optional
+touch device.
+
+| Field | Zero/default behavior | Set it when |
+|---|---|---|
+| `struct_size` | `ESP_GSP_ESP_LCD_CONFIG_INIT()` sets the current size | never set it manually to another value |
+| `display` | no valid default; use the target returned by the BSP | always |
+| `presenter` | null; a presenter is created from `display` | advanced handoff reuses a borrowed presenter; when non-null, `display` is ignored |
+| `touch` | input disabled | the BSP provides an `esp_lcd_touch_handle_t` |
+| `touch_input_mode` | interrupt when available, otherwise polling | force polling or require interrupt mode |
+| `touch_wake_from_isr` | no application-owned interrupt notification | an ISR-safe application callback must wake its own task from the same touch interrupt |
+| `touch_wake_user_ctx` | null context is passed to `touch_wake_from_isr` | the wake callback needs application-owned context |
+| `task_stack_size` | 12288 bytes, or 24576 bytes when a dynamic TTF/OTF blob is configured | stack measurement shows a different requirement |
+| `task_stack_size_freetype` | 24576 bytes when a dynamic TTF/OTF blob is configured | measured FreeType paths justify another stack size |
+| `task_priority` | 4 | integration scheduling requires a reviewed priority change |
+| `task_stack_psram` | follows the consuming project's render-stack memory choice | the render stack should use PSRAM and callbacks obey its flash/cache restrictions |
+| `perf_log` | false | five-second rendered-FPS logging is useful during measurement |
+| `render_alignment` | zero fields request no expansion | a producer or display path requires dirty regions aligned in x, y, width, or height |
+
+`ESP_GSP_TOUCH_INPUT_POLLING` overrides an available INT pin.
+`ESP_GSP_TOUCH_INPUT_INTERRUPT` requires one and fails if another callback
+already owns it or interrupt registration fails. The default AUTO mode logs a
+warning and continues in polling mode when interrupt setup is unavailable.
+`touch_wake_from_isr` runs from that registered touch ISR in addition to the
+framework wake notification. It must not perform I2C or ESP-GSP operations;
+use it only for ISR-safe notification of application-owned work. It is not
+called when touch input uses polling.
+
+Keep display presentation mode on `ESP_DISPLAY_PRESENT_MODE_AUTO` for the
+normal path. Panel classification, framebuffer exposure, byte swapping,
+rotation and TE configuration belong to the BSP display target; see
+[Display Presentation](../guide/display.md).
+
+## Build-time bundle options
+
+```cmake
+gsp_add_bundle(<component-target>
+    [SCENES <scene0.json> [scene1.json ...]]
+    [PIXEL_FORMAT rgb565|rgb888]
+    [IMAGE_CACHE_BYTES <bytes>]
+    [DYNAMIC_FONT <font.ttf>]
+    [SYMBOL <c_identifier>]
+    [PROFILE <expert-profile.yaml>]
+    [DEPLOYABLE])
+```
+
+With no `SCENES` argument, ESP-GSP discovers and lexically sorts
+`PROJECT_DIR/scenes/*.json`. Configuration fails with a direct error when that
+directory has no JSON files. Explicit paths are the advanced path for scattered
+JSON, a subset of scenes, or multiple bundles. `PIXEL_FORMAT` defaults to
+`rgb565` when `PROFILE` is not supplied. `PROFILE` is an expert compiler
+override.
+
+`DEPLOYABLE` is opt-in. It adds one self-describing GMD metadata member per
+scene so the resulting GSPB can be loaded without its generated C directory.
+It does not select a partition, transport, update protocol, rollback policy or
+signature scheme. Without this option, bundle output and the generated-header
+startup path remain unchanged.
+
+The default platform profile uses `codec: auto`. On targets that advertise a
+hardware JPEG decoder, an image takes the hardware JPEG path when it clears
+`image_auto_min_pixels`, is not runtime-scaled, its decoded surface fits the
+cache budget, and JPEG is smaller than STORE. The floor is a pixel count rather
+than a per-side limit, matching the decoder, which only constrains the total. This hardware
+decision runs before QOI/RLE size heuristics. Alpha images use the JPEG_A8
+container: the colour plane decodes in hardware, the A8 plane stays lossless.
+Use explicit `codec: raw` for zero-decode MMAP data, `codec: lossless` for
+exact pixels, or set `image_auto_allow_lossy: false` in an expert profile to
+disable automatic JPEG. RGB888 alpha has no JPEG container and stays lossless.
+The compiler emits 4:2:0 JPEG, so the hardware decoder processes 16x16 MCU
+blocks. For non-aligned dimensions it automatically edge-extends the encoded
+image and allocates an MCU-aligned cache surface while preserving the authored
+logical size. The hardware decoder can therefore write directly into PSRAM;
+rendering reads only the logical area through the aligned stride. The padded
+cache size is included in the scene budget and reported in the execution plan.
+On builds without PSRAM, the generated default disables the image cache and
+therefore does not advertise hardware JPEG to `codec: auto`. Supplying an
+explicit `IMAGE_CACHE_BYTES` internal-RAM budget opts back in; an expert
+`PROFILE` remains fully caller-controlled.
+
+## Kconfig (ESP-IDF) capacity and policy tunables
+
+On ESP-IDF builds, product defaults are exposed under
+`Component config → ESP-GSP`. CMake emits them into an independent project
+bridge that provides exactly one strong configuration definition. The same
+bridge contract is used by source, prebuilt, and Host builds; the published
+archive does not contain the consuming product's settings.
+
+In a source-free prebuilt component, runtime policies and heap-backed
+capacities remain visible and effective. Values fixed into the archive are
+published as generated `ESP_GSP_BUILD_CAP_*` constants and do not appear in
+Kconfig. The
+compiler records scene requirements in JSON-derived bundle metadata, the
+runtime raises AUTO capacities as needed, and initialization rejects a
+requirement above the archive's published build capability. This keeps ordinary
+scenes self-sizing without preventing product or per-instance configuration.
+
+For the complete workflow—interactive configuration, reproducible defaults,
+target-specific fragments, precedence, and validation—read the
+[ESP-IDF Kconfig guide](kconfig.md).
+
+At startup each instance resolves project defaults, versioned GSPB
+requirements, explicit application overrides, and finally build capabilities.
+The resulting policy and capacities are stored on that instance and remain
+read-only for its lifetime. Two instances may therefore use different app
+overrides without changing each other. Platform-scoped task settings are
+locked while the shared platform service is active.
+
+Runtime capacities back heap allocations, including List variable-stride row
+storage and StackView page storage. They never set a fixed array bound or a
+public/private protocol layout. The named build capabilities are the only
+values permitted to bound unavoidable scratch arrays inside the archive.
+
+The Kconfig help is the authoritative per-symbol reference. The groups below
+show which product trade-off each setting controls.
+
+Defaults target a balanced general-purpose product rather than either the
+smallest possible SRAM footprint or the benchmark's peak workload. Common
+features remain enabled, capacities cover ordinary screens and controls, and
+large galleries or unusually dense scenes opt in to larger pools. In
+particular, the default shared template-instance pool is 16; the showcase and
+benchmark explicitly request 32 and 40 because their simultaneous recycled
+rows and template widgets are intentionally heavier than a typical page.
+
+| Group | Important symbols | What scales |
+|---|---|---|
+| Resident UI pools | `MAX_SCENES`, `MAX_TIMERS`, `MAX_WIDGETS`, `MAX_ANIMATIONS`, `MAX_LISTS`, `CANVAS_SLOTS`, `MAX_ASSET_ANIMS` | persistent `gsp_ui_core_t` SRAM; exhaustion returns/logs a limit error |
+| List/text pools | `LIST_MAX_SLOTS`, `LIST_TEXT_SLOTS`, `TEXT_SLOTS`, `TEXT_CAPACITY` | visible rows, shaped-text heap, and command queue entry size |
+| Component limits | `COMPONENT_INSTANCES`, `STACK_VIEW_MAX_DEPTH`, `COMPONENT_BATCH_MAX`, `TRANSACTION_UPDATE_CAPACITY`, `COMPONENT_OVERLAY_COMMANDS` | component extension SRAM and render-task transaction scratch |
+| Image/font limits | `DEFAULT_DYNAMIC_IMAGE_SLOTS`, `MAX_DYNAMIC_IMAGE_TARGETS`, `MAX_FONTS_PER_SCENE`, `FREETYPE_CACHE_GLYPHS`, `FREETYPE_GLYPH_MAX_PX` | resource-view arrays, cache metadata and glyph bitmap heap |
+| Renderer scratch | `DIRTY_RECT_CAPACITY`, `RENDER_CLIP_STACK_DEPTH`, `RENDER_TILE_SPAN_CAPACITY` | persistent damage arrays and renderer stack; tile-span overflow falls back to a linear scan |
+| Input | `MAX_TOUCH_POINTS`, `TOUCH_RELEASE_CONFIRM_POLLS` | two-contact build capability and polling-mode release latency; pinch is always compiled in for 0.2.0 |
+| Animation | `ANIM_FRAME_MEMORY_*`, `ANIM_MAX_FRAME_BYTES`, `ANIM_INTERNAL_FRAME_MAX_BYTES`, `ANIM_PATCH_RECTS`, `ANIM_REFERENCE_COMMANDS` | frame-buffer heap placement, safety bounds and per-animation resident metadata |
+| Image-cache policy | `ENABLE_IMAGE_CACHE`, `IMAGE_CACHE_ENTRIES`, `IMAGE_CACHE_SHORTAGE_RETRIES`, `IMAGE_CACHE_AUTO_*` | decoded-image heap budget and retry latency |
+| Tasks | `ENABLE_ASYNC_DECODE`, `RENDER_TASK_STACK_SIZE*`, `DECODE_TASK_STACK_SIZE`, task priorities and decode poll interval | internal SRAM task stacks, scheduling and decode latency |
+| Acceleration | `ACCEL_*`, `PPA_*` | async transaction capacity, timeout and the CPU/hardware crossover thresholds |
+| Motion/latency | `ACTIVE_TICK_MS`, `IDLE_POLL_MS`, `POINTER_POLL_MS`, `SCROLL_*`, `SWIPE_*`, `*_SETTLE_MS`, `*_SLOP_PX` | CPU wake rate and interaction feel; sample capacities also change resident state size |
+| Transition memory | `ENABLE_TRANSITION_SNAPSHOTS` | whether supported transitions may allocate two scene snapshots |
+
+Useful SRAM relationships for capacity planning are:
+
+- FreeType bitmap storage is approximately
+  `FREETYPE_CACHE_GLYPHS * FREETYPE_GLYPH_MAX_PX^2` bytes.
+- List shaped-text heap is approximately
+  `MAX_LISTS * LIST_MAX_SLOTS * LIST_TEXT_SLOTS * 386` bytes at the fully
+  populated worst case; actual list buffers are allocated on use.
+- The command queue is `QUEUE_DEPTH * sizeof(esp_gsp_cmd_t)`. Increasing
+  `TEXT_CAPACITY` increases every queue entry because text is embedded in the
+  command union.
+- `MAX_TOUCH_POINTS` is fixed at the build capability of two in 0.2.0, so a
+  prebuilt archive and source build expose the same pinch functionality.
+- `LIST_MAX_SLOTS` applies per List/Grid viewport. For a Grid, required slots
+  are `(visible rows + overscan) * columns`; `MAX_LISTS` is a separate limit
+  on simultaneously bound controls.
+- `INSTANCE_STATES_PER_SLOT` applies to fields within one template, while
+  `instance_slots` applies to simultaneously live template copies. They are
+  independent multipliers and both must cover the authored control.
+- Disabling async decode saves its task stack and RTOS objects but makes the
+  render task pump decoding. Disabling transition snapshots avoids their peak
+  allocation but changes the supported transition path.
+
+Lower bounds are intentional: they keep the implementation's mandatory
+sentinels and atomic operations valid. Raise a limit only after budgeting its
+pool or stack multiplier; lower one only after exercising the largest authored
+scene and the relevant control path.
+
+AUTO is limited to capacities that `gspc` can derive from authored content.
+The GSPB requirements member carries exact List, text, image, instance, and
+glyph-run minima. Glyph-run capacity uses the same schema-generated formula in
+Python and C. `MAX_SCENES` remains a normal project capacity with default 8;
+`DIRTY_RECT_CAPACITY` remains a normal capacity with default 32. Old bundles
+without the versioned requirements member are rejected rather than guessed.
+
+Protocol constants (format offsets, codec ids, driver extension strides,
+`ESP_GSP_IMAGE_REFS_PER_SLOT`, animation handle encoding) are deliberately
+not exposed: they are ABI or wire-format contracts and changing them breaks
+compiled scenes or shared structures.
