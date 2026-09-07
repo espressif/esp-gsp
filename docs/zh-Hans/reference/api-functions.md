@@ -171,6 +171,17 @@ esp_gsp_err_t esp_gsp_get_toggle(esp_gsp_handle_t gsp, uint16_t bind, bool *out_
 esp_gsp_err_t esp_gsp_keyboard_attach(esp_gsp_handle_t gsp, uint16_t action_id, uint16_t text_bind);
 ```
 
+### `esp_gsp_keyboard_attach_ex()`
+
+按应用指定的 UTF-8 字节上限连接编译键盘。
+
+- **头文件:** `include/esp_gsp.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_keyboard_attach_ex(esp_gsp_handle_t gsp, uint16_t action_id, uint16_t text_bind, size_t max_bytes);
+```
+
 ### `esp_gsp_keyboard_text()`
 
 复制当前键盘编辑缓冲区中的文字。
@@ -180,6 +191,17 @@ esp_gsp_err_t esp_gsp_keyboard_attach(esp_gsp_handle_t gsp, uint16_t action_id, 
 
 ```c
 esp_gsp_err_t esp_gsp_keyboard_text(esp_gsp_handle_t gsp, char *out_text, size_t capacity);
+```
+
+### `esp_gsp_keyboard_text_size()`
+
+读取复制当前键盘文字所需的缓冲区大小。
+
+- **头文件:** `include/esp_gsp.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_keyboard_text_size(esp_gsp_handle_t gsp, size_t *out_size);
 ```
 
 ### `esp_gsp_set_cursor()`

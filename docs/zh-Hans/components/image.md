@@ -12,10 +12,10 @@
 
 ```sh
 mkdir -p build/widget-preview
-python -m gsp.execute --version 0.2.8 gspc pack \
+python -m gsp.execute --version 0.3.0 gspc pack \
   examples/widgets/image/image.json \
   --deployable -o build/widget-preview/image.gspb
-python -m gsp.execute --version 1.1.0 sim \
+python -m gsp.execute --version 1.2.0 sim \
   --bundle build/widget-preview/image.gspb
 ```
 
@@ -45,7 +45,7 @@ python -m gsp.execute --version 1.1.0 sim \
       "y": 45,
       "w": 250,
       "h": 210,
-      "image": "../../benchmark/scenes/bench_rgb.png",
+      "image": "../../benchmark/scenes/bench_industrial.png",
       "fit": "cover",
       "position_x": 0.5,
       "position_y": 0.5
@@ -57,7 +57,7 @@ python -m gsp.execute --version 1.1.0 sim \
       "y": 90,
       "w": 125,
       "h": 125,
-      "image": "../../benchmark/scenes/bench_rgb.png",
+      "image": "../../benchmark/scenes/bench_industrial.png",
       "fit": "contain",
       "border_color": "#334A68",
       "border_width": 1,
@@ -122,6 +122,7 @@ size_t gsp_image_docs_dynamic_image_slots(void)
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
 | `max_fps` | `int` | — | 1…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |

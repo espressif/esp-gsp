@@ -8,13 +8,13 @@ This reference covers `Kconfig` and `config/esp_gsp_config_schema.yml`. Runtime 
 
 Maximum number of scenes held in gsp_ui_core_t
 
-- Project default: `8`
-- Type/range: `int` / `1..32`
+- Project default: `0`
+- Type/range: `int` / `0..65534`
 - Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
-- JSON AUTO-derived: no
+- JSON AUTO-derived: yes
 
-Upper bound of the scenes[] array inside gsp_ui_core_t. Each scene embeds a gsp_context_t (~1 KB), so this is the single largest resident block of the UI core. Bundles with more scenes than this are truncated at init (a warning is logged); size it to the largest bundle the product can load.
+AUTO (0) uses the exact scene count stored in the GSPB. A non-zero value is an explicit project budget and generation fails when the bundle needs more scenes.
 
 ### `CONFIG_ESP_GSP_MAX_TIMERS`
 
@@ -54,34 +54,34 @@ esp_gsp_anim_slot_t pool in gsp_ui_core_t (~56 B per slot). Exhaustion degrades 
 
 ### `CONFIG_ESP_GSP_MAX_LISTS`
 
-Maximum simultaneous List/Wheel components
+Retained List/Wheel bindings per UI instance
 
-- Project default: `5`
-- Type/range: `int` / `1..16`
+- Project default: `0`
+- Type/range: `int` / `0..256`
 - Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
-- JSON AUTO-derived: no
+- JSON AUTO-derived: yes
 
-List pool, list driver extensions and the chrome overlay storage all scale with this. Each list can additionally allocate run_buffers on the heap (see ESP_GSP_LIST_TEXT_SLOTS), so this is a multiplier for list working memory.
+AUTO (0) sums authored List/Wheel bindings across bundled scenes because handles currently have UI-instance lifetime. A non-zero value is an explicit project budget.
 
 ### `CONFIG_ESP_GSP_LIST_MAX_SLOTS`
 
 Row slots per visible list viewport
 
 - Project default: `0`
-- Type/range: `int` / `0..64`
+- Type/range: `int` / `0..65535`
 - Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: yes
 
-AUTO (0) does not additionally restrict gspc: the compiler uses the library capability (64), writes the exact scene requirement N into GSPB, and runtime allocates N rows. A non-zero project value is an explicit upper bound and generation fails when it is below N.
+AUTO (0) writes the exact authored requirement into GSPB and runtime allocates that many rows. A non-zero project value is an explicit upper bound and generation fails when it is below the requirement.
 
 ### `CONFIG_ESP_GSP_LIST_TEXT_SLOTS`
 
 Dynamic text slots per list template row
 
 - Project default: `0`
-- Type/range: `int` / `0..16`
+- Type/range: `int` / `0..65533`
 - Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: yes
@@ -90,27 +90,27 @@ AUTO (0) uses the requirement derived from authored row templates. A non-zero va
 
 ### `CONFIG_ESP_GSP_COMPONENT_INSTANCES`
 
-Transient component-instance pool
+Runtime component-instance pool
 
-- Project default: `8`
-- Type/range: `int` / `1..32`
+- Project default: `0`
+- Type/range: `int` / `0..256`
 - Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
-- JSON AUTO-derived: no
+- JSON AUTO-derived: yes
 
-Simultaneous transient behaviors (a drag plus landing tweens), not authored component count. Exhaustion degrades gracefully and logs the capacity.
+AUTO (0) keeps the legacy baseline of eight and raises it from each scene's generated semantic directory when authored components need more slots. A non-zero project value reserves additional application-created concurrency but never limits authored content. Applications that need a strict budget can set a non-zero per-instance override; values below authored demand fail initialization instead of truncating it.
 
 ### `CONFIG_ESP_GSP_STACK_VIEW_MAX_DEPTH`
 
 Maximum StackView navigation depth
 
-- Project default: `8`
-- Type/range: `int` / `1..64`
+- Project default: `0`
+- Type/range: `int` / `0..64`
 - Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
-- JSON AUTO-derived: no
+- JSON AUTO-derived: yes
 
-Maximum authored capacity of one StackView. The persistent component extension stores one uint16_t page id per level, and every transient component-instance slot reserves an extension large enough for this limit.
+AUTO (0) uses the deepest authored StackView requirement. A non-zero value is an explicit project budget.
 
 ## Capacity and feature limits / Renderer and frame-planning capacity
 
@@ -156,32 +156,32 @@ Concurrent esp_gsp_canvas_* bindings.
 
 Compiled per-scene animation slots
 
-- Project default: `4`
-- Type/range: `int` / `1..16`
-- Ownership: `runtime_capacity` / `heap`
-- Prebuilt component: configurable
-- JSON AUTO-derived: no
-
-gsp_anim_t entries auto-played per scene; each holds patch rects and frame views (~400 B).
-
-### `CONFIG_ESP_GSP_TEXT_SLOTS`
-
-Default dynamic-text shaping slots
-
 - Project default: `0`
-- Type/range: `int` / `0..128`
+- Type/range: `int` / `0..255`
 - Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: yes
 
-AUTO (0) uses the GSPB requirement. A non-zero project value reserves at least that many slots; each slot costs about 386 bytes of heap.
+AUTO (0) uses the maximum per-scene anim_qoi count stored in the GSPB. A non-zero value is an explicit project budget.
+
+### `CONFIG_ESP_GSP_TEXT_SLOTS`
+
+Retained dynamic-text shaping slots
+
+- Project default: `0`
+- Type/range: `int` / `0..65533`
+- Ownership: `runtime_capacity` / `heap`
+- Prebuilt component: configurable
+- JSON AUTO-derived: yes
+
+AUTO (0) sums scene text binds across the bundle because published glyph runs retain their backing storage. A non-zero project value reserves at least that many slots; each slot starts with about 386 bytes of inline run storage and grows on demand.
 
 ### `CONFIG_ESP_GSP_DEFAULT_DYNAMIC_IMAGE_SLOTS`
 
 Default simultaneous runtime image targets
 
 - Project default: `0`
-- Type/range: `int` / `0..256`
+- Type/range: `int` / `0..32767`
 - Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: yes
@@ -353,7 +353,7 @@ Number of cache-budget eviction/retry rounds after an image surface allocation f
 Default low-level context glyph-run slots
 
 - Project default: `0`
-- Type/range: `int` / `0..1024`
+- Type/range: `int` / `0..65535`
 - Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: yes
@@ -365,7 +365,7 @@ AUTO (0) uses the versioned GSPB requirements. A non-zero value is an explicit p
 Default shared template instance slots per scene
 
 - Project default: `0`
-- Type/range: `int` / `0..256`
+- Type/range: `int` / `0..65534`
 - Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: yes
@@ -376,13 +376,13 @@ AUTO (0) uses the template and visible-row requirement stored in the GSPB. A non
 
 Runtime state values reserved per template instance
 
-- Project default: `8`
-- Type/range: `int` / `1..64`
+- Project default: `0`
+- Type/range: `int` / `0..65535`
 - Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
-- JSON AUTO-derived: no
+- JSON AUTO-derived: yes
 
-Default state capacity for every runtime template instance. Each state is about 16 bytes. gsp_add_bundle passes the value to gspc, so a template needing more states is rejected at build time; blobs compiled elsewhere are still checked when instantiated.
+AUTO (0) uses the largest authored template state count stored in the GSPB. A non-zero value is an explicit project budget.
 
 ### `CONFIG_ESP_GSP_IMAGE_CACHE_AUTO_MIN_BYTES`
 
@@ -637,7 +637,7 @@ Default application-service interval while the UI has no active input, animation
 
 ### `CONFIG_ESP_GSP_POINTER_POLL_MS`
 
-Active pointer polling interval in milliseconds
+Idle touch discovery interval in milliseconds
 
 - Project default: `33`
 - Type/range: `int` / `1..1000`
@@ -645,7 +645,7 @@ Active pointer polling interval in milliseconds
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
-Touch-controller polling interval while pointer input is active. Smaller values improve input sampling at higher bus and CPU cost.
+Polling touch integrations use this interval while the UI is otherwise idle. Once input or animation is active, ESP_GSP_ACTIVE_TICK_MS drives the shared UI service loop. Interrupt-driven touch wakes the loop directly and does not read without a fresh interrupt.
 
 ### `CONFIG_ESP_GSP_TOUCH_RELEASE_CONFIRM_POLLS`
 
@@ -1017,7 +1017,7 @@ Maximum distance from the configured screen edge at which a closed Drawer may be
 
 ### `ESP_GSP_BUILD_CAP_COMPONENT_BATCH_MAX`
 
-Maximum updates in one atomic component batch
+Inline component-batch update capacity
 
 - Project default: `64`
 - Type/range: `int` / `1..64`
@@ -1025,11 +1025,11 @@ Maximum updates in one atomic component batch
 - Prebuilt component: fixed library capability 64
 - JSON AUTO-derived: no
 
-Read-only library limit for one atomic component batch. The render task reserves one pending-update entry per item.
+Read-only stack fast-path threshold. Larger batches use temporary framework-owned heap storage and remain atomic.
 
 ### `ESP_GSP_BUILD_CAP_TRANSACTION_UPDATE_CAPACITY`
 
-Internal input/component transaction update capacity
+Inline input/component transaction capacity
 
 - Project default: `64`
 - Type/range: `int` / `1..64`
@@ -1037,7 +1037,7 @@ Internal input/component transaction update capacity
 - Prebuilt component: fixed library capability 64
 - JSON AUTO-derived: no
 
-Read-only library limit for updates committed atomically by input and component paths.
+Read-only stack fast-path threshold. Larger input and component transactions use temporary framework-owned heap storage.
 
 ### `ESP_GSP_BUILD_CAP_RENDER_CLIP_STACK_DEPTH`
 
@@ -1065,7 +1065,7 @@ Read-only library fast-path limit. Overflow safely falls back to a linear comman
 
 ### `ESP_GSP_BUILD_CAP_TEXT_CAPACITY`
 
-Maximum dynamic-text characters
+Inline dynamic-text bytes
 
 - Project default: `63`
 - Type/range: `int` / `1..1024`
@@ -1073,16 +1073,16 @@ Maximum dynamic-text characters
 - Prebuilt component: fixed library capability 63
 - JSON AUTO-derived: no
 
-Read-only library layout limit for each shaped text and queued text command.
+Read-only command fast-path threshold; longer text uses framework-owned heap storage.
 
 ### `ESP_GSP_BUILD_CAP_MAX_DYNAMIC_IMAGE_TARGETS`
 
 Maximum simultaneous runtime image targets
 
-- Project default: `256`
-- Type/range: `int` / `1..256`
+- Project default: `32767`
+- Type/range: `int` / `1..32767`
 - Ownership: `build_capability` / `inline`
-- Prebuilt component: fixed library capability 256
+- Prebuilt component: fixed library capability 32767
 - JSON AUTO-derived: no
 
 Read-only library limit for logical runtime image targets across loaded scenes.

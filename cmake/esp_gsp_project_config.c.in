@@ -306,7 +306,7 @@ static const esp_gsp_project_config_t s_project_config = {
 #ifdef CONFIG_ESP_GSP_MAX_SCENES
         .max_scenes = CONFIG_ESP_GSP_MAX_SCENES,
 #else
-        .max_scenes = 8,
+        .max_scenes = 0,
 #endif
 #ifdef CONFIG_ESP_GSP_MAX_TIMERS
         .max_timers = CONFIG_ESP_GSP_MAX_TIMERS,
@@ -326,7 +326,7 @@ static const esp_gsp_project_config_t s_project_config = {
 #ifdef CONFIG_ESP_GSP_MAX_LISTS
         .max_lists = CONFIG_ESP_GSP_MAX_LISTS,
 #else
-        .max_lists = 5,
+        .max_lists = 0,
 #endif
 #ifdef CONFIG_ESP_GSP_LIST_MAX_SLOTS
         .list_max_slots = CONFIG_ESP_GSP_LIST_MAX_SLOTS,
@@ -341,12 +341,12 @@ static const esp_gsp_project_config_t s_project_config = {
 #ifdef CONFIG_ESP_GSP_COMPONENT_INSTANCES
         .component_instances = CONFIG_ESP_GSP_COMPONENT_INSTANCES,
 #else
-        .component_instances = 8,
+        .component_instances = 0,
 #endif
 #ifdef CONFIG_ESP_GSP_STACK_VIEW_MAX_DEPTH
         .stack_view_max_depth = CONFIG_ESP_GSP_STACK_VIEW_MAX_DEPTH,
 #else
-        .stack_view_max_depth = 8,
+        .stack_view_max_depth = 0,
 #endif
 #ifdef CONFIG_ESP_GSP_COMPONENT_OVERLAY_COMMANDS
         .component_overlay_commands = CONFIG_ESP_GSP_COMPONENT_OVERLAY_COMMANDS,
@@ -366,7 +366,7 @@ static const esp_gsp_project_config_t s_project_config = {
 #ifdef CONFIG_ESP_GSP_MAX_ASSET_ANIMS
         .max_asset_anims = CONFIG_ESP_GSP_MAX_ASSET_ANIMS,
 #else
-        .max_asset_anims = 4,
+        .max_asset_anims = 0,
 #endif
 #ifdef CONFIG_ESP_GSP_TEXT_SLOTS
         .text_slots = CONFIG_ESP_GSP_TEXT_SLOTS,
@@ -416,7 +416,7 @@ static const esp_gsp_project_config_t s_project_config = {
 #ifdef CONFIG_ESP_GSP_INSTANCE_STATES_PER_SLOT
         .instance_states_per_slot = CONFIG_ESP_GSP_INSTANCE_STATES_PER_SLOT,
 #else
-        .instance_states_per_slot = 8,
+        .instance_states_per_slot = 0,
 #endif
 #ifdef CONFIG_ESP_GSP_QUEUE_DEPTH
         .queue_depth = CONFIG_ESP_GSP_QUEUE_DEPTH,

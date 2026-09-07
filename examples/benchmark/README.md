@@ -1,39 +1,199 @@
 # ESP-GSP Hardware Benchmark
 
-This example exercises the complete renderer and interaction surface on real
+This example exercises the renderer and interaction surface on real
 display targets. It covers controls, components, text, image fit and runtime
-scaling, animations, Canvas, fixed and variable-height scrolling, elastic
-message bubbles, drawers, navigation, and transitions under continuous updates.
+scaling and rotation, animations, Canvas, fixed and variable-height scrolling, elastic
+message bubbles, drawers, navigation, transitions, and a dense mixed-content
+render-saturation scene under continuous updates.
 
-The first lap warms caches. The second lap prints the measured summary. Allow
-at least 361 seconds after reset for a complete run. Use a 390-second matrix
-capture to retain margin for slower targets.
+All 49 cases loop their workload throughout their dwell window. The first lap
+warms caches; every following lap prints a fresh measured summary and starts
+again automatically after an on-screen results carousel. No touch input is
+required or enabled by default. Use a 660-second capture initially
+and extend it if the final summary has not arrived. Slow boards may need extra
+time to finish an in-flight drawer cycle or transition.
+
+## Quick start
+
+1. In `examples/benchmark`, select your board's [build profile](#build) below
+   and run its build command in an exported ESP-IDF environment.
+2. Flash and monitor the same build directory, for example
+   `idf.py -B build_esp32p4 -p PORT flash monitor`. Replace `PORT` with the
+   confirmed device port. The demo starts automatically; no interaction is needed.
+3. Wait for `bench: warm-up lap done, measuring`, then
+   `bench: measurement end`. Read the on-screen result cards or retain the
+   complete serial log. FPS means submitted engine frames, not measured panel refresh.
+4. For repeatable qualification, use [matrix capture](#capture-a-board-matrix)
+   and [log validation/comparison](#compare-logs). Use [soak mode](#saturation-soak)
+   to repeat one case longer, or [simulator previews](#automated-simulator-run)
+   to inspect layouts without hardware.
+
+## Coverage and pressure modes
+
+| Family | Workloads |
+| --- | --- |
+| Primitives and blending | Rectangles, rounded containers, shapes, gradients, six arcs, translucent fills/layers and overlays |
+| Text and scrolling | Labels, full-screen text, scrolling rows, grid album, variable-height message bubbles, three momentum wheels |
+| Media | Nine-image RGB/alpha/QOI grids, runtime scaling, arbitrary/cardinal rotation, wallpaper, four GIF players and sparse animation patches |
+| Controls and navigation | Clock needles, widgets, page flow, stack view, tab/table/keyboard/modal composites, repeated drawer open/close |
+| Motion and composition | Static and template-instance movement, Canvas/GRAM-TE workload, mixed industrial render storm |
+| Capacity ladder | 1 / 8 / 32 / 64 overlapping translucent rectangles, fixed size and alpha, deterministic placement |
+| Verified selection | Dedicated dropdown open, select, read-back and repeat loop |
+| Transitions and gestures | Four slide directions, cross-fade, fade-through-black, drag commit/cancel/flick/fade |
+
+All 29 authored widget types in GSPC's registry are present at every supported
+resolution. Presence alone does not prove every interaction or backend: see
+the [coverage matrix and boundaries](COVERAGE.md) for the actual drivers and
+checks. The stable case table is [`main/bench_cases.inc`](main/bench_cases.inc).
+
+The visual language combines native navy/cyan/amber geometry, generated
+industrial artwork, transparent machinery overlays and a looping radar
+animation. Case headers identify the workload. Results show three cards on
+small displays, six in two columns on wide displays, or six rows on the tall
+480×800 display. Each page lasts three seconds; wall FPS is prominent and
+render/submit milliseconds have separate lines. Results
+display time is excluded from the next measurement. There is no live HUD
+redrawing inside a measured case.
+
+The default `GSP_BENCH_FULL_REPAINT=ON` stresses **every ordinary page** by
+requesting a subtle full-screen background color change every 1 ms, alongside
+its own workload. Transitions instead repeat their real transition/gesture
+pipeline. The timer period is a requested service cadence, not a promised
+update rate or a frame-rate limit: slow rendering delays callbacks, and the
+engine may coalesce updates. The pressure and region lines report what
+actually happened.
+
+Use `-D GSP_BENCH_FULL_REPAINT=OFF` for a separate native-damage run. It keeps
+the same scenes and their normal workload drivers but removes the forced
+background repaint, allowing dirty-region and sparse-animation behavior
+to be observed. Benchmark timers remain active: this is not an idle-power
+test. Full-repaint runs measure sustained composition pressure;
+native runs measure the authored update patterns. Do not combine their scores
+or describe full repaint as evidence of dirty-region efficiency.
+
+## Native C UI backend
+
+`pc/` directly compiles the already-separated `main/bench_workload.c` with
+[sim_bridge](../../tools/sim_bridge/README.md). No copy or rewrite of that
+business source is needed. From an application's root with ESP-GSP installed
+under `managed_components`:
+
+```sh
+python -m pip install -U esp-gsp-tools
+python managed_components/espressif__esp-gsp/tools/sim_bridge/run.py \
+  --project managed_components/espressif__esp-gsp/examples/benchmark/pc
+```
+
+The runner automatically selects the component's GSPC and simulator versions.
+Use `GSPC_EXECUTABLE` / `GSP_SIM_EXECUTABLE` for executable overrides.
+The PC adapter selects the RGB565 profile and drives the shared tween timer.
+This is a UI logic reuse example, not the full benchmark harness: board
+setup, automatic page cycling, Canvas/media producers, dynamic list
+fixtures and performance measurements are not ported. Backend mode disables
+sim_host's automatic deployable list binders. Use the hardware workflow
+below for benchmark results.
 
 ## Metrics
 
-- `wall throughput`: frames divided by total elapsed time.
-- `active throughput`: frames divided by renderer/presenter busy time.
-- `rndr ms`: CPU rendering time.
-- `subm ms`: cache synchronization and panel submission time.
-- `svc us`: average UI service time per render-task iteration.
-- `cmd/s`: applied update rate.
+- `wall throughput`: engine frames divided by measured case wall time; not an
+  optical measurement of panel refresh rate.
+- `active throughput`: frames divided by render-path busy time; excludes UI
+  service and idle time, so it is neither CPU utilization nor achieved FPS.
+- `rndr ms`: average rasterization time per frame.
+- `subm ms`: average cache synchronization and panel submission time per frame.
+- `svc us`: average queued-command/input service time per render-task iteration;
+  excludes application timer callbacks and is not total UI processing time.
+- `qcmd/s`: commands drained from the queue per measured second. Calls made
+  inline on the render task are not counted. The raw log field remains
+  `commands` for compatibility; this is not total applied update rate.
 
 The log also records exact frame and microsecond counters, transition paths,
 Canvas publication, media decode backends, and a target configuration
-fingerprint. A valid run must complete the measured lap without panic,
-watchdog, assertion, or display-underrun logs.
+fingerprint, including the embedded bundle CRC. A valid run must complete the
+measured lap through `bench: measurement end` without panic, watchdog,
+assertion, display underrun, unexpected scene changes or physical-input logs.
+
+Aggregates divide summed frame counts by summed measured times; they are not
+averages of page FPS. Per-page counters are captured before printing. Media
+and Canvas deltas reset for each measured lap; explicitly labeled lifetime
+peaks remain lifetime values. Sampled heap deltas are not exact allocation
+high-water marks. Console output, warm-up and inter-page setup are not part of
+the summed page duration.
+
+Each `pressure[...]` line separates callback `ticks`, update `requests`,
+`accepted`, queue-timeout `rejected`, and unexpected `errors`. Accepted requests
+are not rendered frames or necessarily queued commands. These callbacks run
+on the render task and normally dispatch inline; this is render saturation,
+not a cross-task queue-admission stress test. `regions[...]` records the normal
+region planner's output pixels and full-region promotion counts, not panel-bus
+traffic. Snapshot composition can submit frames without running that planner;
+use frame/transition counters for those paths. A refused command must never
+inflate throughput.
+
+The `render storm` page is the saturation workload. Every 4 ms it attempts
+nine updates: four translated alpha-image composites, four meters, and one
+shared color update. Its result reports attempted `commands` separately from
+queue-timeout `rejected` commands and unexpected `errors` (which invalidate
+the run). Rejection counts must not inflate throughput; use the page's
+measured frame, render and submit counters when comparing targets.
+
+The capacity ladder changes only the number of alpha-128 rectangles. Object
+size and the first N positions remain identical across tiers at one resolution;
+the `capacity[...]` line records count, box size and alpha. All tiers include
+the same header/background overhead, so these are composition workloads, not
+isolated blend-kernel timings. Geometry scales with the logical resolution.
+
+The dropdown case repeatedly opens the menu, selects the next of three output
+pipeline labels, and checks the selected index. These labels are demo choices;
+they do not reconfigure the display hardware. A valid result requires positive
+verified selections and zero errors.
+
+The composites page gives each tab a twelve-second window and drives the
+keyboard at a 4 ms event cadence with a 255-byte edit buffer. Protocol 16 and
+later require the final verified text to exceed the 63-byte command inline
+threshold. The longer window ensures that even the slowest supported target
+can reach that boundary; the parser rejects runs that do not. During long
+soaks the keyboard alternates typing and deletion within its bounded buffer,
+so it keeps doing useful work without intentionally overflowing it.
+
+The `image rotation` page updates two 96 x 64 opaque images every 16 ms. One
+uses a continuously changing arbitrary angle; the other cycles through
+0/90/180/-90 degrees to cover the cardinal acceleration route. The workload
+result must report two successful commands per update. Its page row therefore
+represents the combined end-to-end cost of one arbitrary and one cardinal
+rotation, not an isolated kernel microbenchmark.
+
+The image-scale case changes display scale on four images. With a decoded-image
+cache it also publishes an 80×60 dynamic QOI; without one all four retain
+their compiled RAW sources, because encoded region decoding does not support
+runtime scaling. Cache-free dynamic QOI publication is exercised separately by
+`P_QOI`. The startup fingerprint records `image_cache` and `scale_source`;
+unsupported requests or failed publication are not successful workload coverage.
+
+The `anim sparse` page keeps an orientation-readable grid fixed while two
+distant 8 x 8 markers alternate color every 50 ms. It exercises animation
+multi-patch compilation and persistent-frame composition; background changes,
+trails, or missing markers indicate a visual failure.
+Use native-damage mode when evaluating its partial-update efficiency; default
+full-repaint mode intentionally adds full-screen composition pressure.
 
 Cross-fade and fade-through-black are visually successful only when both
 `no_visual` and `path_failures` are zero. When snapshot memory is unavailable,
 cross-fade safely degrades to a direct, zero-snapshot fade-through-black;
 `direct` records that route. A direct switch with `no_visual=1` completes
 navigation safely but is not a rendered transition result.
+Transition latency mean and maximum cover all completed transitions in that
+page window. `p50`/`p95` use the latest at most 16 completions, explicitly
+identified by `latency_window=latest samples=N`; they are not whole-soak
+percentiles when more than 16 transitions complete.
 
 ## Build
 
 Export the matching ESP-IDF environment and build with the appropriate
 configuration fragment. Separate build directories prevent retained target
 settings from affecting another board.
+Run target builds sequentially: ESP-IDF's component manager shares the
+example's `managed_components` directory even with separate build directories.
 
 ```sh
 # ESP32-P4, MIPI-DSI, RGB565
@@ -95,6 +255,37 @@ default remains the generated component-directory path. The startup log prints
 `bench: bundle directory=deployable` or `generated` so captures identify the
 path under test.
 
+### Saturation soak
+
+The default `full` run remains the reproducible all-case benchmark. To keep one
+case under sustained load, add its stable ID and a per-cycle measurement
+window to the normal build command:
+
+```sh
+-D GSP_BENCH_SOAK_CASE=P_STORM \
+-D GSP_BENCH_SOAK_DWELL_MS=60000
+```
+
+The first 60-second cycle warms caches. Every following cycle prints a fresh
+measured summary, displays its result, and continues. Other useful IDs include
+`P_ROTATE`, `P_IMGRGB`, `P_IMGARGB`, `P_QOI`, `P_COMPOSITES`, `P_GRID`, and
+`P_DRAWER`. The canonical ID, category, display name, and default dwell table
+is [`main/bench_cases.inc`](main/bench_cases.inc); an unknown ID fails at
+startup instead of silently running the wrong workload.
+Set `GSP_BENCH_SOAK_CASE` back to an empty string to restore all-case playback.
+Use at least 36000 ms for `P_COMPOSITES` to exercise all three tabs; the default
+60000 ms soak window covers them and repeats the cycle. Drawer and transition
+windows finish their in-flight operation before reporting.
+
+### Manual input diagnostics
+
+`GSP_BENCH_TOUCH_INPUT=OFF` isolates automatic navigation from real fingers.
+Use `-D GSP_BENCH_TOUCH_INPUT=ON` only for diagnostics; the first physical
+pointer event invalidates the capture. Synthetic dropdown, drawer, keyboard
+and gesture workloads still run with physical input disabled. This option
+does not change the framework's swipe thresholds. Use an interactive example
+to assess manual drag feel without the benchmark scheduler changing scenes.
+
 ## Compare logs
 
 Use the same target, panel configuration, scene bundle, and ESP-IDF revision
@@ -107,12 +298,21 @@ python3 tools/compare_logs.py \
   --details
 ```
 
-The parser validates the measured summary and rejects incompatible or fatal
-logs before reporting differences.
+The parser validates raw-counter arithmetic, workload checks and per-case
+pressure evidence, and rejects incompatible or fatal logs before reporting
+differences. Protocol 19 changes scene content and measurement isolation: do not
+compare its scores against older protocols as a renderer improvement. Keep
+pressure mode, soak selection/window and the entire configuration fingerprint
+identical for A/B testing. Hardware acceleration and fallback routes must be
+read from the log, not inferred from a chip name.
 
 ## Assets
 
 `scenes/gen_scenes.py --check` verifies the benchmark scenes and media assets.
+The industrial saturation artwork is checked in, has no runtime network
+dependency, and is validated for exact dimensions and alpha coverage.
+See [asset provenance and generation prompts](scenes/ASSETS.md). Replacing
+artwork changes the workload and invalidates comparisons to the old bundle.
 
 ## Automated simulator run
 
@@ -131,7 +331,21 @@ set `GSPC_EXECUTABLE` to a manually downloaded GSPC release.
 python3 tools/run_sim_benchmark.py
 
 # All RGB565 resolutions
-python3 tools/run_sim_benchmark.py --all --frames 300
+python3 tools/run_sim_benchmark.py --all
+
+# Save every authored page at every resolution for visual review
+python3 tools/run_sim_benchmark.py --all --gallery --page-frames 90
+
+# Small-screen results and keyboard layout (synthetic preview, not scores)
+python3 tools/run_sim_benchmark.py --size 240 --case RESULTS_OVERLAY --frames 3
+python3 tools/run_sim_benchmark.py --size 240 --case P_COMPOSITES --state keyboard
+python3 tools/run_sim_benchmark.py --size 240 --case P_DROPDOWN --state dropdown
+
+# Native RGB888 panel geometry
+python3 tools/run_sim_benchmark.py --size 800 --rgb888 --gallery
+
+# Inspect or repeatedly render only the saturation scene
+python3 tools/run_sim_benchmark.py --case P_STORM --frames 600 --window
 ```
 
 Add `--window` to watch the pages change in SDL while retaining automatic
@@ -140,6 +354,13 @@ default; use `--page-frames 120` to keep each page on screen longer.
 
 Each case runs headless, requires one committed frame per requested loop, and
 saves its log and final PPM under `build/gsp-sim-benchmark/<width>/`.
+The runner covers authored page layers, not the board application's complete
+49-case scheduler or hardware-specific interaction checks. The host supplies
+separate visual grid/message fixtures and an open drawer; those are not the
+board application's pressure drivers. `--state keyboard` and `--state modal`
+inspect composite states. `--case` hides all
+other pages. Check small and portrait resolutions visually as well as checking
+the host exit status.
 
 ## Capture a board matrix
 
@@ -149,6 +370,18 @@ environment, then provide one `--device LABEL PORT LOG` option per board:
 
 ```sh
 python3 tools/capture_matrix.py \
-  --device P4-MIPI /dev/ttyACM0 p4-mipi.log \
-  --device S3-QSPI /dev/ttyACM1 s3-qspi.log
+  --seconds 660 \
+  --device board-a PORT_A board-a.log \
+  --device board-b PORT_B board-b.log
 ```
+
+Replace `PORT_A` and `PORT_B` with confirmed serial devices in your environment;
+labels are user-defined and any number of devices can be supplied. The example
+does not associate serial port numbers with chips, display interfaces or build
+profiles. Keep local device mappings outside project configuration.
+Confirm ports before flashing or resetting and close other monitors first.
+Keep the complete boot/configuration prefix and measured summary.
+Capture refuses to overwrite an existing log and validates each result before
+returning success. A timeout or incomplete summary is not a passing run; extend
+the duration and capture to new paths. Preserve ESP-IDF revision, source commit,
+build configuration and logs alongside any published result.

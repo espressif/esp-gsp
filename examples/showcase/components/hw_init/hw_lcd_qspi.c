@@ -379,7 +379,7 @@ esp_err_t hw_lcd_init(
     }
 
     esp_lcd_panel_io_spi_config_t io_config = CO5300_PANEL_IO_QSPI_CONFIG(
-        PIN_CO5300_CS, NULL, NULL);
+                PIN_CO5300_CS, NULL, NULL);
     io_config.flags.psram_dma_direct = true;
     esp_lcd_panel_io_handle_t io;
     ESP_RETURN_ON_ERROR(esp_lcd_new_panel_io_spi(
@@ -390,7 +390,7 @@ esp_err_t hw_lcd_init(
     co5300_vendor_config_t vendor_config = {
         .init_cmds = co5300_qspi_init,
         .init_cmds_size = sizeof(co5300_qspi_init) /
-                          sizeof(co5300_qspi_init[0]),
+        sizeof(co5300_qspi_init[0]),
         .flags = {
             .use_qspi_interface = true,
         },

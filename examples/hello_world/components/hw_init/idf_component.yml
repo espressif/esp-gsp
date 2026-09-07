@@ -2,6 +2,9 @@ version: "0.1.0"
 description: Shared LCD/touch bring-up for the esp-gsp examples.
 dependencies:
   idf: ">=6.0"
+  espressif/esp_display_present:
+    version: "^1.0.2"
+    public: true
   espressif/esp_lcd_touch:
     version: "^1"
     public: true

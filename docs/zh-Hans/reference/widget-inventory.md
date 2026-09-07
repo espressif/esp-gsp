@@ -15,34 +15,34 @@
 
 | 控件 | 类型 | Facet | 字段数 | 输入事件 |
 |---|---|---|---:|---|
-| [容器](../components/container.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 58 | 是 |
-| [标签](../components/label.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 58 | 是 |
-| [按钮](../components/button.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `text`, `border`, `image`, `interaction`, `template` | 58 | 是 |
-| [图片](../components/image.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `image`, `text`, `interaction`, `template` | 58 | 是 |
-| [矩形](../components/rect.md) | `widget` | `core`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 49 | 是 |
-| [形状](../components/shape.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `shape`, `interaction`, `template` | 60 | 是 |
-| [进度条](../components/progress.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `interaction`, `template` | 62 | 是 |
-| [图表](../components/chart.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `stroke`, `interaction`, `template` | 61 | 是 |
-| [滑块](../components/slider.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `slider`, `interaction`, `template` | 65 | 是 |
-| [圆弧](../components/arc.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `arc`, `interaction`, `template` | 65 | 是 |
-| [指针](../components/needle.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `needle`, `stroke`, `interaction`, `template` | 61 | 是 |
-| [加载指示器](../components/spinner.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `spinner`, `stroke`, `interaction`, `template` | 60 | 是 |
-| [开关](../components/toggle.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `slider`, `interaction`, `template` | 62 | 是 |
-| [复选框](../components/checkbox.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 59 | 是 |
-| [单选框](../components/radio.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 59 | 是 |
-| [时钟](../components/clock.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 66 | 是 |
-| [页面流](../components/page_flow.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `interaction`, `template` | 70 | 是 |
-| [堆栈视图](../components/stackview.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 64 | 是 |
-| [抽屉](../components/drawer.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 60 | 是 |
-| [图层](../components/layer.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 59 | 是 |
+| [容器](../components/container.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 59 | 是 |
+| [标签](../components/label.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 59 | 是 |
+| [按钮](../components/button.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `text`, `border`, `image`, `interaction`, `template` | 59 | 是 |
+| [图片](../components/image.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `image`, `text`, `interaction`, `template` | 59 | 是 |
+| [矩形](../components/rect.md) | `widget` | `core`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 50 | 是 |
+| [形状](../components/shape.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `shape`, `interaction`, `template` | 61 | 是 |
+| [进度条](../components/progress.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `interaction`, `template` | 63 | 是 |
+| [图表](../components/chart.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `stroke`, `interaction`, `template` | 62 | 是 |
+| [滑块](../components/slider.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `slider`, `interaction`, `template` | 66 | 是 |
+| [圆弧](../components/arc.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `arc`, `interaction`, `template` | 66 | 是 |
+| [指针](../components/needle.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `needle`, `stroke`, `interaction`, `template` | 62 | 是 |
+| [加载指示器](../components/spinner.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `spinner`, `stroke`, `interaction`, `template` | 61 | 是 |
+| [开关](../components/toggle.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `slider`, `interaction`, `template` | 63 | 是 |
+| [复选框](../components/checkbox.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 60 | 是 |
+| [单选框](../components/radio.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 60 | 是 |
+| [时钟](../components/clock.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 67 | 是 |
+| [页面流](../components/page_flow.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `interaction`, `template` | 71 | 是 |
+| [堆栈视图](../components/stackview.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 65 | 是 |
+| [抽屉](../components/drawer.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 61 | 是 |
+| [图层](../components/layer.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 60 | 是 |
 | [选项卡视图](../components/tabview.md) | `composite` | `core` | 25 | 是 |
 | [下拉选择](../components/dropdown.md) | `composite` | `core` | 26 | 是 |
 | [消息框](../components/msgbox.md) | `composite` | `composite_core` | 21 | 是 |
 | [表格](../components/table.md) | `composite` | `core` | 19 | 是 |
 | [键盘](../components/keyboard.md) | `composite` | `core` | 36 | 是 |
-| [列表](../components/list.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `list_data`, `scroll_snapshot`, `interaction`, `template` | 68 | 是 |
-| [滚轮选择器](../components/wheel.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `list_data`, `interaction`, `template` | 67 | 是 |
-| [网格](../components/grid.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `grid_data`, `scroll_snapshot`, `interaction`, `template` | 64 | 是 |
+| [列表](../components/list.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `list_data`, `scroll_snapshot`, `interaction`, `template` | 69 | 是 |
+| [滚轮选择器](../components/wheel.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `list_data`, `interaction`, `template` | 68 | 是 |
+| [网格](../components/grid.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `grid_data`, `scroll_snapshot`, `interaction`, `template` | 65 | 是 |
 | [消息列表](../components/message_list.md) | `composite` | `core`, `visibility`, `row_template`, `message_list` | 31 | 是 |
 
 ## 按控件列出字段
@@ -94,6 +94,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -157,6 +158,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -220,6 +222,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -275,6 +278,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -337,6 +341,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -400,6 +405,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -465,6 +471,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -532,6 +539,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -598,6 +606,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -668,6 +677,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -738,6 +748,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -804,6 +815,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -869,6 +881,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -936,6 +949,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -1000,6 +1014,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -1064,6 +1079,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -1135,6 +1151,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -1210,6 +1227,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -1279,6 +1297,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -1344,6 +1363,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -1560,6 +1580,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -1633,6 +1654,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -1705,6 +1727,7 @@
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |

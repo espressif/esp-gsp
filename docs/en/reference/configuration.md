@@ -247,19 +247,20 @@ values permitted to bound unavoidable scratch arrays inside the archive.
 The Kconfig help is the authoritative per-symbol reference. The groups below
 show which product trade-off each setting controls.
 
-Defaults target a balanced general-purpose product rather than either the
-smallest possible SRAM footprint or the benchmark's peak workload. Common
-features remain enabled, capacities cover ordinary screens and controls, and
-large galleries or unusually dense scenes opt in to larger pools. In
-particular, the default shared template-instance pool is 16; the showcase and
-benchmark explicitly request 32 and 40 because their simultaneous recycled
-rows and template widgets are intentionally heavier than a typical page.
+Authored capacities default to AUTO: the compiler records demand according to
+the runtime lifetime of each resource. Reusable pools use the maximum per-scene
+demand, while retained List bindings and dynamic-text backing storage are
+summed across the bundle. Operational budgets that content cannot predict,
+such as application timers, cache policy, dirty rectangles and
+application-created widgets, keep balanced configurable defaults. Increasing
+authored scene density therefore needs no benchmark- or application-specific
+framework setting.
 
 | Group | Important symbols | What scales |
 |---|---|---|
 | Resident UI pools | `MAX_SCENES`, `MAX_TIMERS`, `MAX_WIDGETS`, `MAX_ANIMATIONS`, `MAX_LISTS`, `CANVAS_SLOTS`, `MAX_ASSET_ANIMS` | persistent `gsp_ui_core_t` SRAM; exhaustion returns/logs a limit error |
-| List/text pools | `LIST_MAX_SLOTS`, `LIST_TEXT_SLOTS`, `TEXT_SLOTS`, `TEXT_CAPACITY` | visible rows, shaped-text heap, and command queue entry size |
-| Component limits | `COMPONENT_INSTANCES`, `STACK_VIEW_MAX_DEPTH`, `COMPONENT_BATCH_MAX`, `TRANSACTION_UPDATE_CAPACITY`, `COMPONENT_OVERLAY_COMMANDS` | component extension SRAM and render-task transaction scratch |
+| List/text pools | `LIST_MAX_SLOTS`, `LIST_TEXT_SLOTS`, `TEXT_SLOTS`, `TEXT_CAPACITY` | visible rows, shaped-text heap, and the command inline fast path |
+| Component limits | `COMPONENT_INSTANCES`, `STACK_VIEW_MAX_DEPTH`, `COMPONENT_BATCH_MAX`, `TRANSACTION_UPDATE_CAPACITY`, `COMPONENT_OVERLAY_COMMANDS` | authored manager instances and stack depth use AUTO; larger transaction batches use temporary heap |
 | Image/font limits | `DEFAULT_DYNAMIC_IMAGE_SLOTS`, `MAX_DYNAMIC_IMAGE_TARGETS`, `MAX_FONTS_PER_SCENE`, `FREETYPE_CACHE_GLYPHS`, `FREETYPE_GLYPH_MAX_PX` | resource-view arrays, cache metadata and glyph bitmap heap |
 | Renderer scratch | `DIRTY_RECT_CAPACITY`, `RENDER_CLIP_STACK_DEPTH`, `RENDER_TILE_SPAN_CAPACITY` | persistent damage arrays and renderer stack; tile-span overflow falls back to a linear scan |
 | Input | `MAX_TOUCH_POINTS`, `TOUCH_RELEASE_CONFIRM_POLLS` | two-contact build capability and polling-mode release latency; pinch is always compiled in for 0.2.0 |
@@ -278,13 +279,14 @@ Useful SRAM relationships for capacity planning are:
   `MAX_LISTS * LIST_MAX_SLOTS * LIST_TEXT_SLOTS * 386` bytes at the fully
   populated worst case; actual list buffers are allocated on use.
 - The command queue is `QUEUE_DEPTH * sizeof(esp_gsp_cmd_t)`. Increasing
-  `TEXT_CAPACITY` increases every queue entry because text is embedded in the
-  command union.
+  `TEXT_CAPACITY` changes the inline bytes embedded in every entry. Longer
+  text uses temporary framework-owned heap storage, so this is a fast-path
+  tuning constant rather than a logical text limit.
 - `MAX_TOUCH_POINTS` is fixed at the build capability of two in 0.2.0, so a
   prebuilt archive and source build expose the same pinch functionality.
 - `LIST_MAX_SLOTS` applies per List/Grid viewport. For a Grid, required slots
-  are `(visible rows + overscan) * columns`; `MAX_LISTS` is a separate limit
-  on simultaneously bound controls.
+  are `(visible rows + overscan) * columns`; `MAX_LISTS` covers retained
+  bindings across the UI instance because there is currently no unbind API.
 - `INSTANCE_STATES_PER_SLOT` applies to fields within one template, while
   `instance_slots` applies to simultaneously live template copies. They are
   independent multipliers and both must cover the authored control.
@@ -298,11 +300,12 @@ pool or stack multiplier; lower one only after exercising the largest authored
 scene and the relevant control path.
 
 AUTO is limited to capacities that `gspc` can derive from authored content.
-The GSPB requirements member carries exact List, text, image, instance, and
-glyph-run minima. Glyph-run capacity uses the same schema-generated formula in
-Python and C. `MAX_SCENES` remains a normal project capacity with default 8;
-`DIRTY_RECT_CAPACITY` remains a normal capacity with default 32. Old bundles
-without the versioned requirements member are rejected rather than guessed.
+The GSPB requirements member carries exact scene, List, StackView, text, image,
+compiled-animation, instance, per-instance-state and glyph-run minima.
+Glyph-run capacity uses the same schema-generated formula in Python and C.
+`DIRTY_RECT_CAPACITY` remains a normal capacity with default 32 because authored
+content cannot predict per-frame damage fragmentation. Old bundles without the
+versioned requirements member are rejected rather than guessed.
 
 Protocol constants (format offsets, codec ids, driver extension strides,
 `ESP_GSP_IMAGE_REFS_PER_SLOT`, animation handle encoding) are deliberately

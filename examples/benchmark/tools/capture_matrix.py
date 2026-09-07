@@ -19,16 +19,26 @@ def main() -> int:
     parser.add_argument(
         "--device", action="append", nargs=3, required=True,
         metavar=("LABEL", "PORT", "LOG"))
-    parser.add_argument("--seconds", type=float, default=370.0)
+    parser.add_argument("--seconds", type=float, default=660.0)
     parser.add_argument("--baud", type=int, default=115200)
     args = parser.parse_args()
+    if args.seconds <= 0 or args.baud <= 0:
+        parser.error("seconds and baud must be positive")
+    paths = [Path(device[2]).resolve() for device in args.device]
+    ports = [device[1] for device in args.device]
+    if len(set(paths)) != len(paths) or len(set(ports)) != len(ports):
+        parser.error("each port and log path must be unique")
 
     selector = selectors.DefaultSelector()
     streams = []
     try:
         for label, port, log_path in args.device:
             uart = serial.Serial(port, args.baud, timeout=0)
-            output = Path(log_path).open("wb")
+            try:
+                output = Path(log_path).open("xb")
+            except Exception:
+                uart.close()
+                raise
             streams.append((label, uart, output))
             selector.register(uart.fileno(), selectors.EVENT_READ,
                               (label, uart, output))
@@ -60,7 +70,16 @@ def main() -> int:
                 pass
             output.close()
             uart.close()
-    return 0
+    from compare_logs import parse_log
+    valid = True
+    for label, _, log_path in args.device:
+        try:
+            result = parse_log(Path(log_path))
+            print(f"{label}: VALID measured summary, {len(result.pages)} cases")
+        except ValueError as error:
+            print(f"{label}: INVALID: {error}")
+            valid = False
+    return 0 if valid else 1
 
 
 if __name__ == "__main__":

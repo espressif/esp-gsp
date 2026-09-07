@@ -16,11 +16,25 @@ from pathlib import Path
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 VERSION_RE = re.compile(r"app_init: App version:\s+(\S+)")
 CONFIG_RE = re.compile(r"^bench: config\s+(?P<values>.+)$")
+RUN_RE = re.compile(
+    r"^bench: run mode=(?P<mode>[a-z]+)"
+    r"(?: cases=\d+| case=(?P<case>\S+).* dwell_ms=(?P<dwell>\d+))?$"
+)
+PRESSURE_RE = re.compile(
+    r"^bench: pressure\[(?P<name>.+)\] mode=(?P<mode>full|native|transition)"
+    r" period_ms=(?P<period>\d+) ticks=(?P<ticks>\d+)"
+    r" requests=(?P<requests>\d+) accepted=(?P<accepted>\d+)"
+    r" rejected=(?P<rejected>\d+) errors=(?P<errors>\d+)$"
+)
 RESOLVED_CONFIG_RE = re.compile(
     r"(?:^|\s)present_target: target:\s+(?P<values>.+)$"
 )
 INVALID_RUNTIME_RE = re.compile(
     r"(?:lcd\.rgb: LCD underrun|Guru Meditation Error|"
+    r"Task watchdog got triggered|Interrupt wdt timeout|"
+    r"bench: physical input detected|bench: unexpected scene change|"
+    r"bench: page visibility mismatch|"
+    r"gsp_update: Unknown bind ID|Display render failed:|"
     r"assert failed:|abort\(\) was called|"
     r"gsp_repeater: Repeater slots insufficient|"
     r"gsp_repeater: Repeater window exceeds slots|"
@@ -65,7 +79,8 @@ TRANSITION_RE = re.compile(
     r"\s+max=(?P<maximum>\d+)us"
     r"\s+snapshot=(?P<snapshot>\d+)\s+direct=(?P<direct>\d+)"
     r"\s+inplace=(?P<inplace>\d+)\s+streamed=(?P<streamed>\d+)"
-    r"\s+path_failures=(?P<path_failures>\d+)$"
+    r"\s+path_failures=(?P<path_failures>\d+)"
+    r"(?: latency_window=latest samples=(?P<samples>\d+))?$"
 )
 DRAWER_RE = re.compile(
     r"^bench: drawer opens=(?P<opens>\d+)"
@@ -85,18 +100,37 @@ ERROR_COUNTER_RE = re.compile(
     r"clock .* updates=\d+ commands=\d+)"
     r".*errors=(?P<errors>\d+)"
 )
+ROTATION_RESULT_RE = re.compile(
+    r"^bench: image rotation updates=(?P<updates>\d+)"
+    r"\s+commands=(?P<commands>\d+)\s+errors=(?P<errors>\d+)$"
+)
+STORM_RESULT_RE = re.compile(
+    r"^bench: storm period_ms=(?P<period>\d+)"
+    r"\s+target_hz=(?P<hz>\d+\.\d+)\s+updates=(?P<updates>\d+)"
+    r"\s+commands=(?P<commands>\d+)\s+rejected=(?P<rejected>\d+)"
+    r"(?: errors=(?P<errors>\d+))?$"
+)
 WHEEL_ERROR_RE = re.compile(
     r"^bench: wheel command_errors=(?P<errors>\d+)$"
 )
 KEYBOARD_RE = re.compile(
     r'^bench: keyboard presses=(?P<presses>\d+)'
+    r'(?:\s+completed=(?P<completed>\d+))?'
     r'\s+text_updates=(?P<updates>\d+)\s+backspaces=(?P<backspaces>\d+)'
-    r'\s+final="(?P<final>.*)"$'
+    r'(?:\s+overflows=(?P<overflows>\d+)'
+    r'\s+mismatches=(?P<mismatches>\d+)\s+errors=(?P<errors>\d+)'
+    r'\s+capacity=(?P<capacity>\d+))?'
+    r'\s+final="(?P<final>[^"]*)"'
+    r'(?:\s+expected="(?P<expected>[^"]*)")?$'
 )
 GRID_RE = re.compile(
     r"^bench: grid binds=(?P<binds>\d+)"
     r"\s+drags=(?P<drags>\d+)\s+errors=(?P<errors>\d+)$"
 )
+CAPACITY_RE = re.compile(
+    r"^bench: capacity\[(?P<name>.+)\] objects=(?P<objects>\d+)"
+    r" box=(?P<w>\d+)x(?P<h>\d+) alpha=(?P<alpha>\d+)$")
+DROPDOWN_RE = re.compile(r"^bench: dropdown selections=(\d+) errors=(\d+)$")
 
 
 @dataclasses.dataclass(frozen=True)
@@ -138,6 +172,7 @@ class Transition:
     inplace: int
     streamed: int
     path_failures: int
+    latency_samples: int | None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -197,10 +232,30 @@ def parse_log(path: Path) -> Run:
     raw_busy_us: int | None = None
     config_values: dict[str, str] = {}
     drawer_result: tuple[int, int, int] | None = None
-    keyboard_result: tuple[int, int, int, str] | None = None
+    keyboard_result: tuple[
+        int, int | None, int, int, int | None, int | None,
+        int | None, int | None, str, str | None,
+    ] | None = None
     grid_result: tuple[int, int, int] | None = None
+    rotation_result: tuple[int, int] | None = None
+    storm_result: tuple[int, int, int, int | None] | None = None
     raw_pages: dict[str, RawPage] = {}
+    pressure_results = {}
+    capacity_results = {}
+    dropdown_result = None
     for line in transition_text.splitlines():
+        match = CAPACITY_RE.match(line)
+        if match:
+            capacity_results[match["name"]] = match.groupdict()
+            continue
+        match = DROPDOWN_RE.match(line)
+        if match:
+            dropdown_result = tuple(map(int, match.groups()))
+            continue
+        match = PRESSURE_RE.match(line)
+        if match:
+            pressure_results[match["name"]] = match.groupdict()
+            continue
         match = DETAIL_RE.match(line)
         if match:
             values = match.groupdict()
@@ -213,6 +268,24 @@ def parse_log(path: Path) -> Run:
                 service_steps=int(values["steps"]),
                 service_us=int(values["service"]),
                 commands=int(values["commands"]),
+            )
+            continue
+        match = ROTATION_RESULT_RE.match(line)
+        if match:
+            if int(match.group("errors")) != 0:
+                raise ValueError(
+                    f"{path}: benchmark workload reported command errors")
+            rotation_result = (
+                int(match.group("updates")), int(match.group("commands")))
+            continue
+        match = STORM_RESULT_RE.match(line)
+        if match:
+            storm_result = (
+                int(match.group("updates")),
+                int(match.group("commands")),
+                int(match.group("rejected")),
+                int(match.group("errors"))
+                    if match.group("errors") is not None else None,
             )
             continue
         match = ERROR_COUNTER_RE.match(line) or WHEEL_ERROR_RE.match(line)
@@ -237,6 +310,8 @@ def parse_log(path: Path) -> Run:
                 inplace=int(values["inplace"]),
                 streamed=int(values["streamed"]),
                 path_failures=int(values["path_failures"]),
+                latency_samples=int(values["samples"])
+                    if values["samples"] is not None else None,
             )
             continue
         match = DRAWER_RE.match(line)
@@ -251,9 +326,20 @@ def parse_log(path: Path) -> Run:
         if match:
             keyboard_result = (
                 int(match.group("presses")),
+                int(match.group("completed"))
+                    if match.group("completed") is not None else None,
                 int(match.group("updates")),
                 int(match.group("backspaces")),
+                int(match.group("overflows"))
+                    if match.group("overflows") is not None else None,
+                int(match.group("mismatches"))
+                    if match.group("mismatches") is not None else None,
+                int(match.group("errors"))
+                    if match.group("errors") is not None else None,
+                int(match.group("capacity"))
+                    if match.group("capacity") is not None else None,
                 match.group("final"),
+                match.group("expected"),
             )
             continue
         match = GRID_RE.match(line)
@@ -263,7 +349,18 @@ def parse_log(path: Path) -> Run:
                 int(match.group("drags")),
                 int(match.group("errors")),
             )
+    run_mode = "full"
     for line in text.splitlines():
+        match = RUN_RE.match(line)
+        if match:
+            run_mode = match.group("mode")
+            if run_mode != "full":
+                config_values["run_mode"] = run_mode
+                if match.group("case") is not None:
+                    config_values["run_case"] = match.group("case")
+                if match.group("dwell") is not None:
+                    config_values["run_dwell_ms"] = match.group("dwell")
+            continue
         match = CONFIG_RE.match(line)
         if match:
             for item in match.group("values").split():
@@ -323,7 +420,94 @@ def parse_log(path: Path) -> Run:
         protocol = int(config_map.get("protocol", 0))
     except ValueError:
         protocol = 0
+    if protocol >= 18:
+        manifest = Path(__file__).resolve().parents[1] / "main/bench_cases.inc"
+        cases = dict(re.findall(
+            r'^BENCH_CASE\((\w+),\s*\w+,\s*"([^"]+)"',
+            manifest.read_text(encoding="utf-8"), re.MULTILINE))
+        if protocol == 18:
+            cases = {key: value for key, value in cases.items()
+                     if not key.startswith("P_LOAD") and key != "P_DROPDOWN"}
+        if run_mode == "full":
+            expected_pages = set(cases.values())
+        elif run_mode == "soak" and config_map.get("run_case") in cases:
+            expected_pages = {cases[config_map["run_case"]]}
+        else:
+            raise ValueError(f"{path}: invalid benchmark case selection")
+        if set(pages) != expected_pages:
+            raise ValueError(f"{path}: incomplete or unexpected case coverage")
+        if any(page.frames == 0 for page in raw_pages.values()):
+            raise ValueError(f"{path}: case produced no rendered frames")
+        if set(pressure_results) != set(pages):
+            raise ValueError(f"{path}: missing per-case pressure evidence")
+        if config_map.get("pressure") not in {"full", "native"}:
+            raise ValueError(f"{path}: missing pressure configuration")
+        for name, result in pressure_results.items():
+            ticks, requests, accepted, rejected, errors = (
+                int(result[key]) for key in
+                ("ticks", "requests", "accepted", "rejected", "errors"))
+            if ticks == 0 or errors or requests != accepted + rejected:
+                raise ValueError(f"{path}: invalid pressure accounting on {name!r}")
+            expected_mode = "transition" if name in transitions else config_map["pressure"]
+            if result["mode"] != expected_mode or \
+                    result["period"] != config_map.get("pressure_ms"):
+                raise ValueError(f"{path}: pressure mode mismatch on {name!r}")
+            if result["mode"] == "full":
+                if requests != ticks or accepted == 0:
+                    raise ValueError(f"{path}: missing repaint load on {name!r}")
+            elif requests:
+                raise ValueError(f"{path}: unexpected repaint load on {name!r}")
+    if protocol >= 19:
+        if "bench: measurement end" not in summary:
+            raise ValueError(f"{path}: incomplete measurement trailer")
+        if config_map.get("queue_metric") != "drained" or \
+                config_map.get("hud") != "results-only" or \
+                config_map.get("touch") not in {"disabled", "diagnostic"} or \
+                not re.fullmatch(r"[0-9a-fA-F]{8}", config_map.get("bundle_crc", "")):
+            raise ValueError(f"{path}: missing measurement isolation configuration")
+        geometry = re.fullmatch(r"(\d+)x(\d+)", config_map.get("logical", ""))
+        for count in (1, 8, 32, 64):
+            name = f"blend load x{count}"
+            if name in pages:
+                result = capacity_results.get(name)
+                if result is None or int(result["objects"]) != count or \
+                        int(result["alpha"]) != 128 or \
+                        int(result["w"]) == 0 or int(result["h"]) == 0:
+                    raise ValueError(f"{path}: invalid capacity workload on {name!r}")
+                if geometry is None:
+                    raise ValueError(f"{path}: missing capacity display geometry")
+                width, height = map(int, geometry.groups())
+                expected_box = (width // 4, max(20, (height - max(50, height // 5) - 20) // 3))
+                if (int(result["w"]), int(result["h"])) != expected_box:
+                    raise ValueError(f"{path}: inconsistent capacity geometry on {name!r}")
+        if "dropdown select" in pages and (dropdown_result is None or
+                dropdown_result[0] == 0 or dropdown_result[1] != 0):
+            raise ValueError(f"{path}: invalid dropdown interaction")
+        if "drawer" in pages and drawer_result is None:
+            raise ValueError(f"{path}: missing drawer interaction result")
+        for prefix in ("bench: codecs ", "bench: dynamic image "):
+            if not any(line.startswith(prefix) for line in summary.splitlines()):
+                raise ValueError(f"{path}: missing media measurement trailer")
+        for line in summary.splitlines():
+            if line.startswith(("bench: codecs ", "bench: dynamic image ")):
+                failure = re.search(r" failed=(\d+)", line)
+                if failure is None or int(failure[1]) != 0:
+                    raise ValueError(f"{path}: media workload failure")
+        for name, result in transitions.items():
+            if result.path_failures or (name in {"cross fade", "fade through black"}
+                                       and result.no_visual):
+                raise ValueError(f"{path}: non-rendered transition on {name!r}")
+    if protocol >= 14 and "image rotation" in pages:
+        if rotation_result is None:
+            raise ValueError(f"{path}: missing image rotation workload result")
+        updates, commands = rotation_result
+        if updates == 0 or commands != updates * 2:
+            raise ValueError(
+                f"{path}: invalid image rotation workload result"
+                f" (updates={updates}, commands={commands})")
     for name, transition in transitions.items():
+        if protocol >= 18 and transition.latency_samples != min(transition.count, 16):
+            raise ValueError(f"{path}: invalid transition latency window on {name!r}")
         if transition.count == 0 or transition.errors != 0:
             raise ValueError(
                 f"{path}: invalid transition sample {name!r}"
@@ -353,20 +537,61 @@ def parse_log(path: Path) -> Run:
                 transition.no_visual != expected_no_visual:
             raise ValueError(
                 f"{path}: unexpected no-visual count on {name!r}")
-    if drawer_result is not None and drawer_result != (3, 3, 0):
-        raise ValueError(
-            f"{path}: invalid drawer cycle"
-            f" (opens={drawer_result[0]}, closes={drawer_result[1]},"
-            f" errors={drawer_result[2]})")
+    if drawer_result is not None:
+        valid_drawer = drawer_result == (3, 3, 0)
+        if run_mode == "soak" or protocol >= 18:
+            valid_drawer = drawer_result[0] > 0 and \
+                drawer_result[0] == drawer_result[1] and \
+                drawer_result[2] == 0
+        if not valid_drawer:
+            raise ValueError(
+                f"{path}: invalid drawer cycle"
+                f" (opens={drawer_result[0]}, closes={drawer_result[1]},"
+                f" errors={drawer_result[2]})")
+    if protocol >= 17 and "render storm" in pages:
+        if storm_result is None:
+            raise ValueError(f"{path}: missing render storm workload result")
+        updates, commands, rejected, errors = storm_result
+        if (protocol >= 18 and errors != 0) or errors or \
+                updates == 0 or commands != updates * 9 or rejected >= commands:
+            raise ValueError(
+                f"{path}: invalid render storm workload result"
+                f" (updates={updates}, commands={commands},"
+                f" rejected={rejected})")
     if "composites" in pages:
         if keyboard_result is None:
             raise ValueError(f"{path}: missing keyboard interaction result")
-        presses, updates, backspaces, final_text = keyboard_result
+        presses, completed, updates, backspaces, overflows, mismatches, \
+            keyboard_errors, capacity, final_text, expected = keyboard_result
         if presses == 0 or updates == 0 or backspaces == 0 or not final_text:
             raise ValueError(
                 f"{path}: invalid keyboard interaction"
                 f" (presses={presses}, updates={updates},"
                 f" backspaces={backspaces}, final={final_text!r})")
+        if protocol >= 15:
+            if None in {
+                    completed, overflows, mismatches, keyboard_errors,
+                    capacity, expected,
+            }:
+                raise ValueError(
+                    f"{path}: incomplete keyboard correctness result")
+            if completed != presses or updates != completed or \
+                    overflows != 0 or mismatches != 0 or \
+                    keyboard_errors != 0 or final_text != expected or \
+                    capacity is None or len(final_text.encode()) > capacity:
+                raise ValueError(
+                    f"{path}: invalid keyboard correctness"
+                    f" (presses={presses}, completed={completed},"
+                    f" updates={updates}, overflows={overflows},"
+                    f" mismatches={mismatches}, errors={keyboard_errors},"
+                    f" capacity={capacity}, final={final_text!r},"
+                    f" expected={expected!r})")
+            if protocol >= 16 and (capacity <= 63 or
+                                   len(final_text.encode()) <= 63):
+                raise ValueError(
+                    f"{path}: keyboard long-text path was not exercised"
+                    f" (capacity={capacity}, bytes="
+                    f"{len(final_text.encode())})")
     if "grid album" in pages:
         if grid_result is None:
             raise ValueError(f"{path}: missing grid interaction result")

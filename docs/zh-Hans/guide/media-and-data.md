@@ -109,6 +109,20 @@ Slot 数量按同时可见内容、Overscan 和并发控件计算，而不是按
 刷新数据时通知框架，不重建场景结构。Row 发布运行在框架回调上下文，只发布已准备好
 的数据；存储、网络和慢速解码交给应用任务。
 
+将 `esp_gsp_message_source_t` 清零初始化，并设置 `struct_size`。默认
+`flags = 0` 保留文本 hash 校验，即使漏更新 revision，也能检测文本变化。
+不含 `flags` 字段的旧结构继续使用这一行为。
+
+能可靠维护版本的数据源可以设置
+`flags = ESP_GSP_MESSAGE_SOURCE_TRUST_REVISION`。当 `id`/`revision` 不变时，
+框架直接复用文字测量结果，不再扫描该条文本。ID 应标识消息本身，而不是数组索引；
+前插和重排时保持 ID，文本或装饰数据变化时更新 revision。若不同内容复用了同一组
+ID/revision，画面可能保持旧内容。此模式仍读取每条消息的元数据，并非范围更新 API。
+
+一次处理期间应保持数据源一致。可在渲染任务发布变化，或为读取方保留不可变快照；
+revision 标志不负责同步后台生产者。返回的文本须至少保持有效到下一次 `get()`。
+追加、前插通知和失败重试继续遵循 `esp_gsp_message_list_changed()` 的现有语义。
+
 ## 容量与内存规则
 
 - `ESP_GSP_FIELD_CONTEXT_DEFAULT_INSTANCES` 覆盖同时存活的模板实例和复用行。

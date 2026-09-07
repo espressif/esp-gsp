@@ -40,9 +40,9 @@ CONFIG_ESP_GSP_LIST_MAX_SLOTS=40
 CONFIG_ESP_GSP_CONTEXT_DEFAULT_INSTANCES=24
 ```
 
-以上数值只是语法示例，不是推荐值。容量按最大活动场景中的同时存活峰值配置，
-不按数据集总记录数配置。可以使用 `idf.py save-defconfig` 导出非默认选项，但应
-审查完整 Diff，因为它包含整个工程的配置变化。
+以上数值只是语法示例，不是推荐值。可回收容量按最大活动场景中的同时存活峰值配置；
+List 绑定和动态文字底层存储等保留型资源覆盖整个 UI 实例，但仍不按数据集总记录数配置。
+可以使用 `idf.py save-defconfig` 导出非默认选项，但应审查完整 Diff，因为它包含整个工程的配置变化。
 
 ### 目标专用默认值
 
@@ -93,7 +93,7 @@ idf.py -B build_esp32p4 \
 - 旧版、不含版本化需求记录的 Bundle 必须用当前 GSPC 重新构建。
 
 `CONFIG_ESP_GSP_LIST_MAX_SLOTS=0` 表示 AUTO。GSPC 根据视口、行模板和 Grid
-列数计算需求，运行时至少分配该需求，最终不能超过库能力 64。多场景 Bundle
+列数计算需求，运行时至少分配该需求，最终不能超过 16 位行 Slot 表示范围。多场景 Bundle
 取单个活动场景最大值，不把互斥场景相加。
 
 ## Slot 的含义
@@ -103,12 +103,12 @@ Slot 是一类有界运行时存储，不是统一的对象计数。
 | Slot 类型 | 一个 Slot 表示什么 | 配置方式 |
 |---|---|---|
 | 场景状态 | 一个动态 Bind、可见性、变换、属性或动态主题值 | 编译进 GSB，无工程计数项 |
-| `TEXT_SLOTS` | 一条同时塑形的非模板动态文字 | 按活动场景自动推导 |
+| `TEXT_SLOTS` | 一条保留底层 Glyph Run 的非模板动态文字 | 按 Bundle 中所有场景自动推导 |
 | `LIST_MAX_SLOTS` | 一个可见/回收的 List、Wheel 行或 Grid 单元格 | 按视口与模板自动推导 |
 | `LIST_TEXT_SLOTS` | 回收行中的一个动态文字字段 | 按行模板自动推导 |
 | `CONTEXT_DEFAULT_INSTANCES` | 一个同时存活的模板实例 | 按 `max_instances` 和集合需求推导 |
 | `INSTANCE_STATES_PER_SLOT` | 每个模板实例可携带的动态状态数 | 编译器对照工程/库限制检查 |
-| `CONTEXT_DEFAULT_GLYPH_RUNS` | 一条直接文字、集合文字或内部文字的 Glyph Run | 按活动场景推导 |
+| `CONTEXT_DEFAULT_GLYPH_RUNS` | 一条直接文字、集合文字或内部文字的 Glyph Run | 根据保留文字与活动集合需求推导 |
 | `DEFAULT_DYNAMIC_IMAGE_SLOTS` | 一个同时持有运行时图片的逻辑目标 | 命名图片自动推导，应用创建目标需额外配置 |
 | `CANVAS_SLOTS` | 一个同时绑定的外部帧生产者 | 由固件策略配置 |
 | Timer、Widget、Animation | 一个活动运行时对象 | 按应用同时使用峰值配置 |

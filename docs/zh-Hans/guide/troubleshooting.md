@@ -14,14 +14,11 @@ python -m pip install -U esp-gsp-tools
 idf.py build
 ```
 
-IDF 工程根目录下的 `.gspc_version` 优先于组件包中由 CI 生成的标记。如需 override 组件
-版本，可手动创建工程根目录标记。如果没有可用标记，或当前是没有组件包标记的源码树，
+IDF 工程根目录下的 `.gspc_version` 优先于组件包中的编译器版本标记。如需选择其他
+编译器版本，可手动创建工程根目录标记。如果没有可用标记，
 请显式设置 `GSPC_EXECUTABLE`。如果无法使用 `esp-gsp-tools`，请从
 [ESP-GSP Releases](https://github.com/espressif/esp-gsp/releases) 下载匹配主机的资产，
 校验发布校验值，再指定该可执行文件。
-
-直接从 ESP-GSP 源码树构建的例程会使用可用的组件标记；仅供 CI 和源码校验使用的
-`ci/gspc-dev` 仍保留，但不会进入 Managed Component。
 
 CMake 会执行 `gspc compatibility` 兼容性检查并验证生成格式、需求、配置契约和 GMD 运行时 ABI。不要复制
 其他构建的生成文件绕过错误，应使用匹配的工具版本。当前值见[兼容性契约](../reference/compatibility.md)。

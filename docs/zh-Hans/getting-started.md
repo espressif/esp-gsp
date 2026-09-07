@@ -3,6 +3,17 @@
 添加密封运行时组件，指定兼容的 GSPC 可执行文件，在统一目录编写场景，
 并把生成 Bundle 启动到产品显示目标。
 
+如果希望先体验 ESP-GSP，再集成到现有工程，可以直接创建维护示例：
+
+```sh
+idf.py create-project-from-example "espressif/esp-gsp=1.2.0:hello_world"
+cd hello_world
+python -m pip install -U esp-gsp-tools
+```
+
+随后根据示例 `README.md` 选择模拟器预览或匹配的开发板配置。本文其余部分介绍
+如何把 ESP-GSP 集成到现有应用。
+
 ## 开始之前
 
 需要准备：
@@ -13,26 +24,6 @@
 - 已安装 `esp-gsp-tools`，用于根据组件中的 `.gspc_version` 解析并缓存 GSPC；
 - 可选的独立模拟器，用于预览 Deployable Bundle。
 
-> [!NOTE]
-> 托管组件包含密封运行时库、公共头文件、CMake 集成、依赖元数据，以及
-> `hello_world`、`showcase`、`benchmark` 等参考示例，还有完整的
-> `examples/widgets` 控件目录和共用资源。
->
-> 考虑到主机平台差异，ESP Component Registry 中未分发模拟器、GSPC
-> 编译器。你可以通过 `esp-gsp-tools` 下载和调用：
->
-> ```shell
-> # 下载和安装 esp-gsp-tools
-> pip install -U esp-gsp-tool
->
-> # 运行 GSPC
-> python -m gsp.execute --version '<GSPC 版本>' gspc <传递给 GSPC 的参数>
-> # 当指定路径存在 .gspc_version 时，可以省略 --version '<GSPC version>' ，下详
->
-> # 运行模拟器
-> python -m gsp.execute --version '<GSP 主程序版本>' sim <传递给 GSP 模拟器的参数>
-> ```
-
 ## 添加组件
 
 选择一种方式即可，同一构建中不要同时放入两份 ESP-GSP。
@@ -41,14 +32,14 @@
 
 ```sh
 cd /path/to/your/esp-idf-project
-idf.py add-dependency "espressif/esp-gsp^1.1.0"
+idf.py add-dependency "espressif/esp-gsp^1.2.0"
 ```
 
 ### `idf_component.yml`
 
 ```yaml
 dependencies:
-  espressif/esp-gsp: "^1.1.0"
+  espressif/esp-gsp: "^1.2.0"
 ```
 
 ### 本地覆盖
@@ -56,13 +47,13 @@ dependencies:
 ```yaml
 dependencies:
   espressif/esp-gsp:
-    version: "^1.1.0"
+    version: "^1.2.0"
     override_path: /absolute/path/to/esp-gsp
 ```
 
 `override_path` 用于框架开发。正式产品通常应锁定 Registry 版本，使依赖可复现。
 
-## 安装 GSPC 与模拟器
+## 安装 GSPC；按需使用模拟器
 
 安装工具链管理器。CMake 会读取组件中的 `.gspc_version` 并调用
 `esp-gsp-tools`；第一次调用时，管理器会自动下载、校验并缓存对应版本的 GSPC：
@@ -71,11 +62,12 @@ dependencies:
 python -m pip install -U esp-gsp-tools
 ```
 
-组件包提供的默认 `.gspc_version` 为当前 GSP 版本发布时，兼容此 GSP 的版本的最新 GSPC 版本号。
-如需为某个 IDF 工程 override GSPC 版本，可在工程根目录手动创建 `.gspc_version`；工程根目录的标记优先于组件标记：
+组件包中的 `.gspc_version` 记录发布时推荐的兼容 GSPC 版本。如需为某个
+ESP-IDF 工程指定其他版本，可在工程根目录创建 `.gspc_version`；工程标记优先于
+组件标记：
 
 ```sh
-echo '0.2.8' > .gspc_version # 指定使用 0.2.8 版本的 GSPC
+echo '0.3.0' > .gspc_version # 指定使用 0.3.0 版本的 GSPC
 idf.py build
 ```
 
@@ -90,7 +82,8 @@ idf.py build
 > idf.py -D GSPC_EXECUTABLE=/absolute/path/to/gspc build
 > ```
 
-`gsp_add_bundle()` 在 CMake 配置阶段验证 GSPC 兼容性。可执行文件缺失、路径无效，或不在组件支持的 Scene/GSPB 范围内时都会明确失败。
+`gsp_add_bundle()` 在 CMake 配置阶段验证 GSPC 兼容性。可执行文件缺失、路径
+无效，或者 Scene/GSPB 版本超出组件支持范围时，配置会明确失败。
 
 模拟器不是固件构建依赖。当前 `sim` 暂不自动检测版本号，请手动使用
 `idf_component.yml` 中的 `version` 字段（ESP-GSP 组件版本），不要使用
@@ -287,8 +280,10 @@ idf.py build
 ### 烧录与日志
 
 ```sh
-idf.py -p /dev/ttyACM0 flash monitor
+idf.py -p PORT flash monitor
 ```
+
+将 `PORT` 替换为本机实际连接设备的串口；串口编号不对应固定芯片或开发板。
 
 ### 全新配置
 
@@ -324,7 +319,8 @@ python -m gsp.execute --version '<ESP-GSP version>' sim --bundle product.gspb \
 ```
 
 [控件库](components/index.md)为每个控件提供调用同一发布版模拟器的本地命令。
-模拟器通过属于主机证据；最终布局、颜色、撕裂、触控手感和性能仍需目标显示链路验收。
+模拟器结果属于主机侧证据；最终布局、颜色、撕裂、触控手感和性能仍需在目标
+显示链路上验收。
 
 ## 选择正确的配置层
 
@@ -339,10 +335,12 @@ python -m gsp.execute --version '<ESP-GSP version>' sim --bundle product.gspb \
 它们形成单一优先级链，而不是多个互相竞争的配置系统：
 
 ```text
-工程 Kconfig → JSON 推导的 GSPB 需求 → 单实例 Override → 预编译库能力上限
+工程 Kconfig → JSON 推导的 GSPB 需求 → 单实例覆盖 → 预编译库能力上限
 ```
 
-普通场景需求由 JSON 自动推导。应用需要动态创建模板实例时，在 JSON 模板上设置 `max_instances`，GSPC 会把峰值计入 Bundle；只有无法写入场景的实例差异才使用 Override。
+普通场景需求由 JSON 自动推导。应用需要动态创建模板实例时，在 JSON 模板上设置
+`max_instances`，GSPC 会把峰值计入 Bundle；只有无法写入场景的实例差异才使用
+单实例覆盖。
 
 ## 下一步
 

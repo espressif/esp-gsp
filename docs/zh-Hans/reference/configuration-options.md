@@ -6,15 +6,15 @@
 
 | 配置或能力 | 作用 | 默认值 | 类型 / 范围 | 存储 | 预编译组件 | JSON 自适应 |
 |---|---|---:|---|---|---|---|
-| `CONFIG_ESP_GSP_MAX_SCENES` | 运行时同时持有的最大场景数量 | `8` | `int` / `1..32` | `heap` | 可配置 | 否 |
+| `CONFIG_ESP_GSP_MAX_SCENES` | 运行时同时持有的最大场景数量 | `0` | `int` / `0..65534` | `heap` | 可配置 | 是 |
 | `CONFIG_ESP_GSP_MAX_TIMERS` | 应用可同时使用的定时器数量 | `8` | `int` / `1..32` | `heap` | 可配置 | 否 |
 | `CONFIG_ESP_GSP_MAX_WIDGETS` | 同时存活的模板控件实例数量 | `16` | `int` / `1..255` | `heap` | 可配置 | 否 |
 | `CONFIG_ESP_GSP_MAX_ANIMATIONS` | 同时运行的运行时动画数量 | `32` | `int` / `0..128` | `heap` | 可配置 | 否 |
-| `CONFIG_ESP_GSP_MAX_LISTS` | 同时存活的 List/Wheel 组件数量 | `5` | `int` / `1..16` | `heap` | 可配置 | 否 |
-| `CONFIG_ESP_GSP_LIST_MAX_SLOTS` | 每个可见列表视口的行 Slot 数量 | `0` | `int` / `0..64` | `heap` | 可配置 | 是 |
-| `CONFIG_ESP_GSP_LIST_TEXT_SLOTS` | 每个列表模板行的动态文字 Slot 数量 | `0` | `int` / `0..16` | `heap` | 可配置 | 是 |
-| `CONFIG_ESP_GSP_COMPONENT_INSTANCES` | 临时组件实例池容量 | `8` | `int` / `1..32` | `heap` | 可配置 | 否 |
-| `CONFIG_ESP_GSP_STACK_VIEW_MAX_DEPTH` | StackView 最大导航深度 | `8` | `int` / `1..64` | `heap` | 可配置 | 否 |
+| `CONFIG_ESP_GSP_MAX_LISTS` | 每个 UI 实例保留的 List/Wheel 绑定数量 | `0` | `int` / `0..256` | `heap` | 可配置 | 是 |
+| `CONFIG_ESP_GSP_LIST_MAX_SLOTS` | 每个可见列表视口的行 Slot 数量 | `0` | `int` / `0..65535` | `heap` | 可配置 | 是 |
+| `CONFIG_ESP_GSP_LIST_TEXT_SLOTS` | 每个列表模板行的动态文字 Slot 数量 | `0` | `int` / `0..65533` | `heap` | 可配置 | 是 |
+| `CONFIG_ESP_GSP_COMPONENT_INSTANCES` | 运行时组件实例池容量 | `0` | `int` / `0..256` | `heap` | 可配置 | 是 |
+| `CONFIG_ESP_GSP_STACK_VIEW_MAX_DEPTH` | StackView 最大导航深度 | `0` | `int` / `0..64` | `heap` | 可配置 | 是 |
 ## 容量与功能上限 / 渲染器和帧规划
 
 | 配置或能力 | 作用 | 默认值 | 类型 / 范围 | 存储 | 预编译组件 | JSON 自适应 |
@@ -26,9 +26,9 @@
 | 配置或能力 | 作用 | 默认值 | 类型 / 范围 | 存储 | 预编译组件 | JSON 自适应 |
 |---|---|---:|---|---|---|---|
 | `CONFIG_ESP_GSP_CANVAS_SLOTS` | 外部帧接收目标（Canvas）数量 | `2` | `int` / `1..8` | `heap` | 可配置 | 否 |
-| `CONFIG_ESP_GSP_MAX_ASSET_ANIMS` | 每个场景的编译动画 Slot 数量 | `4` | `int` / `1..16` | `heap` | 可配置 | 否 |
-| `CONFIG_ESP_GSP_TEXT_SLOTS` | 默认动态文字塑形 Slot 数量 | `0` | `int` / `0..128` | `heap` | 可配置 | 是 |
-| `CONFIG_ESP_GSP_DEFAULT_DYNAMIC_IMAGE_SLOTS` | 默认同时使用的运行时图片目标数 | `0` | `int` / `0..256` | `heap` | 可配置 | 是 |
+| `CONFIG_ESP_GSP_MAX_ASSET_ANIMS` | 每个场景的编译动画 Slot 数量 | `0` | `int` / `0..255` | `heap` | 可配置 | 是 |
+| `CONFIG_ESP_GSP_TEXT_SLOTS` | 保留的动态文字塑形 Slot 数量 | `0` | `int` / `0..65533` | `heap` | 可配置 | 是 |
+| `CONFIG_ESP_GSP_DEFAULT_DYNAMIC_IMAGE_SLOTS` | 默认同时使用的运行时图片目标数 | `0` | `int` / `0..32767` | `heap` | 可配置 | 是 |
 | `CONFIG_ESP_GSP_FREETYPE_CACHE_GLYPHS` | 默认 FreeType 字形缓存条目数 | `32` | `int` / `1..512` | `heap` | 可配置 | 否 |
 | `CONFIG_ESP_GSP_FREETYPE_GLYPH_MAX_PX` | 默认 FreeType 字形最大宽高 | `40` | `int` / `8..256` | `heap` | 可配置 | 否 |
 ## 工程运行时默认值 / 渲染加速
@@ -50,9 +50,9 @@
 |---|---|---:|---|---|---|---|
 | `CONFIG_ESP_GSP_IMAGE_CACHE_ENTRIES` | 默认解码图片缓存条目数 | `16` | `int` / `0..512` | `heap` | 可配置 | 否 |
 | `CONFIG_ESP_GSP_IMAGE_CACHE_SHORTAGE_RETRIES` | 图片缓存分配不足时的重试次数 | `3` | `int` / `0..16` | `scalar` | 可配置 | 否 |
-| `CONFIG_ESP_GSP_CONTEXT_DEFAULT_GLYPH_RUNS` | 底层 Context 默认 Glyph Run Slot 数量 | `0` | `int` / `0..1024` | `heap` | 可配置 | 是 |
-| `CONFIG_ESP_GSP_CONTEXT_DEFAULT_INSTANCES` | 每场景共享模板实例 Slot 数量 | `0` | `int` / `0..256` | `heap` | 可配置 | 是 |
-| `CONFIG_ESP_GSP_INSTANCE_STATES_PER_SLOT` | 每个模板实例预留的运行时状态数量 | `8` | `int` / `1..64` | `heap` | 可配置 | 否 |
+| `CONFIG_ESP_GSP_CONTEXT_DEFAULT_GLYPH_RUNS` | 底层 Context 默认 Glyph Run Slot 数量 | `0` | `int` / `0..65535` | `heap` | 可配置 | 是 |
+| `CONFIG_ESP_GSP_CONTEXT_DEFAULT_INSTANCES` | 每场景共享模板实例 Slot 数量 | `0` | `int` / `0..65534` | `heap` | 可配置 | 是 |
+| `CONFIG_ESP_GSP_INSTANCE_STATES_PER_SLOT` | 每个模板实例预留的运行时状态数量 | `0` | `int` / `0..65535` | `heap` | 可配置 | 是 |
 | `CONFIG_ESP_GSP_IMAGE_CACHE_AUTO_MIN_BYTES` | 有 PSRAM 时图片缓存自动预算下限 | `65536` | `int` / `0..16777216` | `scalar` | 可配置 | 否 |
 | `CONFIG_ESP_GSP_IMAGE_CACHE_AUTO_MAX_BYTES` | 图片缓存自动预算上限 | `4194304` | `int` / `0..67108864` | `scalar` | 可配置 | 否 |
 | `CONFIG_ESP_GSP_IMAGE_CACHE_HOST_DEFAULT_BYTES` | 非 ESP 主机的图片缓存默认预算 | `2097152` | `int` / `0..67108864` | `scalar` | 可配置 | 否 |
@@ -144,8 +144,8 @@
 | `ESP_GSP_BUILD_CAP_TRANSACTION_UPDATE_CAPACITY` | 输入与组件事务的内部更新容量 | `64` | `int` / `1..64` | `stack` | 固定上限 | 否 |
 | `ESP_GSP_BUILD_CAP_RENDER_CLIP_STACK_DEPTH` | 渲染器最大嵌套裁剪深度 | `128` | `int` / `4..128` | `stack` | 固定上限 | 否 |
 | `ESP_GSP_BUILD_CAP_RENDER_TILE_SPAN_CAPACITY` | Tile Index 快速路径的 Span 容量 | `256` | `int` / `1..256` | `stack` | 固定上限 | 否 |
-| `ESP_GSP_BUILD_CAP_TEXT_CAPACITY` | 单条动态文字支持的最大字符数 | `63` | `int` / `1..1024` | `inline` | 固定上限 | 否 |
-| `ESP_GSP_BUILD_CAP_MAX_DYNAMIC_IMAGE_TARGETS` | 运行时图片目标的库能力上限 | `256` | `int` / `1..256` | `inline` | 固定上限 | 否 |
+| `ESP_GSP_BUILD_CAP_TEXT_CAPACITY` | 动态文字命令的内联字节数 | `63` | `int` / `1..1024` | `inline` | 固定上限 | 否 |
+| `ESP_GSP_BUILD_CAP_MAX_DYNAMIC_IMAGE_TARGETS` | 运行时图片目标的库能力上限 | `32767` | `int` / `1..32767` | `inline` | 固定上限 | 否 |
 | `ESP_GSP_BUILD_CAP_MAX_FONTS_PER_SCENE` | 单个场景引用字体包的数量上限 | `32` | `int` / `1..32` | `inline` | 固定上限 | 否 |
 | `ESP_GSP_BUILD_CAP_ANIM_PATCH_RECTS` | 每个编译动画帧保留的脏块数量上限 | `32` | `int` / `1..32` | `inline` | 固定上限 | 否 |
 | `ESP_GSP_BUILD_CAP_ANIM_REFERENCE_COMMANDS` | 动画可见性引用命令容量 | `32` | `int` / `1..32` | `inline` | 固定上限 | 否 |
@@ -153,4 +153,4 @@
 | `ESP_GSP_BUILD_CAP_SWIPE_KINETICS_SAMPLES` | 页面滑动速度采样容量 | `32` | `int` / `2..32` | `inline` | 固定上限 | 否 |
 | `ESP_GSP_BUILD_CAP_MAX_TOUCH_POINTS` | 每次采样处理的触点数量上限 | `2` | `int` / `1..2` | `inline` | 固定上限 | 否 |
 
-`AUTO` 项的零值表示使用 Bundle 需求或目标默认值；非零值是明确约束。容量应按同时存活峰值配置，不按数据集总量配置。配置层级、Slot 与动态实例的选择方法见[配置模型](../guide/configuration.md)。
+`AUTO` 项的零值表示使用 Bundle 需求或目标默认值；非零值是明确约束。容量按对应资源的运行时生命周期配置：可回收池取同时存活峰值，保留型资源覆盖整个 UI 实例。配置层级、Slot 与动态实例的选择方法见[配置模型](../guide/configuration.md)。

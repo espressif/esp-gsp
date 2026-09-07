@@ -64,7 +64,7 @@ esp_gsp_err_t esp_gsp_flush(esp_gsp_handle_t gsp, uint32_t timeout_ms);
 
 This is a low-frequency synchronization fence for tests, screenshots and
 orderly application state changes. Normal UI updates should remain
-asynchronous. It must not be called from a render-task callback.
+asynchronous. It must not be called from a render- or decode-task callback.
 
 Parameter `timeout_ms`: Maximum total wait, including command queue admission.
 Zero performs a non-blocking check/submit.
@@ -120,7 +120,7 @@ esp_gsp_err_t esp_gsp_set_visible(esp_gsp_handle_t gsp, uint16_t bind, bool visi
 
 ### `esp_gsp_set_text()`
 
-Shapes UTF-8 on the render task; the string is copied (<= 63 bytes after truncation).
+Shapes UTF-8 on the render task. The string is copied before return; short values stay inline in the command and longer values use temporary framework-owned storage.
 
 - **Header:** `include/esp_gsp.h`
 - **Return type:** `esp_gsp_err_t`
@@ -184,15 +184,37 @@ Use the keyboard attach operation.
 esp_gsp_err_t esp_gsp_keyboard_attach(esp_gsp_handle_t gsp, uint16_t action_id, uint16_t text_bind);
 ```
 
+### `esp_gsp_keyboard_attach_ex()`
+
+Extended attachment with an application-selected UTF-8 byte limit. Storage is allocated once during attachment and reused for editing. max_bytes excludes the trailing NUL and may use the available address space; allocation failure is reported as ESP_GSP_ERR_NO_MEM. It is ignored when action_id is ESP_GSP_KEYBOARD_NONE.
+
+- **Header:** `include/esp_gsp.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_keyboard_attach_ex(esp_gsp_handle_t gsp, uint16_t action_id, uint16_t text_bind, size_t max_bytes);
+```
+
 ### `esp_gsp_keyboard_text()`
 
-Copies the attached keyboard's current text (NUL terminated).
+Copies the attached keyboard's current text (NUL terminated). Returns ESP_GSP_ERR_INVALID_SIZE when capacity is too small; in that case out_text still contains a valid UTF-8 prefix.
 
 - **Header:** `include/esp_gsp.h`
 - **Return type:** `esp_gsp_err_t`
 
 ```c
 esp_gsp_err_t esp_gsp_keyboard_text(esp_gsp_handle_t gsp, char *out_text, size_t capacity);
+```
+
+### `esp_gsp_keyboard_text_size()`
+
+Returns the buffer size, including the trailing NUL, required by esp_gsp_keyboard_text().
+
+- **Header:** `include/esp_gsp.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_keyboard_text_size(esp_gsp_handle_t gsp, size_t *out_size);
 ```
 
 ### `esp_gsp_set_cursor()`
@@ -278,7 +300,7 @@ esp_gsp_err_t esp_gsp_component_set_property(esp_gsp_handle_t gsp, gsp_component
 
 ### `esp_gsp_component_set_many()`
 
-Queues up to ESP_GSP_COMPONENT_BATCH_MAX typed updates as one atomic render-task transaction. The array is copied before return and may be stack allocated. Every entry is validated before the batch is queued; repeated component/property pairs are allowed and the last value wins.
+Queues typed updates as one atomic render-task transaction. The array is copied before return and may be stack allocated. Every entry is validated before the batch is queued; repeated component/property pairs are allowed and the last value wins. Large batches use temporary framework-owned heap storage and report ESP_GSP_ERR_NO_MEM if it cannot be allocated.
 
 - **Header:** `include/esp_gsp.h`
 - **Return type:** `esp_gsp_err_t`
@@ -1374,7 +1396,7 @@ esp_gsp_err_t esp_gsp_widget_set_color(esp_gsp_handle_t gsp, esp_gsp_widget_t wi
 
 ### `esp_gsp_widget_set_text()`
 
-Shapes UTF-8 into a TEXT slot (copied, <= 63 bytes).
+Shapes UTF-8 into a TEXT slot; the string is copied before return.
 
 - **Header:** `include/esp_gsp.h`
 - **Return type:** `esp_gsp_err_t`

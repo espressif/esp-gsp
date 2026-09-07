@@ -33,6 +33,7 @@ typedef int esp_gsp_err_t;
 #define ESP_GSP_ERR_NO_MEM 0x101
 #define ESP_GSP_ERR_INVALID_ARG 0x102
 #define ESP_GSP_ERR_INVALID_STATE 0x103
+#define ESP_GSP_ERR_INVALID_SIZE 0x104
 #define ESP_GSP_ERR_NOT_FOUND 0x105
 #define ESP_GSP_ERR_NOT_SUPPORTED 0x106
 #define ESP_GSP_ERR_TIMEOUT 0x107
@@ -48,6 +49,7 @@ typedef esp_gsp_err_t esp_err_t;
 #define ESP_ERR_NO_MEM ESP_GSP_ERR_NO_MEM
 #define ESP_ERR_INVALID_ARG ESP_GSP_ERR_INVALID_ARG
 #define ESP_ERR_INVALID_STATE ESP_GSP_ERR_INVALID_STATE
+#define ESP_ERR_INVALID_SIZE ESP_GSP_ERR_INVALID_SIZE
 #define ESP_ERR_NOT_FOUND ESP_GSP_ERR_NOT_FOUND
 #define ESP_ERR_NOT_SUPPORTED ESP_GSP_ERR_NOT_SUPPORTED
 #define ESP_ERR_TIMEOUT ESP_GSP_ERR_TIMEOUT
@@ -283,7 +285,7 @@ esp_gsp_err_t esp_gsp_stop(esp_gsp_handle_t gsp);
  *
  * This is a low-frequency synchronization fence for tests, screenshots and
  * orderly application state changes. Normal UI updates should remain
- * asynchronous. It must not be called from a render-task callback.
+ * asynchronous. It must not be called from a render- or decode-task callback.
  *
  * @param timeout_ms Maximum total wait, including command queue admission.
  *                   Zero performs a non-blocking check/submit.
@@ -310,8 +312,9 @@ esp_gsp_err_t esp_gsp_set_color(esp_gsp_handle_t gsp, uint16_t bind,
                                 uint32_t color);
 esp_gsp_err_t esp_gsp_set_visible(esp_gsp_handle_t gsp, uint16_t bind,
                                   bool visible);
-/** Shapes UTF-8 on the render task; the string is copied (<= 63 bytes
- *  after truncation). */
+/** Shapes UTF-8 on the render task. The string is copied before return;
+ *  short values stay inline in the command and longer values use temporary
+ *  framework-owned storage. */
 esp_gsp_err_t esp_gsp_set_text(esp_gsp_handle_t gsp, uint16_t bind,
                                const char *utf8);
 
@@ -343,12 +346,26 @@ esp_gsp_err_t esp_gsp_get_toggle(esp_gsp_handle_t gsp, uint16_t bind,
  * ESP_GSP_KEYBOARD_NONE detaches. The buffer starts empty.
  */
 #define ESP_GSP_KEYBOARD_NONE UINT16_MAX
+#define ESP_GSP_KEYBOARD_DEFAULT_MAX_BYTES ESP_GSP_BUILD_CAP_TEXT_CAPACITY
 esp_gsp_err_t esp_gsp_keyboard_attach(esp_gsp_handle_t gsp,
                                       uint16_t action_id,
                                       uint16_t text_bind);
-/** Copies the attached keyboard's current text (NUL terminated). */
+/** Extended attachment with an application-selected UTF-8 byte limit.
+ *  Storage is allocated once during attachment and reused for editing.
+ *  max_bytes excludes the trailing NUL and may use the available address
+ *  space; allocation failure is reported as ESP_GSP_ERR_NO_MEM. It is
+ *  ignored when action_id is ESP_GSP_KEYBOARD_NONE. */
+esp_gsp_err_t esp_gsp_keyboard_attach_ex(esp_gsp_handle_t gsp,
+        uint16_t action_id, uint16_t text_bind, size_t max_bytes);
+/** Copies the attached keyboard's current text (NUL terminated).
+ *  Returns ESP_GSP_ERR_INVALID_SIZE when capacity is too small; in that
+ *  case out_text still contains a valid UTF-8 prefix. */
 esp_gsp_err_t esp_gsp_keyboard_text(esp_gsp_handle_t gsp, char *out_text,
                                     size_t capacity);
+/** Returns the buffer size, including the trailing NUL, required by
+ *  esp_gsp_keyboard_text(). */
+esp_gsp_err_t esp_gsp_keyboard_text_size(esp_gsp_handle_t gsp,
+        size_t *out_size);
 
 /* --- Component API: address properties by the stable GSP_OBJ_KEY_*
  *     keys from <scene>_objects.h. Requires config.directories.
@@ -392,13 +409,15 @@ esp_gsp_err_t esp_gsp_image_set_scale(
     esp_gsp_handle_t gsp, gsp_component_key_t image,
     uint32_t scale_q16);
 
-/** Maximum scalar component updates accepted by one atomic batch. */
+/** Number of component updates kept in stack scratch before the framework
+ *  transparently uses temporary heap storage. */
 #define ESP_GSP_COMPONENT_BATCH_MAX ESP_GSP_BUILD_CAP_COMPONENT_BATCH_MAX
 
-/** Queues up to ESP_GSP_COMPONENT_BATCH_MAX typed updates as one atomic
- *  render-task transaction. The array is copied before return and may be
- *  stack allocated. Every entry is validated before the batch is queued;
- *  repeated component/property pairs are allowed and the last value wins. */
+/** Queues typed updates as one atomic render-task transaction. The array is
+ *  copied before return and may be stack allocated. Every entry is validated
+ *  before the batch is queued; repeated component/property pairs are allowed
+ *  and the last value wins. Large batches use temporary framework-owned heap
+ *  storage and report ESP_GSP_ERR_NO_MEM if it cannot be allocated. */
 esp_gsp_err_t esp_gsp_component_set_many(
     esp_gsp_handle_t gsp,
     const gsp_component_update_t *updates,
@@ -563,7 +582,8 @@ typedef enum {
  * new image was published; GSP_ERR_CANCELLED means a newer request or shutdown
  * superseded it. Keep the callback short and non-blocking. In particular, do
  * not call esp_gsp_stop() from this callback; defer shutdown to the application
- * task.
+ * task. UI submissions from the decode task never wait for queue space and
+ * may return ESP_GSP_ERR_TIMEOUT when the queue is full.
  */
 typedef void (*esp_gsp_image_complete_cb_t)(
     esp_gsp_handle_t gsp, uint16_t bind, gsp_err_t status,
@@ -731,9 +751,9 @@ typedef enum {
     ESP_GSP_MESSAGE_OUTGOING = 1,
 } esp_gsp_message_direction_t;
 
-/** Borrowed message view; text only needs to remain valid during get().
- * Keep id stable and increment revision when content changes. The framework
- * also checks a text hash, so stale revision values remain functionally safe. */
+/** Borrowed message view; text must remain valid until the next get() call.
+ * Keep id stable and change revision when text or decoration changes. By
+ * default a text hash also detects text changes with a stale revision. */
 typedef struct {
     const char *text;
     uint64_t id;
@@ -787,13 +807,23 @@ typedef gsp_err_t (*esp_gsp_message_decorate_cb_t)(
     esp_gsp_handle_t gsp, esp_gsp_row_t row,
     const esp_gsp_message_t *message, void *user_ctx);
 
-/** Application-owned data source copied by bind; callbacks run on render task. */
+/** Opt in to authoritative id/revision pairs. IDs identify messages, not row
+ * indices, and must survive insertion/reordering. Never reuse a pair for
+ * different text or decoration; stale revisions can leave stale pixels. */
+#define ESP_GSP_MESSAGE_SOURCE_TRUST_REVISION (1U << 0)
+
+/** Application-owned data source copied by bind; callbacks run on render task.
+ * Zero-initialize this struct and set struct_size before binding. Keep a
+ * coherent source during reconciliation: publish on the render task or hold
+ * an immutable snapshot. Do not mutate the source from its own callbacks. */
 typedef struct {
     size_t struct_size;
     esp_gsp_message_count_cb_t count;
     esp_gsp_message_get_cb_t get;
     esp_gsp_message_decorate_cb_t decorate;
     void *user_ctx;
+    /** Zero retains text-hash validation. Legacy prefixes without flags imply zero. */
+    uint32_t flags;
 } esp_gsp_message_source_t;
 
 /** Row binder (render-task context): fill the row with the
@@ -1128,7 +1158,7 @@ esp_gsp_err_t esp_gsp_widget_set_value(esp_gsp_handle_t gsp,
 esp_gsp_err_t esp_gsp_widget_set_color(esp_gsp_handle_t gsp,
                                        esp_gsp_widget_t widget,
                                        uint16_t slot, uint32_t color);
-/** Shapes UTF-8 into a TEXT slot (copied, <= 63 bytes). */
+/** Shapes UTF-8 into a TEXT slot; the string is copied before return. */
 esp_gsp_err_t esp_gsp_widget_set_text(esp_gsp_handle_t gsp,
                                       esp_gsp_widget_t widget,
                                       uint16_t slot, const char *utf8);

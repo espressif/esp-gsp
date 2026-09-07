@@ -8,7 +8,12 @@ idf_component_register(
     PRIV_REQUIRES esp-gsp esp_timer esp_lcd hw_init esp_display_present
 )
 
-idf_component_get_property(present_dir esp_display_present COMPONENT_DIR)
+idf_build_get_property(build_components BUILD_COMPONENTS)
+if("espressif__esp_display_present" IN_LIST build_components)
+    idf_component_get_property(present_dir espressif__esp_display_present COMPONENT_DIR)
+else()
+    idf_component_get_property(present_dir esp_display_present COMPONENT_DIR)
+endif()
 target_include_directories(${COMPONENT_LIB} PRIVATE
     "${present_dir}/private_include")
 

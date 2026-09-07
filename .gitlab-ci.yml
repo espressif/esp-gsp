@@ -1,0 +1,46 @@
+# SPDX-FileCopyrightText: 2026 Espressif Systems (Shanghai) CO LTD
+# SPDX-License-Identifier: LicenseRef-Espressif-Modified-MIT
+
+spec:
+  inputs:
+    force_push:
+      type: boolean
+      default: false
+      description: Force-push the current branch to GitHub.
+
+---
+default:
+  tags:
+    - build
+
+stages:
+  - publish
+
+push-to-github:
+  stage: publish
+  image: alpine:3.21
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - when: never
+  before_script:
+    - apk add --no-cache git openssh-client
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "${GH_PUSH_KEY}" | base64 -d > ~/.ssh/github_deploy_key
+    - chmod 600 ~/.ssh/github_deploy_key
+    - ssh-keyscan -t rsa,ecdsa,ed25519 github.com >> ~/.ssh/known_hosts
+    - export GIT_SSH_COMMAND="ssh -i ~/.ssh/github_deploy_key -o IdentitiesOnly=yes"
+  script:
+    - |
+      set -eu
+      if git remote | grep -qx github; then
+        git remote set-url github git@github.com:espressif/esp-gsp.git
+      else
+        git remote add github git@github.com:espressif/esp-gsp.git
+      fi
+      if [ "$CI_PIPELINE_SOURCE" = "web" ] && $[[ inputs.force_push ]]; then
+        git push github "HEAD:${CI_COMMIT_REF_NAME}" --force
+      else
+        git push github "HEAD:${CI_COMMIT_REF_NAME}"
+      fi

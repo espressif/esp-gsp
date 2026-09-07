@@ -16,16 +16,12 @@ python -m pip install -U esp-gsp-tools
 idf.py build
 ```
 
-The `.gspc_version` in the IDF project root overrides the CI-generated marker
-shipped by the component. To override the component version, create the project
-marker manually. If no usable marker exists, or if the source checkout has no
-component package marker, set `GSPC_EXECUTABLE` explicitly. If `esp-gsp-tools` is unavailable, download
+The `.gspc_version` in the IDF project root overrides the compiler-version marker
+shipped by the component. To select another compiler version, create the project
+marker manually. If no usable marker exists, set `GSPC_EXECUTABLE` explicitly.
+If `esp-gsp-tools` is unavailable, download
 supported host tools from the [ESP-GSP Releases page](https://github.com/espressif/esp-gsp/releases),
 verify the published checksum, and set `GSPC_EXECUTABLE` to the executable.
-
-Examples built directly from an ESP-GSP source checkout use the component marker
-when available. The development-only `ci/gspc-dev` wrapper remains available
-for CI and source validation, but is not included in Managed Components.
 
 `GSPC_EXECUTABLE` is independent of the ESP-GSP component version. CMake runs
 the GSPC compatibility command (`gspc compatibility`, equivalent to

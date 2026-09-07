@@ -26,3 +26,14 @@ static inline uint32_t bench_move_phase(uint32_t tick, uint32_t index)
 {
     return (uint32_t)(((uint64_t)tick * (6U + 3U * index) * 4U) / 25U);
 }
+
+static inline int32_t bench_rotation_arbitrary_angle(uint32_t tick)
+{
+    return (int32_t)((tick * 7U) % 360U) - 180;
+}
+
+static inline int32_t bench_rotation_cardinal_angle(uint32_t tick)
+{
+    static const int16_t angles[] = { 0, 90, 180, -90 };
+    return angles[tick % (sizeof(angles) / sizeof(angles[0]))];
+}

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: LicenseRef-Espressif-Modified-MIT
 
 idf_component_register(
-    SRCS "app_main.c"
+    SRCS "app_main.c" "hello_ui.c"
     INCLUDE_DIRS "."
     PRIV_REQUIRES esp-gsp esp_timer esp_lcd hw_init
 )

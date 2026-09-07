@@ -58,7 +58,7 @@ ESP_ERROR_CHECK(esp_gsp_esp_lcd_start(&app, &lcd, &ui));
 | 结构 | 关键内容 | 规则 |
 |---|---|---|
 | `esp_gsp_message_t` | `text`、稳定 `id`、变化的 `revision`、`direction` | 应用填充；`text` 只需在 `get()` 调用期间有效 |
-| `esp_gsp_message_source_t` | `struct_size`、`count`、`get`、可选 `decorate`、`user_ctx` | `struct_size` 必须为结构大小；回调运行在渲染任务 |
+| `esp_gsp_message_source_t` | `struct_size`、`count`、`get`、可选 `decorate`、`user_ctx`、`flags` | 清零初始化并将 `struct_size` 设为结构大小；回调运行在渲染任务，`flags = 0` 保留文本 hash 校验 |
 | `esp_gsp_row_t` | `list`、`slot`、`instance`、`item` | 框架提供的复用行令牌，原样传给行 setter |
 | `esp_gsp_grid_cell_t` | 行令牌以及解析后的资源/文字槽 | 传给生成或公共单元格 setter，不要自行构造 |
 

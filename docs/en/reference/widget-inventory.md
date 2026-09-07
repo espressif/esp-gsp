@@ -8,41 +8,41 @@ Current GSPC registry coverage.
 |---|---:|
 | Registered widgets | 23 |
 | Compile-time composites | 6 |
-| Total field definitions | 1571 |
-| Dynamic capability fields | 278 |
+| Total field definitions | 1594 |
+| Dynamic capability fields | 301 |
 
 ## Components
 
 | Component | Kind | Facets | Fields | Events |
 |---|---|---|---:|---|
-| `container` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 58 | yes |
-| `label` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 58 | yes |
-| `button` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `text`, `border`, `image`, `interaction`, `template` | 58 | yes |
-| `image` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `image`, `text`, `interaction`, `template` | 58 | yes |
-| `rect` | `Widget` | `core`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 49 | yes |
-| `shape` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `shape`, `interaction`, `template` | 60 | yes |
-| `progress` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `interaction`, `template` | 62 | yes |
-| `chart` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `stroke`, `interaction`, `template` | 61 | yes |
-| `slider` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `slider`, `interaction`, `template` | 65 | yes |
-| `arc` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `arc`, `interaction`, `template` | 65 | yes |
-| `needle` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `needle`, `stroke`, `interaction`, `template` | 61 | yes |
-| `spinner` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `spinner`, `stroke`, `interaction`, `template` | 60 | yes |
-| `toggle` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `slider`, `interaction`, `template` | 62 | yes |
-| `checkbox` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 59 | yes |
-| `radio` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 59 | yes |
-| `clock` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 66 | yes |
-| `page_flow` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `interaction`, `template` | 70 | yes |
-| `stackview` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 64 | yes |
-| `drawer` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 60 | yes |
-| `layer` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 59 | yes |
+| `container` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 59 | yes |
+| `label` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 59 | yes |
+| `button` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `text`, `border`, `image`, `interaction`, `template` | 59 | yes |
+| `image` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `image`, `text`, `interaction`, `template` | 59 | yes |
+| `rect` | `Widget` | `core`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 50 | yes |
+| `shape` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `shape`, `interaction`, `template` | 61 | yes |
+| `progress` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `interaction`, `template` | 63 | yes |
+| `chart` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `stroke`, `interaction`, `template` | 62 | yes |
+| `slider` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `slider`, `interaction`, `template` | 66 | yes |
+| `arc` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `arc`, `interaction`, `template` | 66 | yes |
+| `needle` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `needle`, `stroke`, `interaction`, `template` | 62 | yes |
+| `spinner` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `spinner`, `stroke`, `interaction`, `template` | 61 | yes |
+| `toggle` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `slider`, `interaction`, `template` | 63 | yes |
+| `checkbox` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 60 | yes |
+| `radio` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 60 | yes |
+| `clock` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 67 | yes |
+| `page_flow` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `interaction`, `template` | 71 | yes |
+| `stackview` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 65 | yes |
+| `drawer` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 61 | yes |
+| `layer` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 60 | yes |
 | `tabview` | `Composite` | `core` | 25 | yes |
 | `dropdown` | `Composite` | `core` | 26 | yes |
 | `msgbox` | `Composite` | `composite_core` | 21 | yes |
 | `table` | `Composite` | `core` | 19 | yes |
 | `keyboard` | `Composite` | `core` | 36 | yes |
-| `list` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `list_data`, `scroll_snapshot`, `interaction`, `template` | 68 | yes |
-| `wheel` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `list_data`, `interaction`, `template` | 67 | yes |
-| `grid` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `grid_data`, `scroll_snapshot`, `interaction`, `template` | 64 | yes |
+| `list` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `list_data`, `scroll_snapshot`, `interaction`, `template` | 69 | yes |
+| `wheel` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `list_data`, `interaction`, `template` | 68 | yes |
+| `grid` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `grid_data`, `scroll_snapshot`, `interaction`, `template` | 65 | yes |
 | `message_list` | `Composite` | `core`, `visibility`, `row_template`, `message_list` | 31 | yes |
 
 ## Fields by widget
@@ -94,6 +94,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -157,6 +158,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -220,6 +222,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -275,6 +278,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -337,6 +341,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -400,6 +405,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -465,6 +471,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -532,6 +539,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -598,6 +606,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -668,6 +677,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -738,6 +748,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -804,6 +815,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -869,6 +881,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -936,6 +949,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -1000,6 +1014,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -1064,6 +1079,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -1135,6 +1151,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -1210,6 +1227,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -1279,6 +1297,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -1344,6 +1363,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -1560,6 +1580,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -1633,6 +1654,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -1705,6 +1727,7 @@ Current GSPC registry coverage.
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
+| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |

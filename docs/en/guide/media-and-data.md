@@ -166,6 +166,25 @@ As with Lists and Grids, row publication runs in framework callback context.
 Publish already available data and defer storage, networking, or slow decoding
 to application tasks.
 
+Initialize `esp_gsp_message_source_t` to zero and set `struct_size` to its
+size. The default `flags = 0` retains text-hash validation, including detection
+of text changes whose revision was not updated. Legacy source structs without
+the `flags` field retain that behavior.
+
+Data sources that maintain reliable revisions may set
+`flags = ESP_GSP_MESSAGE_SOURCE_TRUST_REVISION`. An unchanged `id`/`revision`
+pair then allows the framework to reuse text measurements without scanning the
+text. IDs identify messages rather than array indices; preserve them across
+insertion and reordering, and change the revision for text or decoration
+changes. Reusing a pair for different content can leave stale pixels. This
+still reads each message's metadata; it is not a range-update API.
+
+Keep one coherent source during reconciliation. Publish changes on the render
+task or retain an immutable snapshot for readers; the revision flag does not
+synchronize background producers. Returned text must remain valid until the
+next `get()` call. Append/prepend notifications and failure retries retain
+the existing `esp_gsp_message_list_changed()` behavior.
+
 ## Capacity and memory rules
 
 - `ESP_GSP_FIELD_CONTEXT_DEFAULT_INSTANCES` covers simultaneously live

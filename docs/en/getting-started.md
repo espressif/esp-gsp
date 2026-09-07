@@ -4,6 +4,19 @@ This guide builds the default embedded-bundle path: an ESP-IDF application
 owns the display, ESP-GSP compiles one JSON scene during the build, and the
 application updates the UI through the generated C API.
 
+If you want to evaluate ESP-GSP before integrating it, start with the maintained
+example:
+
+```sh
+idf.py create-project-from-example "espressif/esp-gsp=1.2.0:hello_world"
+cd hello_world
+python -m pip install -U esp-gsp-tools
+```
+
+Then follow the example's `README.md` for a simulator preview or a matching
+board profile. The rest of this guide explains how to integrate ESP-GSP into an
+existing application.
+
 ## Prerequisites
 
 - ESP-IDF 6.0 or later is exported in the current shell.
@@ -19,39 +32,17 @@ orientation.
 
 ## 1. Add the component
 
-> [!NOTE]
-> The managed component contains the sealed runtime libraries, public headers,
-> CMake integration, dependency metadata, the `hello_world`, `showcase`, and
-> `benchmark` reference examples, and the complete `examples/widgets` catalog
-> with its shared resources.
->
-> Because host platforms differ, the ESP Component Registry does not distribute
-> the simulator or GSPC compiler. You can download and invoke them through
-> `esp-gsp-tools`:
->
-> ```shell
-> # Download and install esp-gsp-tools
-> pip install -U esp-gsp-tool
->
-> # Run GSPC
-> python -m gsp.execute --version '<GSPC version>' gspc <args passed to GSPC>
-> # When .gspc_version exists in the specified path, --version '<GSPC version>' can be omitted; see below
->
-> # Run the simulator
-> python -m gsp.execute --version '<ESP-GSP version>' sim <args passed to the GSP simulator>
-> ```
-
 From the ESP-IDF project root:
 
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.1.0"
+idf.py add-dependency "espressif/esp-gsp^1.2.0"
 ```
 
 The equivalent component manifest entry is:
 
 ```yaml
 dependencies:
-  espressif/esp-gsp: "^1.1.0"
+  espressif/esp-gsp: "^1.2.0"
 ```
 
 For a local ESP-GSP component directory, use Component Manager `override_path`
@@ -59,7 +50,7 @@ or add it to `EXTRA_COMPONENT_DIRS`. Keep only one selected component copy in a
 build so the compiler, public headers, and runtime come from the same version;
 applications do not need their implementation sources.
 
-## 2. Install GSPC and the simulator
+## 2. Install GSPC; add the simulator when needed
 
 Install the toolchain manager. CMake reads the component's `.gspc_version` and
 invokes `esp-gsp-tools`; the first invocation downloads and verifies that GSPC
@@ -75,7 +66,7 @@ version for an IDF project, create `.gspc_version` in the project root; the
 project marker takes precedence over the component marker:
 
 ```sh
-echo '0.2.8' > .gspc_version # Pin GSPC 0.2.8
+echo '0.3.0' > .gspc_version # Pin GSPC 0.3.0
 idf.py build
 ```
 
@@ -96,7 +87,7 @@ idf.py build
 Do not copy a compiler from an unrelated source checkout merely because
 `gspc --version` runs.
 
-The simulator is optional and is not needed to build firmware. Version
+The simulator is optional; firmware builds do not require it. Version
 detection for `sim` is currently manual: use the `version` field from
 `idf_component.yml` (the ESP-GSP component version), not the GSPC version in
 `.gspc_version`:
@@ -252,9 +243,9 @@ void app_main(void)
 ```
 
 `board_display_init()` and `board_touch_init()` are placeholders for the
-product BSP. The project repository's
-[`examples/common/hw_init`](../../examples/common/hw_init)
-shows complete panel targets used by the examples.
+product BSP. The repository's shared
+[`examples/common/hw_init`](../../examples/common/hw_init) component shows
+complete panel targets used by the examples.
 
 ## 6. Build and inspect the generated API
 

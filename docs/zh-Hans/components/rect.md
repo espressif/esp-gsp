@@ -12,10 +12,10 @@
 
 ```sh
 mkdir -p build/widget-preview
-python -m gsp.execute --version 0.2.8 gspc pack \
+python -m gsp.execute --version 0.3.0 gspc pack \
   examples/widgets/rect/rect.json \
   --deployable -o build/widget-preview/rect.gspb
-python -m gsp.execute --version 1.1.0 sim \
+python -m gsp.execute --version 1.2.0 sim \
   --bundle build/widget-preview/rect.gspb
 ```
 
@@ -107,6 +107,7 @@ size_t gsp_rect_docs_dynamic_image_slots(void)
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |

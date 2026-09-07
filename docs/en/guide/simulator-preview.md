@@ -68,6 +68,89 @@ gsp_sim_host --bundle app.gspb --headless \
 Scripted `--tap`, `--drag`, and `--wait` actions execute in order. For
 complex sequences, prefer the API channel.
 
+## Reuse C UI business logic
+
+The installed ESP-GSP component includes `tools/sim_bridge`, a native C compatibility
+library and CMake integration for building UI `.c` files as a sim_host
+Backend. Business sources keep using `esp_gsp.h` and generated component
+helpers. Python builds and supervises the processes; the native executable
+connects directly over loopback TCP.
+
+Install Python 3.10+, CMake 3.20+, a native C11 compiler and `esp-gsp-tools`.
+After your IDF project has resolved its ESP-GSP dependency (for example with
+`idf.py reconfigure`), run a packaged example from the application root:
+
+```sh
+python -m pip install -U esp-gsp-tools
+python managed_components/espressif__esp-gsp/tools/sim_bridge/run.py \
+  --project managed_components/espressif__esp-gsp/examples/hello_world/pc
+```
+
+On Windows, use a compiler developer terminal and `C:/path/to/tool.exe`
+paths. The native build does not require an active ESP-IDF environment or
+the compiler/simulator implementation sources.
+The host must support `--ready-file` and advertise
+`capabilities.bridge_version: 1`; older simulators cannot run this workflow.
+
+For your own C UI sources, create a `pc/` project using the
+[bridge CMake example](../../../tools/sim_bridge/README.md#add-your-own-application),
+then use `--project pc`. The runner selects GSPC through `python -m gsp.execute`
+using the application's `.gspc_version`, falling back to the component's
+marker. It selects `sim` using the component's `idf_component.yml` version.
+The first use downloads/verifies/caches those precompiled tools.
+`--gspc` / `GSPC_EXECUTABLE` and `--host` / `GSP_SIM_EXECUTABLE` override binary
+paths; `--sim-version` / `GSP_SIM_VERSION` overrides only the managed simulator
+version. `--component-dir` / `ESP_GSP_COMPONENT_DIR` selects a different installed
+component. Default build output is under the working directory's `build/`,
+not `managed_components`. For an unpacked component, adjust only the component
+path; no source repository is required.
+
+CMake packs scenes with `--deployable` and generates matching
+`bundle_gsp.h` headers in the same build. The runner reads the actual
+listener address, starts the Backend, opens the browser, and stops both
+owned processes on exit. Add `--headless --duration 3` for a bounded run,
+or use `build.py` with the same build arguments to build without launching.
+Listener readiness does not mean business initialization is complete;
+`--duration` starts after application initialization.
+
+The examples demonstrate the split:
+
+- `hello_world/main/hello_ui.c`: shared device/PC timer-driven UI logic.
+- `hello_world/main/app_main.c`: device-only display, touch and GSP startup.
+- `hello_world/pc/platform_pc.c`: PC lifecycle adapter.
+- `benchmark/pc`: directly compiles the already-separated
+  `main/bench_workload.c`, demonstrating reads and animations, not full
+  hardware benchmark measurements.
+- `sim_bridge_media/pc`: portable List/Grid binders, QOI images and Canvas
+  offscreen drawing; select this project with the same runner command.
+
+Isolate drivers, RTOS tasks and hardware services behind an application
+HAL/PC mock. Version 1 requires one Backend calling thread; callbacks can
+make synchronous supported GSP calls, while workers hand data over through
+application queues. The bridge maps common state access, scalar properties,
+animations, events, timers and selected navigation APIs. Hosts advertising
+`capabilities.bridge_media_version: 1` also support native dynamic List/Grid
+binders, COPY PNG/JPEG/QOI images and Canvas push/draw APIs. Binders can make
+synchronous row updates. Canvas callbacks instead draw a full local offscreen
+surface before upload; timing and tile partitioning differ from the device,
+and GSP mutations inside draw callbacks are rejected. Re-register draw
+callbacks on scene entry. `capabilities.bridge_image_version: 1` additionally
+supports image BORROW/TAKE helpers, completion/release callbacks and cache
+keys. The wire still copies; native sources remain retained until GSP input
+release or local shutdown. `canvas_try_push*` admits into an eight-frame local
+queue without socket I/O; full queues return TIMEOUT without taking ownership.
+Keep accepted buffers immutable until their release callback. Poll or a later
+synchronous RPC uploads them; release is not proof of host acceptance/display.
+With `capabilities.bridge_fence_version: 1`, `esp_gsp_flush` waits for a host
+render attempt, not animations, image decoding or browser presentation. First
+poll to finish pending local Canvas work; otherwise flush returns INVALID_STATE.
+Timeout does not cancel the fence; later poll/RPC handles its reply.
+Unimplemented declarations from the shared headers fail at link time.
+
+See the component's [bridge README](../../../tools/sim_bridge/README.md) for the CMake interface,
+lifecycle and limitations, and the [Simulator reference](../reference/simulator.md)
+for the protocol.
+
 ## API-driven automation
 
 Enable the JSON-RPC control channel for programmatic access:
@@ -100,10 +183,26 @@ gsp_sim_host --bundle app.gspb --frames 0 \
 ```
 
 The backend receives `callback` notifications when the user interacts with
-the UI and drives the display through `set_text`, `set_value`, `goto_scene`,
-and other state methods. While a backend is attached, scene navigation is
-backend-exclusive: browser scene buttons and API `goto_scene` calls are
-rejected.
+the UI and drives the display through `set_text`, `set_value`, `drawer_open`,
+`page_flow_set_page`, `list_snap`, `goto_scene`, and other state methods. While
+the backend endpoint is enabled, application state writes and scene navigation
+are backend-exclusive: browser controls and API calls cannot bypass the
+business backend.
+
+To reuse device-side C application logic, keep LCD, touch, GPIO, Wi-Fi, NVS,
+and FreeRTOS initialization in a platform layer. Keep timers,
+`esp_gsp_on_event()`, and `esp_gsp_*` UI calls in the application layer. A
+native `sim_bridge` compatibility library is included in the component and
+builds with a native C compiler and the automatically selected precompiled tools.
+The native library maps asynchronous `list_bind` notifications and
+token-checked `row_publish` to local C binders, and uses COPY binary uploads
+for PNG/JPEG/QOI images and full Canvas frames. The host render task never
+waits for a Backend callback. For Canvas direct-draw, the PC adaptation runs
+the callback offscreen in the native event loop and uploads the result.
+Successful upload means acceptance, not completed decoding or rendering;
+Canvas push invokes the supplied release callback before returning on success, unlike
+device-side deferred release. See the bridge README and simulator reference
+for ownership, unsupported APIs and token lifetime rules.
 
 This mode is suitable for verifying data binding, event handling, and
 multi-scene flow without target hardware.

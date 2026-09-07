@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Espressif Systems (Shanghai) CO LTD
+#
+# SPDX-License-Identifier: LicenseRef-Espressif-Modified-MIT
+name: sim_bridge_rgb565
+pixel_format: rgb565
+resource_alignment: 64
+stride_alignment: 64

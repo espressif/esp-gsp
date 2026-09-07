@@ -1,0 +1,61 @@
+menu "Example HW Init"
+
+    choice EXAMPLE_LCD_INTERFACE
+        prompt "Example board/display profile"
+        depends on IDF_TARGET_ESP32P4 || IDF_TARGET_ESP32S31 || \
+                   IDF_TARGET_ESP32S3 || IDF_TARGET_ESP32C3
+        default EXAMPLE_LCD_INTERFACE_MIPI_DSI if IDF_TARGET_ESP32P4
+        default EXAMPLE_LCD_INTERFACE_RGB if IDF_TARGET_ESP32S31
+        default EXAMPLE_LCD_INTERFACE_SPI_WITHOUT_PSRAM if IDF_TARGET_ESP32C3
+        default EXAMPLE_LCD_INTERFACE_QSPI if IDF_TARGET_ESP32S3
+
+        config EXAMPLE_LCD_INTERFACE_MIPI_DSI
+            bool "ESP32-P4: EK79007 MIPI-DSI 1024x600 + GT911"
+            depends on IDF_TARGET_ESP32P4
+
+        config EXAMPLE_LCD_INTERFACE_RGB
+            bool "ESP32-S31/S3: 16-bit RGB 800x480 + GT1151"
+            depends on IDF_TARGET_ESP32S31 || IDF_TARGET_ESP32S3
+
+        config EXAMPLE_LCD_INTERFACE_RGB24
+            bool "ESP32-S31: 24-bit RGB 800x480, no touch"
+            depends on IDF_TARGET_ESP32S31
+
+        config EXAMPLE_LCD_INTERFACE_QSPI
+            bool "ESP32-S3: ST77916 QSPI 360x360 with TE"
+            depends on IDF_TARGET_ESP32S3
+
+        config EXAMPLE_LCD_INTERFACE_QSPI_CO5300
+            bool "ESP32-S31: CO5300 QSPI 480x480 with TE + CST9217"
+            depends on IDF_TARGET_ESP32S31
+
+        config EXAMPLE_LCD_INTERFACE_SPI_WITH_PSRAM
+            bool "ESP32-S3: ILI9341 SPI 320x240 + GT911"
+            depends on IDF_TARGET_ESP32S3
+
+        config EXAMPLE_LCD_INTERFACE_SPI_WITHOUT_PSRAM
+            bool "ESP32-C3: GC9A01 SPI 240x240 knob board"
+            depends on IDF_TARGET_ESP32C3
+    endchoice
+
+    choice EXAMPLE_DISPLAY_ROTATION
+        prompt "Display rotation"
+        default EXAMPLE_DISPLAY_ROTATION_0
+        help
+            Panel-level rotation: the scene renders in its logical
+            orientation and rotates into the panel at present time.
+            90/270 need a scene whose resolution matches the
+            transposed panel (square panels work with any angle; the
+            RGB benchmark ships a portrait 480x800 bundle).
+
+        config EXAMPLE_DISPLAY_ROTATION_0
+            bool "0"
+        config EXAMPLE_DISPLAY_ROTATION_90
+            bool "90"
+        config EXAMPLE_DISPLAY_ROTATION_180
+            bool "180"
+        config EXAMPLE_DISPLAY_ROTATION_270
+            bool "270"
+    endchoice
+
+endmenu

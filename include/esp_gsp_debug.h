@@ -71,6 +71,7 @@ typedef struct {
     uint32_t max_decode_us;
     uint32_t cache_hits;
     uint32_t cache_misses;
+    /** Current decoded bytes summed across all live scene caches. */
     size_t cache_bytes;
     uint32_t cache_requests;
     uint32_t cache_coalesced;
@@ -94,6 +95,8 @@ typedef struct {
     uint64_t animation_patch_pixels;
     uint64_t animation_copy_bytes;
     size_t animation_scratch_peak;
+    /** Sum of each live scene cache's lifetime peak. This is a conservative
+     *  bound, not a time-correlated application high-water mark. */
     size_t cache_peak_bytes;
     uint64_t queue_wait_us;
     uint32_t max_queue_wait_us;

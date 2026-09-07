@@ -128,9 +128,9 @@
     "widget_registry",
     "authoring"
   ],
-  "compiler_version": "0.2.8",
+  "compiler_version": "0.3.0",
   "protocol_version": 1,
-  "registry_hash": "crc32:4c23b81f",
+  "registry_hash": "crc32:89d8d631",
   "schema_version": 2,
   "widgets": {
     "arc": {
@@ -451,6 +451,14 @@
           "dynamic": true,
           "maximum": 65535,
           "minimum": 0,
+          "type": "int"
+        },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
           "type": "int"
         },
         "scalable": {
@@ -860,6 +868,14 @@
           "minimum": 0,
           "type": "int"
         },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
         "scalable": {
           "default": false,
           "doc": "enable runtime image scaling",
@@ -1245,6 +1261,14 @@
           "dynamic": true,
           "maximum": 65535,
           "minimum": 0,
+          "type": "int"
+        },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
           "type": "int"
         },
         "scalable": {
@@ -1635,6 +1659,14 @@
           "dynamic": true,
           "maximum": 65535,
           "minimum": 0,
+          "type": "int"
+        },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
           "type": "int"
         },
         "scalable": {
@@ -2042,6 +2074,14 @@
           "minimum": 0,
           "type": "int"
         },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
         "scalable": {
           "default": false,
           "doc": "enable runtime image scaling",
@@ -2431,6 +2471,14 @@
           "dynamic": true,
           "maximum": 65535,
           "minimum": 0,
+          "type": "int"
+        },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
           "type": "int"
         },
         "scalable": {
@@ -2823,6 +2871,14 @@
           "dynamic": true,
           "maximum": 65535,
           "minimum": 0,
+          "type": "int"
+        },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
           "type": "int"
         },
         "scalable": {
@@ -3393,6 +3449,14 @@
           "minimum": 0,
           "type": "int"
         },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
         "row_gap": {
           "default": 0,
           "doc": "vertical cell gap",
@@ -3779,6 +3843,14 @@
           "dynamic": true,
           "maximum": 65535,
           "minimum": 0,
+          "type": "int"
+        },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
           "type": "int"
         },
         "scalable": {
@@ -4349,6 +4421,14 @@
           "minimum": 0,
           "type": "int"
         },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
         "scalable": {
           "default": false,
           "doc": "enable runtime image scaling",
@@ -4728,6 +4808,14 @@
           "dynamic": true,
           "maximum": 65535,
           "minimum": 0,
+          "type": "int"
+        },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
           "type": "int"
         },
         "scalable": {
@@ -5133,6 +5221,14 @@
           "dynamic": true,
           "maximum": 65535,
           "minimum": 0,
+          "type": "int"
+        },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
           "type": "int"
         },
         "row_template": {
@@ -5859,6 +5955,14 @@
           "minimum": 0,
           "type": "int"
         },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
         "scalable": {
           "default": false,
           "doc": "enable runtime image scaling",
@@ -6301,6 +6405,14 @@
           "minimum": 0,
           "type": "int"
         },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
         "scalable": {
           "default": false,
           "doc": "enable runtime image scaling",
@@ -6716,6 +6828,14 @@
           "minimum": 0,
           "type": "int"
         },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
         "scalable": {
           "default": false,
           "doc": "enable runtime image scaling",
@@ -7109,6 +7229,14 @@
           "minimum": 0,
           "type": "int"
         },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
         "scalable": {
           "default": false,
           "doc": "enable runtime image scaling",
@@ -7423,6 +7551,14 @@
           "dynamic": true,
           "maximum": 65535,
           "minimum": 0,
+          "type": "int"
+        },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
           "type": "int"
         },
         "scalable": {
@@ -7810,6 +7946,14 @@
           "dynamic": true,
           "maximum": 65535,
           "minimum": 0,
+          "type": "int"
+        },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
           "type": "int"
         },
         "scalable": {
@@ -8224,6 +8368,14 @@
           "minimum": 0,
           "type": "int"
         },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
         "scalable": {
           "default": false,
           "doc": "enable runtime image scaling",
@@ -8615,6 +8767,14 @@
           "dynamic": true,
           "maximum": 65535,
           "minimum": 0,
+          "type": "int"
+        },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
           "type": "int"
         },
         "scalable": {
@@ -9034,6 +9194,14 @@
           "dynamic": true,
           "maximum": 65535,
           "minimum": 0,
+          "type": "int"
+        },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
           "type": "int"
         },
         "scalable": {
@@ -9734,6 +9902,14 @@
           "minimum": 0,
           "type": "int"
         },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
         "scalable": {
           "default": false,
           "doc": "enable runtime image scaling",
@@ -10144,6 +10320,14 @@
           "dynamic": true,
           "maximum": 65535,
           "minimum": 0,
+          "type": "int"
+        },
+        "rotation": {
+          "default": 0,
+          "doc": "clockwise opaque-image rotation around the bounding-box center; clipped to the box",
+          "dynamic": true,
+          "maximum": 32767,
+          "minimum": -32768,
           "type": "int"
         },
         "row_template": {

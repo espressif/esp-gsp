@@ -146,14 +146,19 @@ function(gsp_add_bundle target)
     # allowed to derive the exact requirement up to the prebuilt capability.
     set(gsp_list_max_slots "${CONFIG_ESP_GSP_LIST_MAX_SLOTS}")
     if(NOT gsp_list_max_slots)
-        set(gsp_list_max_slots 64)
+        set(gsp_list_max_slots
+            "${ESP_GSP_CAPACITY_LIMIT_LIST_MAX_SLOTS}")
     endif()
     set(gsp_list_text_slots "${CONFIG_ESP_GSP_LIST_TEXT_SLOTS}")
     if(NOT gsp_list_text_slots)
-        set(gsp_list_text_slots 16)
+        set(gsp_list_text_slots
+            "${ESP_GSP_CAPACITY_LIMIT_LIST_TEXT_SLOTS}")
     endif()
-    if(NOT CONFIG_ESP_GSP_INSTANCE_STATES_PER_SLOT)
-        set(CONFIG_ESP_GSP_INSTANCE_STATES_PER_SLOT 8)
+    set(gsp_instance_states_per_slot
+        "${CONFIG_ESP_GSP_INSTANCE_STATES_PER_SLOT}")
+    if(NOT gsp_instance_states_per_slot)
+        set(gsp_instance_states_per_slot
+            "${ESP_GSP_CAPACITY_LIMIT_INSTANCE_STATES_PER_SLOT}")
     endif()
     foreach(gsp_project_var IN ITEMS
             CONFIG_ESP_GSP_MAX_SCENES CONFIG_ESP_GSP_MAX_LISTS
@@ -163,34 +168,47 @@ function(gsp_add_bundle target)
             CONFIG_ESP_GSP_CONTEXT_DEFAULT_INSTANCES
             CONFIG_ESP_GSP_CONTEXT_DEFAULT_GLYPH_RUNS
             CONFIG_ESP_GSP_STACK_VIEW_MAX_DEPTH
-            CONFIG_ESP_GSP_INSTANCE_STATES_PER_SLOT)
+            CONFIG_ESP_GSP_INSTANCE_STATES_PER_SLOT
+            CONFIG_ESP_GSP_MAX_ASSET_ANIMS)
         if(NOT DEFINED ${gsp_project_var} OR "${${gsp_project_var}}" STREQUAL "")
             set(${gsp_project_var} 0)
+        endif()
+    endforeach()
+    foreach(gsp_auto_capacity IN ITEMS
+            MAX_SCENES MAX_LISTS TEXT_SLOTS CONTEXT_DEFAULT_INSTANCES
+            CONTEXT_DEFAULT_GLYPH_RUNS STACK_VIEW_MAX_DEPTH
+            INSTANCE_STATES_PER_SLOT MAX_ASSET_ANIMS)
+        set(gsp_project_${gsp_auto_capacity}
+            "${CONFIG_ESP_GSP_${gsp_auto_capacity}}")
+        if(NOT gsp_project_${gsp_auto_capacity})
+            set(gsp_project_${gsp_auto_capacity}
+                "${ESP_GSP_CAPACITY_LIMIT_${gsp_auto_capacity}}")
         endif()
     endforeach()
     set(slot_limit_args
         --list-max-slots "${gsp_list_max_slots}"
         --list-text-slots "${gsp_list_text_slots}"
         --instance-states-per-slot
-            "${CONFIG_ESP_GSP_INSTANCE_STATES_PER_SLOT}"
+            "${gsp_instance_states_per_slot}"
         --max-dynamic-image-targets
             "${ESP_GSP_BUILD_CAP_MAX_DYNAMIC_IMAGE_TARGETS}"
         --max-font-packs "${ESP_GSP_BUILD_CAP_MAX_FONTS_PER_SCENE}"
-        --project-max-scenes "${CONFIG_ESP_GSP_MAX_SCENES}"
-        --project-max-lists "${CONFIG_ESP_GSP_MAX_LISTS}"
-        --project-list-max-slots "${CONFIG_ESP_GSP_LIST_MAX_SLOTS}"
-        --project-list-text-slots "${CONFIG_ESP_GSP_LIST_TEXT_SLOTS}"
-        --project-text-slots "${CONFIG_ESP_GSP_TEXT_SLOTS}"
+        --project-max-scenes "${gsp_project_MAX_SCENES}"
+        --project-max-lists "${gsp_project_MAX_LISTS}"
+        --project-list-max-slots "${gsp_list_max_slots}"
+        --project-list-text-slots "${gsp_list_text_slots}"
+        --project-text-slots "${gsp_project_TEXT_SLOTS}"
         --project-dynamic-image-slots
             "${CONFIG_ESP_GSP_DEFAULT_DYNAMIC_IMAGE_SLOTS}"
         --project-component-instances
-            "${CONFIG_ESP_GSP_CONTEXT_DEFAULT_INSTANCES}"
+            "${gsp_project_CONTEXT_DEFAULT_INSTANCES}"
         --project-stack-view-max-depth
-            "${CONFIG_ESP_GSP_STACK_VIEW_MAX_DEPTH}"
+            "${gsp_project_STACK_VIEW_MAX_DEPTH}"
         --project-instance-states-per-slot
-            "${CONFIG_ESP_GSP_INSTANCE_STATES_PER_SLOT}"
+            "${gsp_project_INSTANCE_STATES_PER_SLOT}"
         --project-glyph-run-slots
-            "${CONFIG_ESP_GSP_CONTEXT_DEFAULT_GLYPH_RUNS}")
+            "${gsp_project_CONTEXT_DEFAULT_GLYPH_RUNS}"
+        --project-max-asset-anims "${gsp_project_MAX_ASSET_ANIMS}")
     if(NOT CONFIG_SPIRAM)
         list(APPEND bundle_config_args --default-disable-image-cache)
     endif()
@@ -306,7 +324,8 @@ function(gsp_add_bundle target)
     add_custom_command(
         OUTPUT "${bundle_path}" "${api_header}"
         BYPRODUCTS ${scene_api_byproducts}
-        COMMAND ${gspc_command} pack ${scene_paths}
+        COMMAND ${CMAKE_COMMAND} -E env "GSPC_RESOURCE_SUMMARY=pretty"
+                ${gspc_command} pack ${scene_paths}
                 ${profile_args} -o "${bundle_path}"
                 --gen-dir "${gen_dir}" --depfile "${bundle_depfile}"
                 --api-header "${api_header}" --symbol "${ARG_SYMBOL}"

@@ -13,10 +13,10 @@ unpacked component or public repository root:
 
 ```sh
 mkdir -p build/widget-preview
-python -m gsp.execute --version 0.2.8 gspc pack \
+python -m gsp.execute --version 0.3.0 gspc pack \
   examples/widgets/image/image.json \
   --deployable -o build/widget-preview/image.gspb
-python -m gsp.execute --version 1.1.0 sim \
+python -m gsp.execute --version 1.2.0 sim \
   --bundle build/widget-preview/image.gspb
 ```
 
@@ -48,7 +48,7 @@ Give every object that application code must read or update a stable `name`. GSP
       "y": 45,
       "w": 250,
       "h": 210,
-      "image": "../../benchmark/scenes/bench_rgb.png",
+      "image": "../../benchmark/scenes/bench_industrial.png",
       "fit": "cover",
       "position_x": 0.5,
       "position_y": 0.5
@@ -60,7 +60,7 @@ Give every object that application code must read or update a stable `name`. GSP
       "y": 90,
       "w": 125,
       "h": 125,
-      "image": "../../benchmark/scenes/bench_rgb.png",
+      "image": "../../benchmark/scenes/bench_industrial.png",
       "fit": "contain",
       "border_color": "#334A68",
       "border_width": 1,
@@ -125,6 +125,7 @@ These signatures come from the actual compiler output for this JSON.
 | `compress` | `bool` | — | — | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | — | 0.05…1.0 | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | — | 1…120 | — | GIF/animation frame-rate cap (0 = uncapped) |
+| `rotation` | `int` | — | default 0; -32768…32767 | yes | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | — | default `false` | — | enable runtime image scaling |
 | `scale` | `number` | — | default 1.0; 0.0625…16.0 | — | initial runtime image scale |
 | `min_scale` | `number` | — | default 0.5; 0.0625…16.0 | — | minimum runtime image scale |

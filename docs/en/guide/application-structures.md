@@ -57,7 +57,7 @@ with the caller.
 | Structure | Important members | Guidance |
 |---|---|---|
 | `esp_gsp_message_t` | `text`, stable `id`, changing `revision`, `direction` | Filled by the application; text only needs to remain valid during `get()`. |
-| `esp_gsp_message_source_t` | `struct_size`, `count`, `get`, optional `decorate`, `user_ctx` | Set `struct_size` to `sizeof(esp_gsp_message_source_t)`. Source callbacks run on the render task. |
+| `esp_gsp_message_source_t` | `struct_size`, `count`, `get`, optional `decorate`, `user_ctx`, `flags` | Zero-initialize and set `struct_size` to `sizeof(esp_gsp_message_source_t)`. Callbacks run on the render task; `flags = 0` retains text-hash validation. |
 | `esp_gsp_row_t` | `list`, `slot`, `instance`, `item` | Framework token for one recycled row; pass it unchanged to row setters. |
 | `esp_gsp_grid_cell_t` | row token plus resolved resource/text slots | Pass it to generated/public cell setters; do not construct it manually. |
 

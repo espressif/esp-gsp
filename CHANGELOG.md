@@ -1,6 +1,40 @@
 # Changelog
 
-## Unreleased
+## 1.2.0
+
+- Consume externally maintained esp_display_present ^1.0.2, allowing compatible
+  1.x updates, and remove local Present components and their publication pipeline.
+- Fixed standalone Benchmark component lookup for Registry installations and
+  added packaged Benchmark builds to the consumer checks.
+- Added opt-in authoritative message revisions to skip unchanged text scans,
+  retaining default hash validation and compatibility with legacy sources.
+- Reduced repeated transform-damage scans in batch updates with bounded,
+  reusable stack storage.
+- Added runtime image rotation with partition-invariant sampling and CPU/PPA
+  cardinal fast paths; removed heap allocation from transform traversal.
+- Derived UI capacities from authored content and added growable text storage,
+  full-width widget text identities, and incremental message-list refreshes
+  with safe buffer growth and failure recovery.
+- Preserved fitted geometry for dynamic images and serialized decoded image
+  publication with rendering.
+- Expanded benchmark coverage and fixed startup page visibility races.
+- Paired this runtime with GSPC 0.3.0, GSB 2.7 and content requirements v3.
+- Reduced software image-resize cost without changing fixed-point sampling
+  results, and kept decode-time PPA scaling independent from renderer
+  transform thresholds.
+- Compacted adjacent dirty rectangles when their union adds no redraw pixels.
+- Completed image-cache, codec, scaling and animation diagnostics, including
+  explicit conservative cache-peak semantics.
+- Added Backend RPC support for native application backends, including dynamic
+  List/Grid data, encoded images, Canvas frames, image lifecycle notifications,
+  render fences, and matching native/WASM/WASI exports with QOI support.
+- Added the portable `tools/sim_bridge` C bridge for reusing hardware-independent
+  UI/business logic without EMCC or the WASI SDK, including dynamic media,
+  offscreen Canvas callbacks, asynchronous Canvas queues, and image ownership.
+- Added PC Hello World/Benchmark targets and the `sim_bridge_media` example.
+- Published the bridge through the component package with automatic
+  `esp-gsp-tools` version selection, and expanded related documentation and CI
+  checks while excluding tests and developer-only files.
 
 ## 1.1.0
 

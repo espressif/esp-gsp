@@ -12,6 +12,7 @@
 #include "hw_init.h"
 
 #include "bundle_gsp.h"
+#include "hello_ui.h"
 
 #ifndef GSP_HELLO_RGB888
 #define GSP_HELLO_RGB888 0
@@ -19,13 +20,7 @@
 
 static const char *TAG = "gsp_hello";
 
-static void feed_load(esp_gsp_handle_t ui, void *user_ctx)
-{
-    static int32_t load;
-    (void)user_ctx;
-    load = (load + 5) % 101;
-    ESP_ERROR_CHECK(gsp_hello_load_set_value(ui, load));
-}
+static hello_ui_t s_hello;
 
 void app_main(void)
 {
@@ -52,8 +47,7 @@ void app_main(void)
     esp_config.display = display;
     esp_config.touch = touch;
     ESP_ERROR_CHECK(esp_gsp_esp_lcd_start(&app_config, &esp_config, &ui));
-    void *load_timer = esp_gsp_timer_create(ui, 250, feed_load, NULL);
-    ESP_ERROR_CHECK(load_timer == NULL ? ESP_ERR_NO_MEM : ESP_OK);
+    ESP_ERROR_CHECK(hello_ui_init(ui, &s_hello));
     ESP_LOGI(TAG, "Minimal UI started, pixel_format=%s",
              GSP_HELLO_RGB888 ? "RGB888" : "RGB565");
 }

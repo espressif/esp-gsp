@@ -53,31 +53,31 @@ void bench_workload_drive_tweens(esp_gsp_handle_t ui, void *user_ctx)
 
     if (page_visible(ui, GSP_BIND_P_RECT1)) {
         (void)esp_gsp_animate(ui, GSP_BIND_RV0, ESP_GSP_ANIM_CURRENT,
-                              up ? 100 : 0, 900, ESP_GSP_EASE_IN_OUT);
+                              up ? 100 : 0, 1000, ESP_GSP_EASE_IN_OUT);
     } else if (page_visible(ui, GSP_BIND_P_RECTS)) {
         for (uint8_t index = 0; index < 8; ++index) {
             (void)esp_gsp_animate(ui, values[index], ESP_GSP_ANIM_CURRENT,
-                                  ((tick + index) & 1U) ? 100 : 0, 900,
+                                  ((tick + index) & 1U) ? 100 : 0, 1000,
                                   ESP_GSP_EASE_IN_OUT);
         }
     } else if (page_visible(ui, GSP_BIND_P_ARCS)) {
         for (uint8_t index = 0; index < 6; ++index) {
             (void)esp_gsp_animate(ui, arcs[index], ESP_GSP_ANIM_CURRENT,
-                                  ((tick + index) & 1U) ? 100 : 0, 900,
+                                  ((tick + index) & 1U) ? 100 : 0, 1000,
                                   ESP_GSP_EASE_OUT);
         }
     } else if (page_visible(ui, GSP_BIND_P_SHAPES)) {
         uint32_t violet = native_color(workload, 0x420042U, 0x4008U);
         uint32_t blue = native_color(workload, 0x004184U, 0x0210U);
         (void)gsp_bench_theme_animate_shape_accent(
-            ui, up ? violet : blue, up ? blue : violet, 900,
+            ui, up ? violet : blue, up ? blue : violet, 1000,
             ESP_GSP_EASE_IN_OUT);
     } else if (page_visible(ui, GSP_BIND_P_MOTION)) {
         uint32_t violet = native_color(workload, 0x420042U, 0x4008U);
         uint32_t blue = native_color(workload, 0x004184U, 0x0210U);
         (void)esp_gsp_animate_color(ui, GSP_BIND_WALL,
                                     up ? violet : blue,
-                                    up ? blue : violet, 900,
+                                    up ? blue : violet, 1000,
                                     ESP_GSP_EASE_IN_OUT);
     } else if (page_visible(ui, GSP_BIND_P_OVER) ||
                page_visible(ui, GSP_BIND_P_BIGTEXT)) {
@@ -86,14 +86,14 @@ void bench_workload_drive_tweens(esp_gsp_handle_t ui, void *user_ctx)
         uint32_t violet = native_color(workload, 0x290042U, 0x2808U);
         uint32_t blue = native_color(workload, 0x082484U, 0x0930U);
         (void)esp_gsp_animate_color(ui, bind, up ? violet : blue,
-                                    up ? blue : violet, 900,
+                                    up ? blue : violet, 1000,
                                     ESP_GSP_EASE_IN_OUT);
     } else if (page_visible(ui, GSP_BIND_P_WALL)) {
         uint32_t violet = native_color(workload, 0x420042U, 0x4008U);
         uint32_t blue = native_color(workload, 0x004184U, 0x0210U);
         (void)esp_gsp_animate_color(ui, GSP_BIND_WALL4,
                                     up ? violet : blue,
-                                    up ? blue : violet, 900,
+                                    up ? blue : violet, 1000,
                                     ESP_GSP_EASE_IN_OUT);
     } else if (page_visible(ui, GSP_BIND_P_CARDS)) {
         static const uint16_t binds[] = {
@@ -106,7 +106,7 @@ void bench_workload_drive_tweens(esp_gsp_handle_t ui, void *user_ctx)
             bool phase = ((tick + index) & 1U) != 0;
             (void)esp_gsp_animate_color(ui, binds[index],
                                         phase ? dark : light,
-                                        phase ? light : dark, 900,
+                                        phase ? light : dark, 1000,
                                         ESP_GSP_EASE_IN_OUT);
         }
     } else if (page_visible(ui, GSP_BIND_P_OPA)) {
@@ -120,7 +120,7 @@ void bench_workload_drive_tweens(esp_gsp_handle_t ui, void *user_ctx)
             bool phase = ((tick + index) & 1U) != 0;
             (void)esp_gsp_animate_color(ui, binds[index],
                                         phase ? blue : red,
-                                        phase ? red : blue, 900,
+                                        phase ? red : blue, 1000,
                                         ESP_GSP_EASE_IN_OUT);
         }
     } else if (page_visible(ui, GSP_BIND_P_OPAL)) {
@@ -133,7 +133,7 @@ void bench_workload_drive_tweens(esp_gsp_handle_t ui, void *user_ctx)
             bool phase = ((tick + index) & 1U) != 0;
             (void)esp_gsp_animate_color(ui, binds[index],
                                         phase ? blue : dark,
-                                        phase ? dark : blue, 900,
+                                        phase ? dark : blue, 1000,
                                         ESP_GSP_EASE_IN_OUT);
         }
     }

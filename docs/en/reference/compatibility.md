@@ -12,10 +12,10 @@ runtime APIs; parsing, editing, or constructing bundle internals is unsupported.
 
 | Item | Current value | Link |
 |---|---:|---|
-| ESP-GSP component | `1.1.0` | [Component Registry](https://components.espressif.com/components/espressif/esp-gsp/versions/1.1.0/readme) |
-| ESP-GSP simulator | `1.1.0` | [Binary (manifest)](https://dl.espressif.com/AE/gsp/sim/v1.1.0/manifest.json) |
-| Recommended GSPC | `0.2.8` | [Binary (manifest)](https://dl.espressif.com/AE/gsp/gspc/v0.2.8/manifest.json) |
-| GSB | `2.6` |  |
+| ESP-GSP component | `1.2.0` | [Component Registry](https://components.espressif.com/components/espressif/esp-gsp/versions/1.2.0/readme) |
+| ESP-GSP simulator | `1.2.0` | [Binary (manifest)](https://dl.espressif.com/AE/gsp/sim/v1.2.0/manifest.json) |
+| Recommended GSPC | `0.3.0` | [Binary (manifest)](https://dl.espressif.com/AE/gsp/gspc/v0.3.0/manifest.json) |
+| GSB | `2.7` |  |
 | GRB | `1.4` |  |
 | GFB | `1.2` |  |
 | GSPB | `1.2` |  |

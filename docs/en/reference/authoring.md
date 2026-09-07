@@ -1,6 +1,6 @@
 # ESP-GSP Authoring Reference
 
-GSPC version: 0.2.8.
+GSPC version: 0.3.0.
 
 ## Scene keys
 
@@ -100,6 +100,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
@@ -165,6 +166,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
@@ -230,6 +232,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
@@ -287,6 +290,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
@@ -351,6 +355,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
@@ -416,6 +421,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
@@ -483,6 +489,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
@@ -552,6 +559,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
@@ -620,6 +628,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
@@ -692,6 +701,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
@@ -764,6 +774,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
@@ -832,6 +843,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
@@ -899,6 +911,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
@@ -968,6 +981,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
@@ -1034,6 +1048,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
@@ -1102,6 +1117,7 @@ A named clock generates `gsp_<scene>_<name>_set_time()`; the helper validates a 
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
@@ -1175,6 +1191,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
@@ -1252,6 +1269,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
@@ -1323,6 +1341,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
@@ -1390,6 +1409,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
@@ -1456,6 +1476,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
@@ -1531,6 +1552,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
@@ -1605,6 +1627,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
+| `rotation` | int | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box [-32768..32767] *(dynamic)* |
 | `scalable` | bool | `false` | enable runtime image scaling |
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |

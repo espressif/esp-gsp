@@ -1,4 +1,4 @@
-version: 1.1.0
+version: 1.2.0
 targets:
 - esp32c3
 - esp32s3
@@ -14,23 +14,34 @@ dependencies:
     public: true
     registry_url: https://components.espressif.com
   idf: '>=6.0'
+  espressif/esp_display_present:
+    version: ^1.0.2
+    registry_url: https://components.espressif.com
   espressif/freetype:
     version: ^2.14.2
     registry_url: https://components.espressif.com
   espressif/esp_new_jpeg:
     version: 1.*
     registry_url: https://components.espressif.com
-  espressif/esp_display_present:
-    version: ==1.0.1
 files:
   include:
-  - README_CN.md
+  - README_zh.md
   - .gspc_version
   - examples/hello_world/**/*
   - examples/showcase/**/*
   - examples/common/**/*
   - examples/benchmark/**/*
   - examples/widgets/**/*
+  - examples/sim_bridge_media/**/*
+  - tools/sim_bridge/build.py
+  - tools/sim_bridge/run.py
+  - tools/sim_bridge/protocol.h
+  - tools/sim_bridge/CMakeLists.txt
+  - tools/sim_bridge/README.md
+  - tools/sim_bridge/src/*.c
+  - tools/sim_bridge/src/*.h
+  - tools/sim_bridge/include/*.h
+  - tools/sim_bridge/profiles/*.yaml
   exclude:
   - src/**/*
   - priv_include/**/*
@@ -45,6 +56,7 @@ files:
   - formats/**/*
   - config/**/*
   - ci/**/*
+  - dev_docs/**/*
   - .ci-build/**/*
   - build/**/*
   - build-*/**/*
@@ -55,6 +67,7 @@ files:
   - .codewhale/**/*
   - .vscode/**/*
   - tools/**/*
+  - tools/sim_bridge/tests/**/*
   - skills/**/*
   - docs/_generator/**/*
   - docs/en/reference/binary-format.md
@@ -67,6 +80,9 @@ files:
   - include/gsp/sim/**/*
   - cmake/esp_gsp_project_config_host.c.in
   - cmake/gsp_portable_targets.cmake
+sbom:
+  supplier: 'Organization: Espressif Systems (Shanghai) CO LTD'
+  originator: 'Organization: Espressif Systems (Shanghai) CO LTD'
 url: https://github.com/espressif/esp-gsp
 repository: https://github.com/espressif/esp-gsp.git
 issues: https://github.com/espressif/esp-gsp/issues

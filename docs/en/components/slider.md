@@ -13,10 +13,10 @@ unpacked component or public repository root:
 
 ```sh
 mkdir -p build/widget-preview
-python -m gsp.execute --version 0.2.8 gspc pack \
+python -m gsp.execute --version 0.3.0 gspc pack \
   examples/widgets/slider/slider.json \
   --deployable -o build/widget-preview/slider.gspb
-python -m gsp.execute --version 1.1.0 sim \
+python -m gsp.execute --version 1.2.0 sim \
   --bundle build/widget-preview/slider.gspb
 ```
 
@@ -193,6 +193,7 @@ These signatures come from the actual compiler output for this JSON.
 | `fit` | `enum` | — | default stretch; `stretch`, `fill`, `contain`, `cover` | — | image fit mode |
 | `position_x` | `number` | — | default 0.5; 0.0…1.0 | — | image fit horizontal alignment |
 | `position_y` | `number` | — | default 0.5; 0.0…1.0 | — | image fit vertical alignment |
+| `rotation` | `int` | — | default 0; -32768…32767 | yes | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
 | `scalable` | `bool` | — | default `false` | — | enable runtime image scaling |
 | `scale` | `number` | — | default 1.0; 0.0625…16.0 | — | initial runtime image scale |
 | `min_scale` | `number` | — | default 0.5; 0.0625…16.0 | — | minimum runtime image scale |

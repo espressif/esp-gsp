@@ -1,6 +1,6 @@
 # 模拟器参考
 
-`gsp_sim_host` 是 ESP-GSP 的独立模拟器。它在开发主机上运行编译后的 WASI 运行时，
+ESP-GSP 的独立模拟器以预编译可执行文件提供，
 提供交互式浏览器预览、CLI 脚本化输入和 JSON-RPC 自动化 API。
 
 ## 获取模拟器
@@ -55,10 +55,12 @@ gsp_sim_host: browser preview listening at http://127.0.0.1:3222/
 | 指针输入 | 鼠标点击和拖拽映射为模拟器输入 |
 | 缩放控制 | 支持 25 %–400 % 视口缩放 |
 | 场景导航 | 上一场景（◀）、下一场景（▶）、重置（↺）按钮 |
-| 日志面板 | 分标签显示回调事件、宿主日志和 C/WASI stderr 输出 |
+| 日志面板 | 分标签显示回调事件、宿主日志和运行时诊断 |
 
-启用后端时，场景导航按钮的操作会被服务端拒绝。当 `--input-mode` 为 `api-exclusive`
-时，鼠标点击被拒绝并报 `input_busy` 错误。两种情况均在日志面板中显示。
+启用 Backend 时，场景导航按钮和应用状态写操作会被服务端拒绝，并报
+`backend_exclusive` 错误。Browser 仍可发送点击、拖拽等输入并接收实时帧。当
+`--input-mode` 为 `api-exclusive` 时，鼠标点击被拒绝并报 `input_busy` 错误。
+这些情况均在日志面板中显示。
 
 支持多个浏览器同时连接；每个连接独立维护关键帧状态和订阅列表。
 
@@ -82,7 +84,7 @@ gsp_sim_host: browser preview listening at http://127.0.0.1:3222/
 | `--headless` | 不启动浏览器预览 |
 | `--visual-listen <ADDR>` | 预览绑定地址；与 `--headless` 互斥 |
 | `--input-mode <MODE>` | 输入归属：`shared`（默认）/ `api-exclusive` / `browser-exclusive` |
-| `--fail-on-error` | WASI 输出 `E (...)` 错误日志时以非 0 退出 |
+| `--fail-on-error` | 运行时输出 `E (...)` 错误日志时以非 0 退出 |
 
 ### 脚本化操作
 
@@ -172,7 +174,7 @@ API 控制通道支持脚本驱动和 AI agent 自动化，使用 JSON-RPC 2.0 �
 
 | 方法 | 参数 | 说明 |
 |---|---|---|
-| `goto_scene` | `{ "scene": N }` | 切换到 0-based 索引的场景 |
+| `goto_scene` | `{ "scene": N, "transition": N }` | 切换到 0-based 索引的场景；`transition` 可省略 |
 | `reset` | — | 重新加载场景包 |
 | `set_value` | `{ "bind_id": N, "value": N }` | 设置绑定的整数值 |
 | `set_text` | `{ "bind_id": N, "text": "..." }` | 设置文本绑定 |
@@ -180,6 +182,16 @@ API 控制通道支持脚本驱动和 AI agent 自动化，使用 JSON-RPC 2.0 �
 | `set_visible` | `{ "bind_id": N, "visible": bool }` | 设置组件可见性 |
 | `set_component_i32` | `{ "component_key": N, "property_key": N, "value": N }` | 通过键设置组件属性 |
 | `keyboard_attach` | `{ "action_id": N, "text_bind": N }` | 关联虚拟键盘 |
+| `set_cursor` | `{ "bind_id": N }` | 显示/隐藏文本光标；`65535` 隐藏 |
+| `set_swipe_transition` | `{ "transition": N }` | 设置滑动切页视觉效果 |
+| `set_swipe_fade_black_point` | `{ "drag_percent": N }` | 设置滑动淡黑阈值（1..99） |
+| `drawer_open` / `drawer_close` | `{ "component_key": N, "animated": bool }` | 打开/关闭 Drawer |
+| `drawer_is_open` | `{ "component_key": N }` | 查询 Drawer 状态 |
+| `page_flow_set_page` | `{ "component_key": N, "page": N, "animated": bool }` | 设置 PageFlow 页面 |
+| `list_bind_component` | `{ "component_key": N }` | 绑定固定条目的 List/Wheel，返回 `list` 句柄 |
+| `list_snap` | `{ "list": N, "enable": bool }` | 开关 Wheel 行吸附 |
+| `list_fling` | `{ "list": N, "velocity_px_s": N }` | 启动列表惯性滑动 |
+| `list_scroll_to` | `{ "list": N, "offset_px": N }` | 设置列表绝对滚动偏移 |
 | `set_swipe_enabled` | `{ "enabled": bool }` | 启用或禁用滑动切页 |
 | `fling_messages` | `{ "velocity_px_s": N }` | 模拟列表快速滑动 |
 
@@ -197,6 +209,9 @@ API 控制通道支持脚本驱动和 AI agent 自动化，使用 JSON-RPC 2.0 �
 | `unsubscribe` | `{ "events": [...] }` | 取消订阅 |
 | `quit` | — | 请求模拟器退出 |
 
+API 通道保持仅 JSON-RPC。应用 Backend 还提供下文说明的异步动态数据与二进制媒体扩展；
+Browser 不会获得这些数据源请求或二进制上传权限。
+
 ### 通知事件
 
 事件以 JSON-RPC 通知的形式推送（无 `id` 字段）。需先通过 `subscribe` 注册；
@@ -207,9 +222,12 @@ API 通道默认不订阅任何事件。
 | `scene_changed` | `{ "from": N, "to": N }` | 场景切换 |
 | `callback` | `{ "action_id": N, "arg": N, "scene_id": N, "list": N, "item": N }` | 组件回调 |
 | `frame` | `{ "index": N }` | 每帧推送 |
+| `list_bind` | `{ "list": N, "slot": N, "instance": N, "item": N, "resource_slot": N, "text_slot": N }` | Backend 动态 List/Grid 行请求；Grid 成员槽位，65535 表示缺失（List 两者均缺失） |
+| `list_bind_overflow` | `{ "dropped": N, "level": "warn", "message": "..." }` | Backend 行请求丢失；原生桥接器要求重启会话 |
+| `binary_result` | `{ "transfer_id": "...", "ok": bool, ... }` | Backend 二进制上传接受结果 |
 | `backend_state` | `{ "state": "attached"\|"detached" }` | 后端连接/断开 |
 | `log` | `{ "level": "...", "message": "..." }` | 宿主日志 |
-| `wasi_log` | `{ "message": "..." }` | C/WASI stderr 输出 |
+| `wasi_log` | `{ "message": "..." }` | 运行时诊断（为兼容保留通知名称） |
 
 ### 错误码
 
@@ -217,8 +235,8 @@ API 通道默认不订阅任何事件。
 |---|---|---|
 | `-32600` | Invalid Request | 缺少 `jsonrpc: "2.0"` |
 | `-32601` | Method Not Found | 未知方法名 |
-| `-32601` | Method Not Allowed | 后端调用了不在允许列表中的方法 |
-| `-32601` | Backend Exclusive | 后端启用时，非后端通道调用了 `goto_scene` 或 `reset` |
+| `-32601` | Method Not Allowed | 当前通道调用了不允许的方法 |
+| `-32601` | Backend Exclusive | Backend 启用后，非 Backend 通道调用了应用状态写方法 |
 | `-32602` | Invalid Params | 参数缺失或类型错误 |
 | `-32603` | Internal Error | 宿主内部错误 |
 | `-32010` | Input Busy | `--input-mode` 阻止了当前通道发送输入 |
@@ -278,20 +296,28 @@ sock.close()
 后端通道允许应用业务逻辑在模拟过程中驱动 UI，复现固件 C API 的交互行为。
 通过 `--backend-listen <URL>` 启用（TCP 或 Unix 套接字；不支持 stdio）。
 
-后端连接后：
+启用 Backend 后：
 
-- `goto_scene` 和 `reset` 变为后端专属方法，其他通道调用收到
-  `backend_exclusive` 错误。
-- 后端自动订阅 `callback` 和 `scene_changed`。
+- 应用状态写操作以及 `goto_scene`、`reset` 变为 Backend 专属方法；API 调用收到
+  `backend_exclusive`，Browser 调用始终收到 `method not allowed`。
+- 后端自动订阅 `callback`、`scene_changed`、`list_bind`、`list_bind_overflow`、`binary_result`、`image_complete` 和 `image_release`。
 - 同一时间只允许一个后端连接。
 
 使用 `--backend-required` 可在后端连接前暂停帧推进，`--backend-idle-timeout <SECS>`
 设置等待超时。
 
-后端可调用的方法：`ping`、`capabilities`、`set_value`、`set_color`、
-`set_visible`、`set_text`、`set_component_i32`、`keyboard_attach`、
-`set_swipe_enabled`、`goto_scene`、`reset`、`subscribe`、`unsubscribe`。
-调用其他方法（如 `tap`、`screenshot`、`quit`）将返回 `method not allowed`。
+Backend 可调用上方列出的状态和应用逻辑方法，包括光标/滑动策略、Drawer、PageFlow
+和固定条目 List/Wheel。还可用 `list_bind_remote` / `grid_bind_remote` 绑定动态集合、
+用 `list_set_total` 设置总数，并对 `list_bind` 通知调用带令牌校验的 `row_publish`。
+业务处理期间行可能被回收；行更新返回非零结果码表示令牌已失效，必须丢弃。
+
+Backend TCP/Unix 连接还支持 COPY 型 Content-Length 二进制上传：`X-GSP-Kind: image`
+和 `row-image` 接受 PNG、JPEG、QOI；`canvas` 接受携带 stride、height（可选脏区）的完整
+原始帧。Host 用 `binary_result` 确认接受结果；Direct Draw 回调仍在渲染任务内，远程
+生产者应推帧而不是等待回调，`canvas_stop` 负责停止。上述扩展只对 Backend 开放；
+原生 C 生产者建议使用组件中的 [bridge 库](../../../tools/sim_bridge/README.md)
+处理帧传输和缓冲生命周期。模拟器能力位图以
+`ESP_GSP_SIM_CAP_QOI`（bit 7，值 `128`）声明 QOI 解码支持。
 
 ### 后端 Python 示例
 
@@ -351,6 +377,82 @@ while True:
     if msg.get("method"):
         backend._on_notification(msg)
 ```
+
+## 原生 C Backend 工程
+
+`tools/sim_bridge` 提供 `gsp_add_backend(target SOURCES ... SCENES ...)`，
+将业务 C 源码与原生兼容库链接，自动生成 deployable bundle 和配套头文件。
+`INCLUDE_DIRECTORIES` 可添加业务头文件目录，`PROFILE` 可覆盖默认 RGB565
+profile。PC 适配文件实现 `gsp_bridge_app_init(ui)` 与
+`gsp_bridge_app_deinit(ui)`；不用在 PC 端执行 ESP-LCD 启动或链接完整 GSP 渲染库。
+
+启动方式与示例拆分见[复用 C UI 业务代码](../guide/simulator-preview.md#复用-c-ui-业务代码)。
+已安装组件中的 [bridge README](../../../tools/sim_bridge/README.md) 列出完整支持范围；未实现的 C 函数会链接失败，
+不会静默模拟成功。此版本不支持多线程直接调用、自动重连或 reset 后的状态重放。
+
+`capabilities.bridge_media_version: 1` 还支持原生动态 List/Grid binder、行字段、
+PNG/JPEG/QOI COPY 图片和 Canvas push/draw/invalidate/stop。
+`examples/sim_bridge_media` 提供可运行示例。List 需要编译出的 runtime row
+template；Grid 模板图片需 `dynamic_image: true`，回调会收到实际资源/文本槽位。
+行令牌在回收失效前可重复使用；行请求溢出会使原生桥接会话失败，需重启而非自动重放。
+
+Canvas draw 在 poll 时绘制完整本地离屏缓冲，再上传全帧；脏区失效也如此，不复现
+设备端渲染任务/分块时序。draw 内仅允许只读 GSP 查询；场景切换后需重新注册回调。
+同步 push 会停用该目标的 draw callback，成功时在返回前调用一次 release，失败时
+所有权仍归调用方。上传成功不代表渲染完成。
+
+`canvas_try_push*` 不执行网络 I/O，而是将借用指针放入本地 8 帧 FIFO；成功后立即
+停用目标的本地 draw callback。队列满返回 TIMEOUT，不转移所有权。整个帧缓冲应
+保持不可改写直到释放。poll 上传帧；后续同步 GSP RPC 也先排空此前帧以保持顺序。
+目标/步长/脏区校验或场景不符可在入队后拒绝帧并打印诊断；无论上传、拒绝还是
+本地关闭，已接收帧均恰好释放一次，release 不表示宿主接受/呈现。排队帧的 release
+可在同步 RPC 前触发，不得写 GSP 状态、poll 或 close。默认入口在 app deinit 前
+取消待上传帧；自定义入口保持上下文到 bridge close 返回。强制终止不保证回调。
+
+`bridge_fence_version: 1` 新增仅限 Backend 的 `render_fence`（参数 `{}`，随后
+一次宿主 step/渲染尝试后返回 `{"result_code":0}`），由 `esp_gsp_flush` 使用。
+API/Browser 不开放此方法，API 的帧数等待仍用 `wait`。先 poll 完成本地 Canvas
+上传/重绘，否则 flush 返回 INVALID_STATE。flush 不派发业务回调，不等待动画、
+图片发布或浏览器呈现，空闲 step 无画面变化也能完成栅栏。有限超时覆盖其网络 I/O；
+UINT32_MAX 无限等待。零超时只本地排队并返回 TIMEOUT。超时保留栅栏和半包，
+后续 poll/RPC 继续处理，不取消请求或使连接失效。原生库最多保留 16 个未完成
+栅栏，满时返回 TIMEOUT 且不入队。poll 自身的 timeout 只是空闲等待，不是上传
+时限。生产者暂停/poll/flush 用法见 `tools/sim_bridge/README.md`。
+
+`bridge_image_version: 1` 新增图片 EX COPY/BORROW/TAKE、borrowed/owned 辅助函数、
+完成/释放回调和缓存键。传输仍为 COPY，原生 borrowed/owned 输入保留到 GSP 实际
+释放。`image_complete` 报告运行时发布/失败/取消；`image_release` 结束输入保留。
+回调在 poll 中执行，不在宿主渲染任务。最多保留 128 个跟踪请求；立即拒绝不转移
+所有权、不触发回调。本地退出时，尚未收到完成结果的请求按主动关闭报告 CANCELLED，
+按传输失败报告 IO，不据此断言宿主图片的最终状态。默认入口在 app deinit 前结清
+回调；自定义入口须保持上下文到 bridge close 返回。完整语义见桥接库 README。
+
+宿主补充两个仅限 Backend 的方法：
+
+- `bridge_call`：固定宽度标量查询、类型化写入、动画、Canvas 尺寸/格式/场景信息及
+  component RESOURCE bind 查询；不接受任何原生指针。
+- `component_set_text`：通过组件键写文本。
+
+原有 `set_value`、`set_text`、`set_component_i32` 等仍直接复用。
+`capabilities` 返回 `bridge_version: 1`、`bridge_media_version: 1`、`bridge_image_version: 1` 和 `current_scene`
+用于初始协商。
+另有 `bridge_fence_version: 1` 表示渲染栅栏支持。应用通常直接使用 C 包装接口，
+无需自行编码这些操作。标量操作编号随组件的 `tools/sim_bridge/protocol.h` 提供。
+
+启动器默认使用脚本所属组件，通常位于 `managed_components/espressif__esp-gsp`，
+构建输出在应用工作目录下。GSPC 版本由 `.gspc_version` 选择；模拟器版本由所选
+组件的 `idf_component.yml` 选择，均调用已安装的 `esp-gsp-tools`。
+`GSPC_EXECUTABLE` / `GSP_SIM_EXECUTABLE` 可覆盖工具路径；`GSP_SIM_VERSION`
+覆盖管理器使用的模拟器版本；`ESP_GSP_COMPONENT_DIR` 覆盖组件路径。
+对应命令行参数优先，不会隐式选择 PATH 或开发构建中的其他工具版本。
+直接 CMake 和解压组件的用法见 bridge README。
+
+启动器使用 `--ready-file <PATH>` 获取 JSON：
+`version`、`pid`、`backend`、`browser`、`bridge_version`。
+未启用的端点为 null。PID 属于模拟器而非 Python 管理器父进程。
+调用方须使用每次启动独有的新路径，校验进程归属，容忍文件写入
+过程并在结束时清理；就绪文件不表示业务初始化完成，也不是进程存活检查。
+Backend-only headless 模式同样按墙钟节奏推进，便于与原生定时器配合。
 
 ## 验收边界
 

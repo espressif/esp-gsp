@@ -74,16 +74,13 @@ typedef struct {
     size_t instance_slots;
     /** Total runtime glyph-run capacity, including caller and List handles. */
     size_t glyph_run_slots;
-    /** Dynamic-text shaping slots: one per bind or template text widget
-     *  that can hold shaped text at the same time. Zero keeps the default
-     *  (32) — enough for ~19 concurrent dynamic texts plus headroom. Each
-     *  slot costs ~386 bytes of heap, so on no-PSRAM targets size this to
-     *  the scene's actual peak concurrent text count instead of raising
-     *  the default. Values above ESP_GSP_TEXT_SLOTS reserve a larger
-     *  glyph-run handle space (text slots occupy the low handles). */
+    /** Legacy explicit override for dynamic-text shaping slots. Zero keeps
+     *  AUTO, which uses the bundle's authored requirement. One slot is
+     *  needed per bind or template text widget that can hold shaped text at
+     *  the same time; text slots occupy the low glyph-run handles. */
     size_t text_slots;
-    /** Logical runtime image targets; the facade reserves two generations
-     *  internally for each target. */
+    /** Legacy explicit override for logical runtime image targets. Zero keeps
+     *  AUTO; the facade reserves two generations internally per target. */
     size_t dynamic_image_slots;
     size_t image_cache_bytes;
     const gsp_font_catalog_t *font_catalog;
@@ -91,10 +88,11 @@ typedef struct {
     size_t dirty_capacity;
     bool disable_swipe;
     bool disable_bundle_crc;
-    /** Select POINTER_POLL_MS instead of IDLE_POLL_MS from the resolved
-     * project/application policy. Platform touch runners set this. */
+    /** Select POINTER_POLL_MS as the idle service interval. Platform touch
+     * runners set this so polling input can discover the first press. */
     bool use_pointer_poll;
-    uint32_t idle_poll_ms;      /*!< default GSP_APP_IDLE_POLL_MS */
+    /** Explicit idle service interval; zero selects resolved policy. */
+    uint32_t idle_poll_ms;
 } gsp_app_config_t;
 
 typedef struct {

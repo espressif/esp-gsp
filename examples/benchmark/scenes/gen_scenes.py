@@ -4,28 +4,48 @@
 # SPDX-License-Identifier: LicenseRef-Espressif-Modified-MIT
 """Generates the per-resolution benchmark scenes and validates image assets.
 
-One scene, one full-screen page layer per benchmark case, mirroring
-lv_demo_benchmark where its scenes map onto GSP render classes and
-extending it to cover every widget, image codec path and font size the
-framework supports. The app cycles page visibility, samples the
-rendered-frame counter per page and prints a duration-weighted summary.
+One full-screen layer per authored case, with a separate transition scene.
+The app cycles visibility and reports measured frame/time counters. See
+COVERAGE.md for the exercised controls, rendering paths and test boundaries.
 """
 
 import argparse
 import io
 import json
+import math
 import os
+import re
 import sys
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 RESOLUTIONS = [(1024, 600), (800, 480), (480, 800), (360, 360),
                (320, 240), (240, 240)]
-FONT = "../../common/fonts/DejaVuSans.ttf"
+FONT = "../fonts/DejaVuSans.ttf"
 
-LOREM = ("The quick brown fox jumps over the lazy dog. "
-         "Pack my box with five dozen liquor jugs. " * 6)
+LOREM = ("GSP / RENDER LAB. Retained scenes, native controls and explicit "
+         "damage tracking. Images, glyphs and translucent layers share one "
+         "composition pipeline. Measure frames against elapsed time. "
+         "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789. " * 12)
+
+CASE_PATTERN = re.compile(
+    r'^BENCH_CASE\((\w+),\s*\w+,\s*"([^"]+)",\s*"([^"]+)"')
+CASE_LINES = (Path(__file__).resolve().parents[1] /
+              "main/bench_cases.inc").read_text().splitlines()
+CASE_MATCHES = [match for line in CASE_LINES
+                if (match := CASE_PATTERN.match(line))]
+CASES = {match[1].lower(): (index + 1, match[2], match[3])
+         for index, match in enumerate(CASE_MATCHES)}
+
+PALETTE = {
+    "#101820": "#07121E", "#203048": "#10283B",
+    "#1C2534": "#102334", "#26324A": "#153447",
+    "#5090E0": "#19D3FF", "#5070B0": "#267B9B",
+    "#60C080": "#52E8BA", "#8098C0": "#86AFC6",
+    "#D0D8F0": "#DBF4FF", "#F0B040": "#FFAF4D",
+    "#E05050": "#FF745A", "#40C080": "#155D70",
+}
 
 FONT_PALETTES = {
     240: (8, 9, 11, 12, 13, 14, 16, 20),
@@ -38,10 +58,11 @@ FONT_PALETTES = {
 
 def validate_assets():
     expected = {
-        "bench_rgb.png": ("RGB", (640, 480)),
         "bench_scale.png": ("RGB", (96, 64)),
-        "bench_argb.png": ("RGBA", (320, 240)),
+        "bench_industrial.png": ("RGB", (640, 480)),
+        "bench_industrial_argb.png": ("RGBA", (320, 240)),
         "bench_anim.gif": ("P", (120, 120)),
+        "bench_anim_sparse.gif": ("P", (120, 120)),
     }
     for name, (mode, size) in expected.items():
         with Image.open(name) as image:
@@ -51,10 +72,13 @@ def validate_assets():
             if image.size != size:
                 raise ValueError(
                     f"{name}: expected {size}, found {image.size}")
-    with Image.open("bench_argb.png") as image:
+    with Image.open("bench_industrial_argb.png") as image:
         if image.getchannel("A").getextrema() != (0, 255):
-            raise ValueError("bench_argb.png must contain real alpha coverage")
+            raise ValueError(
+                "bench_industrial_argb.png must contain real alpha coverage")
     with Image.open("bench_anim.gif") as image:
+        if image.info.get("loop") != 0:
+            raise ValueError("bench_anim.gif must loop indefinitely")
         if image.n_frames != 24:
             raise ValueError(
                 f"bench_anim.gif: expected 24 frames, found {image.n_frames}")
@@ -65,15 +89,124 @@ def validate_assets():
         if any(duration != 50 for duration in durations):
             raise ValueError(
                 "bench_anim.gif: every frame must last exactly 50 ms")
+    with Image.open("bench_anim_sparse.gif") as image:
+        if image.info.get("loop") != 0:
+            raise ValueError("bench_anim_sparse.gif must loop indefinitely")
+        if image.n_frames != 24:
+            raise ValueError(
+                "bench_anim_sparse.gif: expected 24 frames, "
+                f"found {image.n_frames}")
+        durations = []
+        previous = None
+        expected_changes = {
+            *((x, y) for y in range(16, 24) for x in range(8, 16)),
+            *((x, y) for y in range(96, 104) for x in range(104, 112)),
+        }
+        for frame in range(image.n_frames):
+            image.seek(frame)
+            durations.append(image.info.get("duration"))
+            current = image.convert("RGB")
+            if previous is not None:
+                changed = {
+                    (x, y)
+                    for y in range(image.height)
+                    for x in range(image.width)
+                    if current.getpixel((x, y)) != previous.getpixel((x, y))
+                }
+                if changed != expected_changes:
+                    raise ValueError(
+                        "bench_anim_sparse.gif: each frame must change "
+                        "exactly two distant 8x8 regions")
+            previous = current
+        if any(duration != 50 for duration in durations):
+            raise ValueError(
+                "bench_anim_sparse.gif: every frame must last exactly 50 ms")
 
 
 def scale_asset_bytes():
     """Build the small, deterministic runtime-scaling benchmark source."""
-    with Image.open("bench_rgb.png") as source:
+    with Image.open("bench_industrial.png") as source:
         image = source.convert("RGB").resize(
             (96, 64), Image.Resampling.LANCZOS)
     output = io.BytesIO()
     image.save(output, format="PNG", optimize=False)
+    return output.getvalue()
+
+
+def sparse_animation_bytes():
+    """Build two distant 8x8 changes over an orientation-readable backdrop."""
+    width = height = 120
+    colors = [
+        (18, 28, 44),    # background
+        (32, 49, 72),    # grid
+        (38, 61, 88),    # lower triangle
+        (50, 76, 106),   # upper triangle
+        (0, 220, 170),   # top-left phase A
+        (120, 255, 90),  # top-left phase B
+        (255, 176, 48),  # bottom-right phase A
+        (255, 88, 144),  # bottom-right phase B
+        (224, 236, 248), # border
+    ]
+    palette = [channel for color in colors for channel in color]
+    palette.extend([0] * (256 * 3 - len(palette)))
+    background = []
+    for y in range(height):
+        for x in range(width):
+            if x in (0, width - 1) or y in (0, height - 1):
+                color = 8
+            elif x % 16 == 0 or y % 16 == 0:
+                color = 1
+            else:
+                color = 2 if x < y else 3
+            background.append(color)
+    frames = []
+    for index in range(24):
+        frame = Image.new("P", (width, height))
+        frame.putpalette(palette)
+        frame.putdata(background)
+        pixels = frame.load()
+        left = 4 if index % 2 == 0 else 5
+        right = 6 if index % 2 == 0 else 7
+        for y in range(16, 24):
+            for x in range(8, 16):
+                pixels[x, y] = left
+        for y in range(96, 104):
+            for x in range(104, 112):
+                pixels[x, y] = right
+        frames.append(frame)
+    output = io.BytesIO()
+    frames[0].save(output, format="GIF", save_all=True,
+                   append_images=frames[1:], duration=50, loop=0,
+                   disposal=1, optimize=False)
+    return output.getvalue()
+
+
+def scanner_animation_bytes():
+    """Fixed 24-frame industrial scan diagnostic, not a captured UI movie."""
+    palette = [7, 18, 30, 21, 52, 71, 25, 211, 255, 82, 232, 186,
+               255, 175, 77]
+    palette.extend([0] * (768 - len(palette)))
+    frames = []
+    for phase in range(24):
+        frame = Image.new("P", (120, 120))
+        frame.putpalette(palette)
+        draw = ImageDraw.Draw(frame)
+        for radius in (22, 38, 54):
+            draw.ellipse((60 - radius, 60 - radius, 60 + radius, 60 + radius),
+                         outline=1, width=2)
+        draw.line((6, 60, 114, 60), fill=1)
+        draw.line((60, 6, 60, 114), fill=1)
+        angle = phase * 15
+        draw.arc((6, 6, 114, 114), angle - 65, angle, fill=2, width=4)
+        x = round(60 + 44 * math.cos(math.radians(angle)))
+        y = round(60 + 44 * math.sin(math.radians(angle)))
+        draw.line((60, 60, x, y), fill=3, width=2)
+        draw.ellipse((x - 4, y - 4, x + 4, y + 4), fill=4)
+        frames.append(frame)
+    output = io.BytesIO()
+    frames[0].save(output, format="GIF", save_all=True,
+                   append_images=frames[1:], duration=50, loop=0,
+                   disposal=1, optimize=False)
     return output.getvalue()
 
 
@@ -86,35 +219,77 @@ class Builder:
         self.row = max(14, height // 14)
         self.gap = max(6, height // 26)
         self.sweep_count = 0
+        self.pages = []
         self.font_palette = FONT_PALETTES[height]
         self.objects = [
             {"type": "container", "parent": -1, "x": 0, "y": 0,
-             "w": width, "h": height, "bg_color": "#101820"},
+             "w": width, "h": height, "bg_color": "#07121E",
+             "bind": "pressure_bg"},
         ]
+        # Packed scenes share font ordinals and glyph sets. Declare the same
+        # bounded palette before either scene's visible labels.
+        fonts = self.add({"type": "layer", "parent": 0, "x": 0, "y": 0,
+                          "w": width, "h": height, "hidden": True,
+                          "bind": "font_palette"})
+        charset = "".join(chr(code) for code in range(32, 127)) + "\u25be"
+        for size in self.font_palette:
+            self.add({"type": "label", "parent": fonts, "x": 0, "y": 0,
+                      "w": width, "h": size + 4, "font_size": size,
+                      "text": charset, "fg_color": "#DBF4FF"})
+        # Shared vector backdrop: the cost is included in every page sample.
+        for index in range(1, 8):
+            self.add({"type": "container", "parent": 0,
+                      "x": index * width // 8, "y": 0,
+                      "w": 1, "h": height, "bg_color": "#112536"})
+        for index in range(1, 5):
+            self.add({"type": "container", "parent": 0,
+                      "x": 0, "y": index * height // 5,
+                      "w": width, "h": 1, "bg_color": "#112536"})
 
-    def page(self, bind, hidden=True, tag=True):
+    def page(self, bind, hidden=True):
         self.objects.append({"type": "layer", "parent": 0, "x": 0,
                              "y": 0, "w": self.w, "h": self.h,
                              "hidden": hidden, "bind": bind})
         layer = len(self.objects) - 1
-        if tag:
-            # Top-left tag naming the scenario under test. Full-surface image
-            # grids opt out so this label cannot be mistaken for a stale or
-            # missing decoded tile.
-            self.add({"type": "label", "parent": layer, "x": 4, "y": 2,
-                      "w": self.w // 2, "h": max(14, self.h // 30),
-                      "text": bind[2:].replace("_", " "),
-                      "font_size": max(11, self.h // 40),
-                      "fg_color": "#8098C0"})
+        self.pages.append((layer, bind))
         return layer
 
     def add(self, obj):
+        for key, value in obj.items():
+            if isinstance(value, str):
+                obj[key] = PALETTE.get(value, value)
         if "font_size" in obj:
             requested = obj["font_size"]
             obj["font_size"] = min(
                 self.font_palette, key=lambda size: abs(size - requested))
         self.objects.append(obj)
         return len(self.objects) - 1
+
+    def finish(self):
+        """Consistent case identification; no synthetic on-screen FPS."""
+        bar_h = max(14, self.h // 28)
+        for page, bind in self.pages:
+            if bind in {"p_storm", "p_messages"}:
+                continue  # These pages have integrated case headers.
+            number, title, category = CASES[bind]
+            self.add({"type": "container", "parent": page,
+                      "x": 0, "y": 0, "w": self.w, "h": bar_h,
+                      "bg_color": "#07121EF0"})
+            self.add({"type": "label", "parent": page, "x": 5, "y": 1,
+                      "w": self.w * 7 // 10, "h": bar_h - 1,
+                      "text": f"{number:02d} / {title.upper()}",
+                      "font_size": max(9, self.h // 48),
+                      "fg_color": "#DBF4FF"})
+            self.add({"type": "label", "parent": page,
+                      "x": self.w * 7 // 10, "y": 1,
+                      "w": self.w * 3 // 10 - 5, "h": bar_h - 1,
+                      "text": category.upper(), "text_align": "right",
+                      "font_size": max(8, self.h // 55),
+                      "fg_color": "#19D3FF"})
+            self.add({"type": "container", "parent": page,
+                      "x": 0, "y": bar_h, "w": self.w, "h": 1,
+                      "bg_color": "#267B9B"})
+        return self.objects
 
     def sweep(self, parent, y, color="#5090E0"):
         """Full-width tween strip forcing redraw on this page (each
@@ -138,6 +313,20 @@ def scene(width, height, rgb888=False):
            "y": height // 2 - row // 2, "w": inner, "h": row,
            "value": 0, "bind": "rv0", "bg_color": "#26324A",
            "fg_color": "#5090E0"})
+    b.add({"type": "label", "parent": p, "x": m,
+           "y": height // 3, "w": inner, "h": row * 2,
+           "text": "RASTER / 01", "font_size": max(20, height // 15),
+           "fg_color": "#DBF4FF"})
+    for index in range(21):
+        b.add({"type": "container", "parent": p,
+               "x": m + index * (inner - 1) // 20,
+               "y": height // 2 + row, "w": 1,
+               "h": row // 2 if index % 5 == 0 else row // 4,
+               "bg_color": "#267B9B"})
+    b.add({"type": "label", "parent": p, "x": m,
+           "y": height * 2 // 3, "w": inner, "h": row * 2,
+           "text": "SOLID FILL / LIVE VALUE RAMP", "font_size": max(9, height // 40),
+           "fg_color": "#86AFC6"})
 
     # P2 multiple rects.
     p = b.page("p_rects")
@@ -159,12 +348,16 @@ def scene(width, height, rgb888=False):
     card_w = inner // 3 - gap
     card_h = height // 3 - gap
     for index in range(6):
-        b.add({"type": "rect" if index == 0 else "container", "parent": p,
+        card = b.add({"type": "rect" if index == 0 else "container", "parent": p,
                "x": m + (index % 3) * (card_w + gap),
                "y": height // 8 + (index // 3) * (card_h + gap),
                "w": card_w, "h": card_h, "bg_color": "#203048",
                "bind": f"cc{index}", "radius": 14,
                "border_color": "#5070B0", "border_width": 3})
+        b.add({"type": "label", "parent": card, "x": 6, "y": card_h // 4,
+               "w": card_w - 12, "h": card_h // 2,
+               "text": f"0{index + 1}", "font_size": max(16, card_h // 3),
+               "fg_color": "#DBF4FF", "text_align": "center"})
 
     # P3b decorative vector shapes. One dynamic theme drives every primitive
     # so the page continuously measures rect/round-rect/ellipse/line raster
@@ -293,8 +486,12 @@ def scene(width, height, rgb888=False):
     y = height // 8
     line = max(18, height // 9)
     for index in range(4):
+        b.add({"type": "container", "parent": p, "x": m - 5, "y": y - 2,
+               "w": inner + 10, "h": line + 4, "radius": 4,
+               "bg_color": "#10283B"})
         b.add({"type": "label", "parent": p, "x": m, "y": y,
-               "w": inner, "h": line, "text": f"line {index}",
+               "w": inner, "h": line, "text": f"GLYPH / CHANNEL {index:02d}",
+               "font_size": max(12, min(height // 22, width // 22)),
                "bind": f"t{index}", "fg_color": "#D0D8F0"})
         y += line + gap
 
@@ -306,7 +503,7 @@ def scene(width, height, rgb888=False):
     b.add({"type": "label", "parent": p, "x": m // 2,
            "y": height // 20, "w": width - m,
            "h": height - height // 10,
-           "text": LOREM[: max(80, (width * height) // 2400)],
+           "text": LOREM,
            "font_size": max(13, height // 26), "fg_color": "#C8D2E8"})
 
     # P10 scroll simulation: a column of rows rewritten every tick.
@@ -315,7 +512,7 @@ def scene(width, height, rgb888=False):
     line = max(16, height // 11)
     for index in range(8):
         b.add({"type": "label", "parent": p, "x": m, "y": y,
-               "w": inner, "h": line, "text": ".",
+               "w": inner, "h": line, "text": f"{index + 1:02d} / pipeline ready",
                "bind": f"s{index}", "fg_color": "#B8C4DC"})
         y += line + gap // 2
 
@@ -332,42 +529,34 @@ def scene(width, height, rgb888=False):
                "value": (17 * index) % 101, "bind": f"a{index}",
                "fg_color": "#F0B040", "bg_color": "#282018"})
 
-    # P12 RGB image grid re-blit under a sweep.
-    p = b.page("p_imgrgb")
-    for index in range(9):
-        x = (index % 3) * max(1, (width - 160)) // 2
-        y2 = (index // 3) * max(1, (height - 120)) // 2
-        parent = p
-        if index % 2 == 0:
-            parent = b.add({"type": "layer", "parent": p, "x": x,
-                            "y": y2, "w": 160, "h": 120,
-                            "bind": f"iv{index // 2}"})
-            x, y2 = 0, 0
-        b.add({"type": "image", "parent": parent, "x": x, "y": y2,
-               "w": 160, "h": 120, "image": "bench_rgb.png",
-               "codec": "raw"})
-
-    # P13 ARGB image grid (alpha blend) under a sweep.
-    p = b.page("p_imgargb")
-    for index in range(9):
-        x = (index % 3) * max(1, (width - 160)) // 2
-        y2 = (index // 3) * max(1, (height - 120)) // 2
-        parent = p
-        if index % 2 == 0:
-            parent = b.add({"type": "layer", "parent": p, "x": x,
-                            "y": y2, "w": 160, "h": 120,
-                            "bind": f"av{index // 2}"})
-            x, y2 = 0, 0
-        b.add({"type": "image", "parent": parent, "x": x, "y": y2,
-               "w": 160, "h": 120, "image": "bench_argb.png",
-               "codec": "raw"})
+    # Responsive nine-tile grids keep every image visible at every size.
+    # Five card colors change continuously, invalidating their image subtree.
+    image_gap = max(3, gap // 2)
+    image_top = max(18, height // 16)
+    tile_w = (width - 2 * image_gap) // 3
+    tile_h = (height - image_top - 3 * image_gap) // 3
+    for page_bind, prefix, source in (
+            ("p_imgrgb", "iv", "bench_industrial.png"),
+            ("p_imgargb", "av", "bench_industrial_argb.png")):
+        p = b.page(page_bind)
+        for index in range(9):
+            card = {"type": "container", "parent": p,
+                    "x": (index % 3) * (tile_w + image_gap),
+                    "y": image_top + (index // 3) * (tile_h + image_gap),
+                    "w": tile_w, "h": tile_h, "bg_color": "#153447"}
+            if index % 2 == 0:
+                card["bind"] = f"{prefix}{index // 2}"
+            parent = b.add(card)
+            b.add({"type": "image", "parent": parent, "x": 2, "y": 2,
+                   "w": tile_w - 4, "h": tile_h - 4,
+                   "image": source, "codec": "raw"})
 
     # P13b QOI-decoded grid: tiles are stored compressed (QOI/RLE16 +
     # DECODE_LRU) except dyn0's flash-mapped initial placeholder.
     # Small panels shrink the decoded tiles: no-PSRAM chips must fit
     # the two cache entries next to the frame buffer.
     qw, qh = (160, 120) if width >= 320 else (80, 60)
-    p = b.page("p_qoi", tag=False)
+    p = b.page("p_qoi")
     for index in range(9):
         x = (index % 3) * max(1, (width - qw)) // 2
         y2 = (index // 3) * max(1, (height - qh)) // 2
@@ -379,8 +568,8 @@ def scene(width, height, rgb888=False):
             x, y2 = 0, 0
         tile = {"type": "image", "parent": parent, "x": x, "y": y2,
                 "w": qw, "h": qh, "compress": True,
-                "image": "bench_argb.png" if index % 2 else
-                         "bench_rgb.png"}
+                "image": "bench_industrial_argb.png" if index % 2 else
+                         "bench_industrial.png"}
         if index == 0:
             tile["bind"] = "dyn0"
             del tile["compress"]
@@ -404,7 +593,7 @@ def scene(width, height, rgb888=False):
     # rate. The first three cover every fit policy with a static resource;
     # scale_dynamic is replaced with encoded QOI at page entry so the same
     # measured workload also covers the decoded-cache path.
-    p = b.page("p_scale", tag=False)
+    p = b.page("p_scale")
     scale_top = max(18, height // 14)
     scale_gap = max(4, gap // 2)
     scale_w = max(24, (width - 2 * m - scale_gap) // 2)
@@ -428,19 +617,38 @@ def scene(width, height, rgb888=False):
             image["bind"] = bind
         b.add(image)
 
-    # P13d canvas stream: a placeholder image drawn by the app's
+    # P13d image rotation. Both objects retain exact 1:1 contain geometry:
+    # the app continuously drives one through arbitrary angles and cycles the
+    # other through cardinal angles so the same page covers scalar and PPA
+    # routes with a resolution-independent workload.
+    p = b.page("p_rotate")
+    rotate_size = 96
+    rotate_gap = 8
+    rotate_x = (width - 2 * rotate_size - rotate_gap) // 2
+    rotate_y = (height - rotate_size) // 2
+    for index, name in enumerate(("rotate_arbitrary", "rotate_cardinal")):
+        b.add({
+            "type": "image", "parent": p, "name": name,
+            "x": rotate_x + index * (rotate_size + rotate_gap),
+            "y": rotate_y, "w": rotate_size, "h": rotate_size,
+            "image": "bench_scale.png", "codec": "raw", "fit": "contain",
+            "rotation": {"default": 0, "min": -180, "max": 180},
+        })
+
+    # P13e canvas stream: a placeholder image drawn by the app's
     # synthetic camera / video / custom-stream producer.
     p = b.page("p_stream")
     # The no-PSRAM 240x240 target uses a smaller surface while retaining
-    # the same 25 fps Canvas update path.
+    # the same high-rate Canvas update path.
     cw, ch = ((64, 32) if width < 320 else
               (width // 2, height // 3))
     b.add({"type": "image", "parent": p,
            "x": (width - cw) // 2, "y": (height - ch) // 2,
-           "w": cw, "h": ch, "image": "bench_rgb.png",
+           "w": cw, "h": ch, "image": "bench_industrial.png",
            "codec": "lossless", "bind": "cv0"})
     b.add({"type": "label", "parent": p, "x": m, "y": height // 12,
-           "w": inner, "h": row, "text": "canvas stream 25 fps",
+           "w": inner, "h": row, "text": "CANVAS / DIRTY STREAM",
+           "font_size": max(10, min(height // 26, width // 25)),
            "fg_color": "#8098C0", "text_align": "center"})
 
     # P14 wallpaper composite: tiled images fully covered by a
@@ -449,7 +657,7 @@ def scene(width, height, rgb888=False):
     for ty in range(0, height, 120):
         for tx in range(0, width, 160):
             b.add({"type": "image", "parent": p, "x": tx, "y": ty,
-                   "w": 160, "h": 120, "image": "bench_rgb.png",
+                   "w": 160, "h": 120, "image": "bench_industrial.png",
                    "codec": "raw"})
     b.add({"type": "container", "parent": p, "x": 0, "y": 0,
            "w": width, "h": height, "bg_color": "#102030",
@@ -495,14 +703,14 @@ def scene(width, height, rgb888=False):
             "radius": 12, "callback": "on_static_mover",
         })
         b.add({"type": "image", "parent": mover, "x": 6, "y": 6,
-               "w": image_w, "h": image_h, "image": "bench_rgb.png"})
+               "w": image_w, "h": image_h, "image": "bench_industrial.png"})
         b.add({"type": "label", "parent": mover, "x": 6,
                "y": mover_h - 20, "w": mover_w - 12, "h": 16,
                "text": f"static SRAM {index}", "font_size": 12,
                "fg_color": "#FFFFFF"})
     b.add({"type": "image", "parent": p, "x": width // 3,
            "y": height // 3, "w": 160, "h": 120,
-           "image": "bench_argb.png"})
+           "image": "bench_industrial_argb.png"})
 
     # P16c moving instances: template widgets swept across the full
     # screen by the app (the lvgl moving-wallpaper counterpart).
@@ -518,12 +726,12 @@ def scene(width, height, rgb888=False):
                  "w": 100, "h": 100, "bg_color": "#40C080",
                  "radius": 16, "template": "box", "max_instances": 4})
     b.add({"type": "image", "parent": tpl, "x": 10, "y": 10,
-           "w": 80, "h": 60, "image": "bench_rgb.png"})
+           "w": 80, "h": 60, "image": "bench_industrial.png"})
     b.add({"type": "container", "parent": 0, "x": 0, "y": 0,
            "w": 140, "h": 140, "bg_color": "#E06090",
            "opacity": 110, "radius": 20, "template": "veil"})
     b.add({"type": "image", "parent": 0, "x": 0, "y": 0,
-           "w": 160, "h": 120, "image": "bench_argb.png",
+           "w": 160, "h": 120, "image": "bench_industrial_argb.png",
            "template": "sprite"})
 
     # A real album-style Grid keeps the public component in every benchmark
@@ -541,13 +749,13 @@ def scene(width, height, rgb888=False):
     })
     b.add({"type": "image", "parent": gallery_cell, "x": 0, "y": 0,
            "w": grid_cell_w, "h": grid_cell_h,
-           "image": "bench_rgb.png"})
+           "image": "bench_industrial.png"})
 
     # Moving page shows a tiled backdrop so instance motion composites
     # over real content, not a flat background.
     b.add({"type": "image", "parent": move_page, "x": width // 4,
            "y": height // 4, "w": 160, "h": 120,
-           "image": "bench_argb.png"})
+           "image": "bench_industrial_argb.png"})
 
     p = b.page("p_grid")
     b.add({
@@ -562,12 +770,22 @@ def scene(width, height, rgb888=False):
     # P17 full-page motion: color tween + spinner.
     p = b.page("p_motion")
     b.add({"type": "container", "parent": p, "x": 0, "y": 0,
-           "w": width, "h": height, "bg_color": "#402010",
+           "w": width, "h": height, "bg_color": "#07121E",
            "bind": "wall"})
-    spin = max(24, min(width, height) // 6)
+    spin = max(40, min(width, height) // 4)
+    for index in range(3):
+        diameter = spin + (index + 1) * max(14, min(width, height) // 12)
+        b.add({"type": "arc", "parent": p,
+               "x": (width - diameter) // 2, "y": (height - diameter) // 2,
+               "w": diameter, "h": diameter, "start_angle": 0, "sweep": 360,
+               "thickness": 1, "value": 100, "fg_color": "#267B9B"})
     b.add({"type": "spinner", "parent": p,
            "x": width // 2 - spin // 2, "y": height // 2 - spin // 2,
-           "w": spin, "h": spin, "speed": 900, "fg_color": "#E05050"})
+           "w": spin, "h": spin, "speed": 900, "fg_color": "#52E8BA"})
+    b.add({"type": "label", "parent": p, "x": m, "y": height * 5 // 6,
+           "w": inner, "h": row, "text": "MOTION / CONTINUOUS COMPOSITION",
+           "font_size": max(8, height // 42), "text_align": "center",
+           "fg_color": "#DBF4FF"})
 
     # P16 wheels: three momentum-driven rollers (repeater scroll_blit
     # path under load) over a translucent center selection bar.
@@ -584,7 +802,7 @@ def scene(width, height, rgb888=False):
         b.add({"type": "wheel", "parent": p,
                "x": m + index * (wheel_w + gap), "y": wheel_y,
                "w": wheel_w, "h": wheel_h,
-               "items": [f"item {n}" for n in range(8)],
+               "items": [f"{n:02d}" for n in range(8)],
                "item_height": item, "name": f"whl{index}",
                "bind": f"whl{index}", "font_size": max(12, item // 2),
                "fg_color": "#C8D4E8", "bg_color": "#161E2C"})
@@ -606,7 +824,7 @@ def scene(width, height, rgb888=False):
     panel = b.add({
         "type": "layer", "parent": drawer, "name": "quick_main",
         "x": 0, "y": 0, "w": width, "h": height,
-        "bg_color": "#050505",
+        "bg_color": "#07121E",
     })
     drawer_pad = max(8, width // 14)
     drawer_gap = max(6, height // 32)
@@ -621,12 +839,12 @@ def scene(width, height, rgb888=False):
             "type": "container", "parent": panel,
             "x": card_x, "y": drawer_pad,
             "w": drawer_col, "h": drawer_card_h,
-            "bg_color": "#F4F5F7", "radius": drawer_col // 8,
+            "bg_color": "#153447", "radius": drawer_col // 8,
         })
         b.add({
             "type": "container", "parent": card, "x": 0, "y": 0,
             "w": drawer_col, "h": max(12, drawer_card_h // 5),
-            "bg_color": "#242424",
+            "bg_color": "#19D3FF",
             "radius": min(drawer_col // 8, drawer_card_h // 5),
         })
         b.add({
@@ -634,20 +852,20 @@ def scene(width, height, rgb888=False):
             "y": drawer_card_h * 2 // 3,
             "w": drawer_col, "h": drawer_card_h // 3,
             "text": f"{percent}%",
-            "fg_color": "#080808", "text_align": "center",
+            "fg_color": "#DBF4FF", "text_align": "center",
         })
     b.add({
         "type": "slider", "parent": panel, "name": "drawer_level",
         "x": drawer_pad, "y": drawer_rows_y,
         "w": drawer_col, "h": drawer_row_h, "value": 80,
-        "bg_color": "#F4F5F7", "fg_color": "#F05020",
+        "bg_color": "#153447", "fg_color": "#52E8BA",
         "track_size": max(4, drawer_row_h // 8),
     })
     toggle_card = b.add({
         "type": "container", "parent": panel,
         "x": drawer_pad + drawer_col + drawer_gap, "y": drawer_rows_y,
         "w": drawer_col, "h": drawer_row_h,
-        "bg_color": "#F4F5F7", "radius": drawer_row_h // 2,
+        "bg_color": "#153447", "radius": drawer_row_h // 2,
     })
     toggle_h = max(20, drawer_row_h * 2 // 3)
     b.add({
@@ -655,7 +873,7 @@ def scene(width, height, rgb888=False):
         "x": (drawer_col - 2 * toggle_h) // 2,
         "y": (drawer_row_h - toggle_h) // 2,
         "w": 2 * toggle_h, "h": toggle_h, "checked": True,
-        "bg_color": "#404040", "fg_color": "#F05020",
+        "bg_color": "#267B9B", "fg_color": "#19D3FF",
     })
     for index, caption in enumerate(("Mode A", "Mode B")):
         b.add({
@@ -664,7 +882,7 @@ def scene(width, height, rgb888=False):
             "y": drawer_rows_y + drawer_row_h + drawer_gap,
             "w": drawer_col, "h": drawer_row_h,
             "text": caption,
-            "bg_color": "#F4F5F7", "fg_color": "#202020",
+            "bg_color": "#153447", "fg_color": "#DBF4FF",
             "radius": drawer_row_h // 2,
             "events": [{"event": "click", "action": "call",
                         "target_name": "drawer_choice", "arg": index}],
@@ -696,7 +914,7 @@ def scene(width, height, rgb888=False):
         b.add({"type": "image", "parent": page,
                "x": (width - min(160, inner)) // 2,
                "y": flow_h // 4, "w": min(160, inner),
-               "h": min(120, flow_h // 2), "image": "bench_rgb.png"})
+               "h": min(120, flow_h // 2), "image": "bench_industrial.png"})
         metric_y = flow_h * 3 // 4
         metric_w = max(30, (inner - 2 * gap) // 3)
         for metric, caption in enumerate(("FPS", "DMA", "CACHE")):
@@ -741,7 +959,7 @@ def scene(width, height, rgb888=False):
         image_h = min(120, stack_h // 3)
         b.add({"type": "image", "parent": page,
                "x": (width - image_w) // 2, "y": stack_h // 4,
-               "w": image_w, "h": image_h, "image": "bench_rgb.png"})
+               "w": image_w, "h": image_h, "image": "bench_industrial.png"})
         card_y = stack_h * 2 // 3
         card_w = max(32, (inner - 2 * gap) // 3)
         for card_index, value in enumerate(("CPU", "BUS", "LCD")):
@@ -761,7 +979,7 @@ def scene(width, height, rgb888=False):
     # P21 variable-height conversation history. Static chat chrome makes the
     # benchmark read like a real application while the message viewport stays
     # an independently styled, reusable component.
-    p = b.page("p_messages", tag=False)
+    p = b.page("p_messages")
     short_side = min(width, height)
     header_h = max(34, height // 11)
     composer_h = max(34, height // 12)
@@ -783,7 +1001,7 @@ def scene(width, height, rgb888=False):
     b.add({"type": "label", "parent": p,
            "x": title_x, "y": max(3, header_h // 7),
            "w": width - title_x - m, "h": header_h // 2,
-           "text": "GSP Chat", "font_size": chrome_font,
+           "text": f"{CASES['p_messages'][0]:02d} / MESSAGES", "font_size": chrome_font,
            "fg_color": "#F4F7FB"})
     b.add({"type": "label", "parent": p,
            "x": title_x, "y": header_h // 2,
@@ -871,18 +1089,19 @@ def scene(width, height, rgb888=False):
            "h": height // 5, "points": [5, 30, 18, 60, 42, 88, 66],
            "fg_color": "#5090E0", "bg_color": "#141C2C",
            "grid_lines": 3})
-    b.add({"type": "list", "parent": p, "x": m + col + gap, "y": y,
+    b.add({"type": "list", "name": "widget_list", "parent": p, "x": m + col + gap, "y": y,
            "w": col, "h": height // 5,
            "items": ["alpha", "beta", "gamma", "delta", "epsilon",
                      "zeta"],
            "item_height": max(18, height // 14), "bind": "w_list",
-           "font_size": small})
+           "font_size": small, "fg_color": "#DBF4FF", "bg_color": "#10283B"})
     y += height // 5 + gap
-    b.add({"type": "wheel", "parent": p, "x": m, "y": y, "w": col,
+    b.add({"type": "wheel", "name": "widget_wheel", "parent": p, "x": m, "y": y, "w": col,
            "h": height // 6,
            "items": ["one", "two", "three", "four", "five"],
            "item_height": max(18, height // 14), "cyclic": True,
-           "bind": "w_whl", "font_size": small})
+           "bind": "w_whl", "font_size": small,
+           "fg_color": "#DBF4FF", "bg_color": "#10283B"})
     b.add({"type": "progress", "parent": p, "x": m + col + gap,
            "y": y, "w": col, "h": max(18, height // 14),
            "value": 50, "bind": "w_progress",
@@ -907,15 +1126,16 @@ def scene(width, height, rgb888=False):
     content_h = tabs_h - bar_h
     b.add({"type": "dropdown", "parent_name": "bench_tabs_tab0",
            "x": m, "y": gap, "w": inner, "h": max(24, height // 11),
-           "options": ["Throughput", "Latency", "Memory"],
+           "options": ["Demo data", "Controls", "Media"],
            "font_size": max(9, height // 30)})
     b.add({"type": "table", "parent_name": "bench_tabs_tab0",
            "x": m, "y": max(24, height // 11) + 2 * gap,
-           "w": inner, "columns": ["path", "load", "state"],
-           "rows": [["render", "100%", "active"],
-                    ["present", "100%", "active"],
-                    ["input", "100%", "active"]],
-           "font_size": max(9, height // 32)})
+           "w": inner, "columns": ["path", "data", "mode"],
+           "rows": [["draw", "shape", "demo"],
+                    ["media", "image", "demo"],
+                    ["input", "keys", "demo"]],
+           "font_size": max(9, height // 32),
+           "row_height": max(24, content_h // 6)})
     input_h = max(80, content_h * 3 // 4)
     b.add({"type": "label", "parent_name": "bench_tabs_tab1",
            "x": m, "y": 2, "w": inner, "h": max(18, content_h // 5),
@@ -931,7 +1151,7 @@ def scene(width, height, rgb888=False):
     media_h = min(120, max(60, content_h * 2 // 3))
     b.add({"type": "image", "parent_name": "bench_tabs_tab2",
            "x": (width - media_w) // 2, "y": gap,
-           "w": media_w, "h": media_h, "image": "bench_rgb.png"})
+           "w": media_w, "h": media_h, "image": "bench_industrial.png"})
     b.add({"type": "label", "parent_name": "bench_tabs_tab2",
            "x": m, "y": media_h + 2 * gap, "w": inner,
            "h": max(18, content_h - media_h - 2 * gap),
@@ -949,11 +1169,183 @@ def scene(width, height, rgb888=False):
         "dismissable": True,
     })
 
+    # Append the sparse animation page so existing authored object indexes
+    # remain stable. Two distant 8x8 regions change on every source frame.
+    p = b.page("p_anim_sparse")
+    b.add({"type": "image", "parent": p,
+           "x": (width - anim_size) // 2,
+           "y": (height - anim_size) // 2,
+           "w": anim_size, "h": anim_size,
+           "image": "bench_anim_sparse.gif"})
+
+    # Deliberately dense mixed-content saturation page. It combines a
+    # full-screen opaque image, translucent HUD surfaces and four independently
+    # translated alpha images. The 4 ms driver updates positions and meters to
+    # keep raster, blend, dirty-region and submission paths under back-pressure.
+    p = b.page("p_storm")
+    b.add({"type": "image", "parent": p, "x": 0, "y": 0,
+           "w": width, "h": height, "image": "bench_industrial.png",
+           "fit": "cover"})
+    b.add({"type": "container", "parent": p, "x": 0, "y": 0,
+           "w": width, "h": height, "bg_color": "#06111C90"})
+    header_h = max(28, height // 9)
+    footer_h = max(46, height // 5)
+    b.add({"type": "container", "parent": p, "x": 0, "y": 0,
+           "w": width, "h": header_h, "bg_color": "#081827D8",
+           "border_color": "#1DD6FF", "border_width": 1})
+    b.add({"type": "label", "parent": p, "x": m,
+           "y": max(2, header_h // 7), "w": inner * 2 // 3,
+           "h": header_h * 2 // 3,
+           "text": f"{CASES['p_storm'][0]:02d} / RENDER STORM",
+           "font_size": max(11, height // 24), "fg_color": "#F2FAFF"})
+    b.add({"type": "label", "parent": p,
+           "x": width - m - inner // 3, "y": max(2, header_h // 7),
+           "w": inner // 3, "h": header_h * 2 // 3,
+           "text": "SATURATION", "text_align": "right",
+           "font_size": max(8, height // 38), "fg_color": "#FFAD3D"})
+    b.add({"type": "container", "parent": p,
+           "x": 0, "y": height - footer_h, "w": width, "h": footer_h,
+           "bg_color": "#081827E8", "border_color": "#1DD6FF",
+           "border_width": 1})
+    storm_accent = {"theme": "shape_accent"}
+    beam_w = max(2, width // 180)
+    for index in range(4):
+        b.add({"type": "shape", "shape": "line", "parent": p,
+               "x": index * width // 4, "y": header_h,
+               "w": width // 3, "h": max(1, height - header_h - footer_h),
+               "line_direction": "tl_br" if index % 2 == 0 else "bl_tr",
+               "border_color": storm_accent, "border_width": beam_w,
+               "opacity": 144})
+    meter_gap = max(3, gap // 2)
+    meter_w = (inner - 3 * meter_gap) // 4
+    meter_h = max(10, footer_h // 4)
+    for index in range(4):
+        meter_x = m + index * (meter_w + meter_gap)
+        b.add({"type": "progress", "parent": p,
+               "x": meter_x, "y": height - footer_h // 2,
+               "w": meter_w, "h": meter_h,
+               "value": 0, "bind": f"storm_v{index}",
+               "bg_color": "#193147", "fg_color": "#19D3FF",
+               "radius": max(2, meter_h // 3)})
+    mover_w = max(58, min(136, width // 3))
+    mover_h = max(46, min(96, (height - header_h - footer_h) * 2 // 3))
+    x_max = max(0, width - mover_w)
+    y_min = header_h
+    y_max = max(y_min, height - footer_h - mover_h)
+    for index in range(4):
+        mover = b.add({
+            "type": "container", "parent": p,
+            "name": f"storm_mover{index}",
+            "x": {"default": index * x_max // 3, "min": 0,
+                  "max": x_max},
+            "y": {"default": y_min + index * (y_max - y_min) // 3,
+                  "min": y_min, "max": y_max},
+            "w": mover_w, "h": mover_h, "bg_color": "#0A2330B8",
+            "radius": max(5, mover_h // 10), "border_color": "#34D7FF",
+            "border_width": 1,
+        })
+        b.add({"type": "image", "parent": mover, "x": 2, "y": 2,
+               "w": mover_w - 4, "h": mover_h - 4,
+               "image": "bench_industrial_argb.png"})
+
+    p = b.page("p_dropdown")
+    b.add({"type": "label", "parent": p, "x": m, "y": height // 7,
+           "w": inner, "h": max(20, height // 12), "text": "OUTPUT PIPELINE",
+           "fg_color": "#52E8BA", "font_size": max(11, height // 30)})
+    b.add({"type": "dropdown", "parent": p, "name": "bench_select",
+           "x": m, "y": height // 4, "w": inner, "h": max(26, height // 12),
+           "options": ["RGB / scanout", "SPI / DMA", "DSI / framebuffer"],
+           "item_height": max(20, height // 12), "selected": 0,
+           "font_size": max(11, height // 30), "bg_color": "#153447",
+           "panel_color": "#10283B", "fg_color": "#DBF4FF"})
+    b.add({"type": "label", "parent": p, "x": m, "y": height * 5 // 6,
+           "w": inner, "h": height // 10, "text": "OPEN / SELECT / VERIFY / LOOP",
+           "font_size": max(8, height // 45), "fg_color": "#86AFC6"})
+
+    for count in (1, 8, 32, 64):
+        p = b.page(f"p_load{count}")
+        top = max(50, height // 5)
+        box_w, box_h = width // 4, max(20, (height - top - 20) // 3)
+        b.add({"type": "label", "parent": p, "x": m, "y": max(20, height // 12),
+               "w": inner, "h": max(20, height // 12),
+               "text": f"{count:02d} RECT / ALPHA 128",
+               "font_size": max(11, height // 28), "fg_color": "#52E8BA"})
+        for index in range(count):
+            # Prefix-stable positions and fixed geometry: only count changes.
+            x = (index * 37 + width // 3) % (width - box_w)
+            y = top + (index * 53) % max(1, height - top - box_h - 12)
+            b.add({"type": "container", "parent": p, "x": x, "y": y,
+                   "w": box_w, "h": box_h, "opacity": 128,
+                   "bg_color": {"theme": "load_accent"}})
+
+    stage = b.add({"type": "layer", "parent": 0, "x": 0, "y": 0,
+                   "w": width, "h": height, "hidden": True,
+                   "bind": "transition_stage"})
+    transition_dashboard(b, stage, False)
+    # Outside scored windows. Small displays show three readable cards,
+    # landscape displays use two columns, and tall displays use six rows.
+    results = b.add({"type": "layer", "parent": 0, "x": 0, "y": 0,
+                     "w": width, "h": height, "hidden": True,
+                     "bind": "results_overlay"})
+    b.add({"type": "container", "parent": results, "x": 0, "y": 0,
+           "w": width, "h": height, "bg_color": "#07121E"})
+    result_count = 6 if width >= 600 or height >= 600 else 3
+    columns = 2 if width >= 600 else 1
+    rows = result_count // columns
+    result_margin = max(8, width // 40)
+    title_h = max(20, height // 16)
+    top = max(46, height // 7)
+    footer_h = max(18, height // 20)
+    card_gap = max(5, height // 60)
+    card_w = (width - (columns + 1) * result_margin) // columns
+    card_h = (height - top - footer_h - (rows - 1) * card_gap) // rows
+    name_font = max(12, min(card_w // 18, card_h // 4))
+    value_font = max(9, min(card_w // 26, card_h // 5))
+    fps_font = max(20, min(card_w // 9, card_h * 2 // 5))
+    b.add({"type": "label", "parent": results, "x": result_margin, "y": 3,
+           "w": width - 2 * result_margin, "h": title_h,
+           "font_size": max(14, title_h * 2 // 3),
+           "text": "GSP / PERFORMANCE LAB", "fg_color": "#DBF4FF"})
+    b.add({"type": "label", "parent": results, "x": result_margin, "y": title_h + 3,
+           "w": width - 2 * result_margin, "h": top - title_h - 6,
+           "font_size": max(9, title_h // 2), "text": "MEASURED RESULTS",
+           "bind": "result_title", "fg_color": "#19D3FF"})
+    for index in range(6):
+        x = result_margin + (index % columns) * (card_w + result_margin)
+        y = top + (index // columns) * (card_h + card_gap)
+        card = b.add({"type": "layer", "parent": results, "x": x, "y": y,
+                      "w": card_w, "h": card_h, "hidden": index >= result_count,
+                      "bind": f"result_card{index}"})
+        b.add({"type": "container", "parent": card, "x": 0, "y": 0,
+               "w": card_w, "h": card_h, "radius": max(5, card_gap),
+               "bg_color": "#10283B"})
+        b.add({"type": "container", "parent": card, "x": 0, "y": 8,
+               "w": 2, "h": card_h - 16, "bg_color": "#19D3FF"})
+        b.add({"type": "label", "parent": card, "x": 8, "y": 3,
+               "w": card_w - 16, "h": card_h // 3,
+               "font_size": name_font, "text": "", "bind": f"result_name{index}",
+               "fg_color": "#DBF4FF"})
+        b.add({"type": "label", "parent": card, "x": 8, "y": card_h // 3,
+               "w": card_w // 2 - 8, "h": card_h * 2 // 3 - 2,
+               "font_size": fps_font, "text": "", "bind": f"result_fps{index}",
+               "fg_color": "#52E8BA"})
+        b.add({"type": "label", "parent": card, "x": card_w // 2, "y": card_h // 3,
+               "w": card_w // 2 - 6, "h": card_h * 2 // 3 - 2,
+               "font_size": value_font, "text": "", "bind": f"result_value{index}",
+               "fg_color": "#86AFC6"})
+    b.add({"type": "label", "parent": results, "x": result_margin,
+           "y": height - footer_h + 2, "w": width - 2 * result_margin,
+           "h": footer_h - 2, "font_size": max(8, footer_h // 2),
+           "text": "FPS / RENDER / SUBMIT ms  |  AUTO LOOP", "fg_color": "#86AFC6"})
+
     return {
         "screen": "bench",
         "w": width, "h": height,
         "screen_bg": "#101820",
         "themes": {
+            "load_accent": {
+                "type": "color", "default": "#19D3FF", "dynamic": True,
+            },
             "shape_accent": {
                 "type": "color",
                 "default": "#45B6FF",
@@ -964,28 +1356,65 @@ def scene(width, height, rgb888=False):
         "default_font_size": min(
             b.font_palette,
             key=lambda size: abs(size - max(14, height // 22))),
-        "objects": b.objects,
+        "objects": b.finish(),
     }
 
 
+def transition_dashboard(b, parent, alternate):
+    """Two distinct, dense scenes make direction and fade progress readable."""
+    w, h, m = b.w, b.h, max(8, b.w // 24)
+    accent = "#FFAF4D" if alternate else "#19D3FF"
+    b.add({"type": "container", "parent": parent, "x": 0, "y": 0,
+           "w": w, "h": h, "bg_color": "#231B20" if alternate else "#07121E"})
+    if alternate:
+        side = min(w // 5, h // 4)
+        for index in range(6):
+            b.add({"type": "arc", "parent": parent,
+                   "x": w * 2 // 5 + index % 3 * (w // 5),
+                   "y": h // 4 + index // 3 * (h // 3),
+                   "w": side, "h": side, "start_angle": 120, "sweep": 300,
+                   "value": 35 + index * 11, "thickness": max(3, side // 10),
+                   "fg_color": accent, "bg_color": "#3D3440"})
+    else:
+        b.add({"type": "image", "parent": parent, "x": w // 3,
+               "y": h // 6, "w": w * 2 // 3, "h": h * 2 // 3,
+               "image": "bench_industrial.png", "fit": "cover"})
+    b.add({"type": "container", "parent": parent, "x": m, "y": h // 5,
+           "w": w // 3, "h": h * 3 // 5, "bg_color": "#0A1E30E0",
+           "border_color": accent, "border_width": 1, "radius": max(4, h // 40)})
+    b.add({"type": "label", "parent": parent, "x": m, "y": h // 20,
+           "w": w - 2 * m, "h": h // 10,
+           "text": "GSP / AUTOMATION", "font_size": max(13, h // 24),
+           "fg_color": accent})
+    b.add({"type": "label", "parent": parent, "x": 2 * m, "y": h // 4,
+           "w": w // 3 - 2 * m, "h": h // 5,
+           "text": "02" if alternate else "01",
+           "font_size": max(20, h // 12), "fg_color": "#DBF4FF"})
+    for index in range(4):
+        b.add({"type": "progress", "parent": parent, "x": 2 * m,
+               "y": h // 2 + index * max(7, h // 18),
+               "w": w // 3 - 2 * m, "h": max(3, h // 60),
+               "value": ((index + (2 if alternate else 1)) * 23) % 100,
+               "bg_color": "#153447", "fg_color": accent})
+    b.add({"type": "label", "parent": parent, "x": m, "y": h * 7 // 8,
+           "w": w - 2 * m, "h": h // 12,
+           "text": "SCENE B / TRANSITION STRESS" if alternate else
+                   "SCENE A / TRANSITION STRESS",
+           "font_size": max(9, h // 40), "fg_color": "#86AFC6"})
+
+
 def alt_scene(width, height):
-    """Contrast screen for the full-screen slide-transition test."""
-    objects = [
-        {"type": "container", "parent": -1, "x": 0, "y": 0,
-         "w": width, "h": height, "bg_color": "#3A1818"},
-        {"type": "container", "parent": 0, "x": width // 8,
-         "y": height // 8, "w": width - width // 4,
-         "h": height - height // 4, "bg_color": "#602828",
-         "radius": 18, "border_color": "#C06060", "border_width": 3},
-        {"type": "container", "parent": 1, "x": 24,
-         "y": 24, "w": 48, "h": 48, "bg_color": "#C06060",
-         "radius": 24},
-    ]
+    b = Builder(width, height)
+    transition_dashboard(b, 0, True)
     return {
         "screen": "bench_alt",
         "w": width, "h": height,
-        "screen_bg": "#3A1818",
-        "objects": objects,
+        "screen_bg": "#07121E",
+        "font": FONT,
+        "default_font_size": min(
+            b.font_palette,
+            key=lambda size: abs(size - max(14, height // 22))),
+        "objects": b.objects,
     }
 
 
@@ -996,27 +1425,32 @@ def main():
         "--check", action="store_true",
         help="fail if checked-in generated scenes are stale")
     args = parser.parse_args()
-    scale_asset = scale_asset_bytes()
-    scale_asset_path = Path("bench_scale.png")
-    if args.check:
-        if (not scale_asset_path.exists() or
-                scale_asset_path.read_bytes() != scale_asset):
-            print("stale benchmark asset: bench_scale.png", file=sys.stderr)
-            return 1
-    else:
-        scale_asset_path.write_bytes(scale_asset)
-        print("wrote bench_scale.png")
+    generated_assets = {
+        "bench_anim.gif": scanner_animation_bytes(),
+        "bench_scale.png": scale_asset_bytes(),
+        "bench_anim_sparse.gif": sparse_animation_bytes(),
+    }
+    for name, content in generated_assets.items():
+        path = Path(name)
+        if args.check:
+            if not path.exists() or path.read_bytes() != content:
+                print(f"stale benchmark asset: {name}", file=sys.stderr)
+                return 1
+        else:
+            path.write_bytes(content)
+            print(f"wrote {name}")
     validate_assets()
     generated = {}
     for width, height in RESOLUTIONS:
+        main_scene = scene(width, height)
         name = f"bench_{width}.json"
-        generated[name] = json.dumps(scene(width, height), indent=2) + "\n"
+        generated[name] = json.dumps(main_scene, indent=2) + "\n"
         alt = f"bench_alt_{width}.json"
         generated[alt] = json.dumps(alt_scene(width, height), indent=2) + "\n"
-    generated["bench_rgb888_1024.json"] = json.dumps(
-        scene(1024, 600, rgb888=True), indent=2) + "\n"
-    generated["bench_rgb888_800.json"] = json.dumps(
-        scene(800, 480, rgb888=True), indent=2) + "\n"
+    for width, height in ((1024, 600), (800, 480)):
+        main_scene = scene(width, height, rgb888=True)
+        generated[f"bench_rgb888_{width}.json"] = json.dumps(
+            main_scene, indent=2) + "\n"
     stale = []
     for name, content in generated.items():
         path = Path(name)

@@ -24,14 +24,12 @@ menu "Core object and component pools"
 
 config ESP_GSP_MAX_SCENES
     int "Maximum number of scenes held in gsp_ui_core_t"
-    default 8
-    range 1 32
+    default 0
+    range 0 65534
     help
-        Upper bound of the scenes[] array inside gsp_ui_core_t. Each
-        scene embeds a gsp_context_t (~1 KB), so this is the single
-        largest resident block of the UI core. Bundles with more scenes
-        than this are truncated at init (a warning is logged); size it
-        to the largest bundle the product can load.
+        AUTO (0) uses the exact scene count stored in the GSPB. A non-zero
+        value is an explicit project budget and generation fails when the
+        bundle needs more scenes.
 
 config ESP_GSP_MAX_TIMERS
     int "Maximum simultaneous application timers"
@@ -59,52 +57,51 @@ config ESP_GSP_MAX_ANIMATIONS
         Exhaustion degrades gracefully (legacy tween) and logs.
 
 config ESP_GSP_MAX_LISTS
-    int "Maximum simultaneous List/Wheel components"
-    default 5
-    range 1 16
+    int "Retained List/Wheel bindings per UI instance"
+    default 0
+    range 0 256
     help
-        List pool, list driver extensions and the chrome overlay storage
-        all scale with this. Each list can additionally allocate
-        run_buffers on the heap (see ESP_GSP_LIST_TEXT_SLOTS), so this
-        is a multiplier for list working memory.
+        AUTO (0) sums authored List/Wheel bindings across bundled scenes
+        because handles currently have UI-instance lifetime. A non-zero
+        value is an explicit project budget.
 
 config ESP_GSP_LIST_MAX_SLOTS
     int "Row slots per visible list viewport"
     default 0
-    range 0 64
+    range 0 65535
     help
-        AUTO (0) does not additionally restrict gspc: the compiler uses
-        the library capability (64), writes the exact scene requirement N
-        into GSPB, and runtime allocates N rows. A non-zero project value
-        is an explicit upper bound and generation fails when it is below N.
+        AUTO (0) writes the exact authored requirement into GSPB and runtime
+        allocates that many rows. A non-zero project value is an explicit
+        upper bound and generation fails when it is below the requirement.
 
 config ESP_GSP_LIST_TEXT_SLOTS
     int "Dynamic text slots per list template row"
     default 0
-    range 0 16
+    range 0 65533
     help
         AUTO (0) uses the requirement derived from authored row templates.
         A non-zero value explicitly reserves at least that many shaped-text
         slots per visible row.
 
 config ESP_GSP_COMPONENT_INSTANCES
-    int "Transient component-instance pool"
-    default 8
-    range 1 32
+    int "Runtime component-instance pool"
+    default 0
+    range 0 256
     help
-        Simultaneous transient behaviors (a drag plus landing tweens),
-        not authored component count. Exhaustion degrades gracefully
-        and logs the capacity.
+        AUTO (0) keeps the legacy baseline of eight and raises it from each
+        scene's generated semantic directory when authored components need more
+        slots. A non-zero project value reserves additional application-created
+        concurrency but never limits authored content. Applications that need a
+        strict budget can set a non-zero per-instance override; values below
+        authored demand fail initialization instead of truncating it.
 
 config ESP_GSP_STACK_VIEW_MAX_DEPTH
     int "Maximum StackView navigation depth"
-    default 8
-    range 1 64
+    default 0
+    range 0 64
     help
-        Maximum authored capacity of one StackView. The persistent
-        component extension stores one uint16_t page id per level, and
-        every transient component-instance slot reserves an extension
-        large enough for this limit.
+        AUTO (0) uses the deepest authored StackView requirement. A
+        non-zero value is an explicit project budget.
 
 endmenu
 
@@ -144,24 +141,26 @@ config ESP_GSP_CANVAS_SLOTS
 
 config ESP_GSP_MAX_ASSET_ANIMS
     int "Compiled per-scene animation slots"
-    default 4
-    range 1 16
+    default 0
+    range 0 255
     help
-        gsp_anim_t entries auto-played per scene; each holds patch
-        rects and frame views (~400 B).
+        AUTO (0) uses the maximum per-scene anim_qoi count stored in the
+        GSPB. A non-zero value is an explicit project budget.
 
 config ESP_GSP_TEXT_SLOTS
-    int "Default dynamic-text shaping slots"
+    int "Retained dynamic-text shaping slots"
     default 0
-    range 0 128
+    range 0 65533
     help
-        AUTO (0) uses the GSPB requirement. A non-zero project value reserves
-        at least that many slots; each slot costs about 386 bytes of heap.
+        AUTO (0) sums scene text binds across the bundle because published
+        glyph runs retain their backing storage. A non-zero project value
+        reserves at least that many slots; each slot starts with about 386
+        bytes of inline run storage and grows on demand.
 
 config ESP_GSP_DEFAULT_DYNAMIC_IMAGE_SLOTS
     int "Default simultaneous runtime image targets"
     default 0
-    range 0 256
+    range 0 32767
     help
         AUTO (0) uses the GSPB requirement. Applications that deliberately
         disable runtime images use esp_gsp_config_set() with value zero, which
@@ -297,7 +296,7 @@ config ESP_GSP_IMAGE_CACHE_SHORTAGE_RETRIES
 config ESP_GSP_CONTEXT_DEFAULT_GLYPH_RUNS
     int "Default low-level context glyph-run slots"
     default 0
-    range 0 1024
+    range 0 65535
     help
         AUTO (0) uses the versioned GSPB requirements. A non-zero value is an
         explicit project capacity and startup fails if the bundle needs more.
@@ -305,7 +304,7 @@ config ESP_GSP_CONTEXT_DEFAULT_GLYPH_RUNS
 config ESP_GSP_CONTEXT_DEFAULT_INSTANCES
     int "Default shared template instance slots per scene"
     default 0
-    range 0 256
+    range 0 65534
     help
         AUTO (0) uses the template and visible-row requirement stored in the
         GSPB. A non-zero value explicitly reserves at least that many slots;
@@ -313,13 +312,11 @@ config ESP_GSP_CONTEXT_DEFAULT_INSTANCES
 
 config ESP_GSP_INSTANCE_STATES_PER_SLOT
     int "Runtime state values reserved per template instance"
-    default 8
-    range 1 64
+    default 0
+    range 0 65535
     help
-        Default state capacity for every runtime template instance. Each
-        state is about 16 bytes. gsp_add_bundle passes the value to gspc,
-        so a template needing more states is rejected at build time; blobs
-        compiled elsewhere are still checked when instantiated.
+        AUTO (0) uses the largest authored template state count stored in
+        the GSPB. A non-zero value is an explicit project budget.
 
 config ESP_GSP_IMAGE_CACHE_AUTO_MIN_BYTES
     int "Minimum automatic image-cache budget with PSRAM"
@@ -535,12 +532,14 @@ config ESP_GSP_IDLE_POLL_MS
         polling-only application work.
 
 config ESP_GSP_POINTER_POLL_MS
-    int "Active pointer polling interval in milliseconds"
+    int "Idle touch discovery interval in milliseconds"
     default 33
     range 1 1000
     help
-        Touch-controller polling interval while pointer input is active.
-        Smaller values improve input sampling at higher bus and CPU cost.
+        Polling touch integrations use this interval while the UI is otherwise
+        idle. Once input or animation is active, ESP_GSP_ACTIVE_TICK_MS drives
+        the shared UI service loop. Interrupt-driven touch wakes the loop
+        directly and does not read without a fresh interrupt.
 
 config ESP_GSP_TOUCH_RELEASE_CONFIRM_POLLS
     int "Empty touch polls required to confirm release"

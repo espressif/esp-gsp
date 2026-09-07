@@ -147,7 +147,7 @@ is rejected; rebuild it with the 0.2.0 `gspc`.
 
 `CONFIG_ESP_GSP_LIST_MAX_SLOTS=0` means AUTO/no extra project restriction.
 `gspc` computes the scene requirement, the runtime allocates at least that
-amount, and the generated build capability of 64 is the final upper bound.
+amount, and the serialized `uint16_t` row-slot count is the final format bound.
 Multiple scenes use the maximum single active-scene requirement rather than a
 sum. `DIRTY_RECT_CAPACITY` is not AUTO because a scene cannot predict the
 number of dirty rectangles in a frame; overflow safely coalesces or redraws.
@@ -230,7 +230,7 @@ tuning.
 | More visible/recycled rows in one viewport | `CONFIG_ESP_GSP_LIST_MAX_SLOTS` | Applies per List/Grid; Grid slots include all columns |
 | More live copies of a template created through the Widget API | Set that template's JSON `max_instances` to the maximum simultaneous count | `gspc` adds every template quota to the GSPB pool requirement; no pool arithmetic is needed |
 | An externally compiled/custom bundle whose requirement metadata cannot be regenerated | `CONFIG_ESP_GSP_CONTEXT_DEFAULT_INSTANCES` or `esp_gsp_config_set(..., ESP_GSP_FIELD_CONTEXT_DEFAULT_INSTANCES, value)` | Advanced compatibility escape hatch; the value is the total shared pool capacity, not an increment |
-| More dynamic text | `CONFIG_ESP_GSP_TEXT_SLOTS`, `CONFIG_ESP_GSP_LIST_TEXT_SLOTS` | Per-string capacity is the read-only `ESP_GSP_BUILD_CAP_TEXT_CAPACITY`; split longer content instead of changing a false Kconfig control |
+| More dynamic text | `CONFIG_ESP_GSP_TEXT_SLOTS`, `CONFIG_ESP_GSP_LIST_TEXT_SLOTS` | `ESP_GSP_BUILD_CAP_TEXT_CAPACITY` is only the inline command threshold; longer strings use framework-owned heap storage |
 | Application pinch handling | Always available since 0.2.0 | `ESP_GSP_BUILD_CAP_MAX_TOUCH_POINTS` is two; product settings do not compile pinch out |
 | Runtime PNG/JPEG or compiled JPEG | `CONFIG_ESP_GSP_ENABLE_IMAGE_CACHE` and its budget | Disabling the cache makes those paths unavailable in region-decode mode |
 | Lower internal-SRAM use | First reduce measured pool demand; then consider PSRAM task stacks | Do not shrink stacks without high-water-mark evidence |

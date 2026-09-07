@@ -30,7 +30,7 @@
 | 配置 RGB、MIPI-DSI、SPI、QSPI 显示链路 | [显示与目标验收](guide/display.md) |
 | 选择 JSON 自适应、Kconfig 与实例覆盖 | [统一配置模型](guide/configuration.md) |
 | 查询配置结构、Bundle 参数和覆盖顺序 | [配置参考](reference/configuration.md) |
-| 使用 `menuconfig` 与可复现 Defaults | [Kconfig 使用](reference/kconfig.md) |
+| 使用 `menuconfig` 与可复现默认配置 | [Kconfig 使用](reference/kconfig.md) |
 | 查询每个 Kconfig 与只读库能力的作用 | [配置项参考](reference/configuration-options.md) |
 | 排查编译、链接、运行、显示与输入问题 | [故障排查](guide/troubleshooting.md) |
 | 查找公共 API 分层与所有权 | [API 参考](reference/api.md) |
@@ -60,15 +60,16 @@
 - [模拟器参考](reference/simulator.md)：浏览器预览、CLI、输入模式、自动化 API 与应用后端。
 - [机器可读 JSON Schema](../en/reference/scene.schema.json)：编辑器与校验契约。
 
-## 文档维护边界
+## 验证边界
 
-控件页和中文字段说明不手工复制编译器表格。维护者修改 GSPC 注册表或控件示例后，
-运行：
+- 场景编译成功表示 JSON、资源、目标配置和容量可以被编译器接受。
+- ESP-IDF 构建成功表示对应芯片完成了配置、编译和链接。
+- 原生或 WASM 模拟器验证可移植行为，不验证面板引脚、时序和触控方向。
+- 设备日志只能证明代码执行，不能单独证明显示效果正确。
+- 最终显示质量和性能必须在目标硬件上验收。
 
-```sh
-python3 docs/_generator/generate_widgets.py
-python3 ci/check_docs.py
-```
+## 文档与组件版本
 
-门禁会校验 GSPC、29 个控件示例、中英文元数据、生成头文件和文档页面完全对应；
-缺控件、缺翻译、过期字段、失效链接或无法编译的示例都会失败。
+使用随已安装组件提供的文档和示例，以保持 API、场景字段与预编译工具一致。
+工具版本选择和覆盖方式见[模拟器预览](guide/simulator-preview.md)及
+[兼容性契约](reference/compatibility.md)。
