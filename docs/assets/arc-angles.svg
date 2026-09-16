@@ -1,0 +1,16 @@
+<!-- SPDX-FileCopyrightText: 2026 Espressif Systems (Shanghai) CO LTD
+     SPDX-License-Identifier: LicenseRef-Espressif-Modified-MIT -->
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320" role="img" aria-labelledby="title desc">
+  <title id="title">GSP arc angle convention</title>
+  <desc id="desc">Zero degrees points up. Positive angles turn clockwise: right is 90 degrees, down is 180 degrees, left is 270 degrees.</desc>
+  <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#2563eb"/></marker></defs>
+  <rect width="320" height="320" rx="12" fill="#f8fafc"/>
+  <circle cx="160" cy="148" r="96" fill="none" stroke="#94a3b8" stroke-width="2"/>
+  <path d="M160 52V244M64 148H256" stroke="#cbd5e1" stroke-dasharray="4 4"/>
+  <path d="M160 52A96 96 0 0 1 256 148" fill="none" stroke="#2563eb" stroke-width="3" marker-end="url(#arrow)"/>
+  <g font-family="sans-serif" font-size="18" fill="#0f172a" text-anchor="middle">
+    <text x="160" y="32">0°</text><text x="284" y="154">90°</text>
+    <text x="160" y="269">180°</text><text x="33" y="154">270°</text>
+    <text x="160" y="300" font-size="15" fill="#2563eb">positive = clockwise</text>
+  </g>
+</svg>

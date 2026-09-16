@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+  <title>Orbit</title>
+  <path fill="#89B9FF" d="M74 9C74 15 76 18 83 18C76 18 74 21 74 27C74 21 72 18 65 18C72 18 74 15 74 9Z"/>
+  <circle cx="17" cy="22" r="2.5" fill="#89B9FF"/>
+  <ellipse cx="48" cy="48" rx="42" ry="12" transform="rotate(-24 48 48)" fill="none" stroke="#218FA0" stroke-width="7"/>
+  <circle cx="48" cy="48" r="25" fill="#FFC56E"/>
+  <path fill="#F28A6D" d="M48 23A25 25 0 0 1 48 73C63 65 66 47 60 34C57 28 53 25 48 23Z"/>
+  <path fill="#FFDFA0" d="M29 40C32 30 42 26 49 28C41 29 35 34 33 42C32 45 28 44 29 40Z"/>
+  <circle cx="39" cy="39" r="4.5" fill="#FFF0CA"/>
+  <circle cx="34" cy="49" r="2" fill="#FFE4AD"/>
+  <path transform="rotate(-24 48 48)" d="M90 48A42 12 0 0 1 6 48" fill="none" stroke="#65DFCB" stroke-width="7" stroke-linecap="round"/>
+  <path fill="#FFD68B" d="M75 72C75 77 77 79 82 79C77 79 75 81 75 86C75 81 73 79 68 79C73 79 75 77 75 72Z"/>
+</svg>

@@ -29,7 +29,7 @@
 | `ttf`、`ttf_size` | 不启用运行时轮廓字体回退 | 使用 `DYNAMIC_FONT` 或调用者持有字体 Blob 时设置 |
 | `disable_swipe` | 多场景默认允许横向滑动 | 整个 UI 必须禁止场景滑动时设置 |
 | `disable_bundle_crc` | 校验 Bundle、资源和字体 CRC | 仅可信构建资产已由外层分区完整性保护时设置 |
-| `image_cache_bytes` | 根据目标可达 Heap 推导 | 测量证明默认图片预算不合适时设置 |
+| `image_cache_bytes` | 根据目标可达 Heap 推导 | 根据同时显示的图片和可用内存设置 |
 
 ### 单实例覆盖
 
@@ -79,9 +79,9 @@ assert(esp_gsp_config_override_bind_external(
 | `touch_input_mode` | 有中断则使用中断，否则轮询 | 强制轮询或必须使用中断时设置 |
 | `touch_wake_from_isr` | 不通知应用 | 应用需要从相同触摸中断唤醒自身任务时设置 |
 | `touch_wake_user_ctx` | 空上下文 | Wake 回调需要应用上下文时设置 |
-| `task_stack_size` | 12288；使用动态 TTF 时为 24576 | 栈高水位测量证明需要调整时设置 |
-| `task_stack_size_freetype` | 动态 TTF 路径为 24576 | FreeType 路径测量证明需要调整时设置 |
-| `task_priority` | 4 | 调度分析证明需要调整时设置 |
+| `task_stack_size` | 12288；使用动态 TTF 时为 24576 | 根据栈高水位测量调整 |
+| `task_stack_size_freetype` | 动态 TTF 路径为 24576 | 根据 FreeType 路径的栈使用量调整 |
+| `task_priority` | 4 | 根据应用调度需求调整 |
 | `task_stack_psram` | 跟随工程渲染栈配置 | 回调满足 PSRAM 栈的 Flash/Cache 约束时设置 |
 | `perf_log` | 关闭 | 测量时需要每五秒输出 FPS 时启用 |
 | `render_alignment` | 不扩展脏区 | 显示或加速后端要求区域对齐时设置 |
@@ -89,6 +89,53 @@ assert(esp_gsp_config_override_bind_external(
 AUTO 触摸模式在中断注册不可用时记录警告并回退轮询。强制 INTERRUPT 模式则
 要求有效 INT，并在注册失败时明确失败。ISR 回调只能做 ISR-safe 通知，不能访问
 I2C 或调用 ESP-GSP API。
+
+## 内存吃紧时如何调整
+
+先区分内部 RAM、PSRAM 和连续块不足，再调整对应项。`image_cache_bytes`
+是解码图片缓存预算，不是整个 GSP 的 RAM 配额；增大它不会增加实际可用内存。
+`0` 表示自动推导，而不是关闭缓存。
+
+按需读取设备堆信息，不需要 UI 句柄，初始化失败后也能调用：
+
+```c
+#include "esp_gsp_debug.h"
+
+esp_gsp_heap_stats_t heap;
+if (esp_gsp_heap_stats(&heap)) {
+    // Inspect heap.internal and heap.psram:
+    // free_bytes and largest_free_block, both in bytes.
+}
+```
+
+该查询包含应用和驱动的堆使用，不是 GSP 独占用量；两个堆分别采样，结果会随
+其他任务分配而变化。无 PSRAM 时对应数值为零；PC 不提供这些能力时返回
+`false` 并清零输出。仅在任务上下文按需调用，不放入每帧回调或 ISR。
+最大连续块也不保证满足 DMA、对齐或多个同时分配的要求。
+
+| 观察到的问题 | 优先处理 | 代价或条件 |
+|---|---|---|
+| 内部 RAM 少，PSRAM 充足 | 检查渲染／解码栈及动画帧是否适合放 PSRAM | PSRAM 栈必须满足 Flash/Cache 约束；动画的 Prefer PSRAM 仍允许回退内部 RAM |
+| 图片缓存没有可淘汰空间 | 为活动图片和待替换图片预留同时驻留的预算 | 仅在堆有余量时提高 `image_cache_bytes`，否则减少同时驻留的解码图片 |
+| 图片分配失败 | 比较请求字节数与两类堆的最大连续块，检查显示缓冲和解码临时内存 | 预算充足不代表堆能分配；降低缓存或关闭快照可能增加绘制／解码开销 |
+| 总内存紧张 | 检查显示缓冲配置、缓存预算、转场快照和后台解码 | 关闭后台解码会将工作转移到渲染任务；显示缓冲需由 BSP／Presenter 配合调整 |
+
+每个图片缓存首次堆分配失败时额外输出两类堆的信息；后续失败保留请求大小，
+避免反复扫描堆。需要最新堆状态时调用上述按需查询。
+
+`esp_gsp_media_stats()` 提供缓存占用、峰值、分配失败和解码失败计数。
+这些计数不涵盖所有预算拒绝；结合具体失败日志判断，不要把每个
+`LIMIT_EXCEEDED` 都解释成整机堆耗尽。读取媒体计数时沿用其 UI 序列化要求。
+
+任务栈开关位于 `ESP-GSP → Advanced settings (optional) → Project runtime defaults
+→ Runtime tasks`。默认渲染栈为 12 KiB，动态 FreeType 为 24 KiB；后台解码栈为
+4 KiB。启用 PSRAM 栈前核对任务及回调中的 Flash、NVS、文件系统操作，必要时
+转交内部栈任务或 Flash dispatcher。初始化仍使用调用者栈，修改渲染栈不改变
+`app_main()` 栈。缩栈前必须测量所有启用路径的历史最低剩余空间。
+
+启动日志的 `memory` 来自实际栈地址，因此也反映 IDF 全局外部栈配置及其回退。
+创建失败时只报告 `requested_memory`，因为此时不存在可检查的栈。
+这些诊断不会自动改变预算、搬移任务栈或关闭功能。
 
 ## `gsp_add_bundle()` 参数
 
@@ -118,13 +165,22 @@ gsp_add_bundle(<component-target>
 
 ## 图片缓存与场景切换
 
-零 `image_cache_bytes` 会根据可达 Heap、最大可分配块和场景需求推导预算。活动
-场景的编译图片会在显示前准备；离开场景后可保留解码结果，超过预算时优先释放
-最久未使用的非活动场景。动画转场需要新旧场景同时驻留，不能承担峰值的产品应
-使用 `ESP_GSP_NO_TRANSITION`。
+零 `image_cache_bytes` 会根据可达 Heap、最大可分配块和场景需求推导预算。首帧前，
+运行时先准备当前可见命令使用的编译图片，再用剩余预算预取隐藏页面的图片；即使资源
+注册顺序从隐藏内容开始，也会优先准备首屏图片。返回保留的场景时可复用解码结果，超过
+预算则优先释放最久未使用的非活动场景 Surface。
+
+预算应容纳可见图片的解码工作集。容纳不下时，启动日志会报告
+`Visible scene images exceed cache budget`；已准备的可见图片保持驻留，跳过的图片走
+占位和按需解码路径。需要首帧完整就绪时，应增大 `image_cache_bytes` 或减小图片解码
+尺寸。动画转场还要求新旧场景同时驻留；峰值预算不足时使用
+`ESP_GSP_NO_TRANSITION`。
 
 关闭 `ESP_GSP_FIELD_ENABLE_IMAGE_CACHE` 后，QOI/RLE 等资源按区域解码；运行时
 发布的 PNG/JPEG 需要解码图片缓存，在关闭状态下会被拒绝。
+
+即使关闭图片缓存，矢量绘制仍需要额外内存。应使用应用的实际素材和转场测量峰值；
+相关内存由框架自动管理。
 
 ## 相关文档
 

@@ -171,7 +171,8 @@ static inline esp_gsp_config_set_result_t esp_gsp_config_set(
     return esp_gsp_config_override_set(&config->overrides, field, value);
 }
 
-/** UI event kinds delivered by esp_gsp_on_event. */
+/** UI event kinds delivered by esp_gsp_on_event. JSON press/release/long/click
+ * actions using call all arrive as CALL with their generated callback ID. */
 typedef enum {
     ESP_GSP_EVENT_CALL = 0,         /*!< a `callback` action fired */
     ESP_GSP_EVENT_SCENE_CHANGED,    /*!< navigation settled */
@@ -187,7 +188,9 @@ typedef struct esp_gsp_event {
 #endif
     esp_gsp_event_type_t type;
     uint16_t action_id;             /*!< GSP_ACT_ID_* for CALL */
-    uint32_t arg;                   /*!< the action's arg */
+    uint32_t arg;                   /*!< authored arg; slider/arc value/release
+                                    * CALL carries the committed value in
+                                    * min/max units (cast to int32_t). */
     uint16_t scene_id;              /*!< current scene */
     /** CALL from a tapped list row: which list and item; list is
      *  ESP_GSP_LIST_NONE for non-row calls. */
@@ -317,6 +320,37 @@ esp_gsp_err_t esp_gsp_set_visible(esp_gsp_handle_t gsp, uint16_t bind,
  *  framework-owned storage. */
 esp_gsp_err_t esp_gsp_set_text(esp_gsp_handle_t gsp, uint16_t bind,
                                const char *utf8);
+
+/** Compiler-generated description of one fixed-capacity Chart series.
+ * Applications normally use the generated named Chart wrappers. Both this
+ * descriptor and its bind table are immutable generated data and must outlive
+ * the UI instance. */
+typedef struct {
+    const uint16_t *point_binds;
+    uint32_t scene_content_id;
+    uint16_t capacity;
+    int16_t plot_top;
+    int16_t plot_bottom;
+    int32_t value_min;
+    int32_t value_max;
+} esp_gsp_chart_series_t;
+
+#define ESP_GSP_CHART_MAX_POINTS ESP_GSP_BUILD_CAP_TRANSACTION_UPDATE_CAPACITY
+
+/** Replaces every point in a fixed-capacity series in one render transaction.
+ * Values use the authored business range and are copied before return. count
+ * must equal the series capacity (at most ESP_GSP_CHART_MAX_POINTS). Small
+ * batches stay inline; larger batches use temporary framework-owned storage
+ * and return ESP_GSP_ERR_NO_MEM if allocation fails. */
+esp_gsp_err_t esp_gsp_chart_set_series(
+    esp_gsp_handle_t gsp, const esp_gsp_chart_series_t *series,
+    const int32_t *values, size_t count);
+
+/** Appends one business value, dropping the oldest point from the fixed
+ * window. Consecutive queued appends are applied in order on the render task. */
+esp_gsp_err_t esp_gsp_chart_append(
+    esp_gsp_handle_t gsp, const esp_gsp_chart_series_t *series,
+    int32_t value);
 
 /* --- State read-back: the committed value the renderer draws from, on
  *     the CURRENT scene. Callable from any task. A value queued by a
@@ -473,12 +507,51 @@ esp_gsp_err_t esp_gsp_component_get_value(esp_gsp_handle_t gsp,
 esp_gsp_err_t esp_gsp_component_set_value(esp_gsp_handle_t gsp,
         gsp_component_key_t key,
         int32_t value);
+/** Native scene color: RGB565 uses packed 16-bit values, RGB888 uses 0xRRGGBB. */
 esp_gsp_err_t esp_gsp_component_get_color(esp_gsp_handle_t gsp,
         gsp_component_key_t key,
-        uint32_t *out_rgb888);
+        uint32_t *out_native_color);
+/** Sets the component's primary color in the scene's native format. */
 esp_gsp_err_t esp_gsp_component_set_color(esp_gsp_handle_t gsp,
         gsp_component_key_t key,
-        uint32_t rgb888);
+        uint32_t native_color);
+
+/** Sets the primary color from 0xRRGGBB, converting to the scene format.
+ * Requires a canonical color property or a legacy color binding. For named
+ * colors such as fg_color, use the generated property-specific helper.
+ * RGB565 uses 5/6/5-bit truncation; ARGB8888 receives opaque alpha.
+ * Values above 0xFFFFFF are rejected. Existing native-color APIs are unchanged. */
+esp_gsp_err_t esp_gsp_component_set_color_rgb888(esp_gsp_handle_t gsp,
+        gsp_component_key_t key, uint32_t rgb888);
+
+/** Sets a named COLOR property from 0xRRGGBB with scene-format conversion.
+ * Uses the same validation, queue and transaction path as set_property().
+ * Does not change component opacity or accept an alpha byte. */
+esp_gsp_err_t esp_gsp_component_set_property_color_rgb888(esp_gsp_handle_t gsp,
+        gsp_component_key_t component, gsp_property_key_t property, uint32_t rgb888);
+
+/** Gets the primary color as 0xRRGGBB. */
+esp_gsp_err_t esp_gsp_component_get_color_rgb888(esp_gsp_handle_t gsp,
+        gsp_component_key_t key, uint32_t *out_rgb888);
+/** Enable/disable the default press shade; processed on the render task. */
+esp_gsp_err_t esp_gsp_set_press_feedback_enabled(esp_gsp_handle_t gsp, bool enabled);
+
+/** Compiler-generated layout visibility target. A zero group_ref has no transform. */
+typedef struct {
+    uint32_t scene_content_id;
+    gsp_rect_t bounds;
+    uint16_t group_ref;
+    const uint16_t *visible_slots;
+    size_t visible_slot_count;
+    uint16_t width_slot_ref, height_slot_ref;
+    int32_t width_min, width_max, height_min, height_max;
+} esp_gsp_visibility_target_t;
+/** True when the active scene, visibility gates and transformed layout bounds
+ * intersect the screen/ancestor viewport. Does not test pixel alpha or occlusion
+ * by unrelated siblings. Prefer the generated get_effective_visible() helper. */
+esp_gsp_err_t esp_gsp_query_visibility(esp_gsp_handle_t gsp,
+                                       const esp_gsp_visibility_target_t *target, bool *out_visible);
+
 esp_gsp_err_t esp_gsp_component_get_visible(esp_gsp_handle_t gsp,
         gsp_component_key_t key,
         bool *out_visible);
@@ -736,7 +809,7 @@ esp_gsp_err_t esp_gsp_overlay_builder_glyph_a8(
     uint16_t width, uint16_t height, uint32_t color,
     const uint8_t *a8, size_t a8_size, size_t stride_bytes);
 
-/* --- Declarative scrolling lists (LVGL-style): the compiler emits
+/* --- Declarative scrolling lists: the compiler emits
  *     the row template + viewport constants; the framework owns the
  *     repeater, the drag gesture, clamping, and threading. The app
  *     only fills row data. --- */
@@ -923,8 +996,7 @@ esp_gsp_err_t esp_gsp_row_set_image_owned(
  * config.directories. A NULL @p bind_item serves the authored item
  * texts directly (fixed lists: zero application assembly). Adjust
  * the count later with esp_gsp_list_set_total when data is dynamic. The
- * returned binding has UI-instance lifetime; there is currently no unbind
- * operation.
+ * returned binding remains valid until the UI instance is destroyed.
  */
 esp_gsp_list_t esp_gsp_list_bind_component(esp_gsp_handle_t gsp,
         gsp_component_key_t key,
@@ -981,18 +1053,21 @@ esp_gsp_err_t esp_gsp_list_snap(esp_gsp_handle_t gsp, esp_gsp_list_t list,
 
 /** Programmatic momentum: starts coasting at @p velocity_px_s (signed;
  *  positive scrolls toward higher items). Friction and row snapping
- *  behave exactly as a released drag. */
+ *  behave exactly as a released drag. A newly bound visible list is activated
+ *  when this command is applied, so callers need not wait for a UI tick
+ *  between binding and requesting the fling. */
 esp_gsp_err_t esp_gsp_list_fling(esp_gsp_handle_t gsp, esp_gsp_list_t list,
                                  int32_t velocity_px_s);
 
 /** Jumps to an absolute scroll offset in pixels (clamped to content;
- *  cancels any coasting). Row N sits at offset N * row_height. */
+ *  cancels any coasting). Fixed-height row N starts at N * row_height;
+ *  variable-height lists use cumulative item heights. */
 esp_gsp_err_t esp_gsp_list_scroll_to(esp_gsp_handle_t gsp,
                                      esp_gsp_list_t list,
                                      int32_t offset_px);
 
 /** Roller-style fade: translucent @p native_color bands dim the rows
- *  toward the viewport's top and bottom edges (LVGL-roller look).
+ *  toward the viewport's top and bottom edges.
  *  Pass the wheel's background color. The bands render above the row
  *  instances, which disables the scroll-blit shortcut over this
  *  viewport — scrolling repaints the viewport instead. */
@@ -1199,7 +1274,7 @@ esp_gsp_err_t esp_gsp_widget_set_position(esp_gsp_handle_t gsp,
 esp_gsp_err_t esp_gsp_play(esp_gsp_handle_t gsp, const void *eaf,
                            size_t size, bool once);
 
-/* --- Value animations (lv_anim equivalent): the framework tweens
+/* --- Value animations: the framework tweens
  *     a bind or widget VALUE slot on the render task. --- */
 
 typedef enum {
@@ -1207,6 +1282,24 @@ typedef enum {
     ESP_GSP_EASE_OUT,               /*!< cubic ease-out */
     ESP_GSP_EASE_IN_OUT,            /*!< cubic ease-in-out */
 } esp_gsp_ease_t;
+
+/** Bounded property playback. iterations=0 repeats until stopped; alternate
+ * returns to the starting value on each cycle. Hidden targets pause playback.
+ * Use iterations=1 for one cycle. Configuration is copied on submit. */
+typedef struct {
+    uint32_t duration_ms;
+    uint32_t delay_ms;
+    uint16_t iterations;
+    bool alternate;
+    esp_gsp_ease_t ease;
+} esp_gsp_animation_config_t;
+
+esp_gsp_err_t esp_gsp_component_play_animation(
+    esp_gsp_handle_t gsp, gsp_component_key_t component,
+    gsp_property_key_t property, const gsp_value_t *from,
+    const gsp_value_t *to, const esp_gsp_animation_config_t *config);
+esp_gsp_err_t esp_gsp_component_stop_animation(
+    esp_gsp_handle_t gsp, gsp_component_key_t component, gsp_property_key_t property);
 
 /** Pass as @p from to start a tween from the target's CURRENT value. */
 #define ESP_GSP_ANIM_CURRENT INT32_MIN

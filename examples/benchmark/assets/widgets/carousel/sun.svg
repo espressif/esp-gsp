@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <title>Sun</title>
+  <defs>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#FFD577"/>
+      <stop offset="0.25" stop-color="#EA9132"/>
+    </linearGradient>
+  </defs>
+  <rect x="6" y="9" width="84" height="82" rx="25" fill="#965321"/>
+  <rect x="6" y="5" width="84" height="82" rx="25" fill="url(#plate)"/>
+  <rect x="7" y="6" width="82" height="80" rx="24" fill="none" stroke="#FFFFFF" stroke-opacity="0.22"/>
+  <g stroke="#FFF8DF" stroke-width="4" stroke-linecap="round"><path d="M48 24v6m0 36v6M24 48h6m36 0h6M31 31l4 4m26 26 4 4M31 65l4-4m26-26 4-4"/></g><circle cx="48" cy="48" r="13" fill="#FFF9E9"/><path d="M41 44a8 8 0 0 1 9-4" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+</svg>

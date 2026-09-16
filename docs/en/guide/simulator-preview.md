@@ -2,9 +2,7 @@
 
 The standalone simulator host provides three ways to verify UI behavior
 before flashing firmware: interactive browser preview, scripted CLI testing,
-and API-driven automation. Each approach proves portable scene behavior but
-cannot substitute for panel wiring, touch mapping, or visual acceptance on
-target hardware.
+and API-driven automation. Use the simulator to check scene behavior, then check display and touch on the board.
 
 For the complete command-line, API, and backend reference see the
 [Simulator reference](../reference/simulator.md).
@@ -140,7 +138,7 @@ keys. The wire still copies; native sources remain retained until GSP input
 release or local shutdown. `canvas_try_push*` admits into an eight-frame local
 queue without socket I/O; full queues return TIMEOUT without taking ownership.
 Keep accepted buffers immutable until their release callback. Poll or a later
-synchronous RPC uploads them; release is not proof of host acceptance/display.
+synchronous RPC uploads them. Use upload and completion results to track host processing.
 With `capabilities.bridge_fence_version: 1`, `esp_gsp_flush` waits for a host
 render attempt, not animations, image decoding or browser presentation. First
 poll to finish pending local Canvas work; otherwise flush returns INVALID_STATE.
@@ -217,14 +215,8 @@ multi-scene flow without target hardware.
 | Complex automation or AI agent testing | API channel (`--api-enable`) |
 | End-to-end application logic | Backend + API channel |
 
-## Evidence boundary
+## Run on the board
 
-A simulator run proves that the compiled scene renders and responds to input
-correctly in the portable runtime. It does **not** prove:
-
-- panel byte order, rotation, or tearing behavior;
-- touch controller coordinate mapping;
-- PSRAM timing or DMA throughput;
-- final display color accuracy or font rendering fidelity.
-
-Report simulator evidence and hardware evidence as separate layers.
+Use the simulator to check layout, text and interaction before flashing. Check panel
+wiring, orientation, byte order, touch mapping and performance on the target board;
+see [Display integration](display.md).

@@ -1,123 +1,65 @@
 # Changelog
 
+## Unreleased
+
+- Add child clipping, state images, cyclic wheels and dynamic chart series.
+- Fix scrolling, text layout, generated APIs and image preparation.
+- Improve resource diagnostics and UI development guidance.
+
+Rebuild GSPC and the runtime together for the new controls.
+
+## 1.3.0
+
+- Add SVG rendering, visual effects and animation controls.
+- Add filesystem media and font loading.
+- Improve rendering, message lists and resource management.
+- Update platform compatibility, examples and packaging.
+
+Use GSPC 0.4.0 and simulator 1.3.0. JPEG quality follows the Profile;
+set `quality: 80` to retain the previous default. SVG support increases firmware size.
+
 ## 1.2.0
 
-- Consume externally maintained esp_display_present ^1.0.2, allowing compatible
-  1.x updates, and remove local Present components and their publication pipeline.
-- Fixed standalone Benchmark component lookup for Registry installations and
-  added packaged Benchmark builds to the consumer checks.
-- Added opt-in authoritative message revisions to skip unchanged text scans,
-  retaining default hash validation and compatibility with legacy sources.
-- Reduced repeated transform-damage scans in batch updates with bounded,
-  reusable stack storage.
-- Added runtime image rotation with partition-invariant sampling and CPU/PPA
-  cardinal fast paths; removed heap allocation from transform traversal.
-- Derived UI capacities from authored content and added growable text storage,
-  full-width widget text identities, and incremental message-list refreshes
-  with safe buffer growth and failure recovery.
-- Preserved fitted geometry for dynamic images and serialized decoded image
-  publication with rendering.
-- Expanded benchmark coverage and fixed startup page visibility races.
-- Paired this runtime with GSPC 0.3.0, GSB 2.7 and content requirements v3.
-- Reduced software image-resize cost without changing fixed-point sampling
-  results, and kept decode-time PPA scaling independent from renderer
-  transform thresholds.
-- Compacted adjacent dirty rectangles when their union adds no redraw pixels.
-- Completed image-cache, codec, scaling and animation diagnostics, including
-  explicit conservative cache-peak semantics.
-- Added Backend RPC support for native application backends, including dynamic
-  List/Grid data, encoded images, Canvas frames, image lifecycle notifications,
-  render fences, and matching native/WASM/WASI exports with QOI support.
-- Added the portable `tools/sim_bridge` C bridge for reusing hardware-independent
-  UI/business logic without EMCC or the WASI SDK, including dynamic media,
-  offscreen Canvas callbacks, asynchronous Canvas queues, and image ownership.
-- Added PC Hello World/Benchmark targets and the `sim_bridge_media` example.
-- Published the bridge through the component package with automatic
-  `esp-gsp-tools` version selection, and expanded related documentation and CI
-  checks while excluding tests and developer-only files.
+- Use the separately maintained `esp_display_present` ^1.0.2 dependency.
+- Add runtime image rotation, automatic UI capacity sizing and longer dynamic text.
+- Improve message updates, image scaling, low-memory behavior and diagnostics.
+- Add native application backends and the portable `tools/sim_bridge` integration,
+  with PC examples and dynamic List/Grid, image and Canvas support.
+- Fix packaged Benchmark builds and startup page visibility.
+
+Use GSPC 0.3.0 with this release.
 
 ## 1.1.0
 
-- Added code-checked English and Chinese public-function references, complete
-  Chinese authoring and Widget inventories, and matching configuration,
-  Kconfig, compatibility, and binary-format navigation.
-- Completed bilingual standalone-tool onboarding with one stable release
-  entry point, compatibility checks, simulator dependency boundaries, and
-  actionable missing-GSPC diagnostics.
-- Reorganized documentation into explicit `docs/en` and `docs/zh-Hans` trees
-  with one language entry point and no parallel documentation website stack.
-- Generate every bilingual Widget page from the GSPC registry and its checked-in
-  JSON example, including actual generated C signatures and the canonical local
-  WASM preview command.
-- Added exact registry, example, English/Chinese page and field-translation
-  coverage gates, and removed the obsolete Web catalog and duplicate Widget
-  preview scripts.
-- Added configure-time GSPC compatibility validation based on generated
-  binary-format, requirements, configuration and GMD runtime ABI contracts.
-  Incompatible standalone compilers now fail before scene build rules run.
-- Removed compiler-local configuration and runtime-local GMD ABI version
-  constants; both sides now consume their existing schema-generated values.
-- Added an independent GSPC version/changelog release gate and generated
-  bilingual compatibility reference.
-- Consolidated the Rust GSPC source into the ESP-GSP repository so compiler,
-  runtime formats, generated documentation and compatibility tests have one
-  maintained source of truth. The released component still consumes a
-  separately published executable through `GSPC_EXECUTABLE`.
-- Added the conventional `scenes/` project directory while retaining explicit
-  `SCENES` paths for multi-bundle and non-standard layouts.
-- Kept runtime Kconfig policies and heap-backed capacities available to
-  source-free consumers, while hiding only capabilities fixed into prebuilt
-  archives and deriving authored scene requirements from JSON.
-- Separated GSPC and native/browser simulators from the Component Registry
-  archive, and added generated schema, authoring and widget-inventory checks
-  backed by one real preview example per compiler-registered widget.
-- Published `esp_display_present` 1.0.1 so its bundled handoff test app follows
-  the conventional `scenes/` layout used by the release examples.
-- Added an installable ESP-GSP UI authoring Skill backed by GSPC schema,
-  diagnostics, checked-in Widget examples and bilingual documentation, while
-  keeping the Skill outside the Component Registry archive.
-- Clarified the Arc thickness default and the current Slider/Arc value-event
-  and reserved `back` action contracts in generated references and guides.
+- Complete bilingual API, Widget, configuration and compatibility documentation.
+- Improve standalone-tool setup and detect incompatible compilers at configure time.
+- Support the conventional `scenes/` directory and configurable prebuilt packages.
+- Distribute GSPC and simulators separately from the firmware component.
+- Add the installable ESP-GSP UI authoring Skill and clarify control events.
 
 ## 1.0.0
 
-- Publish `esp-gsp` and `esp_display_present` under the official `espressif`
+- Publish ESP-GSP and `esp_display_present` under the official `espressif`
   Component Registry namespace.
-- Align the runtime, manifests, examples, documentation, and package consumer
-  checks on the 1.0.0 component release contract. The standalone `gspc`
-  compiler keeps its independent version.
+- Align examples and documentation with the 1.0.0 release.
 
 ## 0.2.10
 
-- Removed the in-repository Python `gspc` implementation from the Component
-  Registry package. Component consumers now select a separately released,
-  format-compatible compiler through `GSPC_EXECUTABLE`.
-- Decoupled ESP-GSP component/runtime release validation from the standalone
-  `gspc` version. Existing `.gspb` files remain directly usable by the
-  packaged simulator without a compiler.
+- Use a separately installed, compatible GSPC through `GSPC_EXECUTABLE`.
+- Allow packaged simulators to open existing `.gspb` files without GSPC.
 
 ## 0.2.7
 
-- Fixed prebuilt-package consumption when `esp_display_present` is installed
-  under its Component Registry namespace (`espressif2022__esp_display_present`).
-- Added a namespaced dependency-layout smoke test to prevent unqualified
-  component lookups from passing CI accidentally.
+- Fix prebuilt-package integration with Registry-installed `esp_display_present`.
 
 ## 0.2.6
 
-- Fixed source-free ESP-IDF packages so the public touch adapter is retained
-  when the prebuilt core references it during the final firmware link.
+- Fix touch support when linking prebuilt ESP-IDF packages.
 
 ## 0.2.5
 
-- Added the public, opaque Simulator session SDK with explicit lifecycle,
-  frame, input, and surface contracts.
-- Added consumer-built SDL, headless, Web, and ESP-IDF touch adapters while
-  keeping renderer/runtime composition internals in prebuilt archives.
-- Split simulator CMake targets into core and adapter targets, retaining the
-  legacy fat simulator target for migration compatibility.
-- Added native simulator artifact gates and source-free Registry package
-  validation for the public adapter boundary.
+- Add the public Simulator session SDK and SDL, headless, Web and ESP-IDF adapters.
+- Improve packaged simulator integration and preserve legacy CMake target support.
 
 Breaking changes in the display-present and LCD-host APIs:
 
@@ -139,110 +81,47 @@ Breaking changes in the display-present and LCD-host APIs:
 
 ## 0.2.4
 
-- Fixed component-free and otherwise empty scenes being rejected as out of
-  memory when their compiled requirements legitimately resolved optional
-  runtime pools to zero capacity.
+- Fix loading empty scenes and scenes without optional components.
 
 ## 0.2.3
 
-- Fixed a dual-core PPA teardown race where an application switch could delete
-  the global SRM mutex while another render task was entering it, leading to
-  an interrupt watchdog timeout in `ppa_blit()`.
+- Fix a watchdog timeout when switching applications during PPA rendering.
 
 ## 0.2.2
 
-- Added the dropdown `open_direction` scene property. It accepts `down`
-  (default) or `up`, allowing panels near the bottom edge to open above their
-  selection box.
+- Add Dropdown `open_direction`: `down` (default) or `up`.
 
 ## 0.2.1
 
-- Fixed decoded-image cache entry negotiation so a non-zero project baseline
-  is still raised to fit the compiled startup images and runtime image
-  generations. Applications no longer need to predict each scene's image
-  count or carry a per-bundle cache-entry override.
-- Applied resolved instance-state, image-cache budget, idle/pointer cadence and
-  StackView depth settings to their actual runtime consumers. These settings
-  no longer report an effective value while silently using a built-in default.
-- GSPB requirements now include declared template instances, per-instance
-  state width and StackView depth. Standalone `gspc bundle` reads the exact
-  requirements emitted by `gspc build` and rejects stale/missing sidecars
-  instead of silently packaging placeholder capacities.
-- Source-free registry/local components hide the complete ESP-GSP menuconfig
-  tree. Hidden defaults still feed the project bridge; source checkouts retain
-  the engineering menu.
-- Requirements contract version 2 identifies StackView-depth and
-  per-instance-state fields so an older runtime rejects newer gspc output
-  instead of silently ignoring them. The 0.2.1 runtime still accepts legacy
-  version-1 requirements without interpreting those formerly reserved fields.
-- Removed the internal `ESP_GSP_CONFIG_*` Kconfig compatibility layer. Build
-  capabilities now come from a schema-generated header; runtime code and
-  package consumers read the project/effective configuration structures.
-- Prebuilt consumers now use one menu-level visibility rule, so every project
-  symbol is present in `sdkconfig` with its schema default while the complete
-  engineering menu remains hidden.
+- Size image caches and UI capacities from scene requirements.
+- Apply effective configuration consistently and reject incompatible bundles.
+- Improve configuration handling for prebuilt packages.
 
 ## 0.2.0
 
-- Replaced compile-time product configuration in prebuilt libraries with a
-  versioned project bridge and immutable per-instance effective policy and
-  capacity snapshots.
-- Added GSPB capacity requirements, strict schema/ABI validation, AUTO
-  resolution and precise diagnostics for undersized application overrides.
-- Changed the public override ABI to eight sparse inline entries plus an
-  optional caller-owned read-only extension table. The transitional typed
-  fields remain available until 0.3.0.
-- Runtime pools, List rows and StackView pages are allocated from resolved
-  capacities; source, prebuilt, SDL and WASM consumers share the same model.
-- GSPB and public configuration artifacts from 0.1.x are incompatible and
-  must be regenerated with gspc 0.2.0.
+- Apply application `menuconfig` settings to prebuilt libraries and diagnose
+  insufficient UI capacities.
+- Add native and WebAssembly simulators to the component package, with improved
+  image and dynamic-font support.
 
-- Applied consumer `menuconfig` runtime settings to source-free prebuilt
-  libraries instead of freezing product behavior into the release build.
-- Added source-free SDL/headless and WebAssembly simulators to the Registry
-  component, built from the same portable core as the device archives.
-- Made packaged simulation self-describing through deployable metadata and
-  fixed JPEG, FreeType, dynamic-font, component-directory and capability ABI
-  support across native and browser runtimes.
-- Added final-package simulator tests and minimum/current ESP-IDF consumer
-  matrices; stripped debug information from distributed device archives.
+Regenerate 0.1.x bundles and generated configuration files with GSPC 0.2.0.
 
 ## 0.1.3
 
-- Made CMake helpers namespace-independent by using the component's registered
-  target and validated the exact Registry-qualified consumption path.
-- Added component-specific release tags and stricter per-target FreeType
-  symbol validation.
+- Improve CMake integration for Registry-installed components.
 
 ## 0.1.2
 
-- Fixed the source-free managed component to resolve its namespaced ESP-GSP
-  target and keep a configurable static component target.
-- Included the FreeType provider in every target's prebuilt archive so dynamic
-  CJK fonts work from the published package.
+- Fix managed-component integration and dynamic CJK font support in prebuilt packages.
 
 ## 0.1.1
 
-- Added typed generated helpers for application-backed List components.
-- Improved low-memory image, animation, and transition behavior.
-- Hardened portable compiler, simulator, header, and component-package checks.
-- Made the built-in Dropdown indicator independent of application font glyphs.
-- Reorganized user documentation around the recommended integration workflow,
-  JSON/Kconfig authoring, public structures, ownership, and troubleshooting.
-- Added a repository-scoped ESP-GSP UI vibecoding skill for natural-language
-  and reference-image scene creation.
+- Add generated List helpers and improve low-memory media and transitions.
+- Fix the Dropdown indicator and improve integration documentation.
+- Add the ESP-GSP UI authoring Skill.
 
 ## 0.1.0
 
-- Ahead-of-time JSON scene compiler with embedded assets and generated C APIs.
-- RGB565/RGB888 rendering, dirty updates, transitions, gestures, and ESP-LCD
-  presentation.
-- Controls, layouts, lists, page flows, stacks, drawers, shapes, charts,
-  needles, clocks, templates, and runtime positioning.
-- Static and runtime text, images, animations, dynamic resources, and Canvas.
-- Velocity-aware scene, PageFlow, and Drawer gestures with guarded short flicks,
-  adaptive settling, and ESP touch-dropout filtering.
-- Transform-aware dynamic/visibility damage and stable conditional-control hit
-  testing for keyboards, checkbox/radio controls, and nested viewports.
-- User-controlled Showcase for 800x480 RGB565/RGB888 and 1024x600 MIPI-DSI.
-- Host simulator, reference renderer, compiler tests, and target examples.
+- Introduce JSON scenes, generated C APIs, RGB565/RGB888 rendering and ESP-LCD support.
+- Add controls, layouts, lists, navigation, gestures, text, media and Canvas.
+- Provide a host simulator and device examples.

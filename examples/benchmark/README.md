@@ -6,7 +6,7 @@ scaling and rotation, animations, Canvas, fixed and variable-height scrolling, e
 message bubbles, drawers, navigation, transitions, and a dense mixed-content
 render-saturation scene under continuous updates.
 
-All 49 cases loop their workload throughout their dwell window. The first lap
+All 58 cases loop their workload throughout their dwell window. The first lap
 warms caches; every following lap prints a fresh measured summary and starts
 again automatically after an on-screen results carousel. No touch input is
 required or enabled by default. Use a 660-second capture initially
@@ -41,7 +41,7 @@ time to finish an in-flight drawer cycle or transition.
 | Verified selection | Dedicated dropdown open, select, read-back and repeat loop |
 | Transitions and gestures | Four slide directions, cross-fade, fade-through-black, drag commit/cancel/flick/fade |
 
-All 29 authored widget types in GSPC's registry are present at every supported
+All 34 authored widget types in GSPC's registry are present at every supported
 resolution. Presence alone does not prove every interaction or backend: see
 the [coverage matrix and boundaries](COVERAGE.md) for the actual drivers and
 checks. The stable case table is [`main/bench_cases.inc`](main/bench_cases.inc).
@@ -148,13 +148,25 @@ pipeline labels, and checks the selected index. These labels are demo choices;
 they do not reconfigure the display hardware. A valid result requires positive
 verified selections and zero errors.
 
+Protocol 25 drives the messages page from the 1 ms pressure callback, advancing
+once per completed frame. Each step moves one quarter of the logical screen
+height within a one-screen-height range and reverses at either endpoint without
+pausing. Each lap restores 32 messages and the same starting offset. This tests
+scrolling and row recycling at the achieved frame rate without a fixed velocity
+or a periodic fling delay. The case runs as part of the full benchmark suite.
+Four history messages are prepended at 750 ms and one message is appended at
+2250 ms. The trailer reports successful upward/downward scroll commands in `up`
+and `down`, plus `prepends` and `appends`. Protocol 25 checks that scroll commands
+keep pace with rendered frames. Compare results within the same protocol and
+display configuration.
+
 The composites page gives each tab a twelve-second window and drives the
 keyboard at a 4 ms event cadence with a 255-byte edit buffer. Protocol 16 and
 later require the final verified text to exceed the 63-byte command inline
 threshold. The longer window ensures that even the slowest supported target
 can reach that boundary; the parser rejects runs that do not. During long
 soaks the keyboard alternates typing and deletion within its bounded buffer,
-so it keeps doing useful work without intentionally overflowing it.
+so it keeps doing useful work without overflowing it.
 
 The `image rotation` page updates two 96 x 64 opaque images every 16 ms. One
 uses a continuously changing arbitrary angle; the other cycles through
@@ -175,7 +187,7 @@ distant 8 x 8 markers alternate color every 50 ms. It exercises animation
 multi-patch compilation and persistent-frame composition; background changes,
 trails, or missing markers indicate a visual failure.
 Use native-damage mode when evaluating its partial-update efficiency; default
-full-repaint mode intentionally adds full-screen composition pressure.
+full-repaint mode adds full-screen composition pressure.
 
 Cross-fade and fade-through-black are visually successful only when both
 `no_visual` and `path_failures` are zero. When snapshot memory is unavailable,
@@ -273,7 +285,8 @@ measured summary, displays its result, and continues. Other useful IDs include
 is [`main/bench_cases.inc`](main/bench_cases.inc); an unknown ID fails at
 startup instead of silently running the wrong workload.
 Set `GSP_BENCH_SOAK_CASE` back to an empty string to restore all-case playback.
-Use at least 36000 ms for `P_COMPOSITES` to exercise all three tabs; the default
+Use at least 45000 ms on C3, or 36000 ms on other targets, for `P_COMPOSITES`
+to exercise all three tabs; the default
 60000 ms soak window covers them and repeats the cycle. Drawer and transition
 windows finish their in-flight operation before reporting.
 
@@ -307,6 +320,93 @@ identical for A/B testing. Hardware acceleration and fallback routes must be
 read from the log, not inferred from a chip name.
 
 ## Assets
+
+### Vector Cases
+
+Protocol 22 includes eight SVG cases in the full run. Protocol 20 introduced
+resize/rotation/tint; protocol 21 added morphing.
+
+| Case | Workload |
+| --- | --- |
+| `P_VECTOR_SIZE` | Color and monochrome images resize in opposite phases from 32 to 96 px; four setters per update |
+| `P_VECTOR_ROTATE` | Color and monochrome 96 px images rotate in opposite directions; two setters per update |
+| `P_VECTOR_TINT` | Two fixed 96 px silhouettes change color; two setters per update |
+| `P_VECTOR_MORPH` | Two selected emblem groups interpolate matching curves in opposite phases; color and A8 paths, two setters per update |
+| `P_VECTOR_MOVE` | Opposite integer translations of fixed-size color/A8 images; two setters per update |
+| `P_VECTOR_FIT` | `contain`, `cover`, `stretch` in non-square boxes; Q16.16 zoom from 0.75x to 1.5x, three setters per update |
+| `P_VECTOR_STYLE` | Decorative paths with even-odd holes, per-paint alpha, cubic/quadratic curves, expanded strokes and local `use` transforms; silhouette visibility toggles, one setter per update |
+| `P_VECTOR_EYES` | Layered iris gaze and actual eyelid curve morphing; 100 ms controller, commands only on target changes (36 per 32 updates), 8-second dwell |
+
+The device frame timer and simulator share the vector update function. Device
+logs include `bench: vector[...] updates=... commands=... errors=...`; the parser
+requires positive updates, exact command counts and zero errors. Protocol 18/19
+logs retain their original case coverage; protocol 20 retains 52 cases and
+protocol 21 retains 53 cases.
+Do not compare aggregate scores across these protocols: the measured workload has changed.
+
+From the repository root, preview a vector case with GSPC 0.4.0 and simulator 1.3.0:
+
+```sh
+export GSPC_EXECUTABLE="$PWD/ci/gspc-dev"
+python3 examples/benchmark/tools/run_sim_benchmark.py \
+    --size 240 --case P_VECTOR_SIZE --frames 120
+```
+
+Use `P_VECTOR_ROTATE` or `P_VECTOR_TINT` for the other cases. For an isolated
+device run, use the board build command above with
+`-D ESP_GSP_BUILD_PREBUILT=ON -D GSP_BENCH_SOAK_CASE=P_VECTOR_TINT` and the same
+source GSPC override. Published binaries predating this branch cannot render
+the vector resources.
+
+With the expanded scene, C3 uses 15 seconds per composite tab (45 seconds
+total); other targets keep 12 seconds per tab. The former C3 window ended at
+63 bytes after successful typing/deletion. The longer window preserves the
+strict greater-than-63-byte coverage gate instead of weakening validation.
+`keyboard_window_ms` in the configuration fingerprint records the difference.
+
+The normal benchmark keeps all existing workloads and includes these eight
+cases in its 58-case cycle. After an isolated run, explicitly clear the cached
+selection when rebuilding the same board build directory:
+
+```sh
+idf.py -B <board-build-dir> -D GSP_BENCH_SOAK_CASE= build flash
+```
+
+Keep the board's existing target, port and profile options. Confirm the boot
+log reports `bench: run mode=full cases=58`; a vector-only soak is not a full
+benchmark validation.
+
+Tint can reuse A8 coverage when the image cache is enabled and has budget.
+Cache-disabled configurations exercise rerasterization instead. The RGB565
+mask composition can use existing PIE/SIMD kernels, but simulator timing is
+not evidence of hardware throughput. Compare `native` and `full` pressure as
+separate measurements.
+
+The eye case uses separately selected `white`, `iris`, `mask` and `rim` parts
+from two compatible SVG states. Iris/highlights translate without deformation;
+the eyelid opening changes curvature and closes completely. These are solid
+background-colored occluding shapes, not SVG clip paths or masks. The iris
+and eyelid animations use the shared property animation engine; their timing
+does not depend on incrementing geometry once per rendered frame.
+The protocol requires observed open and fully closed states, not just successful
+animation calls. Eye size scales up with the panel but is capped at 192 pixels
+per eye; do not treat cross-board scores as equal-pixel CPU comparisons.
+
+Check actual benchmark frames for complete closure and two-axis pupil movement:
+
+```sh
+GSPC_EXECUTABLE="$PWD/ci/gspc-dev" \
+python3 examples/benchmark/tools/check_vector_eye_frames.py \
+    --build-dir /tmp/gsp-eye-check --output-dir /tmp/gsp-eye-frames
+```
+
+Add `--rgb888` to check the 800x480 RGB888 scene with the same pixel assertions.
+
+This complements the hardware counters and the lower-level cache/tile, format,
+template and boundary checks listed in [COVERAGE.md](COVERAGE.md). It does not
+claim support for gradients, arbitrary topology changes or dynamic clipping.
+
+### Generated Media
 
 `scenes/gen_scenes.py --check` verifies the benchmark scenes and media assets.
 The industrial saturation artwork is checked in, has no runtime network
@@ -355,7 +455,7 @@ default; use `--page-frames 120` to keep each page on screen longer.
 Each case runs headless, requires one committed frame per requested loop, and
 saves its log and final PPM under `build/gsp-sim-benchmark/<width>/`.
 The runner covers authored page layers, not the board application's complete
-49-case scheduler or hardware-specific interaction checks. The host supplies
+58-case scheduler or hardware-specific interaction checks. The host supplies
 separate visual grid/message fixtures and an open drawer; those are not the
 board application's pressure drivers. `--state keyboard` and `--state modal`
 inspect composite states. `--case` hides all
@@ -385,3 +485,16 @@ Capture refuses to overwrite an existing log and validates each result before
 returning success. A timeout or incomplete summary is not a passing run; extend
 the duration and capture to new paths. Preserve ESP-IDF revision, source commit,
 build configuration and logs alongside any published result.
+
+## Mixed effects regression
+
+Protocol 23 adds `P_EFFECTS` (`effects mixed`) at every resolution: charging
+orb, pulse with retained foreground/background opacity, flip card, carousel,
+static baked glass, a cached SVG and alternating runtime QOI images. The
+measured trailer requires nonzero updates, five accepted command submissions
+per update, zero submission errors and successful asynchronous image
+publication with no failures. The 32x32 QOI inputs also match the placeholder
+on no-cache targets; global media checks still validate the complete cycle. Use `GSP_BENCH_SOAK_CASE=P_EFFECTS` for focused
+stress. The host opacity oracle verifies static versus runtime pixels and
+incremental damage in RGB565/RGB888; serial counters do not replace visual
+acceptance of effects, clipping or panel output.

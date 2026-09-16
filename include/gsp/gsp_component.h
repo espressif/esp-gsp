@@ -221,6 +221,8 @@ typedef struct {
     const char *const *items;
     uint16_t transform_group_ref; /*!< parent transform group + 1; 0 for root */
     bool scroll_snapshot;      /*!< opt-in cached viewport scrolling */
+    bool snap_disabled;       /*!< Wheel: explicit snap_to_item=false; zero keeps the default */
+    bool cyclic;              /*!< Wheel repeats logical items across both ends */
 } gsp_list_config_t;
 
 /** Compiler-owned geometry for a vertically scrolling fixed-column grid. */

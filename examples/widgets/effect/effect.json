@@ -1,0 +1,12 @@
+{
+  "screen": "effects", "w": 320, "h": 240, "screen_bg": "#0B1424",
+  "font": "../../common/fonts/DejaVuSans.ttf",
+  "objects": [
+    {"type":"label","parent":-1,"x":16,"y":10,"w":288,"h":24,"text":"GSP  /  MOTION","font_size":18,"fg_color":"#E8F4FF"},
+    {"type":"effect","parent":-1,"name":"charge","x":28,"y":54,"w":112,"h":112,"effect":"liquid","value":62,"fg_color":"#35DCBA","bg_color":"#153D4A","period_ms":2400},
+    {"type":"label","parent":-1,"x":48,"y":97,"w":72,"h":32,"text":"62%","font_size":26,"fg_color":"#FFFFFF","text_align":"center"},
+    {"type":"effect","parent":-1,"name":"loading","x":188,"y":56,"w":76,"h":76,"effect":"ring","value":35,"fg_color":"#6BAFFF","period_ms":1200},
+    {"type":"effect","parent":-1,"name":"status","x":212,"y":144,"w":28,"h":28,"effect":"pulse","fg_color":"#C99AFF","period_ms":2000},
+    {"type":"effect","parent":-1,"name":"scan","x":28,"y":196,"w":264,"h":14,"effect":"shimmer","fg_color":"#9ACFFF","bg_color":"#1C3350","period_ms":1800}
+  ]
+}

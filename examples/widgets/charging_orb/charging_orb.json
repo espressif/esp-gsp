@@ -1,0 +1,51 @@
+{
+  "screen": "charging_orb_demo",
+  "w": 320,
+  "h": 240,
+  "screen_bg": "#08131F",
+  "font": "../../common/fonts/DejaVuSans.ttf",
+  "objects": [
+    {
+      "type": "charging_orb",
+      "name": "charge",
+      "parent": -1,
+      "x": 70,
+      "y": 20,
+      "w": 180,
+      "h": 180,
+      "style": "halo",
+      "value": 62,
+      "fg_color": "#69CEF6",
+      "strength": 85,
+      "period_ms": 4200,
+      "particles": 4,
+      "softness": 90,
+      "ripple": 55,
+      "charging": true
+    },
+    {
+      "type": "label",
+      "parent": -1,
+      "x": 90,
+      "y": 92,
+      "w": 140,
+      "h": 40,
+      "text": "62%",
+      "font_size": 32,
+      "fg_color": "#EFFFFF",
+      "text_align": "center"
+    },
+    {
+      "type": "label",
+      "parent": -1,
+      "x": 20,
+      "y": 210,
+      "w": 280,
+      "h": 22,
+      "text": "ENERGY / CHARGING",
+      "font_size": 14,
+      "fg_color": "#7AADB5",
+      "text_align": "center"
+    }
+  ]
+}

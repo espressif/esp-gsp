@@ -11,22 +11,21 @@
 [安装 `esp-gsp-tools`](../guide/simulator-preview.md) 后，在解压后的组件或公共仓库根目录运行：
 
 ```sh
-mkdir -p build/widget-preview
-python -m gsp.execute --version 0.3.0 gspc pack \
+mkdir -p gsp-out/widget-preview
+python -m gsp.execute --version 0.4.0 gspc pack \
   examples/widgets/table/table.json \
-  --deployable -o build/widget-preview/table.gspb
-python -m gsp.execute --version 1.2.0 sim \
-  --bundle build/widget-preview/table.gspb
+  --deployable -o gsp-out/widget-preview/table.gspb
+python -m gsp.execute --version 1.3.0 sim \
+  --bundle gsp-out/widget-preview/table.gspb
 ```
 
-这些命令用 GSPC 编译下方同一份 JSON，并通过发布版 ESP-GSP 模拟器打开浏览器预览，
-不是 HTML 仿制控件。最终像素格式、字体、显示链路和性能仍需在目标硬件确认。
+这些命令编译下方 JSON，并在 ESP-GSP 模拟器中打开浏览器预览。
 
 ## 运行方式
 
 GSPC 将组合组件编译为原生基础图元，并为命名元素生成连接应用行为的适配 API。
 
-为需要在 C 代码中读写的对象设置稳定的 `name`。GSPC 会为示例中的命名对象生成下方列出的类型化函数；JSON 中没有命名的对象不会产生无用 API。
+为需要在 C 代码中读写的对象设置稳定的 `name`。GSPC 为命名对象生成下方列出的类型化函数。
 
 ## 完整示例 JSON
 
@@ -105,9 +104,9 @@ size_t gsp_table_docs_dynamic_image_slots(void)
 |---|---|---:|---|---:|---|
 | `type` | `string` | 是 | — | — | 控件类型 |
 | `parent` | `int` | 是 | 默认 -1; -1…65534 | — | 父对象索引（-1 表示屏幕根节点） |
-| `x` | `int` | 是 | 默认 0; -32768…32767 | 是 | 相对于父对象的 x 坐标 |
-| `y` | `int` | 是 | 默认 0; -32768…32767 | 是 | 相对于父对象的 y 坐标 |
-| `w` | `int` | 是 | 0…65535 | 是 | 宽度（像素） |
+| `x` | `int` | 是 | 默认 0; -32768…32767 | 场景: 不支持; 模板: 不支持 | 相对于父对象的 x 坐标 |
+| `y` | `int` | 是 | 默认 0; -32768…32767 | 场景: 不支持; 模板: 不支持 | 相对于父对象的 y 坐标 |
+| `w` | `int` | 是 | 0…65535 | 场景: 不支持; 模板: 不支持 | 宽度（像素） |
 | `bg_color` | `color` | — | — | 是 | 表格背景 |
 | `fg_color` | `color` | — | — | — | 表格文字颜色 |
 | `font_size` | `int` | — | 1…255 | — | 单个对象的字体像素尺寸 |
@@ -122,7 +121,8 @@ size_t gsp_table_docs_dynamic_image_slots(void)
 
 | 字段 | 类型 | 必填 | 默认值 / 范围 | 可运行时更新 | 编译器定义 |
 |---|---|---:|---|---:|---|
-| `radius` | `int` | — | 默认 0; 0…65535 | 是 | 圆角半径 |
+| `radius` | `int` | — | 默认 0; 0…65535 | 场景: 不支持; 模板: 不支持 | 圆角半径 |
+| `font` | `path` | — | — | — | 单个对象的 TTF/OTF 字体覆盖路径 |
 
 </details>
 
@@ -131,8 +131,7 @@ size_t gsp_table_docs_dynamic_image_slots(void)
 | 字段 | 类型 | 必填 | 默认值 / 范围 | 可运行时更新 | 编译器定义 |
 |---|---|---:|---|---:|---|
 | `parent_name` | `string` | — | — | — | 使用名称而不是索引指定父对象 |
-| `h` | `int` | 是 | 0…65535 | 是 | 高度（像素） |
+| `h` | `int` | 是 | 0…65535 | 场景: 不支持; 模板: 不支持 | 高度（像素） |
 | `name` | `identifier` | — | — | — | 稳定组件名称；生成 GSP_OBJ_KEY_&lt;NAME&gt; |
-| `font` | `path` | — | — | — | 单个对象的 TTF/OTF 字体覆盖路径 |
 
 </details>

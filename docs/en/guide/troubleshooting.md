@@ -50,8 +50,8 @@ nearby component directory overrides a managed component automatically.
 
 ### JSON reports an unknown field or component
 
-Use [Scene authoring](../reference/authoring.md) for the installed component version. Do
-not borrow fields from LVGL or from a newer ESP-GSP release. Check the full
+Use [Scene authoring](../reference/authoring.md) for the installed component
+version to select supported fields. Check the full
 JSON path in the compiler diagnostic; repeated templates and component
 configuration can make the leaf field appear far from the root cause.
 
@@ -80,7 +80,7 @@ scene or referenced asset change should trigger regeneration automatically.
 4. Rebuild the bundle.
 5. Inspect `<symbol>_gsp.h` and the included per-scene header.
 
-Do not hand-write a guessed helper and do not edit the generated header.
+Use the declarations and editor completion from the generated header.
 
 ### An old generated helper still appears
 
@@ -117,6 +117,14 @@ Verify that the BSP exposes the correct panel class, framebuffer count, TE
 signal, draw-buffer memory, and completion callbacks. Keep presentation mode
 on `ESP_DISPLAY_PRESENT_MODE_AUTO` unless a measured integration requires an
 explicit mode. See [Display presentation](display.md).
+
+### Bound text moves upward after upgrading
+
+A left-aligned bound Label with room for at least two font lines uses multiline
+layout from its first frame, including when the initial text is a single line.
+This keeps initial text and later `set_text()` updates aligned. For a single-line
+caption centered inside a larger control, give the Label one line of height and
+position that text box within the control.
 
 ## State and lifecycle
 
@@ -164,6 +172,31 @@ it does not automatically zoom or pan a control. `MAX_TOUCH_POINTS=1` disables
 the second contact and pinch handling.
 
 ## Lists, grids, and runtime media
+
+### A cyclic Wheel stops at an end or shows no rows
+
+Set `cyclic: true` on the Wheel; a finite `items` array is the logical data set,
+not a limit on how many cycles can be displayed. A cyclic Wheel has a generated
+bind helper; call it once with a null callback, for example
+`gsp_widget_wheel_city_bind(ui, NULL, NULL)`. The runtime then supplies the
+compiled item text and reuses the row template without application slot IDs.
+Use a callback, `set_total()` and `refresh()` only when the application owns
+dynamic row data.
+
+For item sets that will change at runtime, declare `dynamic_items: true`. The generated
+`bind`, `set_total()` and `refresh()` APIs then remain available whether the initial
+array is empty, short or longer than the viewport. Bind once and retain the handle.
+For compiled item text, pass `NULL` as the callback; provide a callback when the
+application owns the row data and declare its possible characters with `font_charset`.
+
+When debugging a precompiled runtime, first reproduce with the matching
+component, GSPC and simulator versions. Include `gspc compatibility` and the
+firmware startup summary when reporting a problem. The simulator log panel exposes host
+and runtime diagnostics, and its API bridge supports the same generated Wheel
+helper. On device, `esp_gsp_set_pointer_observer()` confirms mapped press and
+release samples before gesture routing; `esp_gsp_render_error_stats()` and
+`esp_gsp_service_stats()` expose render failures and queued service work. These
+public diagnostics do not require runtime source code.
 
 ### List binding eventually returns `ESP_GSP_LIST_NONE`
 

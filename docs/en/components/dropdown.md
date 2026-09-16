@@ -12,24 +12,24 @@ After [installing `esp-gsp-tools`](../guide/simulator-preview.md), run from an
 unpacked component or public repository root:
 
 ```sh
-mkdir -p build/widget-preview
-python -m gsp.execute --version 0.3.0 gspc pack \
+mkdir -p gsp-out/widget-preview
+python -m gsp.execute --version 0.4.0 gspc pack \
   examples/widgets/dropdown/dropdown.json \
-  --deployable -o build/widget-preview/dropdown.gspb
-python -m gsp.execute --version 1.2.0 sim \
-  --bundle build/widget-preview/dropdown.gspb
+  --deployable -o gsp-out/widget-preview/dropdown.gspb
+python -m gsp.execute --version 1.3.0 sim \
+  --bundle gsp-out/widget-preview/dropdown.gspb
 ```
 
-These commands compile the same JSON below with GSPC and open it in the
-published ESP-GSP simulator's browser preview. It is not an HTML recreation.
-Confirm the final pixel format, fonts, display path, and performance on target
-hardware.
+These commands compile the JSON below and open it in the ESP-GSP simulator's
+browser preview.
 
 ## Runtime behavior
 
 GSPC compiles the group into native primitives and generates adapters for application behavior exposed by named elements.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects in this example; unnamed objects do not create unused API.
+`selected` is the zero-based initial index (default 0). Generated `set_selected` updates the active scene's runtime selection and label, not the JSON. Restore saved selection after entering that scene. Read a clicked choice from `event->arg`; a getter inside the callback can still observe the value before the input transaction commits.
+
+Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
 
 ## Complete example JSON
 
@@ -87,6 +87,9 @@ This is `examples/widgets/dropdown/dropdown.json`. Copy any relative assets refe
 
 ```c
 const gsp_component_directory_t *const * gsp_dropdown_docs_component_directories(uint16_t *out_count)
+esp_err_t gsp_widget_dropdown___metric_label_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_dropdown___metric_panel_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_dropdown_metric_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
 esp_err_t gsp_widget_dropdown_metric_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
 esp_err_t gsp_widget_dropdown_metric_get_selected(esp_gsp_handle_t gsp, uint32_t *out_value)
 esp_err_t gsp_widget_dropdown_metric_set_selected(esp_gsp_handle_t gsp, uint32_t new_value)
@@ -102,16 +105,16 @@ These signatures come from the actual compiler output for this JSON.
 |---|---|---:|---|---:|---|
 | `type` | `string` | yes | — | — | widget type |
 | `parent` | `int` | yes | default -1; -1…65534 | — | parent object index (-1 = screen root) |
-| `x` | `int` | yes | default 0; -32768…32767 | yes | x relative to parent |
-| `y` | `int` | yes | default 0; -32768…32767 | yes | y relative to parent |
-| `w` | `int` | yes | 0…65535 | yes | width in px |
-| `h` | `int` | yes | 0…65535 | yes | height in px |
+| `x` | `int` | yes | default 0; -32768…32767 | scene: —; template: — | x relative to parent |
+| `y` | `int` | yes | default 0; -32768…32767 | scene: —; template: — | y relative to parent |
+| `w` | `int` | yes | 0…65535 | scene: —; template: — | width in px |
+| `h` | `int` | yes | 0…65535 | scene: —; template: — | height in px |
 | `name` | `identifier` | — | — | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
 | `bg_color` | `color` | — | — | yes | dropdown background |
 | `fg_color` | `color` | — | — | — | dropdown text color |
 | `border_color` | `color` | — | — | — | border stroke color |
 | `border_width` | `int` | — | 0…65535 | — | border stroke width |
-| `radius` | `int` | — | default 0; 0…65535 | yes | corner radius |
+| `radius` | `int` | — | default 0; 0…65535 | scene: —; template: — | corner radius |
 | `font_size` | `int` | — | 1…255 | — | per-object font pixel size |
 | `options` | `string_list` | yes | — | — | option labels |
 | `open_direction` | `enum` | — | default down; `down`, `up` | — | direction in which the option panel opens |
@@ -123,6 +126,7 @@ These signatures come from the actual compiler output for this JSON.
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
 | `grow` | `int` | — | default 0; 0…100 | — | auto-layout grow weight |
+| `font` | `path` | — | — | — | per-object TTF/OTF override |
 | `items` | `string_list` | — | — | — | normalized dropdown option labels |
 | `item_height` | `int` | — | 0…65535 | — | item row height |
 | `callback` | `identifier` | — | — | — | selection callback |
@@ -137,6 +141,5 @@ These signatures come from the actual compiler output for this JSON.
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
 | `parent_name` | `string` | — | — | — | parent by name instead of index |
-| `font` | `path` | — | — | — | per-object TTF/OTF override |
 
 </details>

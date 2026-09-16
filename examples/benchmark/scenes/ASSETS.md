@@ -13,9 +13,23 @@ No external stock-photo download was used.
 | [bench_scale.png](bench_scale.png) | 96 × 64 RGB PNG | Deterministically resized from the industrial scene by `gen_scenes.py` for runtime scaling/rotation |
 | [bench_anim.gif](bench_anim.gif) | 120 × 120, 24 frames | Procedurally generated radar sweep, 50 ms per frame, infinite loop |
 | [bench_anim_sparse.gif](bench_anim_sparse.gif) | 120 × 120, 24 frames | Generated diagnostic: exactly two distant 8 × 8 regions change every 50 ms |
+| [vector_planet.svg](../../widgets/image/vector_planet.svg) | 96 × 96 SVG | Original Orbit icon with layered planet shading, front/back rings and sparkles; shared by vector resize, rotation and silhouette-tint cases |
+| [vector_emblem.svg](../../widgets/image/vector_emblem.svg), [vector_emblem_active.svg](../../widgets/image/vector_emblem_active.svg) | 128 × 128 SVG | Original shield/heart states with matching cubic paths and a named emblem group; color and A8 morph workload |
+| [vector_paints.svg](../../widgets/image/vector_paints.svg) | 128 × 128 SVG | Original orbital ornament: even-odd ring, translucent color overlap, stroked curves and reused transformed rays |
+| [vector_eye.svg](../../widgets/image/vector_eye.svg), [vector_eye_closed.svg](../../widgets/image/vector_eye_closed.svg) | 128 × 112 SVG | Original layered eyes: detailed iris/highlights, independently selected parts and matching open/closed eyelid paths |
 
 Both GIFs are generated locally by `gen_scenes.py`, with no external artwork.
-The GIF diagnostics are deliberately simple: replacing them with decorative
+The Orbit SVG is authored as vector paths and solid paints, not traced from a
+bitmap. Its geometry stays inside a rotation-safe circular margin. The older
+`vector_icon.svg` remains a separate low-level regression fixture for holes
+and alpha math; it is not the benchmark presentation artwork.
+The emblem states are authored directly as compatible curves. The benchmark
+selects only the `emblem` group; the separate `spark` element is used by the
+public vector-motion example to demonstrate independent control of one source.
+The eye artwork is vector-authored, not a GIF or a traced bitmap. The same iris
+geometry translates in both eyes; matched mask/rim curves close over it on a
+uniform face background. The eye case uses existing Image property animations.
+The GIF diagnostics are simple: replacing them with decorative
 animation would change their measurable patch workload. Scene geometry, grids,
 labels, HUDs and controls remain native GSP objects, not baked screenshots.
 `gen_scenes.py --check` verifies dimensions, alpha extrema, frame timing,

@@ -1,6 +1,24 @@
 # Configuration model
 
-ESP-GSP keeps configuration useful in both source and prebuilt-library consumption. Each setting has one owner and one precedence chain.
+Source builds and prebuilt libraries use the same configuration entries and precedence.
+
+## Start with defaults
+
+Ordinary integration does not require filling in pool sizes. Select the board and PSRAM configuration in ESP-IDF/BSP, author the scenes, and build. GSPC derives the declared scene, list, text, image-target and template-instance requirements.
+
+`menuconfig → ESP-GSP` exposes only image caching, background decoding and transition snapshots at the entry level. Other settings live under **Advanced settings (optional)**. Saved `sdkconfig` values and instance overrides remain active.
+
+Fields labelled `0 = automatic` use authored requirements; follow the field descriptions for other values. Advanced settings cover application concurrency, task tuning and product capacities. The compiler reports known capacity conflicts together with their configuration symbols. Prebuilt capability limits are available as `ESP_GSP_BUILD_CAP_*` constants.
+
+Applications can supply images, text, timers and instances at runtime. Declare known peaks in scenes/templates and use instance overrides for additional application capacity.
+
+## Read the build result
+
+Build logs show derived scene needs, encoded resource sizes, animation working sets and the image-cache policy. An `automatic runtime budget` does not mean the image cache is disabled.
+
+The report shows the profile's internal/PSRAM allocation preferences. Include task stacks, control pools, DMA scratch, display buffers and application allocations separately when sizing the system. Check the target's actual heap capacities; PSRAM-preferred allocations can fall back to internal RAM.
+
+The build checks known resource requirements. Runtime allocation failures report the requested memory and available heap. Use these diagnostics together with BSP buffer sizes to tune application budgets.
 
 ## Three input layers, one result
 
@@ -18,15 +36,15 @@ The runtime raises AUTO capacity to cover bundle demand and rejects values above
 
 ## Does Kconfig work with a prebuilt library?
 
-Yes, for settings intentionally resolved by the consuming project: runtime policies, interaction tuning, task settings and heap-backed capacities. They are emitted through the project configuration bridge and remain effective with sealed libraries.
+Yes, for settings resolved by the consuming project: runtime policies, interaction tuning, task settings and heap-backed capacities. They are emitted through the project configuration bridge and remain effective with prebuilt libraries.
 
-Values that change compiled library layout cannot be changed after the library is built. Those do not masquerade as usable Kconfig settings in a source-free release; the archive publishes them as `ESP_GSP_BUILD_CAP_*` capability constants. This removes ineffective options while keeping a clear failure boundary.
+Parameters that affect the compiled library layout are fixed in the prebuilt archive and exposed as `ESP_GSP_BUILD_CAP_*` constants. The consuming project configures task policies and heap-backed capacities.
 
 ## Slots and dynamic instances
 
 A slot is bounded runtime storage, not the total number of authored objects or dataset records. GSPC derives normal scene demand. For application-created instances, declare the reusable subtree as a JSON template and set `max_instances` to the maximum simultaneously live copies. List/Grid recycling therefore scales with visible rows or cells rather than total records.
 
-Use `esp_gsp_config_set()` only when the extra peak truly cannot be authored:
+To configure capacity for one bundle, call `esp_gsp_config_set()` before startup:
 
 ```c
 esp_gsp_config_t config = gsp_product_config();

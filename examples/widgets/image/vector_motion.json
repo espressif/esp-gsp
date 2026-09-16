@@ -1,0 +1,13 @@
+{
+  "screen": "vector_motion", "w": 240, "h": 160, "screen_bg": "#151b24",
+  "objects": [
+    {"type": "image", "name": "emblem", "parent": -1,
+     "x": 56, "y": 16, "w": 128, "h": 128,
+     "image": "vector_emblem.svg", "svg_element": "emblem",
+     "morph_to": "vector_emblem_active.svg", "morph": 0, "svg_layout": "canvas"},
+    {"type": "image", "name": "spark", "parent": -1,
+     "x": {"property": "x", "default": 56, "min": 40, "max": 72},
+     "y": 16, "w": 128, "h": 128, "rotation": 0, "svg_layout": "canvas",
+     "image": "vector_emblem.svg", "svg_element": "spark", "tint": "#4dd2b1"}
+  ]
+}

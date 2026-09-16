@@ -15,6 +15,8 @@ import unittest
 from pathlib import Path
 
 from PIL import ImageFont
+from run_sim_benchmark import validate_vector_updates
+from vector_cases import VECTOR_CASES, expected_commands
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -41,6 +43,90 @@ def manifest_scene_binds():
 
 
 class BenchmarkSceneCoverageTests(unittest.TestCase):
+    def test_vector_manifest_and_command_contracts_match(self):
+        manifest = dict(re.findall(r'^BENCH_CASE\((P_VECTOR_\w+),\s*\w+,\s*"([^"]+)"',
+                                   CASE_MANIFEST.read_text(), re.MULTILINE))
+        self.assertEqual(manifest, {key: value[0] for key, value in VECTOR_CASES.items()})
+        for updates in range(100):
+            commands = sum(4 * ((i % 32 in (0, 4, 6, 18, 20)) + (i % 8 == 0)) for i in range(updates))
+            self.assertEqual(expected_commands("P_VECTOR_EYES", updates), commands)
+
+    def test_simulator_requires_actual_vector_updates(self):
+        valid = "gsp_sim: vector[P_VECTOR_SIZE] updates=60 commands=240 errors=0\n"
+        validate_vector_updates(valid, ("P_VECTOR_SIZE",), 60, 60)
+        for output in ("", valid.replace("commands=240", "commands=239"),
+                       valid.replace("errors=0", "errors=1")):
+            with self.assertRaises(RuntimeError):
+                validate_vector_updates(output, ("P_VECTOR_SIZE",), 60, 60)
+        validate_vector_updates("", ("P_VECTOR_SIZE",), 1, 60)
+        validate_vector_updates("", ("P_RECT1", "P_VECTOR_SIZE"), 60, 60)
+
+    def test_vector_cases_at_every_resolution(self):
+        for path in sorted(SCENE_DIR.glob("bench_*.json")):
+            if "_alt_" in path.name:
+                continue
+            scene = json.loads(path.read_text())
+            objects = scene["objects"]
+            for bind in ("p_vector_size", "p_vector_rotate", "p_vector_tint", "p_vector_morph"):
+                page = next(i for i, obj in enumerate(objects) if obj.get("bind") == bind)
+                images = [obj for obj in objects if obj.get("parent") == page and obj["type"] == "image"]
+                self.assertEqual(len(images), 2, (path.name, bind))
+                for image in images:
+                    self.assertTrue((path.parent / image["image"]).is_file())
+                    self.assertLessEqual(image["x"] + 96, scene["w"])
+                    self.assertLessEqual(image["y"] + 96, scene["h"])
+                    if bind == "p_vector_size":
+                        self.assertEqual((image["w"]["min"], image["w"]["max"]), (32, 96))
+                    elif bind == "p_vector_rotate":
+                        self.assertEqual(image["rotation"], 0)
+                    elif bind == "p_vector_morph":
+                        self.assertEqual(image["svg_element"], "emblem")
+                        self.assertTrue((path.parent / image["morph_to"]).is_file())
+                    else:
+                        self.assertIn("tint", image)
+
+    def test_vector_feature_pages_and_eye_layers(self):
+        expected = {"p_vector_move": 2, "p_vector_fit": 3, "p_vector_style": 2, "p_vector_eyes": 8}
+        for path in sorted(SCENE_DIR.glob("bench_*.json")):
+            if "_alt_" in path.name:
+                continue
+            scene = json.loads(path.read_text())
+            objects = scene["objects"]
+            for bind, count in expected.items():
+                page = next(i for i, obj in enumerate(objects) if obj.get("bind") == bind)
+                images = [obj for obj in objects if obj.get("parent") == page and obj["type"] == "image"]
+                self.assertEqual(len(images), count, (path.name, bind))
+                for obj in images:
+                    for axis, span, limit in (("x", "w", scene["w"]), ("y", "h", scene["h"])):
+                        position = obj[axis]
+                        low, high = (position["min"], position["max"]) if isinstance(position, dict) else (position, position)
+                        if obj.get("svg_layout") == "canvas" and isinstance(position, dict):
+                            self.assertGreater(low + obj[span], 0)
+                            self.assertLess(high, limit)
+                            low = high = position["default"]
+                        self.assertGreaterEqual(low, 0)
+                        self.assertLessEqual(high + obj[span], limit)
+                    self.assertTrue((path.parent / obj["image"]).is_file())
+                if bind == "p_vector_fit":
+                    self.assertEqual({obj["fit"] for obj in images}, {"contain", "cover", "stretch"})
+                    self.assertTrue(all(obj["scalable"] for obj in images))
+                if bind == "p_vector_eyes":
+                    self.assertEqual([obj["svg_element"] for obj in images], ["white", "iris", "mask", "rim"] * 2)
+                    for obj in images:
+                        self.assertEqual(obj.get("svg_layout"), "canvas")
+                        if obj["svg_element"] in {"mask", "rim"}:
+                            self.assertTrue((path.parent / obj["morph_to"]).is_file())
+                        if obj["svg_element"] == "iris":
+                            self.assertIsInstance(obj["x"], dict)
+                            self.assertIsInstance(obj["y"], dict)
+
+    def test_eye_simulator_requires_completed_blinks(self):
+        output = "gsp_sim: vector[P_VECTOR_EYES] updates=30 commands=36 errors=0\ngsp_sim: eyes open=5 closed=2 errors=0\n"
+        validate_vector_updates(output, ("P_VECTOR_EYES",), 180, 180)
+        for broken in (output.replace("closed=2", "closed=0"), output.replace("open=5", "open=0"), output.splitlines()[0]):
+            with self.assertRaises(RuntimeError):
+                validate_vector_updates(broken, ("P_VECTOR_EYES",), 180, 180)
+
     def test_repeater_controls_have_bindable_names(self):
         for path in sorted(SCENE_DIR.glob("bench_*.json")):
             data = json.loads(path.read_text())

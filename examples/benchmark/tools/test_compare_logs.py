@@ -18,6 +18,86 @@ SPEC.loader.exec_module(compare_logs)
 
 
 class ParseLogTest(unittest.TestCase):
+    def test_vector_protocols_require_actual_updates(self):
+        content = '''
+I (1) app_init: App version: vector-benchmark
+bench: run mode=soak case=P_VECTOR_TINT name="vector tint" category=vector dwell_ms=4000
+bench: config protocol=20 pressure=full pressure_ms=1 touch=disabled queue_metric=drained hud=results-only bundle_crc=1234abcd logical=240x240
+bench: warm-up lap done, measuring
+bench: pressure[vector tint] mode=full period_ms=1 ticks=200 requests=200 accepted=200 rejected=0 errors=0
+bench: vector[vector tint] updates=200 commands=400 errors=0
+bench: detail[vector tint] frames=100 elapsed_us=4000000 busy_us=2000000 render_us=500000 submit_us=1500000 service_steps=200 service_us=10000 commands=400 busy=20.000ms internal_peak=0 psram_peak=0
+bench: ---- summary ----
+bench: vector tint 25.0 50.0 5.0 15.0 50.0 100.0 4
+bench: aggregate wall throughput 25.0 fps
+bench: aggregate active throughput 50.0 fps
+bench: aggregate raw frames=100 wall_us=4000000 busy_us=2000000
+bench: legacy dwell-weighted busy score 50.0 fps
+bench: codecs qoi=0/0 rle16=0/0 png=0/0 failed=0 scale_hw=0 scale_sw=0
+bench: dynamic image request=0 queued=0 published=0 failed=0 cancelled=0 probe=0us
+bench: measurement end
+'''
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "monitor.log"
+            messages = content.replace("protocol=20", "protocol=24").replace("P_VECTOR_TINT", "P_MESSAGES").replace("vector tint", "messages").replace("category=vector", "category=components")
+            messages = messages.replace("bench: vector[messages] updates=200 commands=400 errors=0",
+                "bench: messages count=37 first=4 errors=0 up=8 down=8 prepends=1 appends=1")
+            path.write_text(messages)
+            self.assertEqual(compare_logs.parse_log(path).raw_frames, 100)
+            saturated = messages.replace("protocol=24", "protocol=25").replace("up=8 down=8", "up=50 down=50")
+            path.write_text(saturated)
+            self.assertEqual(compare_logs.parse_log(path).raw_frames, 100)
+            path.write_text(saturated.replace("up=50 down=50", "up=8 down=8"))
+            with self.assertRaises(ValueError):
+                compare_logs.parse_log(path)
+            for broken in (messages.replace("down=8", "down=0"),
+                           messages.replace("up=8", "up=0"),
+                           messages.replace("count=37", "count=36"),
+                           messages.replace("errors=0 up=8", "errors=1 up=8"),
+                           messages.replace("prepends=1", "prepends=0"),
+                           messages.replace("appends=1", "appends=0"),
+                           messages.replace("bench: messages count=37 first=4 errors=0 up=8 down=8 prepends=1 appends=1\n", "")):
+                path.write_text(broken)
+                with self.assertRaises(ValueError):
+                    compare_logs.parse_log(path)
+            eyes = content.replace("protocol=20", "protocol=22").replace("P_VECTOR_TINT", "P_VECTOR_EYES")
+            eyes = eyes.replace("vector tint", "vector eyes").replace("updates=200 commands=400", "updates=50 commands=60")
+            eyes = eyes.replace("bench: detail", "bench: eyes open=8 closed=4 errors=0\nbench: detail")
+            path.write_text(eyes)
+            self.assertEqual(compare_logs.parse_log(path).raw_frames, 100)
+            for broken in (eyes.replace("closed=4", "closed=0"), eyes.replace("open=8", "open=0"),
+                           eyes.replace("bench: eyes open=8 closed=4 errors=0\n", ""),
+                           eyes.replace("bench: eyes open=8 closed=4 errors=0\n", "")
+                           .replace("bench: warm-up lap done", "bench: eyes open=8 closed=4 errors=0\nbench: warm-up lap done")):
+                path.write_text(broken)
+                with self.assertRaises(ValueError):
+                    compare_logs.parse_log(path)
+            effects = content.replace("protocol=20", "protocol=23").replace("P_VECTOR_TINT", "P_EFFECTS").replace("vector tint", "effects mixed")
+            effects = effects.replace("bench: vector[effects mixed] updates=200 commands=400 errors=0", "bench: effects updates=200 commands=1000 errors=0 published=200 failed=0")
+            path.write_text(effects)
+            self.assertEqual(compare_logs.parse_log(path).raw_frames, 100)
+            for broken in (effects.replace("commands=1000", "commands=999"),
+                           effects.replace("published=200", "published=0"),
+                           effects.replace("published=200 failed=0", "published=200 failed=1"),
+                           effects.replace("updates=200 commands=1000 errors=0", "updates=200 commands=1000 errors=1"),
+                           effects.replace("bench: effects updates=200 commands=1000 errors=0 published=200 failed=0\n", "")):
+                path.write_text(broken)
+                with self.assertRaises(ValueError):
+                    compare_logs.parse_log(path)
+            for sample in (content, content.replace("protocol=20", "protocol=21")
+                           .replace("P_VECTOR_TINT", "P_VECTOR_MORPH").replace("vector tint", "vector morph")):
+                path.write_text(sample)
+                self.assertEqual(compare_logs.parse_log(path).raw_frames, 100)
+                for invalid in (
+                    "\n".join(line for line in sample.splitlines() if not line.startswith("bench: vector[")),
+                    sample.replace("updates=200 commands=400", "updates=0 commands=0"),
+                    sample.replace("updates=200 commands=400", "updates=200 commands=399"),
+                    sample.replace("updates=200 commands=400 errors=0", "updates=200 commands=400 errors=1"),
+                ):
+                    path.write_text(invalid)
+                    with self.assertRaises(ValueError):
+                        compare_logs.parse_log(path)
+
     def test_protocol_19_results_isolation_and_capacity(self):
         content = '''
 I (1) app_init: App version: results-cards

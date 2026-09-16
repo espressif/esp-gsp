@@ -13,7 +13,7 @@ actions first. For a screenshot or design image:
 1. Treat it as a reference unless it is an actual product asset.
 2. Split it into containers, labels, controls, shapes and reusable images;
    do not flatten the complete UI into one screenshot image.
-3. Scale geometry deliberately when the reference and display resolutions
+3. Scale geometry when the reference and display resolutions
    differ.
 4. Record assumptions for missing fonts, exact colors and interaction states.
 
@@ -61,6 +61,10 @@ Required top-level fields are `screen`, `w`, `h` and a non-empty `objects`
 array. Scene size is in logical pixels and must match the bundle/BSP display
 path.
 
+Ordinary parent references may point forward or backward in the object array.
+Inherited hidden state and template membership do not depend on that ordering;
+the compiler preserves authored draw order.
+
 ## Field decisions
 
 | Purpose | Fields | Rule |
@@ -70,7 +74,7 @@ path.
 | Application API | `name` | Add to application-controlled elements; it drives generated typed helpers. |
 | Application event | `callback` | Use when product code must react; keep the resulting callback non-blocking. |
 | Declarative event | `events` | Use for scene-local show/hide, value or navigation actions. |
-| Advanced raw state | `bind`, `bind_target` | Not needed for generated typed helpers; use only for generic integration. |
+| Advanced raw state | `bind`, `bind_target` | Declare when the desired runtime property requires a bind; see the declaration rules below. |
 | Appearance | `bg_color`, `fg_color`, `border_*`, `radius`, `opacity` | The selected widget must accept the field. Colors use `#RRGGBB` or `#RRGGBBAA`. |
 | Text and assets | `text`, `font*`, `image`, `fit` | Paths are relative to the scene. Declare `font_charset` for runtime text beyond static/ASCII characters. |
 | Layout | `layout`, `padding`, `gap`, child `margin`/`grow` | Row/column layout controls its main axis; child coordinates control the cross axis. |
@@ -131,5 +135,90 @@ idf.py build
 
 Scene compilation is integrated by `gsp_add_bundle()`; ordinary applications
 do not need compiler source files or private runtime headers. Rebuild before
-using generated APIs. Compiler success proves schema and assets; preview,
-board execution and visual acceptance remain separate results.
+using generated APIs. Check layout and interaction in the simulator, then verify display, touch and
+animation on the target board.
+
+
+## Dynamic property scope
+
+A runtime-update marker identifies fields that can generate runtime properties.
+The declaration determines which properties are generated:
+
+- `name` gives an object a stable identity; it does not make every static field dynamic.
+- For bounded geometry and opacity fields, scalar literals remain static. To expose a runtime property, use `{"default":128,"min":0,"max":255,"property":"alpha"}`. The optional `property` defaults to the field name.
+- Raster images use dynamic `x`/`y`, `rotation` and `scalable` for position, rotation and scale; use literals for `w`/`h`/`opacity`/`radius`. Scene SVG images also support bounded `w`/`h`; template images use literals for all four fields.
+- Dynamic `x`/`y` translate the object and its subtree. Dynamic `w`/`h`/`radius`/`opacity` affect the object's own drawing; they do not relayout children or apply opacity to an entire subtree as a unit.
+- A layer's dynamic `w`/`h`/`radius`/`opacity` controls its background fill; declare a background color when using these properties.
+- Widget values, text, colors, visibility and template-instance properties have their own declarations and APIs. Use the relevant widget example and generated headers instead of extrapolating from a runtime-update marker.
+
+
+The field tables distinguish scene objects from template members. “Own fill”
+means the property controls the object's background; text, images and children
+keep their own appearance. “Image” requires an image source, and “SVG” applies
+to scene SVG images. Enable `runtime_style` where the table specifies it.
+
+Template helpers use the following units: bounded width/height/radius/opacity
+setters use a 0..100 value, while the JSON default is authored in the declared units.
+For templates, omit `property` or use the field name; custom names are rejected.
+Template slot names follow member and field names; scene `property` names select the
+corresponding generated scene-property API.
+
+## Declaring runtime controls
+
+For C-side visibility of an ordinary visible object, declare `bind: "eye_visible"`
+with `bind_target: "visible"`. Declare a text Bind for mutable text. Value controls,
+bounded dynamic fields and template slots also generate their corresponding APIs,
+with no additional Bind declaration. Static objects can omit bindings.
+
+A named object with `hidden: true` retains its initial hidden state, visibility API
+and required glyphs. An unnamed static hidden subtree without visibility bindings
+or declarative visibility references is removed at compile time. Statically hidden
+template members are not drawn.
+
+The bundle header exports `GSP_<SCENE>_OBJ_KEY_<NAME>` by default, for example
+`GSP_HOME_OBJ_KEY_EYE`. These stable keys require neither LEGACY nor RAW_IDS switches.
+Renaming the JSON object makes use of its old symbol fail during application compilation.
+Prefer generated typed helpers; use qualified keys for generic component APIs rather
+than hard-coded FNV values. Legacy unqualified names remain opt-in to avoid collisions.
+
+## Press actions and default feedback
+
+Ordinary clickable controls already have a default pressed overlay; a pointer observer
+is not required. JSON `press`, `release`, `long` and `click` actions using `call` arrive
+as `ESP_GSP_EVENT_CALL` with their respective callback IDs.
+
+An ordinary control held for 500 ms without dragging fires `long` once and suppresses
+`click` on release. Cancellation or scroll takeover does not fire a long press. Use
+distinct callback names for the phases and keep callbacks nonblocking. Cancellation
+does not dispatch `release`; use the built-in feedback for automatic pressed-state cleanup.
+Hiding or disabling a pressed control cancels its interaction. Restoring the control
+while the finger remains down does not start another press; lift and press again. Slider/Arc
+value changes and commits follow the range-control contract in the workflow guide.
+
+## Container bounds and clipping
+
+A Container or Layer groups children and provides their coordinate origin.
+Set `clip_children: true` to clip child drawing and hit testing to its rectangular
+bounds. Nested clips intersect and move with their parent. Use fixed `w` and `h`
+for the clipping viewport; `radius` styles the background and border, and
+`overflow` controls text overflow.
+
+List, PageFlow, StackView and Drawer provide their own rectangular viewports.
+The child viewport is rectangular. For static circular or path masks, bake the
+mask into the image alpha channel.
+
+## Shared UI
+
+Place a shared header, navigation bar or keyboard outside the page roots of a
+PageFlow/StackView in one scene. The pages can then change while the shared controls
+keep their state. Use component definitions to reuse the same UI across separate scenes;
+each scene has its own control instances.
+
+For application-drawn overlays, register `esp_gsp_set_overlay_contributor()`. It draws
+rounded rectangles and caller-owned A8 glyph bitmaps, and rebuilds them against the
+active scene after a scene switch. Handle custom overlay input through the top-level
+input interceptor; use scene widgets for built-in layout, focus and hit handling.
+
+A Keyboard declaration generates its pages and keys at build time. The active page
+handles rendering and input, while the bundle stores all pages. Sharing one keyboard
+across pages keeps both the JSON and compiled resources smaller.

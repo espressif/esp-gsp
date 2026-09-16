@@ -1,16 +1,50 @@
 # ESP-GSP configuration reference
 
-This reference covers `Kconfig` and `config/esp_gsp_config_schema.yml`. Runtime settings are firmware defaults and remain configurable with source or prebuilt components. Library capabilities are read-only limits published by the archive; they are intentionally not Kconfig options.
+This reference covers application configuration. Runtime settings are firmware defaults and remain configurable with source or prebuilt components. Library capabilities are read-only limits published by the archive; they are not Kconfig options.
 
-## Capacity and feature limits / Core object and component pools
+## Common options
+
+### `CONFIG_ESP_GSP_ENABLE_IMAGE_CACHE`
+
+Cache decoded images on demand
+
+- Project default: `true`
+- Type/range: `bool` / `boolean`
+- Prebuilt component: configurable
+- JSON AUTO-derived: no
+
+Runtime product setting. Disable to use bounded region decoding. The prebuilt archive still contains both implementations.
+
+### `CONFIG_ESP_GSP_ENABLE_ASYNC_DECODE`
+
+Decode images in the background
+
+- Project default: `true`
+- Type/range: `bool` / `boolean`
+- Prebuilt component: configurable
+- JSON AUTO-derived: no
+
+Creates a decode worker when the current scene has an image cache. Disabling saves its stack and RTOS objects but moves decode work to the render-task fallback and may increase frame latency.
+
+### `CONFIG_ESP_GSP_ENABLE_TRANSITION_SNAPSHOTS`
+
+Use transition snapshots when available
+
+- Project default: `true`
+- Type/range: `bool` / `boolean`
+- Prebuilt component: configurable
+- JSON AUTO-derived: no
+
+Runtime product setting. Disable to select the lower-memory transition path. The prebuilt archive supports both paths.
+
+## Advanced settings (optional) / Capacity and feature limits / Core object and component pools
 
 ### `CONFIG_ESP_GSP_MAX_SCENES`
 
-Maximum number of scenes held in gsp_ui_core_t
+Scene capacity (0 = automatic)
 
 - Project default: `0`
 - Type/range: `int` / `0..65534`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: yes
 
@@ -22,11 +56,10 @@ Maximum simultaneous application timers
 
 - Project default: `8`
 - Type/range: `int` / `1..32`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
-Timer slot pool in gsp_ui_core_t. Timer registration fails (ESP_GSP_ERR_LIMIT_EXCEEDED) when the pool is full.
+Maximum simultaneous application timers. Registration returns ESP_GSP_ERR_LIMIT_EXCEEDED when this capacity is exhausted.
 
 ### `CONFIG_ESP_GSP_MAX_WIDGETS`
 
@@ -34,11 +67,10 @@ Maximum simultaneous template-widget instances
 
 - Project default: `16`
 - Type/range: `int` / `1..255`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
-The handle index width is derived from this value, up to the uint8_t-backed pool limit of 255. The remaining handle bits hold a recycling generation. Each slot costs about 20 bytes.
+Maximum simultaneous template-widget instances. Increase this capacity if application widget creation reaches the configured limit.
 
 ### `CONFIG_ESP_GSP_MAX_ANIMATIONS`
 
@@ -46,19 +78,17 @@ Maximum concurrent runtime animations
 
 - Project default: `32`
 - Type/range: `int` / `0..128`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
-esp_gsp_anim_slot_t pool in gsp_ui_core_t (~56 B per slot). Exhaustion degrades gracefully (legacy tween) and logs.
+Maximum simultaneous runtime animations. Increase this capacity when animation capacity warnings appear.
 
 ### `CONFIG_ESP_GSP_MAX_LISTS`
 
-Retained List/Wheel bindings per UI instance
+List and wheel capacity (0 = automatic)
 
 - Project default: `0`
 - Type/range: `int` / `0..256`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: yes
 
@@ -66,11 +96,10 @@ AUTO (0) sums authored List/Wheel bindings across bundled scenes because handles
 
 ### `CONFIG_ESP_GSP_LIST_MAX_SLOTS`
 
-Row slots per visible list viewport
+Visible rows per list (0 = automatic)
 
 - Project default: `0`
 - Type/range: `int` / `0..65535`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: yes
 
@@ -78,11 +107,10 @@ AUTO (0) writes the exact authored requirement into GSPB and runtime allocates t
 
 ### `CONFIG_ESP_GSP_LIST_TEXT_SLOTS`
 
-Dynamic text slots per list template row
+Dynamic text fields per row (0 = automatic)
 
 - Project default: `0`
 - Type/range: `int` / `0..65533`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: yes
 
@@ -90,11 +118,10 @@ AUTO (0) uses the requirement derived from authored row templates. A non-zero va
 
 ### `CONFIG_ESP_GSP_COMPONENT_INSTANCES`
 
-Runtime component-instance pool
+Component instance capacity (0 = automatic)
 
 - Project default: `0`
 - Type/range: `int` / `0..256`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: yes
 
@@ -102,17 +129,16 @@ AUTO (0) keeps the legacy baseline of eight and raises it from each scene's gene
 
 ### `CONFIG_ESP_GSP_STACK_VIEW_MAX_DEPTH`
 
-Maximum StackView navigation depth
+Navigation stack depth (0 = automatic)
 
 - Project default: `0`
 - Type/range: `int` / `0..64`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: yes
 
 AUTO (0) uses the deepest authored StackView requirement. A non-zero value is an explicit project budget.
 
-## Capacity and feature limits / Renderer and frame-planning capacity
+## Advanced settings (optional) / Capacity and feature limits / Renderer and frame-planning capacity
 
 ### `CONFIG_ESP_GSP_COMPONENT_OVERLAY_COMMANDS`
 
@@ -120,7 +146,6 @@ Base component overlay command capacity
 
 - Project default: `32`
 - Type/range: `int` / `2..128`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -132,13 +157,12 @@ Dirty rectangles retained per frame
 
 - Project default: `32`
 - Type/range: `int` / `4..128`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
 Shared capacity for scene dirty storage, portable frame planning and the ESP-LCD presenter damage contract. Each persistent frame loop keeps two arrays at about 16 bytes per entry. When the set is full, GSP compacts it or promotes the frame to a full redraw. This is a project policy, not a scene-derived AUTO requirement.
 
-## Capacity and feature limits / Canvas, text, image, and font pools
+## Advanced settings (optional) / Capacity and feature limits / Canvas, text, image, and font pools
 
 ### `CONFIG_ESP_GSP_CANVAS_SLOTS`
 
@@ -146,7 +170,6 @@ External frame-sink (canvas) targets
 
 - Project default: `2`
 - Type/range: `int` / `1..8`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -154,23 +177,21 @@ Concurrent esp_gsp_canvas_* bindings.
 
 ### `CONFIG_ESP_GSP_MAX_ASSET_ANIMS`
 
-Compiled per-scene animation slots
+Compiled animations per scene (0 = automatic)
 
 - Project default: `0`
 - Type/range: `int` / `0..255`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: yes
 
-AUTO (0) uses the maximum per-scene anim_qoi count stored in the GSPB. A non-zero value is an explicit project budget.
+AUTO (0) uses the maximum per-scene compiled-animation count stored in the GSPB. A non-zero value is an explicit project budget.
 
 ### `CONFIG_ESP_GSP_TEXT_SLOTS`
 
-Retained dynamic-text shaping slots
+Dynamic text capacity (0 = automatic)
 
 - Project default: `0`
 - Type/range: `int` / `0..65533`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: yes
 
@@ -178,15 +199,14 @@ AUTO (0) sums scene text binds across the bundle because published glyph runs re
 
 ### `CONFIG_ESP_GSP_DEFAULT_DYNAMIC_IMAGE_SLOTS`
 
-Default simultaneous runtime image targets
+Dynamic image capacity (0 = automatic)
 
 - Project default: `0`
 - Type/range: `int` / `0..32767`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: yes
 
-AUTO (0) uses the GSPB requirement. Applications that deliberately disable runtime images use esp_gsp_config_set() with value zero, which is distinguishable through the override bitset.
+AUTO (0) uses the GSPB requirement. Applications that disable runtime images can explicitly set zero with esp_gsp_config_set().
 
 ### `CONFIG_ESP_GSP_FREETYPE_CACHE_GLYPHS`
 
@@ -194,7 +214,6 @@ Default FreeType glyph cache entries
 
 - Project default: `32`
 - Type/range: `int` / `1..512`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -206,13 +225,12 @@ Default maximum FreeType glyph width and height
 
 - Project default: `40`
 - Type/range: `int` / `8..256`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
 Default maximum cached glyph dimension. Override one UI instance with esp_gsp_config_set() and ESP_GSP_FIELD_FREETYPE_GLYPH_MAX_PX. Memory grows quadratically; glyphs larger than this bound cannot be cached by the dynamic-font fallback.
 
-## Project runtime defaults / Rendering acceleration
+## Advanced settings (optional) / Project runtime defaults / Rendering acceleration
 
 ### `CONFIG_ESP_GSP_ACCEL_MAX_DRIVERS`
 
@@ -220,7 +238,6 @@ Maximum registered acceleration backends
 
 - Project default: `4`
 - Type/range: `int` / `1..16`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -232,7 +249,6 @@ Maximum asynchronous accelerator blits in flight
 
 - Project default: `4`
 - Type/range: `int` / `1..16`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -244,7 +260,6 @@ Accelerator completion timeout in milliseconds
 
 - Project default: `500`
 - Type/range: `int` / `1..10000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -256,7 +271,6 @@ Minimum pixels for accelerated copy
 
 - Project default: `8192`
 - Type/range: `int` / `0..1048576`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -268,7 +282,6 @@ Minimum pixels for PPA fill
 
 - Project default: `32768`
 - Type/range: `int` / `0..1048576`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -280,7 +293,6 @@ Minimum pixels for PPA blend/fade
 
 - Project default: `8192`
 - Type/range: `int` / `0..1048576`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -292,7 +304,6 @@ Enable PPA SRM for runtime image scaling
 
 - Project default: `false`
 - Type/range: `bool` / `boolean`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -304,7 +315,6 @@ Minimum destination pixels for runtime PPA scaling
 
 - Project default: `32768`
 - Type/range: `int` / `0..1048576`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -316,13 +326,12 @@ Maximum pixels in one PPA fill span
 
 - Project default: `524288`
 - Type/range: `int` / `1024..16777216`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
 Splits very large PPA fills into bounded spans. Lower values reduce the duration of one submitted operation; higher values reduce setup count.
 
-## Project runtime defaults / Runtime pools and image cache
+## Advanced settings (optional) / Project runtime defaults / Runtime pools and image cache
 
 ### `CONFIG_ESP_GSP_IMAGE_CACHE_ENTRIES`
 
@@ -330,7 +339,6 @@ Default decoded-image cache entry count
 
 - Project default: `16`
 - Type/range: `int` / `0..512`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -342,7 +350,6 @@ Image-cache allocation shortage retries
 
 - Project default: `3`
 - Type/range: `int` / `0..16`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -350,11 +357,10 @@ Number of cache-budget eviction/retry rounds after an image surface allocation f
 
 ### `CONFIG_ESP_GSP_CONTEXT_DEFAULT_GLYPH_RUNS`
 
-Default low-level context glyph-run slots
+Shaped text capacity (0 = automatic)
 
 - Project default: `0`
 - Type/range: `int` / `0..65535`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: yes
 
@@ -362,11 +368,10 @@ AUTO (0) uses the versioned GSPB requirements. A non-zero value is an explicit p
 
 ### `CONFIG_ESP_GSP_CONTEXT_DEFAULT_INSTANCES`
 
-Default shared template instance slots per scene
+Template instance capacity (0 = automatic)
 
 - Project default: `0`
 - Type/range: `int` / `0..65534`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: yes
 
@@ -374,11 +379,10 @@ AUTO (0) uses the template and visible-row requirement stored in the GSPB. A non
 
 ### `CONFIG_ESP_GSP_INSTANCE_STATES_PER_SLOT`
 
-Runtime state values reserved per template instance
+State capacity per template instance (0 = automatic)
 
 - Project default: `0`
 - Type/range: `int` / `0..65535`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: yes
 
@@ -390,7 +394,6 @@ Minimum automatic image-cache budget with PSRAM
 
 - Project default: `65536`
 - Type/range: `int` / `0..16777216`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -402,7 +405,6 @@ Maximum automatic image-cache budget
 
 - Project default: `4194304`
 - Type/range: `int` / `0..67108864`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -414,39 +416,12 @@ Non-ESP automatic image-cache budget
 
 - Project default: `2097152`
 - Type/range: `int` / `0..67108864`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
 Default used where heap-capability discovery is unavailable, such as host integrations. This is a budget, not an eager allocation.
 
-## Project runtime defaults
-
-### `CONFIG_ESP_GSP_ENABLE_IMAGE_CACHE`
-
-Enable decoded-image cache by default
-
-- Project default: `true`
-- Type/range: `bool` / `boolean`
-- Ownership: `runtime_policy` / `scalar`
-- Prebuilt component: configurable
-- JSON AUTO-derived: no
-
-Runtime product setting. Disable to use bounded region decoding. The prebuilt archive still contains both implementations.
-
-### `CONFIG_ESP_GSP_ENABLE_TRANSITION_SNAPSHOTS`
-
-Enable full-screen transition snapshots
-
-- Project default: `true`
-- Type/range: `bool` / `boolean`
-- Ownership: `runtime_policy` / `scalar`
-- Prebuilt component: configurable
-- JSON AUTO-derived: no
-
-Runtime product setting. Disable to select the lower-memory transition path. The prebuilt archive supports both paths.
-
-## Project runtime defaults / Runtime tasks / Render task
+## Advanced settings (optional) / Project runtime defaults / Runtime tasks / Render task
 
 ### `CONFIG_ESP_GSP_RENDER_TASK_STACK_PSRAM`
 
@@ -454,7 +429,6 @@ Allocate render task stack in PSRAM
 
 - Project default: `false`
 - Type/range: `bool` / `boolean`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -466,7 +440,6 @@ Render task stack size in bytes
 
 - Project default: `12288`
 - Type/range: `int` / `4096..65536`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -478,7 +451,6 @@ Render task stack size with FreeType in bytes
 
 - Project default: `24576`
 - Type/range: `int` / `8192..65536`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -490,25 +462,12 @@ Default render task priority
 
 - Project default: `4`
 - Type/range: `int` / `1..24`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
 Used when the platform API priority is zero. The asynchronous decode task defaults one priority below this value.
 
-## Project runtime defaults / Runtime tasks / Background decode task
-
-### `CONFIG_ESP_GSP_ENABLE_ASYNC_DECODE`
-
-Enable background image decode task
-
-- Project default: `true`
-- Type/range: `bool` / `boolean`
-- Ownership: `runtime_policy` / `scalar`
-- Prebuilt component: configurable
-- JSON AUTO-derived: no
-
-Creates a decode worker when the current scene has an image cache. Disabling saves its stack and RTOS objects but moves decode work to the render-task fallback and may increase frame latency.
+## Advanced settings (optional) / Project runtime defaults / Runtime tasks / Background decode task
 
 ### `CONFIG_ESP_GSP_DECODE_TASK_STACK_PSRAM`
 
@@ -516,7 +475,6 @@ Allocate decode task stack in PSRAM
 
 - Project default: `false`
 - Type/range: `bool` / `boolean`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -528,7 +486,6 @@ Decode task stack size in bytes
 
 - Project default: `4096`
 - Type/range: `int` / `2048..32768`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -540,11 +497,10 @@ Standalone decode task default priority
 
 - Project default: `3`
 - Type/range: `int` / `1..24`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
-Used by direct gsp_decode_task_start() callers. The high-level ESP-IDF runtime derives its worker priority from the render task.
+Default priority for standalone background decoding. The ESP-IDF UI integration selects its decode priority from the render-task priority.
 
 ### `CONFIG_ESP_GSP_DECODE_TASK_IDLE_POLL_MS`
 
@@ -552,13 +508,12 @@ Decode worker idle poll interval in milliseconds
 
 - Project default: `100`
 - Type/range: `int` / `1..10000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
 How often an idle decode worker wakes when no job notification is pending. Lower values reduce fallback wake latency at higher idle cost.
 
-## Project runtime defaults / Animation and transitions
+## Advanced settings (optional) / Project runtime defaults / Animation and transitions
 
 ### `CONFIG_ESP_GSP_ANIM_FRAME_MEMORY`
 
@@ -566,7 +521,6 @@ Animation frame memory preference
 
 - Project default: `auto`
 - Type/range: `enum` / `0..2`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 - Choices: `CONFIG_ESP_GSP_ANIM_FRAME_MEMORY_AUTO`, `CONFIG_ESP_GSP_ANIM_FRAME_MEMORY_INTERNAL`, `CONFIG_ESP_GSP_ANIM_FRAME_MEMORY_SPIRAM`
@@ -579,7 +533,6 @@ Maximum bytes in one runtime animation frame
 
 - Project default: `16777216`
 - Type/range: `int` / `1024..67108864`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -591,13 +544,12 @@ Maximum animation frame preferred in SRAM
 
 - Project default: `65536`
 - Type/range: `int` / `0..16777216`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
 AUTO mode prefers SRAM at or below this size and PSRAM above it. Zero sends every non-empty animation surface to PSRAM first. Every mode falls back to the other heap when the preferred heap is full.
 
-## Scheduling and interaction / Runtime cadence and command queue
+## Advanced settings (optional) / Scheduling and interaction / Runtime cadence and command queue
 
 ### `CONFIG_ESP_GSP_QUEUE_DEPTH`
 
@@ -605,11 +557,10 @@ Platform command queue depth
 
 - Project default: `24`
 - Type/range: `int` / `4..128`
-- Ownership: `runtime_capacity` / `heap`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
-esp_gsp_cmd_t queue entries (xQueueCreate) and the per-frame release-callback stack arrays in the ESP-IDF runtime.
+Maximum queued UI commands. Increase this value when command submission reports queue exhaustion; larger values use more memory.
 
 ### `CONFIG_ESP_GSP_ACTIVE_TICK_MS`
 
@@ -617,7 +568,6 @@ Active render-loop tick in milliseconds
 
 - Project default: `10`
 - Type/range: `int` / `1..1000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -629,7 +579,6 @@ Default idle application poll in milliseconds
 
 - Project default: `100`
 - Type/range: `int` / `1..10000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -641,7 +590,6 @@ Idle touch discovery interval in milliseconds
 
 - Project default: `33`
 - Type/range: `int` / `1..1000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -653,13 +601,12 @@ Empty touch polls required to confirm release
 
 - Project default: `2`
 - Type/range: `int` / `1..8`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
 Higher values tolerate intermittent empty controller reports but add pointer-release latency in polling mode. Interrupt mode consumes only fresh IRQ reports and treats a fresh empty report as release.
 
-## Scheduling and interaction / Scroll physics
+## Advanced settings (optional) / Scheduling and interaction / Scroll physics
 
 ### `CONFIG_ESP_GSP_SCROLL_VELOCITY_WINDOW_MS`
 
@@ -667,7 +614,6 @@ Scroll release velocity window in milliseconds
 
 - Project default: `100`
 - Type/range: `int` / `10..1000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -679,7 +625,6 @@ Scroll release motion grace in milliseconds
 
 - Project default: `100`
 - Type/range: `int` / `0..1000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -691,7 +636,6 @@ Scroll coast stop speed in pixels per second
 
 - Project default: `20`
 - Type/range: `int` / `1..1000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -703,7 +647,6 @@ Minimum release speed that starts a coast, in pixels per second
 
 - Project default: `160`
 - Type/range: `int` / `0..5000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -715,7 +658,6 @@ Maximum scroll release speed in pixels per second
 
 - Project default: `6000`
 - Type/range: `int` / `100..50000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -727,7 +669,6 @@ Scroll velocity decay time in milliseconds
 
 - Project default: `325`
 - Type/range: `int` / `10..5000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -739,7 +680,6 @@ Maximum integrated scroll tick in milliseconds
 
 - Project default: `100`
 - Type/range: `int` / `1..1000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -751,13 +691,12 @@ List row snap response time in milliseconds
 
 - Project default: `40`
 - Type/range: `int` / `1..1000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
 Response time used when a List or Wheel settles onto its nearest row. Lower values snap more aggressively.
 
-## Scheduling and interaction / Swipe and component motion
+## Advanced settings (optional) / Scheduling and interaction / Swipe and component motion
 
 ### `CONFIG_ESP_GSP_SWIPE_VELOCITY_WINDOW_MS`
 
@@ -765,7 +704,6 @@ Page-swipe velocity window in milliseconds
 
 - Project default: `80`
 - Type/range: `int` / `10..1000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -777,7 +715,6 @@ Page-swipe release motion grace in milliseconds
 
 - Project default: `350`
 - Type/range: `int` / `0..2000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -789,7 +726,6 @@ Minimum page-swipe settle time in milliseconds
 
 - Project default: `80`
 - Type/range: `int` / `1..2000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -801,7 +737,6 @@ Base page-swipe settle time in milliseconds
 
 - Project default: `110`
 - Type/range: `int` / `1..2000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -813,7 +748,6 @@ Distance-dependent page-swipe settle time in milliseconds
 
 - Project default: `90`
 - Type/range: `int` / `0..2000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -825,7 +759,6 @@ Maximum page-swipe settle time in milliseconds
 
 - Project default: `220`
 - Type/range: `int` / `1..5000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -837,7 +770,6 @@ Swipe settle speed reduction scale in milliseconds
 
 - Project default: `60`
 - Type/range: `int` / `0..2000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -849,7 +781,6 @@ Maximum swipe settle speed reduction in milliseconds
 
 - Project default: `120`
 - Type/range: `int` / `0..2000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -861,7 +792,6 @@ Legacy PageFlow settle duration in milliseconds
 
 - Project default: `220`
 - Type/range: `int` / `1..5000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -873,7 +803,6 @@ Default StackView settle duration in milliseconds
 
 - Project default: `220`
 - Type/range: `int` / `1..5000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -885,7 +814,6 @@ Drawer settle duration in milliseconds
 
 - Project default: `180`
 - Type/range: `int` / `1..5000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -897,13 +825,12 @@ Toggle/checkbox knob tween duration in milliseconds
 
 - Project default: `130`
 - Type/range: `int` / `1..5000`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
 Retained visual tween duration for Toggle and Checkbox state changes.
 
-## Scheduling and interaction / Gesture thresholds
+## Advanced settings (optional) / Scheduling and interaction / Gesture thresholds
 
 ### `CONFIG_ESP_GSP_TAP_SLOP_PX`
 
@@ -911,7 +838,6 @@ Tap classification slop in pixels
 
 - Project default: `16`
 - Type/range: `int` / `0..128`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -923,7 +849,6 @@ Drag / gesture start threshold in pixels
 
 - Project default: `24`
 - Type/range: `int` / `0..256`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -935,7 +860,6 @@ Flick commit distance in pixels
 
 - Project default: `12`
 - Type/range: `int` / `0..256`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -947,7 +871,6 @@ Scene swipe minimum fling distance in pixels
 
 - Project default: `32`
 - Type/range: `int` / `0..512`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -959,7 +882,6 @@ Component swipe distance divisor
 
 - Project default: `4`
 - Type/range: `int` / `2..16`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -971,7 +893,6 @@ Scene swipe distance divisor
 
 - Project default: `5`
 - Type/range: `int` / `2..16`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -983,7 +904,6 @@ Swipe settle velocity numerator
 
 - Project default: `3`
 - Type/range: `int` / `1..16`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -995,7 +915,6 @@ Swipe settle velocity denominator
 
 - Project default: `5`
 - Type/range: `int` / `1..32`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -1007,7 +926,6 @@ Drawer edge activation slop in pixels
 
 - Project default: `24`
 - Type/range: `int` / `0..256`
-- Ownership: `runtime_policy` / `scalar`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
@@ -1021,7 +939,6 @@ Inline component-batch update capacity
 
 - Project default: `64`
 - Type/range: `int` / `1..64`
-- Ownership: `build_capability` / `stack`
 - Prebuilt component: fixed library capability 64
 - JSON AUTO-derived: no
 
@@ -1033,7 +950,6 @@ Inline input/component transaction capacity
 
 - Project default: `64`
 - Type/range: `int` / `1..64`
-- Ownership: `build_capability` / `stack`
 - Prebuilt component: fixed library capability 64
 - JSON AUTO-derived: no
 
@@ -1045,7 +961,6 @@ Maximum nested renderer clip depth
 
 - Project default: `128`
 - Type/range: `int` / `4..128`
-- Ownership: `build_capability` / `stack`
 - Prebuilt component: fixed library capability 128
 - JSON AUTO-derived: no
 
@@ -1057,7 +972,6 @@ Tile-index fast-path span capacity
 
 - Project default: `256`
 - Type/range: `int` / `1..256`
-- Ownership: `build_capability` / `stack`
 - Prebuilt component: fixed library capability 256
 - JSON AUTO-derived: no
 
@@ -1069,7 +983,6 @@ Inline dynamic-text bytes
 
 - Project default: `63`
 - Type/range: `int` / `1..1024`
-- Ownership: `build_capability` / `inline`
 - Prebuilt component: fixed library capability 63
 - JSON AUTO-derived: no
 
@@ -1081,7 +994,6 @@ Maximum simultaneous runtime image targets
 
 - Project default: `32767`
 - Type/range: `int` / `1..32767`
-- Ownership: `build_capability` / `inline`
 - Prebuilt component: fixed library capability 32767
 - JSON AUTO-derived: no
 
@@ -1093,7 +1005,6 @@ Maximum font packs referenced by one scene
 
 - Project default: `32`
 - Type/range: `int` / `1..32`
-- Ownership: `build_capability` / `inline`
 - Prebuilt component: fixed library capability 32
 - JSON AUTO-derived: no
 
@@ -1105,7 +1016,6 @@ Maximum dirty patches retained per compiled animation frame
 
 - Project default: `32`
 - Type/range: `int` / `1..32`
-- Ownership: `build_capability` / `inline`
 - Prebuilt component: fixed library capability 32
 - JSON AUTO-derived: no
 
@@ -1117,7 +1027,6 @@ Animation visibility reference command capacity
 
 - Project default: `32`
 - Type/range: `int` / `1..32`
-- Ownership: `build_capability` / `inline`
 - Prebuilt component: fixed library capability 32
 - JSON AUTO-derived: no
 
@@ -1129,7 +1038,6 @@ Scroll velocity sample capacity
 
 - Project default: `32`
 - Type/range: `int` / `2..32`
-- Ownership: `build_capability` / `inline`
 - Prebuilt component: fixed library capability 32
 - JSON AUTO-derived: no
 
@@ -1141,7 +1049,6 @@ Page-swipe velocity sample capacity
 
 - Project default: `32`
 - Type/range: `int` / `2..32`
-- Ownership: `build_capability` / `inline`
 - Prebuilt component: fixed library capability 32
 - JSON AUTO-derived: no
 
@@ -1153,7 +1060,6 @@ Maximum touch contacts consumed per sample
 
 - Project default: `2`
 - Type/range: `int` / `1..2`
-- Ownership: `build_capability` / `inline`
 - Prebuilt component: fixed library capability 2
 - JSON AUTO-derived: no
 

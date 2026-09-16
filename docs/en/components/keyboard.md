@@ -12,24 +12,22 @@ After [installing `esp-gsp-tools`](../guide/simulator-preview.md), run from an
 unpacked component or public repository root:
 
 ```sh
-mkdir -p build/widget-preview
-python -m gsp.execute --version 0.3.0 gspc pack \
+mkdir -p gsp-out/widget-preview
+python -m gsp.execute --version 0.4.0 gspc pack \
   examples/widgets/keyboard/keyboard.json \
-  --deployable -o build/widget-preview/keyboard.gspb
-python -m gsp.execute --version 1.2.0 sim \
-  --bundle build/widget-preview/keyboard.gspb
+  --deployable -o gsp-out/widget-preview/keyboard.gspb
+python -m gsp.execute --version 1.3.0 sim \
+  --bundle gsp-out/widget-preview/keyboard.gspb
 ```
 
-These commands compile the same JSON below with GSPC and open it in the
-published ESP-GSP simulator's browser preview. It is not an HTML recreation.
-Confirm the final pixel format, fonts, display path, and performance on target
-hardware.
+These commands compile the JSON below and open it in the ESP-GSP simulator's
+browser preview.
 
 ## Runtime behavior
 
 GSPC compiles the group into native primitives and generates adapters for application behavior exposed by named elements.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects in this example; unnamed objects do not create unused API.
+Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
 
 ## Complete example JSON
 
@@ -97,16 +95,214 @@ This is `examples/widgets/keyboard/keyboard.json`. Copy any relative assets refe
 bool gsp_widget_keyboard_event_decode_call( const esp_gsp_event_t *event, gsp_widget_keyboard_call_event_t *out_event)
 bool gsp_widget_keyboard_event_is_onscreen_keyboard_key( const esp_gsp_event_t *event)
 const gsp_component_directory_t *const * gsp_keyboard_docs_component_directories(uint16_t *out_count)
+esp_err_t gsp_widget_keyboard_input_value_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
 esp_err_t gsp_widget_keyboard_input_value_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
 esp_err_t gsp_widget_keyboard_input_value_set_text( esp_gsp_handle_t gsp, const char *text)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
 esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
 esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_get_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_0_0_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_0_0_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_0_1_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_0_1_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_0_2_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_0_2_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_0_3_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_0_3_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_0_4_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_0_4_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_0_5_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_0_5_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_0_6_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_0_6_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_0_7_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_0_7_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_0_8_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_0_8_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_0_9_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_0_9_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_1_0_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_1_0_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_1_1_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_1_1_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_1_2_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_1_2_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_1_3_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_1_3_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_1_4_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_1_4_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_1_5_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_1_5_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_1_6_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_1_6_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_1_7_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_1_7_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_1_8_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_1_8_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_2_0_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_2_0_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_2_1_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_2_1_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_2_2_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_2_2_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_2_3_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_2_3_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_2_4_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_2_4_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_2_5_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_2_5_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_2_6_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_2_6_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_2_7_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_2_7_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_2_8_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_2_8_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_3_0_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_3_0_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_3_1_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_3_1_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_3_2_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_key_3_2_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
 esp_err_t gsp_widget_keyboard_onscreen_keyboard_lower_set_visible(esp_gsp_handle_t gsp, bool visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
 esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
 esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_get_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_0_0_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_0_0_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_0_1_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_0_1_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_0_2_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_0_2_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_0_3_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_0_3_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_0_4_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_0_4_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_0_5_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_0_5_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_0_6_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_0_6_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_0_7_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_0_7_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_0_8_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_0_8_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_0_9_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_0_9_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_1_0_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_1_0_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_1_1_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_1_1_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_1_2_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_1_2_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_1_3_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_1_3_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_1_4_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_1_4_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_1_5_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_1_5_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_1_6_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_1_6_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_1_7_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_1_7_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_1_8_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_1_8_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_1_9_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_1_9_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_2_0_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_2_0_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_2_1_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_2_1_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_2_2_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_2_2_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_2_3_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_2_3_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_2_4_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_2_4_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_2_5_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_2_5_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_2_6_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_2_6_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_2_7_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_2_7_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_2_8_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_2_8_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_2_9_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_2_9_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_3_0_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_3_0_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_3_1_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_3_1_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_3_2_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_3_2_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_3_3_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_key_3_3_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
 esp_err_t gsp_widget_keyboard_onscreen_keyboard_sym_set_visible(esp_gsp_handle_t gsp, bool visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
 esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
 esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_get_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_0_0_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_0_0_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_0_1_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_0_1_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_0_2_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_0_2_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_0_3_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_0_3_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_0_4_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_0_4_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_0_5_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_0_5_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_0_6_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_0_6_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_0_7_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_0_7_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_0_8_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_0_8_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_0_9_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_0_9_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_1_0_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_1_0_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_1_1_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_1_1_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_1_2_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_1_2_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_1_3_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_1_3_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_1_4_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_1_4_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_1_5_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_1_5_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_1_6_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_1_6_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_1_7_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_1_7_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_1_8_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_1_8_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_2_0_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_2_0_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_2_1_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_2_1_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_2_2_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_2_2_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_2_3_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_2_3_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_2_4_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_2_4_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_2_5_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_2_5_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_2_6_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_2_6_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_2_7_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_2_7_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_2_8_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_2_8_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_3_0_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_3_0_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_3_1_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_3_1_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_3_2_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_key_3_2_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
 esp_err_t gsp_widget_keyboard_onscreen_keyboard_upper_set_visible(esp_gsp_handle_t gsp, bool visible)
 esp_gsp_config_t gsp_keyboard_docs_config(void)
 size_t gsp_keyboard_docs_dynamic_image_slots(void)
@@ -120,10 +316,10 @@ These signatures come from the actual compiler output for this JSON.
 |---|---|---:|---|---:|---|
 | `type` | `string` | yes | — | — | widget type |
 | `parent` | `int` | yes | default -1; -1…65534 | — | parent object index (-1 = screen root) |
-| `x` | `int` | yes | default 0; -32768…32767 | yes | x relative to parent |
-| `y` | `int` | yes | default 0; -32768…32767 | yes | y relative to parent |
-| `w` | `int` | yes | 0…65535 | yes | width in px |
-| `h` | `int` | yes | 0…65535 | yes | height in px |
+| `x` | `int` | yes | default 0; -32768…32767 | scene: —; template: — | x relative to parent |
+| `y` | `int` | yes | default 0; -32768…32767 | scene: —; template: — | y relative to parent |
+| `w` | `int` | yes | 0…65535 | scene: —; template: — | width in px |
+| `h` | `int` | yes | 0…65535 | scene: —; template: — | height in px |
 | `name` | `identifier` | — | — | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
 | `bg_color` | `color` | — | — | yes | keyboard background |
 | `fg_color` | `color` | — | — | — | keyboard text color |
@@ -137,6 +333,7 @@ These signatures come from the actual compiler output for this JSON.
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
+| `font` | `path` | — | — | — | per-object TTF/OTF override |
 | `hidden` | `bool` | — | default `false` | yes | start hidden |
 | `function_text_color` | `color` | — | — | — | keyboard modifier-key text color |
 | `delete_color` | `color` | — | — | — | keyboard delete-key fill color |
@@ -165,6 +362,5 @@ These signatures come from the actual compiler output for this JSON.
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
 | `parent_name` | `string` | — | — | — | parent by name instead of index |
-| `font` | `path` | — | — | — | per-object TTF/OTF override |
 
 </details>

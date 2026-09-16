@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: LicenseRef-Espressif-Modified-MIT
  */
 
-/* GSP benchmark, mirroring lv_demo_benchmark's methodology: one page
+/* GSP benchmark: one page
  * per render class, each with its own characteristic motion (card
  * color tweens, translucent panel pulses, blinking image grids, live
  * keyboard typing, template instances sweeping the screen, full-screen
@@ -39,7 +39,7 @@
 #define GSP_BENCH_RGB888 0
 #endif
 
-#define BENCH_PROTOCOL_VERSION 19U
+#define BENCH_PROTOCOL_VERSION 25U
 #define BENCH_RESULT_ROWS ((BENCH_W >= 600 || BENCH_H >= 600) ? 6U : 3U)
 #define BENCH_RESULT_PAGE_MS 3000U
 #define BENCH_PRESSURE_PERIOD_MS 1U
@@ -52,7 +52,12 @@
 #define BENCH_STRESS_TARGET_HZ 250.0
 #define BENCH_TRANSITION_SAMPLE_CAPACITY 16U
 #define BENCH_KEYBOARD_TEXT_CAPACITY 256U
+/* Keep long-text coverage on the cache-free C3 under full repaint pressure. */
+#ifdef CONFIG_IDF_TARGET_ESP32C3
+#define BENCH_COMPOSITE_TAB_MS 15000U
+#else
 #define BENCH_COMPOSITE_TAB_MS 12000U
+#endif
 #define BENCH_COMPOSITE_DWELL_MS (BENCH_COMPOSITE_TAB_MS * 3U)
 #define BENCH_COMPOSITE_MODAL_PERIOD_MS 128U
 #define BENCH_KEYBOARD_SETTLE_MS 320U
@@ -541,7 +546,9 @@ static esp_gsp_list_t s_messages = ESP_GSP_LIST_NONE;
 static esp_gsp_list_t s_widget_lists[2] = {ESP_GSP_LIST_NONE, ESP_GSP_LIST_NONE};
 static uint32_t s_message_first = 8;
 static uint32_t s_message_count = 32;
-static uint16_t s_message_tick;
+static bench_message_clock_t s_message_clock;
+static uint32_t s_message_scrolls[2];
+static uint32_t s_message_frame;
 static uint32_t s_message_errors;
 
 typedef struct {
@@ -875,6 +882,15 @@ static void activate_page(esp_gsp_handle_t ui, uint8_t page)
         s_image_rotation_errors = 0;
         s_image_rotation_tick = 0;
     }
+    if (s_pages[page].bind == GSP_BIND_P_EFFECTS) {
+        memset(&s_bench_workload.effects, 0, sizeof(s_bench_workload.effects));
+        atomic_store(&s_bench_workload.effects_published, 0);
+        atomic_store(&s_bench_workload.effects_failed, 0);
+    }
+    if (bench_workload_vector_index(s_pages[page].bind) >= 0) {
+        memset(s_bench_workload.vectors, 0, sizeof(s_bench_workload.vectors));
+        s_bench_workload.eyes_closed = s_bench_workload.eyes_open = 0;
+    }
     if (s_pages[page].bind == GSP_BIND_P_STATIC_MOVE) {
         s_static_move_commands = 0;
         s_static_move_errors = 0;
@@ -977,7 +993,11 @@ static void activate_page(esp_gsp_handle_t ui, uint8_t page)
     if (s_pages[page].bind == GSP_BIND_P_MESSAGES) {
         s_message_first = 8;
         s_message_count = 32;
-        s_message_tick = 0;
+        s_message_clock = (bench_message_clock_t) {
+            0
+        };
+        memset(s_message_scrolls, 0, sizeof(s_message_scrolls));
+        s_message_frame = UINT32_MAX;
         if (s_messages == ESP_GSP_LIST_NONE) {
             s_messages = gsp_bench_bench_messages_bind(
                              ui, &s_message_source);
@@ -986,6 +1006,10 @@ static void activate_page(esp_gsp_handle_t ui, uint8_t page)
             }
         } else if (gsp_bench_bench_messages_changed(
                        ui, s_messages, 0) != ESP_GSP_OK) {
+            ++s_message_errors;
+        }
+        if (s_messages != ESP_GSP_LIST_NONE &&
+                esp_gsp_list_scroll_to(ui, s_messages, BENCH_H) != ESP_GSP_OK) {
             ++s_message_errors;
         }
     }
@@ -1631,10 +1655,12 @@ static void page_scheduler(esp_gsp_handle_t ui, void *user_ctx)
                (unsigned long)s_grid_errors);
     }
     if (s_pages[s_page].bind == GSP_BIND_P_MESSAGES) {
-        printf("bench: messages count=%lu first=%lu errors=%lu\n",
+        printf("bench: messages count=%lu first=%lu errors=%lu up=%lu down=%lu prepends=%u appends=%u\n",
                (unsigned long)s_message_count,
                (unsigned long)s_message_first,
-               (unsigned long)s_message_errors);
+               (unsigned long)s_message_errors,
+               (unsigned long)s_message_scrolls[0], (unsigned long)s_message_scrolls[1],
+               s_message_clock.prepended ? 1U : 0U, s_message_clock.appended ? 1U : 0U);
     }
     if (s_pages[s_page].bind == GSP_BIND_P_STATIC_MOVE) {
         printf("bench: static_move period_ms=%u target_hz=%.1f controls=4"
@@ -1678,6 +1704,23 @@ static void page_scheduler(esp_gsp_handle_t ui, void *user_ctx)
                (unsigned long)s_image_rotation_updates,
                (unsigned long)s_image_rotation_commands,
                (unsigned long)s_image_rotation_errors);
+    }
+    if (s_pages[s_page].bind == GSP_BIND_P_EFFECTS) {
+        const bench_vector_stats_t *stats = &s_bench_workload.effects;
+        printf("bench: effects updates=%lu commands=%lu errors=%lu published=%u failed=%u\n",
+               (unsigned long)stats->updates, (unsigned long)stats->commands, (unsigned long)stats->errors,
+               atomic_load(&s_bench_workload.effects_published), atomic_load(&s_bench_workload.effects_failed));
+    }
+    int vector_index = bench_workload_vector_index(s_pages[s_page].bind);
+    if (vector_index >= 0) {
+        const bench_vector_stats_t *stats = &s_bench_workload.vectors[vector_index];
+        printf("bench: vector[%s] updates=%lu commands=%lu errors=%lu\n",
+               s_pages[s_page].name, (unsigned long)stats->updates,
+               (unsigned long)stats->commands, (unsigned long)stats->errors);
+        if (s_pages[s_page].bind == GSP_BIND_P_VECTOR_EYES) {
+            printf("bench: eyes open=%lu closed=%lu errors=%lu\n", (unsigned long)s_bench_workload.eyes_open,
+                   (unsigned long)s_bench_workload.eyes_closed, (unsigned long)stats->errors);
+        }
     }
     if (s_pages[s_page].bind == GSP_BIND_P_FLOW ||
             s_pages[s_page].bind == GSP_BIND_P_STACK ||
@@ -2163,30 +2206,6 @@ static void drive_fx(esp_gsp_handle_t ui, void *user_ctx)
                 }
             }
         }
-    } else if (page == GSP_BIND_P_MESSAGES) {
-        uint16_t phase = s_message_tick++ % 1200U;
-        if (phase == 120U && s_message_first >= 4U) {
-            s_message_first -= 4U;
-            s_message_count += 4U;
-            if (gsp_bench_bench_messages_changed(
-                        ui, s_messages, 4) != ESP_GSP_OK) {
-                ++s_message_errors;
-            }
-        } else if (phase == 420U &&
-                   s_message_first + s_message_count < 48U) {
-            ++s_message_count;
-            if (gsp_bench_bench_messages_changed(
-                        ui, s_messages, 0) != ESP_GSP_OK) {
-                ++s_message_errors;
-            }
-        } else if ((phase == 0U || phase == 700U) &&
-                   s_messages != ESP_GSP_LIST_NONE) {
-            if (esp_gsp_list_fling(
-                        ui, s_messages, phase == 0U ? -1800 : 1800) !=
-                    ESP_GSP_OK) {
-                ++s_message_errors;
-            }
-        }
     } else if (page == GSP_BIND_P_WHEEL) {
         /* Staggered flings retain an approximately 1.8 s relaunch period while
          * the wheel physics itself advances from the high-rate frame loop. */
@@ -2640,6 +2659,9 @@ static void drive_frame(esp_gsp_handle_t ui, void *user_ctx)
         return;
     }
     uint16_t page = s_pages[s_page].bind;
+    if (!s_page_waiting_for_scene && (bench_workload_vector_index(page) >= 0 || page == GSP_BIND_P_EFFECTS)) {
+        bench_workload_drive_vectors(ui, &s_bench_workload);
+    }
     if (!s_page_waiting_for_scene && page == GSP_BIND_P_CLOCK) {
         uint32_t tick = ++s_clock_tick;
         esp_err_t results[] = {
@@ -2724,11 +2746,49 @@ static void drive_stress(esp_gsp_handle_t ui, void *user_ctx)
     }
 }
 
+static void drive_messages(esp_gsp_handle_t ui)
+{
+    if (s_messages == ESP_GSP_LIST_NONE) {
+        return;
+    }
+    uint32_t frame = esp_gsp_frame_count(ui);
+    if (frame == s_message_frame) {
+        return;
+    }
+    s_message_frame = frame;
+    uint32_t elapsed_ms = (uint32_t)((esp_timer_get_time() - s_page_start_us) / 1000);
+    unsigned actions = bench_workload_message_actions(&s_message_clock, elapsed_ms, BENCH_H);
+    if ((actions & BENCH_MESSAGES_PREPEND) != 0) {
+        s_message_first -= 4U;
+        s_message_count += 4U;
+        if (gsp_bench_bench_messages_changed(ui, s_messages, 4) != ESP_GSP_OK) {
+            ++s_message_errors;
+        }
+    }
+    if ((actions & BENCH_MESSAGES_APPEND) != 0) {
+        ++s_message_count;
+        if (gsp_bench_bench_messages_changed(ui, s_messages, 0) != ESP_GSP_OK) {
+            ++s_message_errors;
+        }
+    }
+    if ((actions & BENCH_MESSAGES_SCROLL) != 0) {
+        unsigned down = (actions & BENCH_MESSAGES_DOWN) != 0;
+        if (esp_gsp_list_scroll_to(ui, s_messages, s_message_clock.offset) != ESP_GSP_OK) {
+            ++s_message_errors;
+        } else {
+            ++s_message_scrolls[down];
+        }
+    }
+}
+
 static void drive_pressure(esp_gsp_handle_t ui, void *user_ctx)
 {
     (void)user_ctx;
     if (s_page_waiting_for_scene || s_results_active) {
         return;
+    }
+    if (s_pages[s_page].bind == GSP_BIND_P_MESSAGES) {
+        drive_messages(ui);
     }
     ++s_pressure_ticks;
     /* Transition snapshots are immutable while in flight. Their own driver
@@ -2753,6 +2813,14 @@ static void drive_pressure(esp_gsp_handle_t ui, void *user_ctx)
     }
 }
 
+static void drive_eyes(esp_gsp_handle_t ui, void *user)
+{
+    (void)user;
+    if (!s_page_waiting_for_scene) {
+        bench_workload_drive_eyes(ui, &s_bench_workload);
+    }
+}
+
 static void benchmark_start(esp_gsp_handle_t ui)
 {
     show_page(ui, s_run_first);
@@ -2761,6 +2829,7 @@ static void benchmark_start(esp_gsp_handle_t ui)
         esp_gsp_timer_cb_t callback;
     } timers[] = {
         {1000, drive_tweens},
+        {100, drive_eyes},
         {BENCH_STRESS_PERIOD_MS, drive_stress},
         {BENCH_PRESSURE_PERIOD_MS, drive_pressure},
         {BENCH_FRAME_PERIOD_MS, drive_frame},

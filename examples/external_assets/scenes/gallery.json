@@ -1,0 +1,7 @@
+{
+  "screen": "gallery", "w": 240, "h": 240, "screen_bg": "#203040",
+  "objects": [
+    {"type": "image", "parent": -1, "x": 16, "y": 64, "w": 96, "h": 96, "image": "../assets/cover.png", "bind": "spinner", "name": "spinner"},
+    {"type": "image", "parent": -1, "x": 128, "y": 64, "w": 96, "h": 96, "image": "../assets/badge.png", "bind": "fade", "name": "fade"}
+  ]
+}

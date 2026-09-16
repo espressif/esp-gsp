@@ -21,12 +21,27 @@ This page lists every Widget currently registered by GSPC. Each page provides a 
 | [Image](./image.md) | `image` | Static or animated raster asset with contain, cover and stretch fitting. | [`image.json`](../../../examples/widgets/image/image.json) |
 | [Label](./label.md) | `label` | Static or runtime-bound UTF-8 text with alignment and overflow control. | [`label.json`](../../../examples/widgets/label/label.json) |
 
+## Data and choices
+
+| Widget | JSON type | Purpose | Example |
+|---|---|---|---|
+| [Carousel](./carousel.md) | `carousel` | Orbit icon picker with drag, depth ordering and snap. | [`carousel.json`](../../../examples/widgets/carousel/carousel.json) |
+| [Dropdown](./dropdown.md) | `dropdown` | Compact single-choice control that opens an option panel. | [`dropdown.json`](../../../examples/widgets/dropdown/dropdown.json) |
+| [Grid](./grid.md) | `grid` | Virtualized multi-column collection backed by a reusable cell template. | [`grid.json`](../../../examples/widgets/grid/grid.json) |
+| [List](./list.md) | `list` | Scrollable fixed or application-backed vertical collection. | [`list.json`](../../../examples/widgets/list/list.json) |
+| [Message List](./message_list.md) | `message_list` | Virtualized conversation viewport with incoming and outgoing bubbles. | [`message_list.json`](../../../examples/widgets/message_list/message_list.json) |
+| [Wheel](./wheel.md) | `wheel` | Single-column collection with row snapping and optional cyclic selection. | [`wheel.json`](../../../examples/widgets/wheel/wheel.json) |
+
 ## Visualization
 
 | Widget | JSON type | Purpose | Example |
 |---|---|---|---|
-| [Chart](./chart.md) | `chart` | Compact line chart for a fixed series of numeric points. | [`chart.json`](../../../examples/widgets/chart/chart.json) |
+| [Charging Orb](./charging_orb.md) | `charging_orb` | Charging progress with liquid, halo or plasma styles and optional particles. | [`charging_orb.json`](../../../examples/widgets/charging_orb/charging_orb.json) |
+| [Chart](./chart.md) | `chart` | Bounded single- or multi-series line chart. | [`chart.json`](../../../examples/widgets/chart/chart.json) |
 | [Clock](./clock.md) | `clock` | Analog clock face with independently configurable hands and ticks. | [`clock.json`](../../../examples/widgets/clock/clock.json) |
+| [Effect](./effect.md) | `effect` | Pulse, rotating ring, liquid progress or shimmer with automatic playback. | [`effect.json`](../../../examples/widgets/effect/effect.json) |
+| [Flip Card](./flip_card.md) | `flip_card` | Two compiled image faces with an interruptible perspective flip. | [`flip_card.json`](../../../examples/widgets/flip_card/flip_card.json) |
+| [Frosted Glass](./glass.md) | `glass` | Build-time frosted crop of a named static image backdrop. | [`glass.json`](../../../examples/widgets/glass/glass.json) |
 | [Needle](./needle.md) | `needle` | Rotating gauge hand with configurable pivot, angle and tail. | [`needle.json`](../../../examples/widgets/needle/needle.json) |
 | [Rectangle](./rect.md) | `rect` | Lightweight rectangular visual with fill, border, radius and opacity. | [`rect.json`](../../../examples/widgets/rect/rect.json) |
 | [Shape](./shape.md) | `shape` | Rectangle, rounded geometry, circle or line rendered without an image asset. | [`shape.json`](../../../examples/widgets/shape/shape.json) |
@@ -36,7 +51,7 @@ This page lists every Widget currently registered by GSPC. Each page provides a 
 
 | Widget | JSON type | Purpose | Example |
 |---|---|---|---|
-| [Container](./container.md) | `container` | Styled parent for grouping, clipping and automatic layout. | [`container.json`](../../../examples/widgets/container/container.json) |
+| [Container](./container.md) | `container` | Styled parent with optional rectangular child clipping and automatic layout. | [`container.json`](../../../examples/widgets/container/container.json) |
 | [Layer](./layer.md) | `layer` | Full or partial visual layer used for overlays and visibility groups. | [`layer.json`](../../../examples/widgets/layer/layer.json) |
 
 ## Navigation
@@ -47,16 +62,6 @@ This page lists every Widget currently registered by GSPC. Each page provides a 
 | [Page Flow](./page_flow.md) | `page_flow` | Swipeable multi-page viewport with horizontal or vertical motion. | [`page_flow.json`](../../../examples/widgets/page_flow/page_flow.json) |
 | [Stack View](./stackview.md) | `stackview` | Push and pop page stack with animated navigation transitions. | [`stackview.json`](../../../examples/widgets/stackview/stackview.json) |
 | [Tab View](./tabview.md) | `tabview` | Compile-time tab bar and swipeable page content. | [`tabview.json`](../../../examples/widgets/tabview/tabview.json) |
-
-## Data and choices
-
-| Widget | JSON type | Purpose | Example |
-|---|---|---|---|
-| [Dropdown](./dropdown.md) | `dropdown` | Compact single-choice control that opens an option panel. | [`dropdown.json`](../../../examples/widgets/dropdown/dropdown.json) |
-| [Grid](./grid.md) | `grid` | Virtualized multi-column collection backed by a reusable cell template. | [`grid.json`](../../../examples/widgets/grid/grid.json) |
-| [List](./list.md) | `list` | Scrollable fixed or application-backed vertical collection. | [`list.json`](../../../examples/widgets/list/list.json) |
-| [Message List](./message_list.md) | `message_list` | Virtualized conversation viewport with incoming and outgoing bubbles. | [`message_list.json`](../../../examples/widgets/message_list/message_list.json) |
-| [Wheel](./wheel.md) | `wheel` | Scrollable single-column picker with optional cyclic selection. | [`wheel.json`](../../../examples/widgets/wheel/wheel.json) |
 
 ## Composites
 

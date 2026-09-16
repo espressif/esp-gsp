@@ -57,13 +57,13 @@ ESP_ERROR_CHECK(esp_gsp_esp_lcd_start(&app, &lcd, &ui));
 
 | 结构 | 关键内容 | 规则 |
 |---|---|---|
-| `esp_gsp_message_t` | `text`、稳定 `id`、变化的 `revision`、`direction` | 应用填充；`text` 只需在 `get()` 调用期间有效 |
+| `esp_gsp_message_t` | `text`、稳定 `id`、变化的 `revision`、`direction` | 应用填充；`text` 必须保持有效到下一次 `get()` 调用 |
 | `esp_gsp_message_source_t` | `struct_size`、`count`、`get`、可选 `decorate`、`user_ctx`、`flags` | 清零初始化并将 `struct_size` 设为结构大小；回调运行在渲染任务，`flags = 0` 保留文本 hash 校验 |
 | `esp_gsp_row_t` | `list`、`slot`、`instance`、`item` | 框架提供的复用行令牌，原样传给行 setter |
 | `esp_gsp_grid_cell_t` | 行令牌以及解析后的资源/文字槽 | 传给生成或公共单元格 setter，不要自行构造 |
 
-Row 与 Grid 令牌仅在回调期间有效。不得保存后异步发布，也不能把复用 `slot` 当作
-数据集中的永久标识。
+在 Binder 回调中提交 Row 与 Grid 更新。异步图片 API 捕获行令牌，并在发布前校验
+实例和所属数据项；行被复用后，旧图片更新会被取消。复用 `slot` 不是数据集中的永久标识。
 
 ## Canvas 与生成描述符
 

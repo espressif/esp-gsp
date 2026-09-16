@@ -49,7 +49,7 @@ dimensions, not necessarily the image widget's scaled layout dimensions.
 
 Binders run serially in the native event loop and can synchronously publish
 row fields. The Canvas callback receives a complete offscreen surface and
-the bridge uploads a full frame after it returns. This intentionally differs
+the bridge uploads a full frame after it returns. This differs
 from device render-task scheduling and tile partitioning; it is not a
 performance benchmark. Grid images use TAKE (`*_image_owned`), with explicit
 free on submission failure. The standalone QOI uses BORROW, a stable cache

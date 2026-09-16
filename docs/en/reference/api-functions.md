@@ -388,24 +388,57 @@ esp_gsp_err_t esp_gsp_component_set_value(esp_gsp_handle_t gsp, gsp_component_ke
 
 ### `esp_gsp_component_get_color()`
 
-Get component color.
+Native scene color: RGB565 uses packed 16-bit values, RGB888 uses 0xRRGGBB.
 
 - **Header:** `include/esp_gsp.h`
 - **Return type:** `esp_gsp_err_t`
 
 ```c
-esp_gsp_err_t esp_gsp_component_get_color(esp_gsp_handle_t gsp, gsp_component_key_t key, uint32_t *out_rgb888);
+esp_gsp_err_t esp_gsp_component_get_color(esp_gsp_handle_t gsp, gsp_component_key_t key, uint32_t *out_native_color);
 ```
 
 ### `esp_gsp_component_set_color()`
 
-Set component color.
+Sets the component's primary color in the scene's native format.
 
 - **Header:** `include/esp_gsp.h`
 - **Return type:** `esp_gsp_err_t`
 
 ```c
-esp_gsp_err_t esp_gsp_component_set_color(esp_gsp_handle_t gsp, gsp_component_key_t key, uint32_t rgb888);
+esp_gsp_err_t esp_gsp_component_set_color(esp_gsp_handle_t gsp, gsp_component_key_t key, uint32_t native_color);
+```
+
+### `esp_gsp_component_set_color_rgb888()`
+
+Sets the primary color from 0xRRGGBB, converting to the scene format. Requires a canonical color property or a legacy color binding. For named colors such as fg_color, use the generated property-specific helper. RGB565 uses 5/6/5-bit truncation; ARGB8888 receives opaque alpha. Values above 0xFFFFFF are rejected. Existing native-color APIs are unchanged.
+
+- **Header:** `include/esp_gsp.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_component_set_color_rgb888(esp_gsp_handle_t gsp, gsp_component_key_t key, uint32_t rgb888);
+```
+
+### `esp_gsp_component_set_property_color_rgb888()`
+
+Sets a named COLOR property from 0xRRGGBB with scene-format conversion. Uses the same validation, queue and transaction path as set_property(). Does not change component opacity or accept an alpha byte.
+
+- **Header:** `include/esp_gsp.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_component_set_property_color_rgb888(esp_gsp_handle_t gsp, gsp_component_key_t component, gsp_property_key_t property, uint32_t rgb888);
+```
+
+### `esp_gsp_component_get_color_rgb888()`
+
+Gets the primary color as 0xRRGGBB.
+
+- **Header:** `include/esp_gsp.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_component_get_color_rgb888(esp_gsp_handle_t gsp, gsp_component_key_t key, uint32_t *out_rgb888);
 ```
 
 ### `esp_gsp_component_get_visible()`
@@ -494,6 +527,28 @@ Set component enabled.
 
 ```c
 esp_gsp_err_t esp_gsp_component_set_enabled(esp_gsp_handle_t gsp, gsp_component_key_t key, bool enabled);
+```
+
+### `esp_gsp_component_play_animation()`
+
+Play component animation.
+
+- **Header:** `include/esp_gsp.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_component_play_animation(esp_gsp_handle_t gsp, gsp_component_key_t component, gsp_property_key_t property, const gsp_value_t *from, const gsp_value_t *to, const esp_gsp_animation_config_t *config);
+```
+
+### `esp_gsp_component_stop_animation()`
+
+Stop component animation.
+
+- **Header:** `include/esp_gsp.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_component_stop_animation(esp_gsp_handle_t gsp, gsp_component_key_t component, gsp_property_key_t property);
 ```
 
 ### `esp_gsp_component_stop_position_animation()`
@@ -755,6 +810,226 @@ Transfers malloc-compatible encoded storage without copying. Ownership is transf
 
 ```c
 esp_gsp_err_t esp_gsp_set_image_owned(esp_gsp_handle_t gsp, uint16_t bind, void *data, size_t size);
+```
+
+### `esp_gsp_asset_image_target()`
+
+Use the asset image target operation.
+
+- **Header:** `include/esp_gsp_assets.h`
+- **Return type:** `esp_gsp_asset_target_t`
+
+```c
+static inline esp_gsp_asset_target_t esp_gsp_asset_image_target(uint16_t bind);
+```
+
+### `esp_gsp_asset_row_target()`
+
+Use the asset row target operation.
+
+- **Header:** `include/esp_gsp_assets.h`
+- **Return type:** `esp_gsp_asset_target_t`
+
+```c
+static inline esp_gsp_asset_target_t esp_gsp_asset_row_target(esp_gsp_row_t row, uint16_t slot);
+```
+
+### `esp_gsp_asset_widget_target()`
+
+Use the asset widget target operation.
+
+- **Header:** `include/esp_gsp_assets.h`
+- **Return type:** `esp_gsp_asset_target_t`
+
+```c
+static inline esp_gsp_asset_target_t esp_gsp_asset_widget_target(esp_gsp_widget_t widget, uint16_t slot);
+```
+
+### `esp_gsp_assets_open()`
+
+Open a mounted SD/NAND filesystem package using the generated open helper. index_crc comes from its generated header. A matching index takes the fast path; a replacement package (or index_crc=0) is fully CRC-checked in bounded chunks at open. Each requested member is CRC-checked when read. No whole-pack RAM copy. Call from an application task; open performs IO. File contents must stay immutable until close. Close before unmount/update. NULL config selects defaults. On failure *out_assets is NULL.
+
+- **Header:** `include/esp_gsp_assets.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_open(const char *path, uint32_t index_crc, const esp_gsp_assets_config_t *config, esp_gsp_assets_t **out_assets);
+```
+
+### `esp_gsp_assets_show()`
+
+Queue an image or animation for an authored Image bind. Asset names come from the generated header. Submission returns without file IO or decoding. once plays one animation cycle; false follows the authored loop count. Existing content stays visible until a complete replacement is ready. Each target has at most one in-flight frame. New requests coalesce per bind. Animation memory follows ANIM_FRAME_MEMORY / ANIM_MAX_FRAME_BYTES and is separate from the encoded read budget. JPEG animations also work with the image cache disabled; measure playback performance on the target device. The target placeholder must match the exported pixel/alpha form and native dimensions (opaque image-fit binds can vary dimensions). Export to the same RGB565/RGB888 profile as the UI. Show targets the active scene. Switching scenes cancels subsequent frames; resubmit when returning to that scene. Hiding a page/group does not stop file IO or decoding. Stop its targets when hidden and show them again when visible; show restarts playback. gsp must remain alive until this service is closed. Use one service owner per target; do not concurrently replace it with another image producer.
+
+- **Header:** `include/esp_gsp_assets.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_show(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, uint16_t bind, esp_gsp_asset_ref_t asset, bool once);
+```
+
+### `esp_gsp_assets_show_name()`
+
+Resolve an asset by its manifest name, including newly added assets. Names are copied as a stable key; the caller may release name on return. Same asynchronous result and lifetime contract as esp_gsp_assets_show().
+
+- **Header:** `include/esp_gsp_assets.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_show_name(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, uint16_t bind, const char *name, bool once);
+```
+
+### `esp_gsp_assets_show_row()`
+
+Same ownership and scene rules as show; a recycled row token is checked again on the UI task, so delayed data cannot replace a newly assigned row.
+
+- **Header:** `include/esp_gsp_assets.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_show_row(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, esp_gsp_row_t row, uint16_t slot, esp_gsp_asset_ref_t asset, bool once);
+```
+
+### `esp_gsp_assets_show_widget()`
+
+Use the assets show widget operation.
+
+- **Header:** `include/esp_gsp_assets.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_show_widget(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, esp_gsp_widget_t widget, uint16_t slot, esp_gsp_asset_ref_t asset, bool once);
+```
+
+### `esp_gsp_assets_show_target()`
+
+Generic target forms for Image, Row and Widget destinations.
+
+- **Header:** `include/esp_gsp_assets.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_show_target(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, esp_gsp_asset_target_t target, esp_gsp_asset_ref_t asset, bool once);
+```
+
+### `esp_gsp_assets_show_target_name()`
+
+Use the assets show target name operation.
+
+- **Header:** `include/esp_gsp_assets.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_show_target_name(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, esp_gsp_asset_target_t target, const char *name, bool once);
+```
+
+### `esp_gsp_assets_get_status()`
+
+Get assets status.
+
+- **Header:** `include/esp_gsp_assets.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_get_status(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, esp_gsp_asset_target_t target, esp_gsp_asset_status_t *out_status);
+```
+
+### `esp_gsp_assets_stop_target()`
+
+Stop assets target.
+
+- **Header:** `include/esp_gsp_assets.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_stop_target(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, esp_gsp_asset_target_t target);
+```
+
+### `esp_gsp_assets_get_stats()`
+
+On-demand overview: encoded bytes belong to this package; optional gsp contributes all live scene decoded caches, including non-external images. Decoded counters also include this service's animation canvases/patch scratch. Peaks are conservative sums, not simultaneous samples. Display buffers and codec-internal scratch are not included.
+
+- **Header:** `include/esp_gsp_assets.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_get_stats(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, esp_gsp_assets_stats_t *out_stats);
+```
+
+### `esp_gsp_assets_status()`
+
+Last load/decode result for this target; out_pending reports unfinished work. Returns GSP_ERR_NOT_FOUND before the target has been submitted.
+
+- **Header:** `include/esp_gsp_assets.h`
+- **Return type:** `gsp_err_t`
+
+```c
+gsp_err_t esp_gsp_assets_status(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, uint16_t bind, bool *out_pending);
+```
+
+### `esp_gsp_assets_stop()`
+
+Stop scheduling this target; its last published image remains visible. An already accepted frame may finish. Call show again to restart/replace.
+
+- **Header:** `include/esp_gsp_assets.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_stop(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, uint16_t bind);
+```
+
+### `esp_gsp_assets_close()`
+
+Stop new work and wait at most 5000 ms. On ESP_GSP_ERR_TIMEOUT the handle remains valid and closing; resume UI/IO progress and retry close. Never unmount storage or destroy the UI until close returns ESP_GSP_OK.
+
+- **Header:** `include/esp_gsp_assets.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_close(esp_gsp_assets_t *assets);
+```
+
+### `esp_gsp_assets_close_wait()`
+
+Explicit wait budget; zero polls. Does not forcibly cancel a driver read. On timeout status/stats and another close are allowed; show is rejected. Call from an application task, not a render/decode callback. Other callers must be quiescent before successful close frees the handle. Published source buffers survive close until UI replacement/shutdown. NULL succeeds.
+
+- **Header:** `include/esp_gsp_assets.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_close_wait(esp_gsp_assets_t *assets, uint32_t timeout_ms);
+```
+
+### `esp_gsp_font_file_open()`
+
+Loads a TTF/OTF/TTC or a GSPB font catalog from a mounted filesystem. max_bytes is a required, nonzero limit on the file size. Oversized files fail before allocation. The entire file stays in RAM (PSRAM preferred on ESP-IDF); this is not on-demand glyph IO. Catalogs are CRC-checked; dynamic fonts are checked by FreeType when the UI starts. Their signature is checked here. TTC uses its first face. Dynamic fonts require gsp_enable_freetype() in source builds. With dynamic fallback, each static GFB must contain at most 32768 glyphs; UI startup rejects larger packs with NOT_SUPPORTED. Call from an application task: open performs blocking file IO. On failure *out_font is NULL. Glyph caches and FreeType working memory are separate.
+
+- **Header:** `include/esp_gsp_font_file.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_font_file_open(const char *path, size_t max_bytes, esp_gsp_font_file_t **out_font);
+```
+
+### `esp_gsp_font_file_apply()`
+
+Applies a loaded font to an initialized configuration before UI startup. Sets ttf/ttf_size for a dynamic font, or font_catalog for a linked catalog; the other font source is preserved. No ownership is transferred. Keep the handle alive until every UI using this configuration has stopped successfully. Changing this configuration does not replace a font in a running UI.
+
+- **Header:** `include/esp_gsp_font_file.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_font_file_apply(const esp_gsp_font_file_t *font, esp_gsp_config_t *config);
+```
+
+### `esp_gsp_font_file_close()`
+
+Frees a loaded font after all borrowing UIs have stopped, or startup failed. NULL is accepted. Configurations that borrowed it must not be reused without applying another font or clearing the corresponding font source fields.
+
+- **Header:** `include/esp_gsp_font_file.h`
+- **Return type:** `void`
+
+```c
+void esp_gsp_font_file_close(esp_gsp_font_file_t *font);
 ```
 
 ## Events, input and overlays
@@ -1051,7 +1326,7 @@ esp_gsp_err_t esp_gsp_row_set_image_owned(esp_gsp_handle_t gsp, esp_gsp_row_t ro
 
 ### `esp_gsp_list_bind_component()`
 
-Creates the list/wheel by its stable component key: template, viewport and initial total (the authored item count) come from the generated directory — nothing to re-pair by hand. Requires config.directories. A NULL `bind_item` serves the authored item texts directly (fixed lists: zero application assembly). Adjust the count later with esp_gsp_list_set_total when data is dynamic. The returned binding has UI-instance lifetime; there is currently no unbind operation.
+Creates the list/wheel by its stable component key: template, viewport and initial total (the authored item count) come from the generated directory — nothing to re-pair by hand. Requires config.directories. A NULL `bind_item` serves the authored item texts directly (fixed lists: zero application assembly). Adjust the count later with esp_gsp_list_set_total when data is dynamic. The returned binding remains valid until the UI instance is destroyed.
 
 - **Header:** `include/esp_gsp.h`
 - **Return type:** `esp_gsp_list_t`
@@ -1146,7 +1421,7 @@ esp_gsp_err_t esp_gsp_list_snap(esp_gsp_handle_t gsp, esp_gsp_list_t list, bool 
 
 ### `esp_gsp_list_fling()`
 
-Programmatic momentum: starts coasting at `velocity_px_s` (signed; positive scrolls toward higher items). Friction and row snapping behave exactly as a released drag.
+Programmatic momentum: starts coasting at `velocity_px_s` (signed; positive scrolls toward higher items). Friction and row snapping behave exactly as a released drag. A newly bound visible list is activated when this command is applied, so callers need not wait for a UI tick between binding and requesting the fling.
 
 - **Header:** `include/esp_gsp.h`
 - **Return type:** `esp_gsp_err_t`
@@ -1157,7 +1432,7 @@ esp_gsp_err_t esp_gsp_list_fling(esp_gsp_handle_t gsp, esp_gsp_list_t list, int3
 
 ### `esp_gsp_list_scroll_to()`
 
-Jumps to an absolute scroll offset in pixels (clamped to content; cancels any coasting). Row N sits at offset N * row_height.
+Jumps to an absolute scroll offset in pixels (clamped to content; cancels any coasting). Fixed-height row N starts at N * row_height; variable-height lists use cumulative item heights.
 
 - **Header:** `include/esp_gsp.h`
 - **Return type:** `esp_gsp_err_t`
@@ -1168,7 +1443,7 @@ esp_gsp_err_t esp_gsp_list_scroll_to(esp_gsp_handle_t gsp, esp_gsp_list_t list, 
 
 ### `esp_gsp_list_fade()`
 
-Roller-style fade: translucent `native_color` bands dim the rows toward the viewport's top and bottom edges (LVGL-roller look). Pass the wheel's background color. The bands render above the row instances, which disables the scroll-blit shortcut over this viewport — scrolling repaints the viewport instead.
+Roller-style fade: translucent `native_color` bands dim the rows toward the viewport's top and bottom edges. Pass the wheel's background color. The bands render above the row instances, which disables the scroll-blit shortcut over this viewport — scrolling repaints the viewport instead.
 
 - **Header:** `include/esp_gsp.h`
 - **Return type:** `esp_gsp_err_t`
@@ -1315,6 +1590,50 @@ Clamps an unsigned Q16.16 scale to an authored or application range.
 
 ```c
 static inline uint32_t esp_gsp_scale_q16_clamp(uint32_t scale_q16, uint32_t minimum_q16, uint32_t maximum_q16);
+```
+
+### `esp_gsp_chart_set_series()`
+
+Replaces every point in a fixed-capacity series in one render transaction. Values use the authored business range and are copied before return. count must equal the series capacity (at most ESP_GSP_CHART_MAX_POINTS). Small batches stay inline; larger batches use temporary framework-owned storage and return ESP_GSP_ERR_NO_MEM if allocation fails.
+
+- **Header:** `include/esp_gsp.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_chart_set_series(esp_gsp_handle_t gsp, const esp_gsp_chart_series_t *series, const int32_t *values, size_t count);
+```
+
+### `esp_gsp_chart_append()`
+
+Appends one business value, dropping the oldest point from the fixed window. Consecutive queued appends are applied in order on the render task.
+
+- **Header:** `include/esp_gsp.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_chart_append(esp_gsp_handle_t gsp, const esp_gsp_chart_series_t *series, int32_t value);
+```
+
+### `esp_gsp_set_press_feedback_enabled()`
+
+Enable/disable the default press shade; processed on the render task.
+
+- **Header:** `include/esp_gsp.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_set_press_feedback_enabled(esp_gsp_handle_t gsp, bool enabled);
+```
+
+### `esp_gsp_query_visibility()`
+
+True when the active scene, visibility gates and transformed layout bounds intersect the screen/ancestor viewport. Does not test pixel alpha or occlusion by unrelated siblings. Prefer the generated get_effective_visible() helper.
+
+- **Header:** `include/esp_gsp.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_query_visibility(esp_gsp_handle_t gsp, const esp_gsp_visibility_target_t *target, bool *out_visible);
 ```
 
 ### `esp_gsp_timer_create()`
@@ -1725,7 +2044,7 @@ esp_err_t esp_gsp_esp_lcd_session_destroy(esp_gsp_esp_lcd_session_t *session);
 
 ### `esp_gsp_esp_lcd_start()`
 
-Start esp lcd.
+Creation and resource validation use the caller's stack before the render task starts. See getting-started: the example starts with a 20 KiB main stack; measure the caller's high-water mark with the actual asset/font workload.
 
 - **Header:** `include/esp_gsp_esp_lcd.h`
 - **Return type:** `esp_err_t`
@@ -1805,7 +2124,18 @@ void esp_gsp_deployable_bundle_close(esp_gsp_deployable_bundle_t *bundle);
 
 ## Diagnostics
 
-Diagnostic counters describe runtime evidence and test input. They are not application state or a substitute for target visual acceptance.
+Diagnostic counters help analyze rendering, input and resource use. Keep product state in application code.
+
+### `esp_gsp_heap_stats()`
+
+Read device-wide internal/PSRAM heaps on demand, including non-GSP users. Does not allocate or change budgets. Call from task context, not an ISR or every frame: heap inspection traverses allocator metadata. The two heaps are sampled separately; concurrent allocations can change the result. Returns false and zeroes the output on hosts without heap capabilities; also returns false for NULL. An absent PSRAM heap has zero values. These values are not DMA guarantees or a complete scene memory budget.
+
+- **Header:** `include/esp_gsp_debug.h`
+- **Return type:** `bool`
+
+```c
+bool esp_gsp_heap_stats(esp_gsp_heap_stats_t *out_stats);
+```
 
 ### `esp_gsp_frame_count()`
 
@@ -1838,6 +2168,17 @@ Use the transition stats operation.
 
 ```c
 void esp_gsp_transition_stats(esp_gsp_handle_t gsp, esp_gsp_transition_stats_t *out_stats);
+```
+
+### `esp_gsp_drag_snapshot_stats()`
+
+Cumulative List/Grid/MessageList and viewport drag snapshot accounting. Read from a serialized app callback, like the other debug counters.
+
+- **Header:** `include/esp_gsp_debug.h`
+- **Return type:** `void`
+
+```c
+void esp_gsp_drag_snapshot_stats(esp_gsp_handle_t gsp, esp_gsp_drag_snapshot_stats_t *out_stats);
 ```
 
 ### `esp_gsp_region_stats()`
@@ -1897,7 +2238,7 @@ esp_gsp_err_t esp_gsp_inject_touch(esp_gsp_handle_t gsp, int16_t x, int16_t y, b
 
 ## Advanced integration
 
-Advanced entry points expose low-level renderer state and are not the normal application path.
+Advanced entry points expose low-level renderer state for custom rendering integration.
 
 ### `esp_gsp_context()`
 

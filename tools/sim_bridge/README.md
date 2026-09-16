@@ -80,6 +80,25 @@ or obtain compatible binaries from [release downloads](https://github.com/espres
 The simulator must support `--ready-file` and `bridge_version: 1`; update the
 component and matching simulator together if that capability is absent.
 
+### Dynamic font at startup
+
+When portable UI text needs a font supplied at run time, pass the host a font
+before the UI exists. This is the bridge equivalent of loading a font with
+`esp_gsp_font_file_open()` and applying it to `esp_gsp_config_t` before
+`esp_gsp_start()` on a device:
+
+```sh
+python managed_components/espressif__esp-gsp/tools/sim_bridge/run.py \
+  --project pc --dynamic-font assets/NotoSansSC-Regular.otf
+```
+
+`--dynamic-font` takes precedence over `GSP_SIM_DYNAMIC_FONT`. The runner
+resolves the path and requires a regular file before it builds or launches the
+host, then passes its absolute path to sim_host's `--dynamic-font`. The font is
+therefore installed while sim_host loads the bundle, before the native Backend
+gets its initialization callback. This option is intentionally a launch-time
+configuration: it cannot replace a font in an already running bridge UI.
+
 The runner compiles a deployable bundle and its C headers together, builds
 the native program, starts sim_host, reads its actual listener address, and
 starts the Backend. It opens the preview URL unless `--headless` or
@@ -210,17 +229,27 @@ advance frames as soon as the Backend connects.
 | Bind value/color/visibility/text writes | Existing RPC methods |
 | Bind value/color/visibility/toggle reads | Host scalar extension |
 | Component info; value/color/visible/checked/enabled reads and writes | Supported; integer writes reuse `set_component_i32` |
-| Component text; scalar property get/set | Supported; original tagged scalar types retained |
-| Bind/component value/color animations; scalar property animations and `*_to` | Executed by GSP inside sim_host |
+| Component text; scalar property get/set; RGB888 color helpers | Supported; original tagged scalar types retained |
+| Bind/component value/color animations; scalar property animations and `*_to`; bounded property play/stop | Executed by GSP inside sim_host |
+| Press-feedback policy and generated effective-visibility queries | Supported with `bridge_api_version: 2`; visibility descriptors are copied over the Backend boundary |
 | Events and timer create/delete | Native callback/context storage and event loop |
-| Scene navigation, swipe policy, keyboard attach/cursor, Drawer, PageFlow set-page | Existing RPC methods |
+| Scene navigation, swipe policy, keyboard attach/cursor, Drawer, PageFlow set/read/drag-state | Existing RPC methods and scalar bridge queries |
+| Pointer observer | Receives host pointer samples during `gsp_sim_bridge_poll()`; see the callback timing note below |
 | Dynamic List/Grid binders and row text/value/color | Native callbacks, asynchronous host row requests and token-checked publication; requires media version 1 |
 | Bind/component/row/Grid encoded images | COPY upload of PNG/JPEG/QOI; requires media version 1 |
-| Bind/row/Grid image EX advanced options and borrowed/owned helpers | Ownership, lifecycle callbacks and cache keys; requires image version 1 |
+| Runtime template widgets | Create/destroy, value/color/text, visibility/position, value animation and encoded RESOURCE images; requires widget version 1 |
+| External `esp_gsp_assets` package images | Single-frame PNG/JPEG/QOI package members for Image, Row and Widget targets; see the limitations below |
+| Bind/row/Grid image EX advanced options and Widget borrowed/owned helpers | Ownership, lifecycle callbacks and cache keys; requires image version 1 |
 | Canvas push/push-dirty, draw callback, invalidate/invalidate-dirty, stop | Full-frame upload; draw callbacks use the PC offscreen adaptation below; requires media version 1 |
 | Canvas try-push/try-push-dirty | Eight-frame local queue, deferred upload and release; requires media version 1 |
 | Flush | Host render-attempt fence after local Canvas work has been polled; requires fence version 1 |
-| Generic enum-based component get/set, batch/position APIs, runtime widgets, input/render observers, device startup | Not implemented by this library |
+| Generic enum-based component get/set, batch/position APIs, input/render observers, device startup | Not implemented by this library |
+
+`bridge_api_version: 2` is required for the RGB888 helpers,
+`esp_gsp_component_play_animation()` / `stop_animation()`, press-feedback
+policy, and `esp_gsp_query_visibility()`. Older version-1 hosts continue to
+run the prior subset; these newer calls return `ESP_GSP_ERR_NOT_SUPPORTED`
+without sending an unknown RPC.
 
 Only exported implementations are linkable. Unsupported public C functions
 produce a link error, not a success stub. The shared headers describe the
@@ -228,6 +257,12 @@ full device API, **not** a promise that every declaration is implemented by
 this bridge. Extend the mapping when your application's next API requires
 it through the published compatibility API; native pointers cannot be sent
 to another process.
+
+Pointer-observer callbacks are delivered by the native bridge event loop after
+the host has accepted a pointer sample. They are suitable for PC preview
+diagnostics and input-driven application logic, but do not reproduce the
+device's synchronous "immediately before gesture routing" timing. Registering
+a non-NULL observer requires `capabilities.bridge_pointer_version: 1`.
 
 Successful state/animation calls mean GSP accepted the operation, not that
 the next frame has rendered. Readbacks query committed runtime state, so a
@@ -275,6 +310,17 @@ the host accepted its copy, not that decoding or rendering has completed.
 Component-key image updates require a compiled
 component directory entry with a RESOURCE property; use the authored bind
 when the compiler does not retain such a component.
+
+`esp_gsp_assets_open()` is also available for PC adapters. It validates the
+external GSPB and its nested GRB CRCs, then `show` / `show_name` unwrap one
+single-frame PNG, JPEG or QOI resource and sends it through the normal COPY
+image channel. The operation completes synchronously in the bridge, so status
+is immediately READY or FAILED and `stop` only records STOPPED while retaining
+the host's last picture. The reader does not implement package animations,
+delta patches, JPEG+A8, or raw/RLE/vector resources; each is
+reported as `ESP_GSP_ERR_NOT_SUPPORTED` rather than being treated as a
+successful image upload. `close` is immediate because no source buffer is
+retained after the host copies it.
 
 ### Image ownership and terminal results
 
@@ -343,6 +389,10 @@ buffer. Invalidation requests coalesce. `invalidate_dirty` validates the
 rectangle but still redraws and uploads the full frame. Callbacks must draw
 the full supplied surface; device render-task timing and tile partitioning
 are not reproduced. This is a UI logic preview, not a Canvas performance test.
+
+> **Compatibility limitation:**
+> Do not use this PC path to validate device Canvas tiled Direct Draw behavior
+> or performance.
 
 The target is an image resource with an authored bind, not a new JSON widget
 type. In the [media scene](../../examples/sim_bridge_media/scenes/media.json),
@@ -458,8 +508,9 @@ flush(0). Closing discards outstanding fences without claiming completion.
   dynamic list fixtures or timing measurements.
 - `sim_bridge_media` provides portable C List/Grid binders, QOI images and
   an offscreen Canvas draw callback; see its [README](../../examples/sim_bridge_media/README.md).
-- `showcase` and widget JSON previews have not been converted to native
-  business backends in this iteration.
+- `showcase` and widget examples provide scene JSON previews rather than native
+  business backends. Use `hello_world`, `benchmark` or `sim_bridge_media` as a
+  starting point when adapting C application logic to the bridge.
 
 Run a bounded smoke test of the published media example from your application root:
 

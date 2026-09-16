@@ -1,0 +1,22 @@
+{
+  "assets": [
+    {
+      "name": "spinner",
+      "src": "spinner.gif",
+      "codec": "speed",
+      "target": {
+        "scene": "../scenes/gallery.json",
+        "image": "spinner"
+      }
+    },
+    {
+      "name": "fade",
+      "src": "fade.png",
+      "codec": "speed",
+      "target": {
+        "scene": "../scenes/gallery.json",
+        "image": "fade"
+      }
+    }
+  ]
+}

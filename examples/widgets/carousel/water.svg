@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <title>Water</title>
+  <defs>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#4DDAE7"/>
+      <stop offset="0.25" stop-color="#1387BB"/>
+    </linearGradient>
+  </defs>
+  <rect x="6" y="9" width="84" height="82" rx="25" fill="#07517B"/>
+  <rect x="6" y="5" width="84" height="82" rx="25" fill="url(#plate)"/>
+  <rect x="7" y="6" width="82" height="80" rx="24" fill="none" stroke="#FFFFFF" stroke-opacity="0.22"/>
+  <path d="M48 24C43 33 30 45 30 56a18 18 0 0 0 36 0c0-11-13-23-18-32Z" fill="#EAFDFF"/><path d="M38 55c-1 6 3 11 9 12" fill="none" stroke="#88E7F2" stroke-width="5" stroke-linecap="round"/><path d="M50 37c3 4 5 7 6 10" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+</svg>

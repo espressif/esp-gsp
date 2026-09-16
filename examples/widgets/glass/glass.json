@@ -1,0 +1,6 @@
+{"screen":"glass_demo","w":320,"h":240,"font":"../../common/fonts/DejaVuSans.ttf","objects":[
+{"type":"image","parent":-1,"name":"wall","x":0,"y":0,"w":320,"h":240,"image":"../../effects/assets/backdrop.svg","fit":"stretch"},
+{"type":"glass","parent":-1,"name":"panel","backdrop":"wall","x":40,"y":45,"w":240,"h":150,"blur":14,"tint_color":"#D8EAFF","tint_opacity":65,"radius":18},
+{"type":"label","parent":-1,"x":65,"y":70,"w":190,"h":24,"text":"LIVING ROOM","font_size":14,"fg_color":"#FFFFFF","text_align":"center"},
+{"type":"label","parent":-1,"x":65,"y":103,"w":190,"h":45,"text":"22.6 C","font_size":34,"fg_color":"#FFFFFF","text_align":"center"},
+{"type":"label","parent":-1,"x":65,"y":157,"w":190,"h":20,"text":"Comfortable","font_size":12,"fg_color":"#E9F5FF","text_align":"center"}]}

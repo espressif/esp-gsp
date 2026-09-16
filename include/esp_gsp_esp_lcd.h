@@ -151,6 +151,9 @@ esp_err_t esp_gsp_esp_lcd_resume(
 esp_err_t esp_gsp_esp_lcd_session_destroy(
     esp_gsp_esp_lcd_session_t *session);
 
+/** Creation and resource validation use the caller's stack before the render
+ * task starts. See getting-started: the example starts with a 20 KiB main stack;
+ * measure the caller's high-water mark with the actual asset/font workload. */
 esp_err_t esp_gsp_esp_lcd_start(const esp_gsp_config_t *app_config,
                                 const esp_gsp_esp_lcd_config_t *esp_config,
                                 esp_gsp_handle_t *out_gsp);

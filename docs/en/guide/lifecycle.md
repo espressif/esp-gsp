@@ -68,9 +68,9 @@ State setters are asynchronous on ESP-IDF:
 application task -> command queue -> render task -> state commit -> render
 ```
 
-A successful setter means the command was accepted. It does not mean that a
-frame has already reached the display. The normal queue admission wait is
-bounded; queue pressure is returned as `ESP_GSP_ERR_TIMEOUT`.
+A successful setter confirms command admission. The render task commits queued
+changes and schedules the resulting redraws. The normal queue admission wait is bounded; queue
+pressure is returned as `ESP_GSP_ERR_TIMEOUT`.
 
 Getters read the committed state of the current scene. A setter followed
 immediately by a getter from another task may still observe the previous
@@ -149,9 +149,9 @@ flash.
 If a borrowed or TAKE submission returns an error immediately, ownership
 remains with the caller and no later release callback follows.
 
-`esp_gsp_canvas_stop()` is asynchronous. Its return does not prove that every
-accepted frame has been released or that a direct-draw callback can no longer
-run. Call `esp_gsp_flush()` before freeing callback context or borrowed frames.
+`esp_gsp_canvas_stop()` is asynchronous. Wait for `esp_gsp_flush()` to succeed
+before freeing the direct-draw callback context. Borrowed frames can be reused
+or freed after their release callbacks run.
 
 ## List binding lifetime
 

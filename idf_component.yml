@@ -1,4 +1,4 @@
-version: 1.2.0
+version: 1.3.0
 targets:
 - esp32c3
 - esp32s3
@@ -28,6 +28,8 @@ files:
   - README_zh.md
   - .gspc_version
   - examples/hello_world/**/*
+  - examples/external_assets/**/*
+  - examples/effects/**/*
   - examples/showcase/**/*
   - examples/common/**/*
   - examples/benchmark/**/*
@@ -80,9 +82,6 @@ files:
   - include/gsp/sim/**/*
   - cmake/esp_gsp_project_config_host.c.in
   - cmake/gsp_portable_targets.cmake
-sbom:
-  supplier: 'Organization: Espressif Systems (Shanghai) CO LTD'
-  originator: 'Organization: Espressif Systems (Shanghai) CO LTD'
 url: https://github.com/espressif/esp-gsp
 repository: https://github.com/espressif/esp-gsp.git
 issues: https://github.com/espressif/esp-gsp/issues

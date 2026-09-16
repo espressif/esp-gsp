@@ -11,6 +11,7 @@ import argparse
 import dataclasses
 import re
 from pathlib import Path
+from vector_cases import VECTOR_CASES, expected_commands
 
 
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
@@ -103,6 +104,10 @@ ERROR_COUNTER_RE = re.compile(
 ROTATION_RESULT_RE = re.compile(
     r"^bench: image rotation updates=(?P<updates>\d+)"
     r"\s+commands=(?P<commands>\d+)\s+errors=(?P<errors>\d+)$"
+)
+VECTOR_RESULT_RE = re.compile(
+    r"^bench: vector\[(?P<name>vector resize|vector rotation|vector tint|vector morph|vector move|vector fit|vector paints|vector eyes)\]"
+    r" updates=(?P<updates>\d+) commands=(?P<commands>\d+) errors=(?P<errors>\d+)$"
 )
 STORM_RESULT_RE = re.compile(
     r"^bench: storm period_ms=(?P<period>\d+)"
@@ -238,12 +243,17 @@ def parse_log(path: Path) -> Run:
     ] | None = None
     grid_result: tuple[int, int, int] | None = None
     rotation_result: tuple[int, int] | None = None
+    vector_results = {}
     storm_result: tuple[int, int, int, int | None] | None = None
     raw_pages: dict[str, RawPage] = {}
     pressure_results = {}
     capacity_results = {}
     dropdown_result = None
     for line in transition_text.splitlines():
+        match = VECTOR_RESULT_RE.match(line)
+        if match:
+            vector_results[match["name"]] = tuple(int(match[key]) for key in ("updates", "commands", "errors"))
+            continue
         match = CAPACITY_RE.match(line)
         if match:
             capacity_results[match["name"]] = match.groupdict()
@@ -425,6 +435,15 @@ def parse_log(path: Path) -> Run:
         cases = dict(re.findall(
             r'^BENCH_CASE\((\w+),\s*\w+,\s*"([^"]+)"',
             manifest.read_text(encoding="utf-8"), re.MULTILINE))
+        if protocol < 23:
+            cases.pop("P_EFFECTS", None)
+        if protocol < 20:
+            cases = {key: value for key, value in cases.items() if not key.startswith("P_VECTOR_")}
+        elif protocol < 21:
+            cases.pop("P_VECTOR_MORPH", None)
+        if protocol < 22:
+            for added in ("P_VECTOR_MOVE", "P_VECTOR_FIT", "P_VECTOR_STYLE", "P_VECTOR_EYES"):
+                cases.pop(added, None)
         if protocol == 18:
             cases = {key: value for key, value in cases.items()
                      if not key.startswith("P_LOAD") and key != "P_DROPDOWN"}
@@ -457,7 +476,38 @@ def parse_log(path: Path) -> Run:
                     raise ValueError(f"{path}: missing repaint load on {name!r}")
             elif requests:
                 raise ValueError(f"{path}: unexpected repaint load on {name!r}")
+    if protocol >= 24 and "messages" in pages:
+        messages = re.findall(
+            r"^bench: messages count=(\d+) first=(\d+) errors=(\d+) "
+            r"up=(\d+) down=(\d+) prepends=(\d+) appends=(\d+)$",
+            transition_text, re.MULTILINE)
+        if not messages:
+            raise ValueError(f"{path}: missing message workload counters")
+        count, first, errors, up, down, prepends, appends = map(int, messages[-1])
+        if errors or up == 0 or prepends > 1 or appends > 1 or \
+                count != 32 + 4 * prepends + appends or first != 8 - 4 * prepends:
+            raise ValueError(f"{path}: invalid message workload counters")
+        if raw_pages["messages"].elapsed_us >= 3_000_000 and \
+                (down == 0 or prepends != 1 or appends != 1):
+            raise ValueError(f"{path}: incomplete timed message workload")
+        if protocol >= 25 and up + down < raw_pages["messages"].frames - 1:
+            raise ValueError(f"{path}: message scrolling did not keep pace with rendering")
+    if protocol >= 23 and "effects mixed" in pages:
+        effects = re.findall(r"^bench: effects updates=(\d+) commands=(\d+) errors=(\d+) published=(\d+) failed=(\d+)$", transition_text, re.MULTILINE)
+        if not effects or int(effects[-1][0]) == 0 or int(effects[-1][1]) != 5 * int(effects[-1][0]) or int(effects[-1][2]) != 0 or int(effects[-1][3]) == 0 or int(effects[-1][4]) != 0:
+            raise ValueError(f"{path}: missing or invalid mixed effects workload")
     if protocol >= 19:
+        if protocol >= 20:
+            for case, (name, _) in VECTOR_CASES.items():
+                if name not in pages:
+                    continue
+                result = vector_results.get(name)
+                if result is None or result[0] == 0 or result[1] != expected_commands(case, result[0]) or result[2] != 0:
+                    raise ValueError(f"{path}: missing or invalid vector workload on {name!r}")
+            if protocol >= 22 and "vector eyes" in pages:
+                eyes = re.findall(r"^bench: eyes open=(\d+) closed=(\d+) errors=(\d+)$", transition_text, re.MULTILINE)
+                if not eyes or int(eyes[-1][0]) == 0 or int(eyes[-1][1]) == 0 or int(eyes[-1][2]) != 0:
+                    raise ValueError(f"{path}: eye animation did not reach open and closed states")
         if "bench: measurement end" not in summary:
             raise ValueError(f"{path}: incomplete measurement trailer")
         if config_map.get("queue_metric") != "drained" or \

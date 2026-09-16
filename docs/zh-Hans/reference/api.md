@@ -44,7 +44,7 @@ Setter 在 ESP-IDF 上异步执行。COPY/BORROW/TAKE 所有权、回调上下�
 gsp_<scene>_<control>_<operation>()
 ```
 
-具体操作由命名组件和动态属性决定。不要根据其他控件猜函数；重新构建并查看 `<symbol>_gsp.h`。每个[控件页面](../components/index.md)都会实际编译示例并列出生成签名。
+具体操作由命名组件和动态属性决定。重新构建后，在 `<symbol>_gsp.h` 中查看接口声明。每个[控件页面](../components/index.md)都会实际编译示例并列出生成签名。
 
 ### Dropdown 选择状态
 
@@ -67,7 +67,7 @@ gsp_<scene>_<control>_<operation>()
 ESP_ERROR_CHECK(gsp_settings_display_mode_set_selected(ui, saved_mode));
 ```
 
-Setter 会拒绝超出 `options` 的索引，并同步保留态选择与显示文字。用户选择回调也使用同一个从零开始的索引；应用应持久化该参数，不要覆盖额外 Label 或直接操作编译器生成的 `__...` 对象。
+Setter 会拒绝超出 `options` 的索引，并同步保留态选择与显示文字。用户选择回调也使用同一个从零开始的索引；应用应持久化该参数，使用生成的选项接口可同步更新选择状态与显示文字。
 
 只有高级数据驱动集成确实需要 Raw bind/action/object/property/template ID 时，才在包含生成头文件前定义 `GSP_BUNDLE_ENABLE_RAW_IDS`。
 
@@ -83,8 +83,9 @@ ESP_ERROR_CHECK(esp_gsp_keyboard_attach(
     ui, GSP_MAIN_ACT_ID_SEARCH_KEY, GSP_MAIN_BIND_SEARCH_TEXT));
 ```
 
-字符键和删除键更新框架持有的编辑缓冲；应用收到 OK 动作时，最终文字已经可通过 `esp_gsp_keyboard_text()` 读取。必须使用当前场景生成的 action/bind 符号，不要复制例子中的名称。
+字符键和删除键更新框架持有的编辑缓冲；应用收到 OK 动作时，最终文字已经可通过 `esp_gsp_keyboard_text()` 读取。将示例中的 action/bind 符号替换为当前场景生成的名称。
 
 ## 诊断接口
 
-`esp_gsp_debug.h` 是可选观测工具，不是应用状态。它提供帧、渲染、转场、区域、服务和媒体统计，以及测试输入注入。产品决策应依赖应用状态和正常错误返回，不能依赖诊断计数器。
+`esp_gsp_debug.h` 提供帧、渲染、转场、区域、服务和媒体统计，以及测试输入注入。
+使用这些接口定位问题、测量性能；产品状态由应用代码维护。

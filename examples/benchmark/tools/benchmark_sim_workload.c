@@ -93,6 +93,22 @@ static void preview_components(esp_gsp_handle_t ui, void *user_ctx)
 
 void gsp_sim_application_reset(void)
 {
+    if (s_workload.vectors[7].updates) {
+        printf("gsp_sim: eyes open=%lu closed=%lu errors=%lu\n", (unsigned long)s_workload.eyes_open,
+               (unsigned long)s_workload.eyes_closed, (unsigned long)s_workload.vectors[7].errors);
+    }
+    static const char *const names[] = {"P_VECTOR_SIZE", "P_VECTOR_ROTATE", "P_VECTOR_TINT", "P_VECTOR_MORPH",
+                                        "P_VECTOR_MOVE", "P_VECTOR_FIT", "P_VECTOR_STYLE", "P_VECTOR_EYES"
+                                       };
+    for (unsigned index = 0; index < 8; ++index) {
+        const bench_vector_stats_t *stats = &s_workload.vectors[index];
+        if (stats->updates != 0) {
+            printf("gsp_sim: vector[%s] updates=%lu commands=%lu errors=%lu\n",
+                   names[index], (unsigned long)stats->updates,
+                   (unsigned long)stats->commands, (unsigned long)stats->errors);
+        }
+    }
+    memset(s_workload.vectors, 0, sizeof(s_workload.vectors));
     s_app = NULL;
     s_grid_ready = false;
     s_messages_ready = false;
@@ -142,6 +158,10 @@ void gsp_sim_application_setup(gsp_app_t *app)
         GSP_FORMAT_COMMON_PIXEL_FORMAT_RGB888);
     (void)esp_gsp_timer_create(gsp_app_handle(app), 1000,
                                bench_workload_drive_tweens, &s_workload);
+    (void)esp_gsp_timer_create(gsp_app_handle(app), 16,
+                               bench_workload_drive_vectors, &s_workload);
+    (void)esp_gsp_timer_create(gsp_app_handle(app), 100,
+                               bench_workload_drive_eyes, &s_workload);
     const char *visual = getenv("GSP_BENCH_VISUAL_PREVIEW");
     if (visual != NULL && visual[0] == '1') {
         (void)esp_gsp_timer_create(gsp_app_handle(app), 16, preview_components, NULL);

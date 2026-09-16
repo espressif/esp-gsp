@@ -1,0 +1,35 @@
+menu "External asset example"
+config GSP_ASSET_MOUNT_PATH
+    string "Mounted filesystem path"
+    default "/sdcard"
+config GSP_ASSET_USE_EXISTING_MOUNT
+    bool "Use a filesystem mounted by the application/BSP"
+    default n
+    help
+        Use for NAND or a BSP-managed SDMMC card. Mount it before app_main
+        opens media.gspb. The generic example otherwise mounts an SDSPI card.
+config GSP_ASSET_SD_SPI3
+    bool "Use SPI3 for SD (avoid the LCD SPI bus)"
+    depends on !GSP_ASSET_USE_EXISTING_MOUNT && SOC_SPI_PERIPH_NUM > 2
+    default y
+config GSP_ASSET_SD_MOSI
+    int "SD MOSI GPIO (-1 = not configured)"
+    depends on !GSP_ASSET_USE_EXISTING_MOUNT
+    range -1 99
+    default -1
+config GSP_ASSET_SD_MISO
+    int "SD MISO GPIO (-1 = not configured)"
+    depends on !GSP_ASSET_USE_EXISTING_MOUNT
+    range -1 99
+    default -1
+config GSP_ASSET_SD_CLK
+    int "SD CLK GPIO (-1 = not configured)"
+    depends on !GSP_ASSET_USE_EXISTING_MOUNT
+    range -1 99
+    default -1
+config GSP_ASSET_SD_CS
+    int "SD CS GPIO (-1 = not configured)"
+    depends on !GSP_ASSET_USE_EXISTING_MOUNT
+    range -1 99
+    default -1
+endmenu

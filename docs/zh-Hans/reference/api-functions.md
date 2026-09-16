@@ -381,7 +381,7 @@ esp_gsp_err_t esp_gsp_component_set_value(esp_gsp_handle_t gsp, gsp_component_ke
 - **返回类型:** `esp_gsp_err_t`
 
 ```c
-esp_gsp_err_t esp_gsp_component_get_color(esp_gsp_handle_t gsp, gsp_component_key_t key, uint32_t *out_rgb888);
+esp_gsp_err_t esp_gsp_component_get_color(esp_gsp_handle_t gsp, gsp_component_key_t key, uint32_t *out_native_color);
 ```
 
 ### `esp_gsp_component_set_color()`
@@ -392,7 +392,40 @@ esp_gsp_err_t esp_gsp_component_get_color(esp_gsp_handle_t gsp, gsp_component_ke
 - **返回类型:** `esp_gsp_err_t`
 
 ```c
-esp_gsp_err_t esp_gsp_component_set_color(esp_gsp_handle_t gsp, gsp_component_key_t key, uint32_t rgb888);
+esp_gsp_err_t esp_gsp_component_set_color(esp_gsp_handle_t gsp, gsp_component_key_t key, uint32_t native_color);
+```
+
+### `esp_gsp_component_set_color_rgb888()`
+
+把 RGB888 色值转换为当前场景原生颜色并设置。
+
+- **头文件:** `include/esp_gsp.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_component_set_color_rgb888(esp_gsp_handle_t gsp, gsp_component_key_t key, uint32_t rgb888);
+```
+
+### `esp_gsp_component_set_property_color_rgb888()`
+
+使用统一 RGB888 颜色设置指定颜色属性，自动转换为场景原生格式。
+
+- **头文件:** `include/esp_gsp.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_component_set_property_color_rgb888(esp_gsp_handle_t gsp, gsp_component_key_t component, gsp_property_key_t property, uint32_t rgb888);
+```
+
+### `esp_gsp_component_get_color_rgb888()`
+
+读取控件原生颜色并转换为 RGB888。
+
+- **头文件:** `include/esp_gsp.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_component_get_color_rgb888(esp_gsp_handle_t gsp, gsp_component_key_t key, uint32_t *out_rgb888);
 ```
 
 ### `esp_gsp_component_get_visible()`
@@ -481,6 +514,28 @@ esp_gsp_err_t esp_gsp_component_get_enabled(esp_gsp_handle_t gsp, gsp_component_
 
 ```c
 esp_gsp_err_t esp_gsp_component_set_enabled(esp_gsp_handle_t gsp, gsp_component_key_t key, bool enabled);
+```
+
+### `esp_gsp_component_play_animation()`
+
+播放可延迟、重复和往返的属性动画，隐藏时暂停。
+
+- **头文件:** `include/esp_gsp.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_component_play_animation(esp_gsp_handle_t gsp, gsp_component_key_t component, gsp_property_key_t property, const gsp_value_t *from, const gsp_value_t *to, const esp_gsp_animation_config_t *config);
+```
+
+### `esp_gsp_component_stop_animation()`
+
+停止指定属性动画并保留当前值。
+
+- **头文件:** `include/esp_gsp.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_component_stop_animation(esp_gsp_handle_t gsp, gsp_component_key_t component, gsp_property_key_t property);
 ```
 
 ### `esp_gsp_component_stop_position_animation()`
@@ -731,6 +786,226 @@ esp_gsp_err_t esp_gsp_set_image_borrowed(esp_gsp_handle_t gsp, uint16_t bind, co
 
 ```c
 esp_gsp_err_t esp_gsp_set_image_owned(esp_gsp_handle_t gsp, uint16_t bind, void *data, size_t size);
+```
+
+### `esp_gsp_asset_image_target()`
+
+构造页面 Image 目标，用于状态和停止操作。
+
+- **头文件:** `include/esp_gsp_assets.h`
+- **返回类型:** `esp_gsp_asset_target_t`
+
+```c
+static inline esp_gsp_asset_target_t esp_gsp_asset_image_target(uint16_t bind);
+```
+
+### `esp_gsp_asset_row_target()`
+
+构造携带复用令牌的 Row 图片目标。
+
+- **头文件:** `include/esp_gsp_assets.h`
+- **返回类型:** `esp_gsp_asset_target_t`
+
+```c
+static inline esp_gsp_asset_target_t esp_gsp_asset_row_target(esp_gsp_row_t row, uint16_t slot);
+```
+
+### `esp_gsp_asset_widget_target()`
+
+构造 Widget 图片资源槽目标。
+
+- **头文件:** `include/esp_gsp_assets.h`
+- **返回类型:** `esp_gsp_asset_target_t`
+
+```c
+static inline esp_gsp_asset_target_t esp_gsp_asset_widget_target(esp_gsp_widget_t widget, uint16_t slot);
+```
+
+### `esp_gsp_assets_open()`
+
+打开已挂载文件系统中的预处理资源包，校验索引并创建后台读取任务。
+
+- **头文件:** `include/esp_gsp_assets.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_open(const char *path, uint32_t index_crc, const esp_gsp_assets_config_t *config, esp_gsp_assets_t **out_assets);
+```
+
+### `esp_gsp_assets_show()`
+
+异步显示资源包中的图片或逐帧播放动画；加载失败保留旧图。
+
+- **头文件:** `include/esp_gsp_assets.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_show(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, uint16_t bind, esp_gsp_asset_ref_t asset, bool once);
+```
+
+### `esp_gsp_assets_show_name()`
+
+按清单名称异步显示资源，支持独立更新资源包中新增的素材。
+
+- **头文件:** `include/esp_gsp_assets.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_show_name(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, uint16_t bind, const char *name, bool once);
+```
+
+### `esp_gsp_assets_show_row()`
+
+异步加载 Row 图片，校验复用行令牌。
+
+- **头文件:** `include/esp_gsp_assets.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_show_row(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, esp_gsp_row_t row, uint16_t slot, esp_gsp_asset_ref_t asset, bool once);
+```
+
+### `esp_gsp_assets_show_widget()`
+
+异步加载 Widget 图片资源槽。
+
+- **头文件:** `include/esp_gsp_assets.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_show_widget(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, esp_gsp_widget_t widget, uint16_t slot, esp_gsp_asset_ref_t asset, bool once);
+```
+
+### `esp_gsp_assets_show_target()`
+
+通过目标描述异步加载外部资源。
+
+- **头文件:** `include/esp_gsp_assets.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_show_target(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, esp_gsp_asset_target_t target, esp_gsp_asset_ref_t asset, bool once);
+```
+
+### `esp_gsp_assets_show_target_name()`
+
+通过清单名称向指定目标异步加载外部资源。
+
+- **头文件:** `include/esp_gsp_assets.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_show_target_name(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, esp_gsp_asset_target_t target, const char *name, bool once);
+```
+
+### `esp_gsp_assets_get_status()`
+
+读取请求编号、处理阶段、错误原因和所需字节数。
+
+- **头文件:** `include/esp_gsp_assets.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_get_status(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, esp_gsp_asset_target_t target, esp_gsp_asset_status_t *out_status);
+```
+
+### `esp_gsp_assets_stop_target()`
+
+停止指定目标的后续帧，保留已显示内容。
+
+- **头文件:** `include/esp_gsp_assets.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_stop_target(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, esp_gsp_asset_target_t target);
+```
+
+### `esp_gsp_assets_get_stats()`
+
+按需读取编码缓冲、解码缓存和加载开销概况。
+
+- **头文件:** `include/esp_gsp_assets.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_get_stats(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, esp_gsp_assets_stats_t *out_stats);
+```
+
+### `esp_gsp_assets_status()`
+
+读取目标最近的加载结果和是否仍在处理。
+
+- **头文件:** `include/esp_gsp_assets.h`
+- **返回类型:** `gsp_err_t`
+
+```c
+gsp_err_t esp_gsp_assets_status(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, uint16_t bind, bool *out_pending);
+```
+
+### `esp_gsp_assets_stop()`
+
+停止目标的后续帧调度，保留已显示的图片。
+
+- **头文件:** `include/esp_gsp_assets.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_stop(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, uint16_t bind);
+```
+
+### `esp_gsp_assets_close()`
+
+最多等待五秒关闭资源包；超时保留有效句柄，恢复处理后重试。
+
+- **头文件:** `include/esp_gsp_assets.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_close(esp_gsp_assets_t *assets);
+```
+
+### `esp_gsp_assets_close_wait()`
+
+在指定超时内关闭服务；超时后保留有效句柄供重试。
+
+- **头文件:** `include/esp_gsp_assets.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_close_wait(esp_gsp_assets_t *assets, uint32_t timeout_ms);
+```
+
+### `esp_gsp_font_file_open()`
+
+在显式文件大小上限内加载动态字体或预编译字体目录包。
+
+- **头文件:** `include/esp_gsp_font_file.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_font_file_open(const char *path, size_t max_bytes, esp_gsp_font_file_t **out_font);
+```
+
+### `esp_gsp_font_file_apply()`
+
+将已加载字体应用到启动前的 UI 配置，保留另一类字体来源。
+
+- **头文件:** `include/esp_gsp_font_file.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_font_file_apply(const esp_gsp_font_file_t *font, esp_gsp_config_t *config);
+```
+
+### `esp_gsp_font_file_close()`
+
+在所有引用它的 UI 停止后释放字体文件及目录。
+
+- **头文件:** `include/esp_gsp_font_file.h`
+- **返回类型:** `void`
+
+```c
+void esp_gsp_font_file_close(esp_gsp_font_file_t *font);
 ```
 
 ## 事件、输入与覆盖层
@@ -1277,6 +1552,50 @@ static inline uint32_t esp_gsp_scale_q16_multiply(uint32_t scale_q16, uint32_t r
 static inline uint32_t esp_gsp_scale_q16_clamp(uint32_t scale_q16, uint32_t minimum_q16, uint32_t maximum_q16);
 ```
 
+### `esp_gsp_chart_set_series()`
+
+按业务数值一次提交整条曲线，返回前复制输入数组。
+
+- **头文件:** `include/esp_gsp.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_chart_set_series(esp_gsp_handle_t gsp, const esp_gsp_chart_series_t *series, const int32_t *values, size_t count);
+```
+
+### `esp_gsp_chart_append()`
+
+丢弃最旧采样点并按顺序追加一个业务数值。
+
+- **头文件:** `include/esp_gsp.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_chart_append(esp_gsp_handle_t gsp, const esp_gsp_chart_series_t *series, int32_t value);
+```
+
+### `esp_gsp_set_press_feedback_enabled()`
+
+启用或关闭默认按下遮罩，不改变点击路由。
+
+- **头文件:** `include/esp_gsp.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_set_press_feedback_enabled(esp_gsp_handle_t gsp, bool enabled);
+```
+
+### `esp_gsp_query_visibility()`
+
+查询活动场景中对象布局与屏幕及父视口的有效可见交集。
+
+- **头文件:** `include/esp_gsp.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_query_visibility(esp_gsp_handle_t gsp, const esp_gsp_visibility_target_t *target, bool *out_visible);
+```
+
 ### `esp_gsp_timer_create()`
 
 创建定时器。
@@ -1749,7 +2068,18 @@ void esp_gsp_deployable_bundle_close(esp_gsp_deployable_bundle_t *bundle);
 
 ## 诊断
 
-诊断计数器用于运行证据和测试输入，不是应用状态，也不能替代目标硬件视觉验收。
+诊断计数器用于分析渲染、输入和资源使用；产品状态由应用代码维护。
+
+### `esp_gsp_heap_stats()`
+
+按需读取设备内部 RAM 与 PSRAM 的空闲字节和最大连续块；不支持时返回 false 并清零。
+
+- **头文件:** `include/esp_gsp_debug.h`
+- **返回类型:** `bool`
+
+```c
+bool esp_gsp_heap_stats(esp_gsp_heap_stats_t *out_stats);
+```
 
 ### `esp_gsp_frame_count()`
 
@@ -1782,6 +2112,17 @@ void esp_gsp_render_stats(esp_gsp_handle_t gsp, uint32_t *out_frames, uint64_t *
 
 ```c
 void esp_gsp_transition_stats(esp_gsp_handle_t gsp, esp_gsp_transition_stats_t *out_stats);
+```
+
+### `esp_gsp_drag_snapshot_stats()`
+
+读取拖拽快照启用、复用及各类跳过原因的累计计数。
+
+- **头文件:** `include/esp_gsp_debug.h`
+- **返回类型:** `void`
+
+```c
+void esp_gsp_drag_snapshot_stats(esp_gsp_handle_t gsp, esp_gsp_drag_snapshot_stats_t *out_stats);
 ```
 
 ### `esp_gsp_region_stats()`
@@ -1841,7 +2182,7 @@ esp_gsp_err_t esp_gsp_inject_touch(esp_gsp_handle_t gsp, int16_t x, int16_t y, b
 
 ## 高级集成
 
-高级入口公开底层渲染状态，不属于普通应用路径。
+高级入口用于定制渲染集成，可访问底层渲染状态。
 
 ### `esp_gsp_context()`
 

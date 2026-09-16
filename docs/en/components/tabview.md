@@ -12,24 +12,22 @@ After [installing `esp-gsp-tools`](../guide/simulator-preview.md), run from an
 unpacked component or public repository root:
 
 ```sh
-mkdir -p build/widget-preview
-python -m gsp.execute --version 0.3.0 gspc pack \
+mkdir -p gsp-out/widget-preview
+python -m gsp.execute --version 0.4.0 gspc pack \
   examples/widgets/tabview/tabview.json \
-  --deployable -o build/widget-preview/tabview.gspb
-python -m gsp.execute --version 1.2.0 sim \
-  --bundle build/widget-preview/tabview.gspb
+  --deployable -o gsp-out/widget-preview/tabview.gspb
+python -m gsp.execute --version 1.3.0 sim \
+  --bundle gsp-out/widget-preview/tabview.gspb
 ```
 
-These commands compile the same JSON below with GSPC and open it in the
-published ESP-GSP simulator's browser preview. It is not an HTML recreation.
-Confirm the final pixel format, fonts, display path, and performance on target
-hardware.
+These commands compile the JSON below and open it in the ESP-GSP simulator's
+browser preview.
 
 ## Runtime behavior
 
 GSPC compiles the group into native primitives and generates adapters for application behavior exposed by named elements.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects in this example; unnamed objects do not create unused API.
+Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
 
 ## Complete example JSON
 
@@ -127,7 +125,20 @@ This is `examples/widgets/tabview/tabview.json`. Copy any relative assets refere
 
 ```c
 const gsp_component_directory_t *const * gsp_tabview_docs_component_directories(uint16_t *out_count)
+esp_err_t gsp_widget_tabview___feature_tabs_btn0_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_tabview___feature_tabs_btn1_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_tabview___feature_tabs_btn2_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_tabview___feature_tabs_ind0_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_tabview___feature_tabs_ind1_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_tabview___feature_tabs_ind2_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_tabview_feature_tabs_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
 esp_err_t gsp_widget_tabview_feature_tabs_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_tabview_feature_tabs_tab0_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_tabview_feature_tabs_tab0_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_tabview_feature_tabs_tab1_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_tabview_feature_tabs_tab1_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_tabview_feature_tabs_tab2_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_tabview_feature_tabs_tab2_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
 esp_gsp_config_t gsp_tabview_docs_config(void)
 size_t gsp_tabview_docs_dynamic_image_slots(void)
 ```
@@ -140,10 +151,10 @@ These signatures come from the actual compiler output for this JSON.
 |---|---|---:|---|---:|---|
 | `type` | `string` | yes | — | — | widget type |
 | `parent` | `int` | yes | default -1; -1…65534 | — | parent object index (-1 = screen root) |
-| `x` | `int` | yes | default 0; -32768…32767 | yes | x relative to parent |
-| `y` | `int` | yes | default 0; -32768…32767 | yes | y relative to parent |
-| `w` | `int` | yes | 0…65535 | yes | width in px |
-| `h` | `int` | yes | 0…65535 | yes | height in px |
+| `x` | `int` | yes | default 0; -32768…32767 | scene: —; template: — | x relative to parent |
+| `y` | `int` | yes | default 0; -32768…32767 | scene: —; template: — | y relative to parent |
+| `w` | `int` | yes | 0…65535 | scene: —; template: — | width in px |
+| `h` | `int` | yes | 0…65535 | scene: —; template: — | height in px |
 | `name` | `identifier` | — | — | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
 | `bg_color` | `color` | — | — | yes | tabview background |
 | `tabs` | `string_list` | yes | — | — | tab labels |
@@ -158,11 +169,12 @@ These signatures come from the actual compiler output for this JSON.
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
 | `fg_color` | `color` | — | — | — | tab label color |
-| `radius` | `int` | — | default 0; 0…65535 | yes | corner radius |
+| `radius` | `int` | — | default 0; 0…65535 | scene: —; template: — | corner radius |
 | `hidden` | `bool` | — | default `false` | yes | start hidden |
 | `axis` | `enum` | — | default horizontal; `horizontal`, `vertical` | — | page axis |
 | `stop_anywhere` | `bool` | — | default `false` | — | allow PageFlow to settle between pages |
 | `page_extent` | `int` | — | default 0; 0…65535 | — | PageFlow drag extent |
+| `font` | `path` | — | — | — | per-object TTF/OTF override |
 | `enabled` | `bool` | — | — | — | initial interaction state; when present, exposes a runtime enabled property inherited by descendant controls |
 | `disabled_color` | `color` | — | default #808080 | — | disabled-state overlay color |
 | `disabled_opacity` | `int` | — | default 112; 0…255 | — | disabled-state overlay opacity |
@@ -174,6 +186,5 @@ These signatures come from the actual compiler output for this JSON.
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
 | `parent_name` | `string` | — | — | — | parent by name instead of index |
-| `font` | `path` | — | — | — | per-object TTF/OTF override |
 
 </details>

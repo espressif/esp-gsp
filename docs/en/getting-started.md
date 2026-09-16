@@ -1,5 +1,12 @@
 # Getting Started
 
+## Initialization task stack and integrity checks
+
+Creation and resource verification run synchronously on the calling task. Start a new integration with the `hello_world` setting `CONFIG_ESP_MAIN_TASK_STACK_SIZE=20480`; when starting from a custom task, size that task instead. This 20 KiB starting point is not a universal minimum. Measure `uxTaskGetStackHighWaterMark()` with the intended fonts, decoders and logging before reducing it. Render-task `task_stack_size`/Kconfig settings do not increase the initialization caller's stack.
+
+Keep CRC validation enabled by default. Large scans give the scheduler opportunities to run between chunks. Do not disable the task watchdog to work around startup stalls. `disable_bundle_crc` is only for static assets verified by another trusted mechanism.
+
+
 This guide builds the default embedded-bundle path: an ESP-IDF application
 owns the display, ESP-GSP compiles one JSON scene during the build, and the
 application updates the UI through the generated C API.
@@ -8,7 +15,7 @@ If you want to evaluate ESP-GSP before integrating it, start with the maintained
 example:
 
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.2.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.3.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -35,14 +42,14 @@ orientation.
 From the ESP-IDF project root:
 
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.2.0"
+idf.py add-dependency "espressif/esp-gsp^1.3.0"
 ```
 
 The equivalent component manifest entry is:
 
 ```yaml
 dependencies:
-  espressif/esp-gsp: "^1.2.0"
+  espressif/esp-gsp: "^1.3.0"
 ```
 
 For a local ESP-GSP component directory, use Component Manager `override_path`
@@ -66,7 +73,7 @@ version for an IDF project, create `.gspc_version` in the project root; the
 project marker takes precedence over the component marker:
 
 ```sh
-echo '0.3.0' > .gspc_version # Pin GSPC 0.3.0
+echo '0.4.0' > .gspc_version # Pin GSPC 0.4.0
 idf.py build
 ```
 
@@ -87,8 +94,8 @@ idf.py build
 Do not copy a compiler from an unrelated source checkout merely because
 `gspc --version` runs.
 
-The simulator is optional; firmware builds do not require it. Version
-detection for `sim` is currently manual: use the `version` field from
+The simulator is optional; firmware builds do not require it. Select the
+`sim` version using the `version` field from
 `idf_component.yml` (the ESP-GSP component version), not the GSPC version in
 `.gspc_version`:
 
@@ -175,10 +182,7 @@ gsp_add_bundle(${COMPONENT_LIB})
 ```
 
 The default call discovers and sorts `PROJECT_DIR/scenes/*.json`, and uses
-RGB565. The directory name is deliberately `scenes`: it describes application
-content without being confused with the ESP-GSP component or a generic UI
-source directory. It also gives small applications one predictable place for
-JSON and scene-relative assets.
+RGB565. Keep scene JSON and scene-relative assets in the `scenes` directory.
 
 `gsp_add_bundle()` performs four jobs during the ESP-IDF build:
 
@@ -198,6 +202,8 @@ gsp_add_bundle(${COMPONENT_LIB}
     PIXEL_FORMAT rgb888)
 ```
 
+With `SYMBOL product`, include `product_gsp.h` and initialize with
+`gsp_product_config()`. The startup example below uses the default `bundle` symbol.
 Set a different `SYMBOL` for each bundle. See
 [Configuration](reference/configuration.md) for all build-time options.
 
@@ -265,8 +271,8 @@ gsp_<scene>_<named-element>_<operation>()
 ```
 
 The available operations depend on the element type and dynamic properties.
-Do not copy a helper from another scene and do not edit generated headers.
-Change JSON, rebuild, and consume the API that was generated for that scene.
+Update JSON and rebuild to refresh the available helpers; use the declarations
+and editor completion from the generated header.
 
 ## 7. Configure product limits when needed
 
@@ -316,7 +322,7 @@ inspect generated API
 integrate application state and events
         |
         v
-preview -> target build -> board run -> visual acceptance
+preview -> target build -> check display and interaction on the board
 ```
 
 Continue with [Recommended development workflow](guide/workflow.md).

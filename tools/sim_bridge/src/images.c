@@ -146,7 +146,8 @@ void bridge_images_close(esp_gsp_handle_t ui, gsp_err_t status)
 }
 
 static esp_gsp_err_t submit(esp_gsp_handle_t ui, uint16_t bind, const esp_gsp_row_t *row,
-                            uint16_t slot, const void *data, size_t size, const esp_gsp_image_options_t *options)
+                            bool widget, uint16_t slot, const void *data, size_t size,
+                            const esp_gsp_image_options_t *options)
 {
     if (!ui || !data || !size || size > 16U * 1024U * 1024U) {
         return ESP_GSP_ERR_INVALID_ARG;
@@ -160,6 +161,11 @@ static esp_gsp_err_t submit(esp_gsp_handle_t ui, uint16_t bind, const esp_gsp_ro
         return ESP_GSP_ERR_INVALID_ARG;
     }
     if (!options || (options->ownership == ESP_GSP_IMAGE_COPY && !options->on_complete && !options->cache_key)) {
+        if (widget) {
+            char headers[160];
+            snprintf(headers, sizeof(headers), "X-GSP-Kind: widget-image\r\nX-GSP-Widget: %u\r\nX-GSP-Resource-Slot: %u\r\n", bind, slot);
+            return bridge_binary(ui, headers, data, size);
+        }
         return row ? esp_gsp_row_set_image(ui, *row, slot, data, size) : esp_gsp_set_image(ui, bind, data, size);
     }
     if (!bridge_images_enabled(ui)) {
@@ -189,9 +195,11 @@ static esp_gsp_err_t submit(esp_gsp_handle_t ui, uint16_t bind, const esp_gsp_ro
     char headers[512];
     int count = snprintf(headers, sizeof(headers),
                          "X-GSP-Image-Request: %" PRIu32 "\r\nX-GSP-Cache-Key: %" PRIu32 "\r\n", image->id, options->cache_key);
-    if (row) snprintf(headers + count, sizeof(headers) - (size_t)count,
-                          "X-GSP-Kind: row-image\r\nX-GSP-List: %u\r\nX-GSP-Slot: %u\r\nX-GSP-Instance: %" PRIu32
-                          "\r\nX-GSP-Item: %" PRIu32 "\r\nX-GSP-Resource-Slot: %u\r\n", row->list, row->slot, row->instance, row->item, slot);
+    if (widget) snprintf(headers + count, sizeof(headers) - (size_t)count,
+                             "X-GSP-Kind: widget-image\r\nX-GSP-Widget: %u\r\nX-GSP-Resource-Slot: %u\r\n", bind, slot);
+    else if (row) snprintf(headers + count, sizeof(headers) - (size_t)count,
+                               "X-GSP-Kind: row-image\r\nX-GSP-List: %u\r\nX-GSP-Slot: %u\r\nX-GSP-Instance: %" PRIu32
+                               "\r\nX-GSP-Item: %" PRIu32 "\r\nX-GSP-Resource-Slot: %u\r\n", row->list, row->slot, row->instance, row->item, slot);
     else {
         snprintf(headers + count, sizeof(headers) - (size_t)count, "X-GSP-Kind: image\r\nX-GSP-Bind: %u\r\n", bind);
     }
@@ -208,11 +216,36 @@ static esp_gsp_err_t submit(esp_gsp_handle_t ui, uint16_t bind, const esp_gsp_ro
 
 esp_gsp_err_t esp_gsp_set_image_ex(esp_gsp_handle_t ui, uint16_t bind, const void *data, size_t size, const esp_gsp_image_options_t *options)
 {
-    return submit(ui, bind, NULL, 0, data, size, options);
+    return submit(ui, bind, NULL, false, 0, data, size, options);
 }
 esp_gsp_err_t esp_gsp_row_set_image_ex(esp_gsp_handle_t ui, esp_gsp_row_t row, uint16_t slot, const void *data, size_t size, const esp_gsp_image_options_t *options)
 {
-    return submit(ui, row.list, &row, slot, data, size, options);
+    return submit(ui, row.list, &row, false, slot, data, size, options);
+}
+static esp_gsp_err_t widget_submit(esp_gsp_handle_t ui, esp_gsp_widget_t widget, uint16_t slot,
+                                   const void *data, size_t size, const esp_gsp_image_options_t *options)
+{
+    if (!ui || widget == ESP_GSP_WIDGET_NONE) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    if (!bridge_widget_enabled(ui)) {
+        return ESP_GSP_ERR_NOT_SUPPORTED;
+    }
+    return submit(ui, widget, NULL, true, slot, data, size, options);
+}
+esp_gsp_err_t esp_gsp_widget_set_image(esp_gsp_handle_t ui, esp_gsp_widget_t widget, uint16_t slot, const void *data, size_t size)
+{
+    return widget_submit(ui, widget, slot, data, size, NULL);
+}
+esp_gsp_err_t esp_gsp_widget_set_image_borrowed(esp_gsp_handle_t ui, esp_gsp_widget_t widget, uint16_t slot, const void *data, size_t size, esp_gsp_image_release_cb_t cb, void *ctx)
+{
+    const esp_gsp_image_options_t options = {.ownership = ESP_GSP_IMAGE_BORROW, .on_release = cb, .release_ctx = ctx};
+    return widget_submit(ui, widget, slot, data, size, &options);
+}
+esp_gsp_err_t esp_gsp_widget_set_image_owned(esp_gsp_handle_t ui, esp_gsp_widget_t widget, uint16_t slot, void *data, size_t size)
+{
+    const esp_gsp_image_options_t options = {.ownership = ESP_GSP_IMAGE_TAKE};
+    return widget_submit(ui, widget, slot, data, size, &options);
 }
 esp_gsp_err_t esp_gsp_grid_cell_set_image_ex(esp_gsp_handle_t ui, esp_gsp_grid_cell_t cell, const void *data, size_t size, const esp_gsp_image_options_t *options)
 {

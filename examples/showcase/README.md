@@ -1,9 +1,8 @@
 # ESP-GSP Experience Showcase
 
-This example is the polished application demo for ESP-GSP. It is deliberately
-different from `hello_world` (smallest integration) and `benchmark`
-(machine-readable stress workload): the showcase presents the same features as
-a coherent smart-space product UI.
+This example presents ESP-GSP features in a smart-space product UI.
+For minimal integration, see `hello_world`; for repeatable performance
+measurements, see `benchmark`.
 
 The presentation has three user-controlled scenes:
 
@@ -49,14 +48,14 @@ python -m gsp.execute --version '<ESP-GSP version>' sim showcase.gspb
 
 Use the value from the selected component's `.gspc_version` for
 `<GSPC version>`, and use the `version` field in `idf_component.yml` for
-`<ESP-GSP version>`. `sim` version detection is currently manual; its version
-must match the ESP-GSP component version. Alternatively, download matching `gspc` and `gsp_sim`
+`<ESP-GSP version>`. Select a `sim` version matching the ESP-GSP component
+version. Alternatively, download matching `gspc` and `gsp_sim`
 archives from the [ESP-GSP Releases](https://github.com/espressif/esp-gsp/releases)
 page and set `GSPC_EXECUTABLE` and `GSP_SIM_EXECUTABLE` to their absolute paths.
 
 Swipe horizontally inside the display to move between scenes. A source
 checkout also provides the developer-only `preview_wasm.sh` helper; it is
-intentionally not part of the Component Registry example.
+not part of the Component Registry example.
 
 Render and interact with an individual scene without hardware:
 

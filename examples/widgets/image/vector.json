@@ -1,0 +1,43 @@
+{
+  "screen": "vector_images",
+  "w": 240,
+  "h": 128,
+  "screen_bg": "#eeeeee",
+  "objects": [
+    {
+      "type": "image",
+      "name": "icon",
+      "parent": -1,
+      "x": 8,
+      "y": 8,
+      "w": {"property": "width", "default": 96, "min": 24, "max": 96},
+      "h": {"property": "height", "default": 96, "min": 24, "max": 96},
+      "image": "vector_planet.svg",
+      "fit": "stretch",
+      "scalable": true,
+      "rotation": {"default": 0, "min": -180, "max": 180}
+    },
+    {
+      "type": "image",
+      "name": "status_icon",
+      "parent": -1,
+      "x": 120,
+      "y": 12,
+      "w": 32,
+      "h": 32,
+      "image": "vector_planet.svg",
+      "tint": "#2266ee"
+    },
+    {
+      "type": "image",
+      "name": "rotated_icon",
+      "parent": -1,
+      "x": 168,
+      "y": 64,
+      "w": 56,
+      "h": 56,
+      "image": "vector_planet.svg",
+      "rotation": 27
+    }
+  ]
+}

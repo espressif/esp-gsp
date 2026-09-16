@@ -2,8 +2,8 @@
 
 [Documentation languages](../README.md) | **English** | [中文](../zh-Hans/README.md)
 
-Use one path for each task. Concept guides explain decisions, reference pages
-define compiler facts, and advanced documents describe runtime contracts.
+Start with the getting-started guide, use the topic guides for integration steps,
+and look up fields and APIs in the reference pages.
 
 ## Start here
 
@@ -17,12 +17,13 @@ define compiler facts, and advanced documents describe runtime contracts.
 
 ## Build an application
 
-| Task | Canonical document |
+| Task | Guide or reference |
 |---|---|
 | Choose what belongs in JSON, application code, or the BSP | [Recommended workflow](guide/workflow.md) |
 | Create or revise a UI with Codex | [Agent-assisted UI development](guide/agent-assisted-ui.md) |
 | Author hierarchy, styles, actions, and templates | [Scene JSON guide](guide/scenes.md) |
 | Use runtime images, Canvas, lists, grids, and application data | [Media and application data](guide/media-and-data.md) |
+| Load preprocessed images and animations from SD/NAND | [External assets](guide/external-assets.md) |
 | Use scenes, viewports, drawers, and retained navigation | [Navigation and viewports](guide/navigation.md) |
 | Start, update, synchronize, suspend, and stop safely | [Lifecycle and threading](guide/lifecycle.md) |
 | Understand public structures and ownership | [Application structures](guide/application-structures.md) |
@@ -30,7 +31,7 @@ define compiler facts, and advanced documents describe runtime contracts.
 
 ## Configure and diagnose
 
-| Task | Canonical document |
+| Task | Guide or reference |
 |---|---|
 | Select JSON demand, Kconfig policy, and instance overrides | [Configuration model](guide/configuration.md) |
 | Look up runtime configuration fields and precedence | [Configuration reference](reference/configuration.md) |
@@ -54,10 +55,7 @@ The [Widget library](components/index.md) covers every current control with a
 checked JSON example, exact C signatures, and the canonical local simulator
 preview command.
 
-## Evidence boundaries
+## Check the application
 
-- Scene compilation proves that JSON, assets, profile, and capacities are accepted.
-- An ESP-IDF build proves configuration, compilation, and linking for that target.
-- Native or WASM preview proves portable behavior, not panel wiring or touch orientation.
-- Device logs prove execution, not visual correctness.
-- Final display quality and performance require target-hardware acceptance.
+Build and preview the UI to check layout and interaction, then check display orientation,
+colors, touch and animation on the board. See [Display integration](guide/display.md).

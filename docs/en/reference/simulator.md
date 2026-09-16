@@ -496,9 +496,8 @@ a partially written file, and clean it up afterwards. Readiness means bound
 listeners, not completed application initialization or process liveness.
 Backend-only headless runs are wall-clock paced to match native timers.
 
-## Validation boundary
+## Run on the board
 
-A simulator render proves portable scene behavior. It does not prove panel
-wiring, byte order, rotation, transfer timing, tearing behavior, touch
-mapping, or visual acceptance on the product display. Report host preview,
-target build, board execution, and human visual acceptance separately.
+Use the simulator to check layout, text and interaction before flashing. Check panel
+wiring, orientation, byte order, touch mapping and performance on the target board;
+see [Display integration](../guide/display.md).

@@ -1,0 +1,53 @@
+{
+  "screen": "flip_card_demo",
+  "w": 320,
+  "h": 240,
+  "screen_bg": "#08131F",
+  "font": "../../common/fonts/DejaVuSans.ttf",
+  "objects": [
+    {
+      "type": "label",
+      "parent": -1,
+      "x": 20,
+      "y": 10,
+      "w": 280,
+      "h": 28,
+      "text": "Flip card",
+      "font_size": 20,
+      "fg_color": "#E8F4FF",
+      "text_align": "center"
+    },
+    {
+      "type": "flip_card",
+      "parent": -1,
+      "name": "card",
+      "x": 35,
+      "y": 42,
+      "w": 250,
+      "h": 166,
+      "front": "../../effects/assets/card_front.svg",
+      "back": "../../effects/assets/card_back.svg",
+      "depth": 60,
+      "period_ms": 600,
+      "runtime_style": true,
+      "image_sets": [
+        [
+          "../../effects/assets/card_front_teal.svg",
+          "../../effects/assets/card_back_teal.svg"
+        ]
+      ]
+    },
+    {
+      "type": "label",
+      "parent": -1,
+      "x": 20,
+      "y": 212,
+      "w": 280,
+      "h": 20,
+      "text": "Tap to turn over",
+      "font_size": 13,
+      "fg_color": "#A6BDCC",
+      "text_align": "center"
+    }
+  ]
+}

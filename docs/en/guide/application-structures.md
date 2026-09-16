@@ -18,7 +18,7 @@ ESP_ERROR_CHECK(esp_gsp_esp_lcd_start(&app, &lcd, &ui));
 
 | Structure | Important members | Guidance |
 |---|---|---|
-| `esp_gsp_config_t` | generated bundle/directories; runtime capacities and feature opt-outs | Start from `gsp_bundle_config()`. Do not replace generated bundle fields; override only measured policy or capacity. |
+| `esp_gsp_config_t` | generated bundle/directories; runtime capacities and feature opt-outs | Start from `gsp_bundle_config()`. Keep the generated bundle fields and configure per-instance policy or capacity as needed. |
 | `esp_gsp_esp_lcd_config_t` | `display`, optional `presenter`/`touch`, task settings, `render_alignment` | Start from `ESP_GSP_ESP_LCD_CONFIG_INIT()`. The ordinary path sets the BSP-provided `display`. |
 | `esp_display_present_target_config_t` | `hw`, `fb`, `drawbuf` | Normally produced by the BSP. It owns panel facts, presentation mode/framebuffers and draw-buffer policy. |
 
@@ -56,13 +56,15 @@ with the caller.
 
 | Structure | Important members | Guidance |
 |---|---|---|
-| `esp_gsp_message_t` | `text`, stable `id`, changing `revision`, `direction` | Filled by the application; text only needs to remain valid during `get()`. |
+| `esp_gsp_message_t` | `text`, stable `id`, changing `revision`, `direction` | Filled by the application; text must remain valid until the next `get()` call. |
 | `esp_gsp_message_source_t` | `struct_size`, `count`, `get`, optional `decorate`, `user_ctx`, `flags` | Zero-initialize and set `struct_size` to `sizeof(esp_gsp_message_source_t)`. Callbacks run on the render task; `flags = 0` retains text-hash validation. |
 | `esp_gsp_row_t` | `list`, `slot`, `instance`, `item` | Framework token for one recycled row; pass it unchanged to row setters. |
 | `esp_gsp_grid_cell_t` | row token plus resolved resource/text slots | Pass it to generated/public cell setters; do not construct it manually. |
 
-Row and Grid tokens are callback-scoped. Do not retain them for asynchronous
-publication or treat recycled `slot` as dataset identity.
+Submit Row and Grid updates from binder callbacks. Asynchronous image APIs
+capture the row token and validate its instance and assigned item before
+publication; recycling cancels stale image updates. A recycled `slot` is not
+a permanent dataset identity.
 
 ## Canvas and generated descriptors
 

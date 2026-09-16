@@ -70,8 +70,8 @@ Left unset, the runtime derives it from the reachable heap: it covers the
 compiled startup set, keeps the remaining headroom for runtime images whenever
 `dynamic_image_slots` is non-zero, and never exceeds what the heap can serve,
 including the heap's largest currently allocatable block. This matters on a
-fragmented PSRAM heap: total free bytes alone do not guarantee that one decoded
-surface can be allocated. An unreachable budget stops eviction and turns every
+fragmented PSRAM heap: a decoded surface needs a sufficiently large
+contiguous block. An unreachable budget stops eviction and turns every
 miss into an allocation failure. A startup set larger than the reachable budget
 is logged and the excess decodes lazily instead of failing initialization; the
 preparation pass stops at the budget rather than evicting what it has already
@@ -112,14 +112,18 @@ validates IDs, ranges and duplicates before accepting the table.
 
 ### Decoded images across scenes
 
-A scene's compiled images are decoded before the scene becomes visible, so a
-scene never appears with placeholders that pop in afterwards. To keep that
-affordable, a scene that leaves the screen keeps its decoded images and
-returning to it costs no decode. The total held across all scenes is capped at
-the value of `image_cache_bytes`, or at the figure a zero setting derives. Over
-the cap the least recently visited inactive scenes are released first, so a
-target with room for one scene pays one synchronous decode per switch and holds
-one scene's worth of pixels, exactly as it would without retention.
+Before the first frame, the runtime prepares compiled images used by currently
+visible commands. It then uses any remaining `image_cache_bytes` budget to
+prefetch images on hidden pages. This gives the initial screen priority even
+when resource-registration order starts with hidden content. A retained scene
+reuses decoded images when you return to it; when the total exceeds the budget,
+the least recently visited inactive scene releases its decoded surfaces first.
+
+Budget for the visible decoded working set. If it does not fit, startup logs
+`Visible scene images exceed cache budget`; the images that fit stay resident,
+and skipped images use the placeholder and lazy-decode path. Increase
+`image_cache_bytes` or reduce decoded image sizes to make the complete first
+frame ready before presentation.
 
 An animated scene change is the one point where two scenes are resident at
 once, because the transition composites both. Applications that cannot afford
@@ -163,6 +167,61 @@ Keep display presentation mode on `ESP_DISPLAY_PRESENT_MODE_AUTO` for the
 normal path. Panel classification, framebuffer exposure, byte swapping,
 rotation and TE configuration belong to the BSP display target; see
 [Display Presentation](../guide/display.md).
+
+## Adjusting memory use
+
+Distinguish internal RAM, PSRAM and contiguous-block shortages before changing
+settings. `image_cache_bytes` limits decoded-image caching, not all GSP memory.
+Increasing it does not add heap memory. Zero selects automatic sizing; it does
+not disable the cache.
+
+Read device heaps on demand, including after initialization fails; no UI handle
+is required:
+
+```c
+#include "esp_gsp_debug.h"
+
+esp_gsp_heap_stats_t heap;
+if (esp_gsp_heap_stats(&heap)) {
+    // Inspect heap.internal and heap.psram:
+    // free_bytes and largest_free_block, both in bytes.
+}
+```
+
+These are device-wide heaps including application and driver allocations, not
+GSP-only accounting. Each heap is sampled separately and concurrent allocations
+can change the result. Absent PSRAM returns zero values. Hosts without these
+capabilities return `false` and clear the output. Query on demand from task context. Account separately for DMA capabilities, alignment
+and simultaneous allocations.
+
+| Observation | First adjustment | Tradeoff or condition |
+|---|---|---|
+| Internal RAM low, PSRAM available | Check whether render/decode stacks and animation frames can use PSRAM | Stack callbacks must satisfy Flash/cache restrictions; Prefer PSRAM animation frames may still fall back to internal RAM |
+| No evictable image-cache room | Budget for active images and pending replacements together | Increase `image_cache_bytes` only with heap headroom; otherwise reduce simultaneously resident decoded images |
+| Image allocation failed | Compare requested bytes with both largest blocks; check display buffers and codec scratch | Allocation also depends on heap capabilities and contiguous space; reducing cache or disabling snapshots can increase rendering/decoding work |
+| Total memory low | Review display buffers, cache budget, transition snapshots and background decoding | Disabling background decoding moves work to the render task; display-buffer changes belong to the BSP/presenter |
+
+The first heap allocation failure in each image cache also logs both heaps.
+Later failures retain the requested size without repeatedly scanning heaps;
+use the on-demand query for a fresh reading.
+
+`esp_gsp_media_stats()` exposes cache usage, peaks, allocation failures and decode
+failures. These counters do not cover every budget rejection. Combine them with
+the failure log; `LIMIT_EXCEEDED` alone does not prove heap exhaustion. Observe
+the media API's UI serialization requirements when reading its counters.
+
+Task-stack settings are under `ESP-GSP → Advanced settings (optional) → Project
+runtime defaults → Runtime tasks`. The default render stack is 12 KiB, or 24 KiB
+with dynamic FreeType; the decode stack is 4 KiB. Before enabling PSRAM stacks,
+audit Flash, NVS and filesystem calls made by the task and its callbacks; route
+them to an internal-stack task or Flash dispatcher where needed. Initialization
+still uses the caller's stack: changing the render stack does not change the
+`app_main()` stack. Reduce stack sizes only after measuring remaining stack
+across all enabled paths.
+
+Startup `memory` logs inspect the actual stack address, including IDF global
+external-stack placement and fallback. Failed creation reports
+`requested_memory` because there is no allocated stack to inspect. Use these diagnostics to choose stack placement and memory budgets.
 
 ## Build-time bundle options
 
@@ -258,12 +317,12 @@ framework setting.
 
 | Group | Important symbols | What scales |
 |---|---|---|
-| Resident UI pools | `MAX_SCENES`, `MAX_TIMERS`, `MAX_WIDGETS`, `MAX_ANIMATIONS`, `MAX_LISTS`, `CANVAS_SLOTS`, `MAX_ASSET_ANIMS` | persistent `gsp_ui_core_t` SRAM; exhaustion returns/logs a limit error |
+| Resident UI pools | `MAX_SCENES`, `MAX_TIMERS`, `MAX_WIDGETS`, `MAX_ANIMATIONS`, `MAX_LISTS`, `CANVAS_SLOTS`, `MAX_ASSET_ANIMS` | resident UI memory; exhaustion returns/logs a limit error |
 | List/text pools | `LIST_MAX_SLOTS`, `LIST_TEXT_SLOTS`, `TEXT_SLOTS`, `TEXT_CAPACITY` | visible rows, shaped-text heap, and the command inline fast path |
 | Component limits | `COMPONENT_INSTANCES`, `STACK_VIEW_MAX_DEPTH`, `COMPONENT_BATCH_MAX`, `TRANSACTION_UPDATE_CAPACITY`, `COMPONENT_OVERLAY_COMMANDS` | authored manager instances and stack depth use AUTO; larger transaction batches use temporary heap |
 | Image/font limits | `DEFAULT_DYNAMIC_IMAGE_SLOTS`, `MAX_DYNAMIC_IMAGE_TARGETS`, `MAX_FONTS_PER_SCENE`, `FREETYPE_CACHE_GLYPHS`, `FREETYPE_GLYPH_MAX_PX` | resource-view arrays, cache metadata and glyph bitmap heap |
 | Renderer scratch | `DIRTY_RECT_CAPACITY`, `RENDER_CLIP_STACK_DEPTH`, `RENDER_TILE_SPAN_CAPACITY` | persistent damage arrays and renderer stack; tile-span overflow falls back to a linear scan |
-| Input | `MAX_TOUCH_POINTS`, `TOUCH_RELEASE_CONFIRM_POLLS` | two-contact build capability and polling-mode release latency; pinch is always compiled in for 0.2.0 |
+| Input | `MAX_TOUCH_POINTS`, `TOUCH_RELEASE_CONFIRM_POLLS` | two-contact build capability and polling-mode release latency |
 | Animation | `ANIM_FRAME_MEMORY_*`, `ANIM_MAX_FRAME_BYTES`, `ANIM_INTERNAL_FRAME_MAX_BYTES`, `ANIM_PATCH_RECTS`, `ANIM_REFERENCE_COMMANDS` | frame-buffer heap placement, safety bounds and per-animation resident metadata |
 | Image-cache policy | `ENABLE_IMAGE_CACHE`, `IMAGE_CACHE_ENTRIES`, `IMAGE_CACHE_SHORTAGE_RETRIES`, `IMAGE_CACHE_AUTO_*` | decoded-image heap budget and retry latency |
 | Tasks | `ENABLE_ASYNC_DECODE`, `RENDER_TASK_STACK_SIZE*`, `DECODE_TASK_STACK_SIZE`, task priorities and decode poll interval | internal SRAM task stacks, scheduling and decode latency |
@@ -273,20 +332,21 @@ framework setting.
 
 Useful SRAM relationships for capacity planning are:
 
+- Vector rendering needs additional memory even when image caching is disabled.
+  Measure peak usage with the application's actual assets and transitions;
+  memory is managed automatically.
 - FreeType bitmap storage is approximately
   `FREETYPE_CACHE_GLYPHS * FREETYPE_GLYPH_MAX_PX^2` bytes.
-- List shaped-text heap is approximately
-  `MAX_LISTS * LIST_MAX_SLOTS * LIST_TEXT_SLOTS * 386` bytes at the fully
-  populated worst case; actual list buffers are allocated on use.
-- The command queue is `QUEUE_DEPTH * sizeof(esp_gsp_cmd_t)`. Increasing
-  `TEXT_CAPACITY` changes the inline bytes embedded in every entry. Longer
-  text uses temporary framework-owned heap storage, so this is a fast-path
-  tuning constant rather than a logical text limit.
-- `MAX_TOUCH_POINTS` is fixed at the build capability of two in 0.2.0, so a
+- List text memory grows with the number of visible rows, text slots and text
+  length. Measure peak usage with representative application data.
+- Increasing `QUEUE_DEPTH` and `TEXT_CAPACITY` increases memory use. Adjust
+  these only when queue diagnostics or text-update workloads justify it;
+  `TEXT_CAPACITY` is not a maximum string length.
+- `MAX_TOUCH_POINTS` is fixed at the build capability of two, so a
   prebuilt archive and source build expose the same pinch functionality.
 - `LIST_MAX_SLOTS` applies per List/Grid viewport. For a Grid, required slots
   are `(visible rows + overscan) * columns`; `MAX_LISTS` covers retained
-  bindings across the UI instance because there is currently no unbind API.
+  bindings retained until the UI instance is destroyed.
 - `INSTANCE_STATES_PER_SLOT` applies to fields within one template, while
   `instance_slots` applies to simultaneously live template copies. They are
   independent multipliers and both must cover the authored control.
@@ -308,6 +368,6 @@ content cannot predict per-frame damage fragmentation. Old bundles without the
 versioned requirements member are rejected rather than guessed.
 
 Protocol constants (format offsets, codec ids, driver extension strides,
-`ESP_GSP_IMAGE_REFS_PER_SLOT`, animation handle encoding) are deliberately
-not exposed: they are ABI or wire-format contracts and changing them breaks
-compiled scenes or shared structures.
+`ESP_GSP_IMAGE_REFS_PER_SLOT`, animation handle encoding) are fixed ABI and
+wire-format definitions. Keep them consistent between the compiler, runtime
+and prebuilt library.

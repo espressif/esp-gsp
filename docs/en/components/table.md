@@ -12,24 +12,22 @@ After [installing `esp-gsp-tools`](../guide/simulator-preview.md), run from an
 unpacked component or public repository root:
 
 ```sh
-mkdir -p build/widget-preview
-python -m gsp.execute --version 0.3.0 gspc pack \
+mkdir -p gsp-out/widget-preview
+python -m gsp.execute --version 0.4.0 gspc pack \
   examples/widgets/table/table.json \
-  --deployable -o build/widget-preview/table.gspb
-python -m gsp.execute --version 1.2.0 sim \
-  --bundle build/widget-preview/table.gspb
+  --deployable -o gsp-out/widget-preview/table.gspb
+python -m gsp.execute --version 1.3.0 sim \
+  --bundle gsp-out/widget-preview/table.gspb
 ```
 
-These commands compile the same JSON below with GSPC and open it in the
-published ESP-GSP simulator's browser preview. It is not an HTML recreation.
-Confirm the final pixel format, fonts, display path, and performance on target
-hardware.
+These commands compile the JSON below and open it in the ESP-GSP simulator's
+browser preview.
 
 ## Runtime behavior
 
 GSPC compiles the group into native primitives and generates adapters for application behavior exposed by named elements.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects in this example; unnamed objects do not create unused API.
+Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
 
 ## Complete example JSON
 
@@ -108,9 +106,9 @@ These signatures come from the actual compiler output for this JSON.
 |---|---|---:|---|---:|---|
 | `type` | `string` | yes | — | — | widget type |
 | `parent` | `int` | yes | default -1; -1…65534 | — | parent object index (-1 = screen root) |
-| `x` | `int` | yes | default 0; -32768…32767 | yes | x relative to parent |
-| `y` | `int` | yes | default 0; -32768…32767 | yes | y relative to parent |
-| `w` | `int` | yes | 0…65535 | yes | width in px |
+| `x` | `int` | yes | default 0; -32768…32767 | scene: —; template: — | x relative to parent |
+| `y` | `int` | yes | default 0; -32768…32767 | scene: —; template: — | y relative to parent |
+| `w` | `int` | yes | 0…65535 | scene: —; template: — | width in px |
 | `bg_color` | `color` | — | — | yes | table background |
 | `fg_color` | `color` | — | — | — | table text color |
 | `font_size` | `int` | — | 1…255 | — | per-object font pixel size |
@@ -125,7 +123,8 @@ These signatures come from the actual compiler output for this JSON.
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
-| `radius` | `int` | — | default 0; 0…65535 | yes | corner radius |
+| `radius` | `int` | — | default 0; 0…65535 | scene: —; template: — | corner radius |
+| `font` | `path` | — | — | — | per-object TTF/OTF override |
 
 </details>
 
@@ -134,8 +133,7 @@ These signatures come from the actual compiler output for this JSON.
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
 | `parent_name` | `string` | — | — | — | parent by name instead of index |
-| `h` | `int` | yes | 0…65535 | yes | height in px |
+| `h` | `int` | yes | 0…65535 | scene: —; template: — | height in px |
 | `name` | `identifier` | — | — | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
-| `font` | `path` | — | — | — | per-object TTF/OTF override |
 
 </details>

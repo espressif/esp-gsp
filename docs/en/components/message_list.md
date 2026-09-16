@@ -12,18 +12,16 @@ After [installing `esp-gsp-tools`](../guide/simulator-preview.md), run from an
 unpacked component or public repository root:
 
 ```sh
-mkdir -p build/widget-preview
-python -m gsp.execute --version 0.3.0 gspc pack \
+mkdir -p gsp-out/widget-preview
+python -m gsp.execute --version 0.4.0 gspc pack \
   examples/widgets/message_list/message_list.json \
-  --deployable -o build/widget-preview/message_list.gspb
-python -m gsp.execute --version 1.2.0 sim \
-  --bundle build/widget-preview/message_list.gspb
+  --deployable -o gsp-out/widget-preview/message_list.gspb
+python -m gsp.execute --version 1.3.0 sim \
+  --bundle gsp-out/widget-preview/message_list.gspb
 ```
 
-These commands compile the same JSON below with GSPC and open it in the
-published ESP-GSP simulator's browser preview. It is not an HTML recreation.
-Confirm the final pixel format, fonts, display path, and performance on target
-hardware.
+These commands compile the JSON below and open it in the ESP-GSP simulator's
+browser preview.
 
 This preview shows the initial state authored in JSON. To reproduce application-driven motion, update the corresponding properties through the simulator backend/API or device code.
 
@@ -31,7 +29,7 @@ This preview shows the initial state authored in JSON. To reproduce application-
 
 GSPC compiles the group into native primitives and generates adapters for application behavior exposed by named elements.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects in this example; unnamed objects do not create unused API.
+Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
 
 ## Complete example JSON
 
@@ -122,11 +120,14 @@ esp_err_t gsp_widget_message_list___conversation_message_row_set_message_text_te
 esp_err_t gsp_widget_message_list_conversation_animate_selected(esp_gsp_handle_t gsp, uint32_t from, uint32_t to, uint32_t duration_ms, esp_gsp_ease_t ease)
 esp_err_t gsp_widget_message_list_conversation_animate_selected_to(esp_gsp_handle_t gsp, uint32_t to, uint32_t duration_ms, esp_gsp_ease_t ease)
 esp_err_t gsp_widget_message_list_conversation_changed(esp_gsp_handle_t gsp, esp_gsp_list_t list, uint32_t prepended_count)
+esp_err_t gsp_widget_message_list_conversation_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
 esp_err_t gsp_widget_message_list_conversation_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
 esp_err_t gsp_widget_message_list_conversation_get_selected(esp_gsp_handle_t gsp, uint32_t *out_value)
 esp_err_t gsp_widget_message_list_conversation_get_value(esp_gsp_handle_t gsp, int32_t *out_value)
+esp_err_t gsp_widget_message_list_conversation_play_selected(esp_gsp_handle_t gsp, uint32_t from, uint32_t to, const esp_gsp_animation_config_t *config)
 esp_err_t gsp_widget_message_list_conversation_set_selected(esp_gsp_handle_t gsp, uint32_t new_value)
 esp_err_t gsp_widget_message_list_conversation_set_value(esp_gsp_handle_t gsp, int32_t value)
+esp_err_t gsp_widget_message_list_conversation_stop_selected(esp_gsp_handle_t gsp)
 esp_gsp_config_t gsp_message_list_docs_config(void)
 esp_gsp_err_t gsp_widget_message_list___conversation_message_row_row_set_bubble_color( esp_gsp_handle_t gsp, esp_gsp_row_t row, uint32_t color)
 esp_gsp_err_t gsp_widget_message_list___conversation_message_row_row_set_bubble_h( esp_gsp_handle_t gsp, esp_gsp_row_t row, uint32_t value)
@@ -147,10 +148,10 @@ These signatures come from the actual compiler output for this JSON.
 |---|---|---:|---|---:|---|
 | `type` | `string` | yes | — | — | widget type |
 | `parent` | `int` | yes | default -1; -1…65534 | — | parent object index (-1 = screen root) |
-| `x` | `int` | yes | default 0; -32768…32767 | yes | x relative to parent |
-| `y` | `int` | yes | default 0; -32768…32767 | yes | y relative to parent |
-| `w` | `int` | yes | 0…65535 | yes | width in px |
-| `h` | `int` | yes | 0…65535 | yes | height in px |
+| `x` | `int` | yes | default 0; -32768…32767 | scene: —; template: — | x relative to parent |
+| `y` | `int` | yes | default 0; -32768…32767 | scene: —; template: — | y relative to parent |
+| `w` | `int` | yes | 0…65535 | scene: —; template: — | width in px |
+| `h` | `int` | yes | 0…65535 | scene: —; template: — | height in px |
 | `name` | `identifier` | — | — | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
 | `background_color` | `color` | — | — | — | message viewport background |
 | `incoming_color` | `color` | — | default #E9EDF3 | — | incoming bubble color |
@@ -173,6 +174,7 @@ These signatures come from the actual compiler output for this JSON.
 | `hidden` | `bool` | — | default `false` | yes | start hidden (show via actions or set_visible) |
 | `row_template` | `identifier` | — | — | — | recycled row template |
 | `callback` | `identifier` | — | — | — | app callback name |
+| `font` | `path` | — | — | — | per-object TTF/OTF override |
 | `font_charset` | `string` | — | — | — | glyphs available to runtime-bound message text |
 | `scroll_snapshot` | `bool` | — | default `true` | — | cache two viewport frames while scrolling; falls back to live rendering when memory is unavailable |
 | `item_height` | `int` | — | default 0; 0…65535 | — | row height |
@@ -187,6 +189,5 @@ These signatures come from the actual compiler output for this JSON.
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
 | `parent_name` | `string` | — | — | — | parent by name instead of index |
-| `font` | `path` | — | — | — | per-object TTF/OTF override |
 
 </details>

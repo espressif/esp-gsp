@@ -18,12 +18,43 @@ config ESP_GSP_PREBUILT_COMPONENT
         Kconfig controls; project runtime defaults remain configurable through
         the consumer-side bridge.
 
+comment "Start with defaults: GSPC derives authored scene capacities"
+comment "Board and PSRAM capabilities come from ESP-IDF/BSP"
+
+comment "Common options"
+
+config ESP_GSP_ENABLE_IMAGE_CACHE
+    bool "Cache decoded images on demand"
+    default y
+    help
+        Runtime product setting. Disable to use bounded region decoding.
+        The prebuilt archive still contains both implementations.
+
+config ESP_GSP_ENABLE_ASYNC_DECODE
+    bool "Decode images in the background"
+    default y
+    help
+        Creates a decode worker when the current scene has an image cache.
+        Disabling saves its stack and RTOS objects but moves decode work to
+        the render-task fallback and may increase frame latency.
+
+config ESP_GSP_ENABLE_TRANSITION_SNAPSHOTS
+    bool "Use transition snapshots when available"
+    default y
+    help
+        Runtime product setting. Disable to select the lower-memory
+        transition path. The prebuilt archive supports both paths.
+
+menu "Advanced settings (optional)"
+
+comment "Overrides stay active; no need to change these for ordinary scenes"
+
 menu "Capacity and feature limits"
 
 menu "Core object and component pools"
 
 config ESP_GSP_MAX_SCENES
-    int "Maximum number of scenes held in gsp_ui_core_t"
+    int "Scene capacity (0 = automatic)"
     default 0
     range 0 65534
     help
@@ -36,28 +67,27 @@ config ESP_GSP_MAX_TIMERS
     default 8
     range 1 32
     help
-        Timer slot pool in gsp_ui_core_t. Timer registration fails
-        (ESP_GSP_ERR_LIMIT_EXCEEDED) when the pool is full.
+        Maximum simultaneous application timers. Registration returns
+        ESP_GSP_ERR_LIMIT_EXCEEDED when this capacity is exhausted.
 
 config ESP_GSP_MAX_WIDGETS
     int "Maximum simultaneous template-widget instances"
     default 16
     range 1 255
     help
-        The handle index width is derived from this value, up to the
-        uint8_t-backed pool limit of 255. The remaining handle bits hold
-        a recycling generation. Each slot costs about 20 bytes.
+        Maximum simultaneous template-widget instances. Increase this
+        capacity if application widget creation reaches the configured limit.
 
 config ESP_GSP_MAX_ANIMATIONS
     int "Maximum concurrent runtime animations"
     default 32
     range 0 128
     help
-        esp_gsp_anim_slot_t pool in gsp_ui_core_t (~56 B per slot).
-        Exhaustion degrades gracefully (legacy tween) and logs.
+        Maximum simultaneous runtime animations. Increase this capacity
+        when animation capacity warnings appear.
 
 config ESP_GSP_MAX_LISTS
-    int "Retained List/Wheel bindings per UI instance"
+    int "List and wheel capacity (0 = automatic)"
     default 0
     range 0 256
     help
@@ -66,7 +96,7 @@ config ESP_GSP_MAX_LISTS
         value is an explicit project budget.
 
 config ESP_GSP_LIST_MAX_SLOTS
-    int "Row slots per visible list viewport"
+    int "Visible rows per list (0 = automatic)"
     default 0
     range 0 65535
     help
@@ -75,7 +105,7 @@ config ESP_GSP_LIST_MAX_SLOTS
         upper bound and generation fails when it is below the requirement.
 
 config ESP_GSP_LIST_TEXT_SLOTS
-    int "Dynamic text slots per list template row"
+    int "Dynamic text fields per row (0 = automatic)"
     default 0
     range 0 65533
     help
@@ -84,7 +114,7 @@ config ESP_GSP_LIST_TEXT_SLOTS
         slots per visible row.
 
 config ESP_GSP_COMPONENT_INSTANCES
-    int "Runtime component-instance pool"
+    int "Component instance capacity (0 = automatic)"
     default 0
     range 0 256
     help
@@ -96,7 +126,7 @@ config ESP_GSP_COMPONENT_INSTANCES
         authored demand fail initialization instead of truncating it.
 
 config ESP_GSP_STACK_VIEW_MAX_DEPTH
-    int "Maximum StackView navigation depth"
+    int "Navigation stack depth (0 = automatic)"
     default 0
     range 0 64
     help
@@ -140,15 +170,15 @@ config ESP_GSP_CANVAS_SLOTS
         Concurrent esp_gsp_canvas_* bindings.
 
 config ESP_GSP_MAX_ASSET_ANIMS
-    int "Compiled per-scene animation slots"
+    int "Compiled animations per scene (0 = automatic)"
     default 0
     range 0 255
     help
-        AUTO (0) uses the maximum per-scene anim_qoi count stored in the
+        AUTO (0) uses the maximum per-scene compiled-animation count stored in the
         GSPB. A non-zero value is an explicit project budget.
 
 config ESP_GSP_TEXT_SLOTS
-    int "Retained dynamic-text shaping slots"
+    int "Dynamic text capacity (0 = automatic)"
     default 0
     range 0 65533
     help
@@ -158,13 +188,12 @@ config ESP_GSP_TEXT_SLOTS
         bytes of inline run storage and grows on demand.
 
 config ESP_GSP_DEFAULT_DYNAMIC_IMAGE_SLOTS
-    int "Default simultaneous runtime image targets"
+    int "Dynamic image capacity (0 = automatic)"
     default 0
     range 0 32767
     help
-        AUTO (0) uses the GSPB requirement. Applications that deliberately
-        disable runtime images use esp_gsp_config_set() with value zero, which
-        is distinguishable through the override bitset.
+        AUTO (0) uses the GSPB requirement. Applications that
+        disable runtime images can explicitly set zero with esp_gsp_config_set().
 
 config ESP_GSP_FREETYPE_CACHE_GLYPHS
     int "Default FreeType glyph cache entries"
@@ -294,7 +323,7 @@ config ESP_GSP_IMAGE_CACHE_SHORTAGE_RETRIES
         cost of additional decode latency.
 
 config ESP_GSP_CONTEXT_DEFAULT_GLYPH_RUNS
-    int "Default low-level context glyph-run slots"
+    int "Shaped text capacity (0 = automatic)"
     default 0
     range 0 65535
     help
@@ -302,7 +331,7 @@ config ESP_GSP_CONTEXT_DEFAULT_GLYPH_RUNS
         explicit project capacity and startup fails if the bundle needs more.
 
 config ESP_GSP_CONTEXT_DEFAULT_INSTANCES
-    int "Default shared template instance slots per scene"
+    int "Template instance capacity (0 = automatic)"
     default 0
     range 0 65534
     help
@@ -311,7 +340,7 @@ config ESP_GSP_CONTEXT_DEFAULT_INSTANCES
         startup fails if it is below the bundle requirement.
 
 config ESP_GSP_INSTANCE_STATES_PER_SLOT
-    int "Runtime state values reserved per template instance"
+    int "State capacity per template instance (0 = automatic)"
     default 0
     range 0 65535
     help
@@ -343,20 +372,6 @@ config ESP_GSP_IMAGE_CACHE_HOST_DEFAULT_BYTES
         host integrations. This is a budget, not an eager allocation.
 
 endmenu
-
-config ESP_GSP_ENABLE_IMAGE_CACHE
-    bool "Enable decoded-image cache by default"
-    default y
-    help
-        Runtime product setting. Disable to use bounded region decoding.
-        The prebuilt archive still contains both implementations.
-
-config ESP_GSP_ENABLE_TRANSITION_SNAPSHOTS
-    bool "Enable full-screen transition snapshots"
-    default y
-    help
-        Runtime product setting. Disable to select the lower-memory
-        transition path. The prebuilt archive supports both paths.
 
 menu "Runtime tasks"
 
@@ -404,14 +419,6 @@ endmenu
 
 menu "Background decode task"
 
-config ESP_GSP_ENABLE_ASYNC_DECODE
-    bool "Enable background image decode task"
-    default y
-    help
-        Creates a decode worker when the current scene has an image cache.
-        Disabling saves its stack and RTOS objects but moves decode work to
-        the render-task fallback and may increase frame latency.
-
 config ESP_GSP_DECODE_TASK_STACK_PSRAM
     bool "Allocate decode task stack in PSRAM"
     default n
@@ -442,8 +449,8 @@ config ESP_GSP_DECODE_TASK_PRIORITY
     range 1 24
     depends on ESP_GSP_ENABLE_ASYNC_DECODE
     help
-        Used by direct gsp_decode_task_start() callers. The high-level
-        ESP-IDF runtime derives its worker priority from the render task.
+        Default priority for standalone background decoding. The ESP-IDF
+        UI integration selects its decode priority from the render-task priority.
 
 config ESP_GSP_DECODE_TASK_IDLE_POLL_MS
     int "Decode worker idle poll interval in milliseconds"
@@ -511,8 +518,8 @@ config ESP_GSP_QUEUE_DEPTH
     default 24
     range 4 128
     help
-        esp_gsp_cmd_t queue entries (xQueueCreate) and the per-frame
-        release-callback stack arrays in the ESP-IDF runtime.
+        Maximum queued UI commands. Increase this value when command
+        submission reports queue exhaustion; larger values use more memory.
 
 config ESP_GSP_ACTIVE_TICK_MS
     int "Active render-loop tick in milliseconds"
@@ -792,6 +799,8 @@ config ESP_GSP_DRAWER_EDGE_SLOP_PX
     help
         Maximum distance from the configured screen edge at which a closed
         Drawer may begin an edge-drag gesture. Zero requires the exact edge.
+
+endmenu
 
 endmenu
 

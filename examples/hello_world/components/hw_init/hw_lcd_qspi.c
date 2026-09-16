@@ -237,9 +237,10 @@ esp_err_t hw_lcd_init(
     ESP_RETURN_ON_ERROR(gpio_config(&power_config), TAG, "gpio");
     gpio_set_level(PIN_POWER_OFF, 0);
 
+    /* Bound IDF fallback DMA copies instead of requiring a full-frame block. */
     spi_bus_config_t bus_config = ST77916_PANEL_BUS_QSPI_CONFIG(
                                       PIN_PCLK, PIN_DATA0, PIN_DATA1, PIN_DATA2, PIN_DATA3,
-                                      HW_LCD_H_RES * HW_LCD_V_RES * 2);
+                                      HW_LCD_H_RES * 16 * 2);
     ESP_RETURN_ON_ERROR(spi_bus_initialize(LCD_SPI_HOST, &bus_config,
                                            SPI_DMA_CH_AUTO),
                         TAG, "spi bus");

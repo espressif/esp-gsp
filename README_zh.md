@@ -20,7 +20,7 @@ ESP-GSP 适用于界面结构在构建期确定，但文字、数值、图片、
 |---|---|
 | 构建期 UI | Schema 校验、资源编译和确定性 Bundle |
 | 生成 API | 为命名元素生成类型化设置函数和事件判断函数 |
-| 嵌入式运行时 | 可配置固定资源池、脏区渲染、RGB565 和 RGB888 |
+| 嵌入式运行时 | 可配置内存用量、RGB565 和 RGB888 渲染 |
 | UI 能力 | 控件、布局、List、Grid、模板、导航、媒体和 Canvas |
 | 输入 | 点击、拖动、滚动、滑动以及可选的应用层双点手势 |
 | 显示路径 | RGB、MIPI-DSI、SPI、QSPI，并保留安全的软件回退 |
@@ -36,7 +36,7 @@ ESP-GSP 适用于界面结构在构建期确定，但文字、数值、图片、
 直接从 ESP Component Registry 创建最小完整示例：
 
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.2.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.3.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -45,12 +45,16 @@ python -m pip install -U esp-gsp-tools
 开发板一致的配置，并在烧录前核对面板引脚和时序。预览和构建命令见
 [`hello_world` 说明](examples/hello_world/README.md)。
 
+编译器配置使用当前 ESP-IDF Python 环境。PATH 中已有配套 `gspc` 时可离线使用，
+否则 CMake 调用工具管理器；源码仓库默认通过 Cargo 构建当前编译器。
+版本固定、离线使用和安装错误处理见[编译器选择](docs/zh-Hans/guide/workflow.md#编译器选择)。
+
 ## 集成到现有工程
 
 在 ESP-IDF 工程根目录运行：
 
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.2.0"
+idf.py add-dependency "espressif/esp-gsp^1.3.0"
 python -m pip install -U esp-gsp-tools
 ```
 
@@ -110,11 +114,12 @@ gsp_add_bundle(${COMPONENT_LIB})
 的 [`showcase`](examples/showcase/README.md) 和用于硬件测量的
 [`benchmark`](examples/benchmark/README.md)。
 
-## 当前限制
+## 选择接入方式
 
-- 场景结构在构建期固定；动态内容使用属性、模板、集合、运行时媒体或 Canvas。
-- 双点手势只上报触点，不会自动缩放控件。
-- 暂不支持从右到左布局和复杂文字塑形。
+- 使用 GSPC 构建场景结构；动态界面使用属性和模板，应用数据使用集合，编码图片使用
+  运行时媒体，连续像素流使用 Canvas。
+- 双指缩放由应用根据上报的双触点手势计算，再更新目标控件或 Canvas。
+- 从右到左与复杂文字可预先制作文字素材，或通过 Canvas 接入应用的文字引擎。
 
 ## 许可证
 

@@ -655,7 +655,7 @@
         "Night"
       ],
       "item_height": 38,
-      "cyclic": true,
+      "cyclic": false,
       "bg_color": "#0C1827",
       "fg_color": "#C5D6E8",
       "font_size": 18

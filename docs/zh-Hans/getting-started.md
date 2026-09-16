@@ -1,12 +1,19 @@
 # 安装与集成
 
-添加密封运行时组件，指定兼容的 GSPC 可执行文件，在统一目录编写场景，
+## 初始化任务栈与校验
+
+GSP 创建和资源校验同步运行在调用者任务中。新工程可先采用 `hello_world` 的 `CONFIG_ESP_MAIN_TASK_STACK_SIZE=20480`；如果从自建任务启动，应配置那个任务的栈。20 KiB 是接入起点，不是固定最低需求：结合字体、解码器和日志负载，用 `uxTaskGetStackHighWaterMark()` 验证后再调整。渲染任务的 `task_stack_size`/Kconfig 栈配置不会增加初始化调用者的栈。
+
+默认保留 CRC 校验。大包扫描分段给调度器运行机会；不要通过关闭任务看门狗解决初始化卡顿。`disable_bundle_crc` 仅适用于由其他可信机制验证的静态资源。
+
+
+添加预编译运行时组件，指定兼容的 GSPC 可执行文件，在统一目录编写场景，
 并把生成 Bundle 启动到产品显示目标。
 
 如果希望先体验 ESP-GSP，再集成到现有工程，可以直接创建维护示例：
 
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.2.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.3.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -32,14 +39,14 @@ python -m pip install -U esp-gsp-tools
 
 ```sh
 cd /path/to/your/esp-idf-project
-idf.py add-dependency "espressif/esp-gsp^1.2.0"
+idf.py add-dependency "espressif/esp-gsp^1.3.0"
 ```
 
 ### `idf_component.yml`
 
 ```yaml
 dependencies:
-  espressif/esp-gsp: "^1.2.0"
+  espressif/esp-gsp: "^1.3.0"
 ```
 
 ### 本地覆盖
@@ -47,7 +54,7 @@ dependencies:
 ```yaml
 dependencies:
   espressif/esp-gsp:
-    version: "^1.2.0"
+    version: "^1.3.0"
     override_path: /absolute/path/to/esp-gsp
 ```
 
@@ -67,7 +74,7 @@ ESP-IDF 工程指定其他版本，可在工程根目录创建 `.gspc_version`�
 组件标记：
 
 ```sh
-echo '0.3.0' > .gspc_version # 指定使用 0.3.0 版本的 GSPC
+echo '0.4.0' > .gspc_version # 指定使用 0.4.0 版本的 GSPC
 idf.py build
 ```
 
@@ -85,7 +92,7 @@ idf.py build
 `gsp_add_bundle()` 在 CMake 配置阶段验证 GSPC 兼容性。可执行文件缺失、路径
 无效，或者 Scene/GSPB 版本超出组件支持范围时，配置会明确失败。
 
-模拟器不是固件构建依赖。当前 `sim` 暂不自动检测版本号，请手动使用
+模拟器不是固件构建依赖。`sim` 不自动检测版本号，请手动使用
 `idf_component.yml` 中的 `version` 字段（ESP-GSP 组件版本），不要使用
 `.gspc_version` 中的 GSPC 版本：
 
@@ -96,7 +103,7 @@ python -m gsp.execute --version '<ESP-GSP version>' sim --bundle product.gspb
 也可以从 [ESP-GSP Releases](https://github.com/espressif/esp-gsp/releases) 下载匹配主机和版本的
 模拟器资产，设置 `GSP_SIM_EXECUTABLE` 后直接调用。
 
-能力查询、CLI 参数和验收边界见[模拟器参考](reference/simulator.md)。
+能力查询、CLI 参数和使用说明见[模拟器参考](reference/simulator.md)。
 
 > [!WARNING]
 > **保持版本匹配：**不要从无关源码目录随意复制 GSPC。应使用组件发布的兼容
@@ -217,6 +224,9 @@ gsp_add_bundle(${COMPONENT_LIB}
     PIXEL_FORMAT rgb565)
 ```
 
+`SYMBOL product` 对应 `product_gsp.h` 和 `gsp_product_config()`；后面的启动代码
+使用默认 `bundle` 符号，对应 `bundle_gsp.h` 和 `gsp_bundle_config()`。
+
 默认形式会发现并按字典序排列 `PROJECT_DIR/scenes/*.json`，使用 RGB565，Bundle 名称为 `bundle`。`idf.py build` 期间自动完成：
 
 1. 校验全部场景与引用资源；
@@ -292,7 +302,7 @@ idf.py fullclean
 idf.py -D GSPC_EXECUTABLE=/absolute/path/to/gspc build
 ```
 
-构建成功后，对 `bundle_gsp.h` 使用编辑器补全。对象接口命名大致为 `gsp_<scene>_<name>_<operation>()`，但具体操作由控件类型和动态字段决定，不能从其他场景猜测或复制。
+构建成功后，对 `bundle_gsp.h` 使用编辑器补全。对象接口命名大致为 `gsp_<scene>_<name>_<operation>()`，但具体操作由控件类型和动态字段决定，可在生成头文件中查看具体声明。
 
 ## 烧录前预览
 
@@ -304,7 +314,7 @@ python -m gsp.execute --version '<GSPC version>' gspc pack scenes/main.json \
 python -m gsp.execute --version '<ESP-GSP version>' sim --bundle product.gspb
 ```
 
-当前 `sim` 暂不自动检测版本号；`<ESP-GSP version>` 使用
+`sim` 不自动检测版本号；`<ESP-GSP version>` 使用
 `idf_component.yml` 中的 `version` 字段，而 `<GSPC version>` 使用组件包中由 CI
 生成的 `.gspc_version`。两者版本相互独立。
 
@@ -319,8 +329,7 @@ python -m gsp.execute --version '<ESP-GSP version>' sim --bundle product.gspb \
 ```
 
 [控件库](components/index.md)为每个控件提供调用同一发布版模拟器的本地命令。
-模拟器结果属于主机侧证据；最终布局、颜色、撕裂、触控手感和性能仍需在目标
-显示链路上验收。
+烧录后在目标板上检查布局、颜色、撕裂、触控手感和性能。
 
 ## 选择正确的配置层
 

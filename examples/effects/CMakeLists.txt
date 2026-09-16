@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.16)
+set(EXTRA_COMPONENT_DIRS "components")
+set(SUPPORTED_TARGETS esp32c3 esp32s3 esp32p4 esp32s31)
+option(GSP_EFFECTS_RGB888 "Native RGB888 display" OFF)
+option(GSP_EFFECTS_AUTOPLAY "Cycle effects for board qualification" OFF)
+include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+project(gsp_effects)

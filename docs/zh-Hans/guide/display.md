@@ -4,7 +4,7 @@
 
 ESP-GSP 消费 `esp_display_present_target_config_t`，不会猜测面板时序、总线引脚、物理旋转、Framebuffer 所有权或字节序。这些值由 BSP 配置，并提供逻辑尺寸与编译场景一致的显示目标。
 
-维护例程覆盖 SPI、QSPI、RGB 和 MIPI-DSI 等显示链路。这里保证的是框架机制，不代表仓库例程引脚天然适配用户开发板。
+例程覆盖 SPI、QSPI、RGB 和 MIPI-DSI 等显示链路。使用时根据开发板原理图配置引脚、时序和面板参数。
 
 ## 面板类别
 
@@ -29,7 +29,7 @@ gsp_add_bundle(${COMPONENT_LIB}
     PIXEL_FORMAT rgb888)
 ```
 
-场景尺寸是 BSP 选定旋转后的逻辑尺寸。构建成功不能证明物理方向和触控坐标映射正确。
+场景尺寸是 BSP 选定旋转后的逻辑尺寸。在开发板上检查画面方向和触控坐标映射。
 
 ## 触控
 
@@ -51,7 +51,7 @@ RGB/MIPI-DSI 使用 Framebuffer；`target.drawbuf` 只影响其可选修复路�
 
 ## 提交与硬件加速
 
-普通场景保持 `ESP_DISPLAY_PRESENT_MODE_AUTO`，只有实际目标测量证明需要时才覆盖。脏区渲染、PPA/硬件加速与安全软件回退属于运行时/显示链路。CI 可以证明编译和主机语义，只有目标实测才能证明某加速路径被选中并对该负载有效。
+普通场景使用 `ESP_DISPLAY_PRESENT_MODE_AUTO`，运行时会选择脏区渲染、硬件加速或软件路径。需要调优时，在目标板上比较帧生成和显示提交耗时，再调整显示策略。
 
 ## 转场
 
@@ -60,6 +60,16 @@ RGB/MIPI-DSI 使用 Framebuffer；`target.drawbuf` 只影响其可选修复路�
 Fade-through-black 可在显示契约允许时直接按分区渲染；Cross-fade 没有两份快照时
 回退为零快照 Fade-through-black，但最终场景状态不能丢失。
 
+## 渲染与 SDK 配套
+
+绘制优化自动生效，包括原生 RGB888 图片透明度处理，无需新增应用 API。
+比较性能时，分别检查帧生成和显示提交耗时。
+
+P4 使用预编译库时，应在 ESP-IDF 中设置与开发板一致的芯片修订版本。
+`CONFIG_ESP32P4_SELECTS_REV_LESS_V3` 选择 v3 之前的库，其他 P4 配置选择 v3 及之后
+的库；修改修订版本后重新配置并构建。DMA2D 适配代码随消费端 ESP-IDF 编译，
+使驱动配置结构与所用 SDK 保持一致。
+
 ## 所有权边界
 
 应用/BSP 拥有硬件描述和产品策略，ESP-GSP 拥有逻辑脏区、命令回放、转场和帧规划，
@@ -67,6 +77,6 @@ Presenter 拥有目标分类、Framebuffer 一致性、物理变换、Cache 同�
 传输和完成栅栏。应用与框架不得绕过 Presenter 重复注册 Panel Callback 或自行修复
 Framebuffer；自定义板级集成只需提供一个准确的显示目标。
 
-## 验收
+## 检查显示效果
 
 先验证准确板级 Profile，再分别观察颜色通道、旋转、裁剪、撕裂、转场、Arc/线条粗细和触控边缘。导航行为见[导航、视口与手势](navigation.md)。

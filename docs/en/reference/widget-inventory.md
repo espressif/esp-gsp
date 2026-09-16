@@ -6,43 +6,48 @@ Current GSPC registry coverage.
 
 | Metric | Count |
 |---|---:|
-| Registered widgets | 23 |
+| Registered widgets | 28 |
 | Compile-time composites | 6 |
-| Total field definitions | 1594 |
-| Dynamic capability fields | 301 |
+| Total field definitions | 1892 |
+| Dynamic capability fields | 234 |
 
 ## Components
 
 | Component | Kind | Facets | Fields | Events |
 |---|---|---|---:|---|
-| `container` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 59 | yes |
-| `label` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 59 | yes |
-| `button` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `text`, `border`, `image`, `interaction`, `template` | 59 | yes |
-| `image` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `image`, `text`, `interaction`, `template` | 59 | yes |
-| `rect` | `Widget` | `core`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 50 | yes |
-| `shape` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `shape`, `interaction`, `template` | 61 | yes |
-| `progress` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `interaction`, `template` | 63 | yes |
-| `chart` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `stroke`, `interaction`, `template` | 62 | yes |
-| `slider` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `slider`, `interaction`, `template` | 66 | yes |
-| `arc` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `arc`, `interaction`, `template` | 66 | yes |
-| `needle` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `needle`, `stroke`, `interaction`, `template` | 62 | yes |
-| `spinner` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `spinner`, `stroke`, `interaction`, `template` | 61 | yes |
-| `toggle` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `slider`, `interaction`, `template` | 63 | yes |
-| `checkbox` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 60 | yes |
-| `radio` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 60 | yes |
-| `clock` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 67 | yes |
-| `page_flow` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `interaction`, `template` | 71 | yes |
-| `stackview` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 65 | yes |
-| `drawer` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 61 | yes |
-| `layer` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 60 | yes |
+| `container` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 67 | yes |
+| `label` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 66 | yes |
+| `button` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `text`, `border`, `image`, `boolean`, `interaction`, `template` | 71 | yes |
+| `image` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `image`, `text`, `interaction`, `template` | 66 | yes |
+| `rect` | `Widget` | `core`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 57 | yes |
+| `shape` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `shape`, `interaction`, `template` | 68 | yes |
+| `progress` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `interaction`, `template` | 70 | yes |
+| `chart` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `stroke`, `interaction`, `template` | 72 | yes |
+| `slider` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `slider`, `interaction`, `template` | 73 | yes |
+| `arc` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `arc`, `interaction`, `template` | 73 | yes |
+| `needle` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `needle`, `stroke`, `interaction`, `template` | 69 | yes |
+| `spinner` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `spinner`, `stroke`, `interaction`, `template` | 68 | yes |
+| `effect` | `Widget` | `core`, `visibility`, `interaction` | 29 | yes |
+| `charging_orb` | `Widget` | `core`, `visibility`, `interaction` | 30 | yes |
+| `carousel` | `Widget` | `core`, `visibility`, `interaction` | 26 | yes |
+| `flip_card` | `Widget` | `core`, `visibility`, `interaction` | 25 | yes |
+| `glass` | `Widget` | `core`, `visibility` | 15 | no |
+| `toggle` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `slider`, `interaction`, `template` | 70 | yes |
+| `checkbox` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 67 | yes |
+| `radio` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 67 | yes |
+| `clock` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 74 | yes |
+| `page_flow` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `interaction`, `template` | 79 | yes |
+| `stackview` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 72 | yes |
+| `drawer` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 68 | yes |
+| `layer` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 68 | yes |
 | `tabview` | `Composite` | `core` | 25 | yes |
 | `dropdown` | `Composite` | `core` | 26 | yes |
 | `msgbox` | `Composite` | `composite_core` | 21 | yes |
 | `table` | `Composite` | `core` | 19 | yes |
 | `keyboard` | `Composite` | `core` | 36 | yes |
-| `list` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `list_data`, `scroll_snapshot`, `interaction`, `template` | 69 | yes |
-| `wheel` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `list_data`, `interaction`, `template` | 68 | yes |
-| `grid` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `grid_data`, `scroll_snapshot`, `interaction`, `template` | 65 | yes |
+| `list` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `list_data`, `scroll_snapshot`, `interaction`, `template` | 76 | yes |
+| `wheel` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `wheel_behavior`, `data`, `list_data`, `interaction`, `template` | 76 | yes |
+| `grid` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `grid_data`, `scroll_snapshot`, `interaction`, `template` | 72 | yes |
 | `message_list` | `Composite` | `core`, `visibility`, `row_template`, `message_list` | 31 | yes |
 
 ## Fields by widget
@@ -83,18 +88,25 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -104,12 +116,13 @@ Current GSPC registry coverage.
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
 | `dynamic_color` | `bool` | no | no | — | template member exposes a per-instance color slot |
 | `dynamic_image` | `bool` | no | no | — | template image exposes a per-instance resource slot |
+| `clip_children` | `bool` | no | no | `false` | clip descendants and their hit areas to the container bounds |
 
 ### `label`
 
@@ -147,18 +160,25 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -168,7 +188,7 @@ Current GSPC registry coverage.
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
@@ -209,35 +229,47 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
 | `max_scale` | `number` | no | no | `4` | maximum runtime image scale |
+| `checked` | `bool` | no | yes | `false` | initial on/off state |
 | `enabled` | `bool` | no | no | — | initial interaction state; when present, exposes a runtime enabled property inherited by descendant controls |
 | `disabled_color` | `color` | no | no | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
 | `dynamic_color` | `bool` | no | no | — | template member exposes a per-instance color slot |
 | `dynamic_image` | `bool` | no | no | — | template image exposes a per-instance resource slot |
+| `pressed_image` | `path` | no | no | — | pressed-state image path |
+| `selected_image` | `path` | no | no | — | selected-state image path |
+| `disabled_image` | `path` | no | no | — | disabled-state image path |
+| `checkable` | `bool` | no | no | `false` | toggle selected state on click |
 
 ### `image`
 
@@ -269,16 +301,22 @@ Current GSPC registry coverage.
 | `radius` | `int` | no | yes | `0` | corner radius in px |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -289,6 +327,7 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
 | `enabled` | `bool` | no | no | — | initial interaction state; when present, exposes a runtime enabled property inherited by descendant controls |
@@ -296,7 +335,7 @@ Current GSPC registry coverage.
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
@@ -330,18 +369,25 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -351,7 +397,7 @@ Current GSPC registry coverage.
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
@@ -394,18 +440,25 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -417,7 +470,7 @@ Current GSPC registry coverage.
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
@@ -460,18 +513,25 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -485,7 +545,7 @@ Current GSPC registry coverage.
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
@@ -528,18 +588,25 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -550,13 +617,16 @@ Current GSPC registry coverage.
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
 | `dynamic_color` | `bool` | no | no | — | template member exposes a per-instance color slot |
 | `dynamic_image` | `bool` | no | no | — | template image exposes a per-instance resource slot |
-| `points` | `int_list` | no | no | — | chart data points |
+| `points` | `int_list` | no | no | — | single-series chart data points |
+| `series` | `chart_series` | no | no | — | fixed-capacity chart series objects |
+| `min` | `int` | no | no | `0` | business value range lower bound |
+| `max` | `int` | no | no | `100` | business value range upper bound |
 | `grid_lines` | `int` | no | no | `0` | chart grid line count |
 
 ### `slider`
@@ -595,18 +665,25 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -623,7 +700,7 @@ Current GSPC registry coverage.
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
@@ -666,18 +743,25 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -686,14 +770,14 @@ Current GSPC registry coverage.
 | `min` | `int` | no | no | `0` | value range lower bound |
 | `max` | `int` | no | no | `100` | value range upper bound |
 | `vertical` | `bool` | no | no | `false` | vertical orientation |
-| `start_angle` | `int` | no | yes | `135` | arc start angle in degrees |
-| `sweep` | `int` | no | no | `270` | arc sweep in degrees |
+| `start_angle` | `int` | no | yes | `135` | arc start angle clockwise from top (0 top, 90 right) |
+| `sweep` | `int` | no | no | `270` | clockwise arc span in degrees |
 | `enabled` | `bool` | no | no | — | initial interaction state; when present, exposes a runtime enabled property inherited by descendant controls |
 | `disabled_color` | `color` | no | no | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
@@ -737,18 +821,25 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -761,7 +852,7 @@ Current GSPC registry coverage.
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
@@ -804,18 +895,25 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -827,12 +925,162 @@ Current GSPC registry coverage.
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
 | `dynamic_color` | `bool` | no | no | — | template member exposes a per-instance color slot |
 | `dynamic_image` | `bool` | no | no | — | template image exposes a per-instance resource slot |
+
+### `effect`
+
+| Field | Kind | Required | Dynamic | Default | Description |
+|---|---|---|---|---|---|
+| `type` | `string` | yes | no | — | widget type |
+| `parent` | `int` | yes | no | `-1` | parent object index (-1 = screen root) |
+| `parent_name` | `string` | no | no | — | parent by name instead of index |
+| `x` | `int` | yes | yes | `0` | x relative to parent |
+| `y` | `int` | yes | yes | `0` | y relative to parent |
+| `w` | `int` | yes | yes | — | width in px |
+| `h` | `int` | yes | yes | — | height in px |
+| `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
+| `enabled` | `bool` | no | no | — | initial interaction state; when present, exposes a runtime enabled property inherited by descendant controls |
+| `disabled_color` | `color` | no | no | `"#808080"` | disabled-state overlay color |
+| `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
+| `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
+| `bind_target` | `enum` | no | no | — | explicit bind state family |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
+| `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
+| `runtime_style` | `bool` | no | no | `false` | generate runtime appearance setters |
+| `effect` | `enum` | yes | no | — | procedural visual |
+| `shimmer_style` | `enum` | no | no | `"linear"` | highlight appearance |
+| `fg_color` | `color` | no | no | `"#38BDF8"` | effect color |
+| `bg_color` | `color` | no | no | — | optional static backing color |
+| `value` | `int` | no | no | `100` | liquid level or visual intensity in percent |
+| `period_ms` | `int` | no | no | `2800` | one animation cycle in milliseconds |
+| `playing` | `bool` | no | no | `true` | advance automatically while visible |
+| `phase` | `int` | no | no | `0` | initial cycle progress, 0..65535 |
+| `ring_style` | `enum` | no | no | `"trail"` | ring appearance |
+| `softness` | `int` | no | no | `75` | glow feather softness in percent |
+| `strength` | `int` | no | no | `65` | soft glow strength in percent |
+| `opacity` | `int` | no | no | `255` | overall effect opacity |
+
+### `charging_orb`
+
+| Field | Kind | Required | Dynamic | Default | Description |
+|---|---|---|---|---|---|
+| `type` | `string` | yes | no | — | widget type |
+| `parent` | `int` | yes | no | `-1` | parent object index (-1 = screen root) |
+| `parent_name` | `string` | no | no | — | parent by name instead of index |
+| `x` | `int` | yes | yes | `0` | x relative to parent |
+| `y` | `int` | yes | yes | `0` | y relative to parent |
+| `w` | `int` | yes | yes | — | width in px |
+| `h` | `int` | yes | yes | — | height in px |
+| `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
+| `enabled` | `bool` | no | no | — | initial interaction state; when present, exposes a runtime enabled property inherited by descendant controls |
+| `disabled_color` | `color` | no | no | `"#808080"` | disabled-state overlay color |
+| `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
+| `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
+| `bind_target` | `enum` | no | no | — | explicit bind state family |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
+| `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
+| `runtime_style` | `bool` | no | no | `false` | generate runtime appearance setters |
+| `fg_color` | `color` | no | no | `"#38BDF8"` | effect color |
+| `bg_color` | `color` | no | no | — | optional static backing color |
+| `value` | `int` | no | no | `100` | liquid level or visual intensity in percent |
+| `period_ms` | `int` | no | no | `2800` | one animation cycle in milliseconds |
+| `playing` | `bool` | no | no | `true` | advance automatically while visible |
+| `phase` | `int` | no | no | `0` | initial cycle progress, 0..65535 |
+| `softness` | `int` | no | no | `75` | glow feather softness in percent |
+| `strength` | `int` | no | no | `65` | soft glow strength in percent |
+| `opacity` | `int` | no | no | `255` | overall effect opacity |
+| `ripple` | `int` | no | no | `45` | attached membrane ripple strength in percent |
+| `style` | `enum` | no | no | `"halo"` | charging orb visual style |
+| `charging` | `bool` | no | no | `true` | enable charging motion and particles |
+| `particles` | `int` | no | no | `4` | maximum soft energy particles |
+
+### `carousel`
+
+| Field | Kind | Required | Dynamic | Default | Description |
+|---|---|---|---|---|---|
+| `type` | `string` | yes | no | — | widget type |
+| `parent` | `int` | yes | no | `-1` | parent object index (-1 = screen root) |
+| `parent_name` | `string` | no | no | — | parent by name instead of index |
+| `x` | `int` | yes | yes | `0` | x relative to parent |
+| `y` | `int` | yes | yes | `0` | y relative to parent |
+| `w` | `int` | yes | yes | — | width in px |
+| `h` | `int` | yes | yes | — | height in px |
+| `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
+| `enabled` | `bool` | no | no | — | initial interaction state; when present, exposes a runtime enabled property inherited by descendant controls |
+| `disabled_color` | `color` | no | no | `"#808080"` | disabled-state overlay color |
+| `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
+| `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
+| `bind_target` | `enum` | no | no | — | explicit bind state family |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
+| `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
+| `runtime_style` | `bool` | no | no | `false` | generate runtime appearance setters |
+| `image_sets` | `string_matrix` | no | no | — | additional image groups for runtime theme selection |
+| `image_set` | `int` | no | no | `0` | initial compiled image group index |
+| `icons` | `string_list` | yes | no | — | 3..12 image paths, compiled to native thumbnails |
+| `projection` | `enum` | no | no | `"perspective"` | carousel projection |
+| `depth` | `int` | no | no | `60` | carousel perspective strength in percent |
+| `spacing` | `int` | no | no | `50` | carousel orbit spacing in percent |
+| `period_ms` | `int` | no | no | `280` | carousel settling duration with runtime_style |
+| `selected` | `int` | no | no | `0` | initial selected icon index |
+| `opacity` | `int` | no | no | `255` | overall icon opacity |
+
+### `flip_card`
+
+| Field | Kind | Required | Dynamic | Default | Description |
+|---|---|---|---|---|---|
+| `type` | `string` | yes | no | — | widget type |
+| `parent` | `int` | yes | no | `-1` | parent object index (-1 = screen root) |
+| `parent_name` | `string` | no | no | — | parent by name instead of index |
+| `x` | `int` | yes | yes | `0` | x relative to parent |
+| `y` | `int` | yes | yes | `0` | y relative to parent |
+| `w` | `int` | yes | yes | — | width in px |
+| `h` | `int` | yes | yes | — | height in px |
+| `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
+| `enabled` | `bool` | no | no | — | initial interaction state; when present, exposes a runtime enabled property inherited by descendant controls |
+| `disabled_color` | `color` | no | no | `"#808080"` | disabled-state overlay color |
+| `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
+| `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
+| `bind_target` | `enum` | no | no | — | explicit bind state family |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
+| `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
+| `runtime_style` | `bool` | no | no | `false` | generate runtime appearance setters |
+| `image_sets` | `string_matrix` | no | no | — | additional image groups for runtime theme selection |
+| `image_set` | `int` | no | no | `0` | initial compiled image group index |
+| `front` | `path` | yes | no | — | front image path |
+| `back` | `path` | yes | no | — | back image path |
+| `flipped` | `bool` | no | yes | `false` | show the back face |
+| `depth` | `int` | no | no | `60` | perspective strength in percent |
+| `period_ms` | `int` | no | no | `560` | flip duration in milliseconds |
+| `opacity` | `int` | no | no | `255` | overall opacity |
+
+### `glass`
+
+| Field | Kind | Required | Dynamic | Default | Description |
+|---|---|---|---|---|---|
+| `type` | `string` | yes | no | — | widget type |
+| `parent` | `int` | yes | no | `-1` | parent object index (-1 = screen root) |
+| `parent_name` | `string` | no | no | — | parent by name instead of index |
+| `x` | `int` | yes | yes | `0` | x relative to parent |
+| `y` | `int` | yes | yes | `0` | y relative to parent |
+| `w` | `int` | yes | yes | — | width in px |
+| `h` | `int` | yes | yes | — | height in px |
+| `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
+| `backdrop` | `string` | yes | no | — | name of a preceding static image with the same parent |
+| `blur` | `int` | no | no | `12` | build-time blur radius in display pixels |
+| `tint_color` | `color` | no | no | `"#D8EAFF"` | frosted material tint |
+| `tint_opacity` | `int` | no | no | `70` | tint strength |
+| `radius` | `int` | no | no | `16` | rounded corner radius in pixels |
+| `opacity` | `int` | no | no | `255` | overall opacity |
 
 ### `toggle`
 
@@ -870,18 +1118,25 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -895,7 +1150,7 @@ Current GSPC registry coverage.
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
@@ -938,18 +1193,25 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -960,7 +1222,7 @@ Current GSPC registry coverage.
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
@@ -1003,18 +1265,25 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -1025,7 +1294,7 @@ Current GSPC registry coverage.
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
@@ -1068,18 +1337,25 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -1089,7 +1365,7 @@ Current GSPC registry coverage.
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
@@ -1140,18 +1416,25 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -1168,12 +1451,13 @@ Current GSPC registry coverage.
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
 | `dynamic_color` | `bool` | no | no | — | template member exposes a per-instance color slot |
 | `dynamic_image` | `bool` | no | no | — | template image exposes a per-instance resource slot |
+| `pages` | `string_list` | no | no | — | ordered names of direct page children; overrides legacy &lt;name&gt;_tabN discovery |
 | `page_count` | `int` | no | no | — | compiled page count |
 | `axis` | `enum` | no | no | `"horizontal"` | page motion axis |
 | `bar_height` | `int` | no | no | `56` | tab bar height |
@@ -1216,18 +1500,25 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -1237,7 +1528,7 @@ Current GSPC registry coverage.
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
@@ -1286,18 +1577,25 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -1307,7 +1605,7 @@ Current GSPC registry coverage.
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
@@ -1352,18 +1650,25 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -1373,12 +1678,13 @@ Current GSPC registry coverage.
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
 | `dynamic_color` | `bool` | no | no | — | template member exposes a per-instance color slot |
 | `dynamic_image` | `bool` | no | no | — | template image exposes a per-instance resource slot |
+| `clip_children` | `bool` | no | no | `false` | clip descendants and their hit areas to the layer bounds |
 | `block_scene_swipe` | `bool` | no | no | `false` | while visible, block horizontal scene swipes |
 
 ### `tabview`
@@ -1569,18 +1875,25 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -1600,7 +1913,7 @@ Current GSPC registry coverage.
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
@@ -1643,29 +1956,37 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
 | `max_scale` | `number` | no | no | `4` | maximum runtime image scale |
+| `snap_to_item` | `bool` | no | no | `true` | scrolling snaps to row boundaries |
+| `dynamic_items` | `bool` | no | no | `false` | keep item-update APIs available regardless of initial item count |
+| `cyclic` | `bool` | no | no | `false` | selection wraps continuously across both ends |
 | `items` | `string_list` | no | no | — | item texts (list/wheel/dropdown/tabview) |
 | `selected` | `int` | no | yes | `0` | initially selected item index |
 | `item_height` | `int` | no | no | `0` | row height for list/wheel |
 | `items_per_page` | `int` | no | no | `0` | tabview items per page |
 | `visible_rows` | `int` | no | no | `0` | visible row count (alt to item_height) |
-| `cyclic` | `bool` | no | no | `false` | wheel wraps around |
-| `snap_to_item` | `bool` | no | no | `false` | scrolling snaps to row boundaries |
 | `row_template` | `identifier` | no | no | — | recycled row template |
 | `item_count` | `int` | no | no | — | initial dynamic item count |
 | `enabled` | `bool` | no | no | — | initial interaction state; when present, exposes a runtime enabled property inherited by descendant controls |
@@ -1673,7 +1994,7 @@ Current GSPC registry coverage.
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
@@ -1716,18 +2037,25 @@ Current GSPC registry coverage.
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound text; static text is added automatically |
+| `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
-| `image` | `path` | no | yes | — | image file path (PNG) |
+| `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
+| `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
+| `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
+| `morph` | `int` | no | no | — | SVG shape interpolation progress (percent); generates a runtime setter |
+| `svg_element` | `string` | no | no | — | SVG element id; imports its painted bounds as an independent image |
+| `tint` | `color` | no | no | — | SVG silhouette color; generates a runtime color setter |
+| `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
-| `quality` | `int` | no | no | — | JPEG quality 1-100 (0 = profile default) |
+| `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
 | `position_x` | `number` | no | no | `0.5` | image fit horizontal alignment |
 | `position_y` | `number` | no | no | `0.5` | image fit vertical alignment |
-| `rotation` | `int` | no | yes | `0` | clockwise opaque-image rotation around the bounding-box center; clipped to the box |
+| `rotation` | `int` | no | yes | `0` | clockwise image rotation around the bounding-box center; source alpha is supported; clipped to the box |
 | `scalable` | `bool` | no | no | `false` | enable runtime image scaling |
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
@@ -1742,7 +2070,7 @@ Current GSPC registry coverage.
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |
 | `bind` | `identifier` | no | no | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | no | no | — | explicit bind state family |
-| `callback` | `identifier` | no | no | — | app callback name; generates GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | no | no | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | no | no | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | no | no | — | declare this subtree as a render template |
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |

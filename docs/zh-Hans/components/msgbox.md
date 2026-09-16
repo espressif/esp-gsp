@@ -11,22 +11,21 @@
 [安装 `esp-gsp-tools`](../guide/simulator-preview.md) 后，在解压后的组件或公共仓库根目录运行：
 
 ```sh
-mkdir -p build/widget-preview
-python -m gsp.execute --version 0.3.0 gspc pack \
+mkdir -p gsp-out/widget-preview
+python -m gsp.execute --version 0.4.0 gspc pack \
   examples/widgets/msgbox/msgbox.json \
-  --deployable -o build/widget-preview/msgbox.gspb
-python -m gsp.execute --version 1.2.0 sim \
-  --bundle build/widget-preview/msgbox.gspb
+  --deployable -o gsp-out/widget-preview/msgbox.gspb
+python -m gsp.execute --version 1.3.0 sim \
+  --bundle gsp-out/widget-preview/msgbox.gspb
 ```
 
-这些命令用 GSPC 编译下方同一份 JSON，并通过发布版 ESP-GSP 模拟器打开浏览器预览，
-不是 HTML 仿制控件。最终像素格式、字体、显示链路和性能仍需在目标硬件确认。
+这些命令编译下方 JSON，并在 ESP-GSP 模拟器中打开浏览器预览。
 
 ## 运行方式
 
 GSPC 将组合组件编译为原生基础图元，并为命名元素生成连接应用行为的适配 API。
 
-为需要在 C 代码中读写的对象设置稳定的 `name`。GSPC 会为示例中的命名对象生成下方列出的类型化函数；JSON 中没有命名的对象不会产生无用 API。
+为需要在 C 代码中读写的对象设置稳定的 `name`。GSPC 为命名对象生成下方列出的类型化函数。
 
 ## 完整示例 JSON
 
@@ -123,6 +122,8 @@ GSPC 将组合组件编译为原生基础图元，并为命名元素生成连接
 bool gsp_widget_msgbox_event_decode_call( const esp_gsp_event_t *event, gsp_widget_msgbox_call_event_t *out_event)
 bool gsp_widget_msgbox_event_is_confirm_choice( const esp_gsp_event_t *event)
 const gsp_component_directory_t *const * gsp_msgbox_docs_component_directories(uint16_t *out_count)
+esp_err_t gsp_widget_msgbox___confirm_dialog_panel_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_msgbox_confirm_dialog_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
 esp_err_t gsp_widget_msgbox_confirm_dialog_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
 esp_err_t gsp_widget_msgbox_confirm_dialog_get_visible(esp_gsp_handle_t gsp, bool *out_visible)
 esp_err_t gsp_widget_msgbox_confirm_dialog_set_visible(esp_gsp_handle_t gsp, bool visible)
@@ -137,8 +138,8 @@ size_t gsp_msgbox_docs_dynamic_image_slots(void)
 | 字段 | 类型 | 必填 | 默认值 / 范围 | 可运行时更新 | 编译器定义 |
 |---|---|---:|---|---:|---|
 | `type` | `string` | 是 | — | — | 控件类型 |
-| `w` | `int` | 是 | 0…65535 | 是 | 宽度（像素） |
-| `h` | `int` | 是 | 0…65535 | 是 | 高度（像素） |
+| `w` | `int` | 是 | 0…65535 | 场景: 不支持; 模板: 不支持 | 宽度（像素） |
+| `h` | `int` | 是 | 0…65535 | 场景: 不支持; 模板: 不支持 | 高度（像素） |
 | `name` | `identifier` | — | — | — | 稳定组件名称；生成 GSP_OBJ_KEY_&lt;NAME&gt; |
 | `title` | `string` | — | — | — | 对话框标题 |
 | `text` | `string` | — | — | 是 | 对话框正文 |
@@ -155,7 +156,8 @@ size_t gsp_msgbox_docs_dynamic_image_slots(void)
 
 | 字段 | 类型 | 必填 | 默认值 / 范围 | 可运行时更新 | 编译器定义 |
 |---|---|---:|---|---:|---|
-| `radius` | `int` | — | 默认 0; 0…65535 | 是 | 圆角半径 |
+| `radius` | `int` | — | 默认 0; 0…65535 | 场景: 不支持; 模板: 不支持 | 圆角半径 |
+| `font` | `path` | — | — | — | 单个对象的 TTF/OTF 字体覆盖路径 |
 | `enabled` | `bool` | — | — | — | 初始交互状态；设置后会公开可由后代控件继承的运行时 enabled 属性 |
 | `disabled_color` | `color` | — | 默认 #808080 | — | 禁用态覆盖颜色 |
 | `disabled_opacity` | `int` | — | 默认 112; 0…255 | — | 禁用态覆盖透明度 |
@@ -168,6 +170,5 @@ size_t gsp_msgbox_docs_dynamic_image_slots(void)
 |---|---|---:|---|---:|---|
 | `parent` | `int` | 是 | 默认 -1; -1…65534 | — | 父对象索引（-1 表示屏幕根节点） |
 | `parent_name` | `string` | — | — | — | 使用名称而不是索引指定父对象 |
-| `font` | `path` | — | — | — | 单个对象的 TTF/OTF 字体覆盖路径 |
 
 </details>

@@ -6,7 +6,7 @@ project(gsp_sim_bridge LANGUAGES C)
 include("${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/gsp_toolchain.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/gsp_compatibility.cmake")
 
-add_library(gsp_sim_bridge STATIC src/transport.c src/api.c src/media.c src/images.c)
+add_library(gsp_sim_bridge STATIC src/transport.c src/api.c src/media.c src/images.c src/assets.c)
 add_library(esp_gsp::sim_bridge ALIAS gsp_sim_bridge)
 target_compile_features(gsp_sim_bridge PUBLIC c_std_11)
 target_include_directories(gsp_sim_bridge PUBLIC
@@ -29,6 +29,7 @@ if(GSP_SIM_BRIDGE_BUILD_TESTS)
     find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)
     add_executable(bridge_test_client tests/client.c)
     target_link_libraries(bridge_test_client PRIVATE esp_gsp::sim_bridge)
+    target_include_directories(bridge_test_client PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../ci/host")
     add_test(NAME bridge_transport
         COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_transport.py"
             "$<TARGET_FILE:bridge_test_client>")

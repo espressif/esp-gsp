@@ -12,7 +12,7 @@ JSON + assets -> ESP-IDF build -> generated C API -> ESP-GSP -> display
 ```
 
 Use ESP-GSP when the screen structure is known at build time while text,
-values, images, collections and visibility change at runtime. The bounded
+values, images, collections and visibility change at runtime. The
 runtime, deterministic assets and generated API are designed for embedded
 products that need predictable memory use and reviewable UI sources.
 
@@ -22,7 +22,7 @@ products that need predictable memory use and reviewable UI sources.
 |---|---|
 | Build-time UI | Schema validation, asset compilation and deterministic Bundles |
 | Generated API | Typed setters and event predicates for named elements |
-| Embedded runtime | Configurable fixed pools, dirty rendering, RGB565 and RGB888 |
+| Embedded runtime | Configurable memory use, RGB565 and RGB888 rendering |
 | UI features | Controls, layouts, lists, grids, templates, navigation, media and Canvas |
 | Input | Tap, drag, scroll, flick and optional application-owned two-contact pinch |
 | Display paths | RGB, MIPI-DSI, SPI and QSPI with safe software fallbacks |
@@ -38,7 +38,7 @@ products that need predictable memory use and reviewable UI sources.
 Create the smallest complete example directly from the ESP Component Registry:
 
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.2.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.3.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -49,12 +49,18 @@ pins and timings before flashing. See the
 [`hello_world` instructions](examples/hello_world/README.md) for preview and
 build commands.
 
+Compiler setup uses the active ESP-IDF Python environment. A matching `gspc`
+already on PATH can be used offline; otherwise CMake uses the tool manager.
+Source checkouts automatically build their compiler with Cargo. See
+[compiler selection](docs/en/guide/workflow.md#compiler-selection) for version
+pinning, offline use and recovery from installation errors.
+
 ## Add ESP-GSP to an existing project
 
 From the ESP-IDF project root:
 
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.2.0"
+idf.py add-dependency "espressif/esp-gsp^1.3.0"
 python -m pip install -U esp-gsp-tools
 ```
 
@@ -119,12 +125,15 @@ Simplified Chinese documentation sets. The repository also contains the
 [`showcase`](examples/showcase/README.md) product demo and the
 [`benchmark`](examples/benchmark/README.md) hardware workload.
 
-## Current limitations
+## Choose the integration path
 
-- Scene structure is fixed at build time; use properties, templates,
-  collections, runtime media or Canvas for dynamic content.
-- Pinch reports two contacts but does not automatically zoom a control.
-- Right-to-left layout and complex-script shaping are not supported.
+- Build the scene structure with GSPC. Use properties and templates for dynamic
+  UI, collections for application datasets, runtime media for encoded images,
+  and Canvas for continuous pixel producers.
+- Implement pinch scaling in application logic using the reported two-contact
+  gesture, then update the target control or Canvas.
+- For right-to-left or complex scripts, prepare rendered text assets or use
+  Canvas with an application text engine.
 
 ## License
 

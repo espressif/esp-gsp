@@ -1,0 +1,4 @@
+{"screen":"carousel_demo","w":320,"h":240,"screen_bg":"#0B1424","font":"../../common/fonts/DejaVuSans.ttf","objects":[
+{"type":"label","parent":-1,"x":16,"y":10,"w":288,"h":24,"text":"GSP  /  ORBIT","font_size":18,"fg_color":"#E8F4FF"},
+{"type":"carousel","parent":-1,"name":"menu","x":16,"y":42,"w":288,"h":168,"icons":["home.svg","music.svg","water.svg","sun.svg","power.svg"],"selected":0},
+{"type":"label","parent":-1,"x":16,"y":214,"w":288,"h":20,"text":"Drag to rotate  /  tap to select","font_size":14,"fg_color":"#9FB5CB","text_align":"center"}]}

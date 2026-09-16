@@ -34,6 +34,7 @@ typedef int bridge_socket;
 
 #define FRAME_LIMIT (1024 * 1024)
 #define EVENT_LIMIT 256
+#define POINTER_LIMIT 256
 #define RPC_TIMEOUT_MS 5000
 #define FENCE_LIMIT 16
 
@@ -54,11 +55,15 @@ struct bridge_timer {
     void *ctx;
     bool deleted;
 };
+struct bridge_pointer_sample {
+    int32_t x, y;
+    bool pressed;
+};
 struct gsp_ui_core {
     bridge_socket socket;
     uint32_t request_id;
     bool failed, polling;
-    bool media_enabled, image_enabled, fence_enabled, drawing, closing;
+    bool media_enabled, image_enabled, widget_enabled, fence_enabled, pointer_enabled, api_extensions_v2, drawing, closing;
     bool read_timeout;
     bool draining_canvas, canvas_queue_closed;
     char read_header[4096];
@@ -73,6 +78,10 @@ struct gsp_ui_core {
     void *callback_ctx;
     esp_gsp_event_t events[EVENT_LIMIT];
     unsigned head, count;
+    esp_gsp_pointer_observer_cb_t pointer_observer;
+    void *pointer_observer_ctx;
+    struct bridge_pointer_sample pointers[POINTER_LIMIT];
+    unsigned pointer_head, pointer_count;
     struct bridge_timer *timers;
 };
 
@@ -91,6 +100,24 @@ bool bridge_images_enabled(esp_gsp_handle_t ui)
 bool bridge_media_enabled(esp_gsp_handle_t ui)
 {
     return ui && ui->media_enabled;
+}
+bool bridge_pointer_enabled(esp_gsp_handle_t ui)
+{
+    return ui && ui->pointer_enabled;
+}
+bool bridge_api_extensions_v2(esp_gsp_handle_t ui)
+{
+    return ui && ui->api_extensions_v2;
+}
+bool bridge_widget_enabled(esp_gsp_handle_t ui)
+{
+    return ui && ui->widget_enabled;
+}
+void bridge_set_pointer_observer(esp_gsp_handle_t ui,
+                                 esp_gsp_pointer_observer_cb_t cb, void *user_ctx)
+{
+    ui->pointer_observer = cb;
+    ui->pointer_observer_ctx = user_ctx;
 }
 bool bridge_canvas_queue_allowed(esp_gsp_handle_t ui)
 {
@@ -539,6 +566,20 @@ static bool notification(esp_gsp_handle_t ui, const char *body)
         event.scene_id = (uint16_t)bridge_json_number(params, "to", ui->scene);
         ui->scene = event.scene_id;
         bridge_media_scene_changed(ui);
+    } else if (!strncmp(method, "\"pointer\"", 9)) {
+        int64_t x = bridge_json_number(params, "x", INT32_MIN);
+        int64_t y = bridge_json_number(params, "y", INT32_MIN);
+        int64_t pressed = bridge_json_number(params, "pressed", -1);
+        if (x < INT32_MIN || x > INT32_MAX || y < INT32_MIN || y > INT32_MAX ||
+                (pressed != 0 && pressed != 1) || ui->pointer_count == POINTER_LIMIT) {
+            return false;
+        }
+        ui->pointers[(ui->pointer_head + ui->pointer_count++) % POINTER_LIMIT] =
+        (struct bridge_pointer_sample) {
+            .x = (int32_t)x, .y = (int32_t)y,
+            .pressed = pressed != 0
+        };
+        return true;
     } else {
         return bridge_media_notify(ui, method, params) && bridge_images_notify(ui, method, params);
     }
@@ -676,8 +717,16 @@ esp_gsp_err_t bridge_scalar(esp_gsp_handle_t ui, unsigned op, const uint32_t arg
 {
     if (bridge_drawing(ui) && !((op >= 1 && op <= 10) ||
                                 op == GSP_BRIDGE_GET_PROPERTY || op == GSP_BRIDGE_CANVAS_INFO ||
-                                op == GSP_BRIDGE_COMPONENT_RESOURCE_BIND)) {
+                                op == GSP_BRIDGE_COMPONENT_RESOURCE_BIND ||
+                                op == GSP_BRIDGE_PAGE_FLOW_GET_PAGE ||
+                                op == GSP_BRIDGE_PAGE_FLOW_GET_OFFSET ||
+                                op == GSP_BRIDGE_PAGE_FLOW_IS_DRAGGING ||
+                                op == GSP_BRIDGE_COMPONENT_GET_COLOR_RGB888)) {
         return ESP_GSP_ERR_INVALID_STATE;
+    }
+    if (op >= GSP_BRIDGE_COMPONENT_SET_COLOR_RGB888 &&
+            !bridge_api_extensions_v2(ui)) {
+        return ESP_GSP_ERR_NOT_SUPPORTED;
     }
     char params[320];
     snprintf(params, sizeof(params), "{\"op\":%u,\"args\":[%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 ",%" PRIu32 "]}",
@@ -782,7 +831,10 @@ esp_gsp_err_t gsp_sim_bridge_open(const char *endpoint, esp_gsp_handle_t *out)
     ui->scene = (uint16_t)bridge_json_number(caps, "current_scene", 0);
     ui->media_enabled = bridge_json_number(caps, "bridge_media_version", 0) == 1;
     ui->image_enabled = bridge_json_number(caps, "bridge_image_version", 0) == 1;
+    ui->widget_enabled = bridge_json_number(caps, "bridge_widget_version", 0) == 1;
     ui->fence_enabled = bridge_json_number(caps, "bridge_fence_version", 0) == 1;
+    ui->pointer_enabled = bridge_json_number(caps, "bridge_pointer_version", 0) == 1;
+    ui->api_extensions_v2 = bridge_json_number(caps, "bridge_api_version", 1) >= 2;
     free(caps);
     *out = ui;
     return ESP_GSP_OK;
@@ -851,7 +903,7 @@ esp_gsp_err_t gsp_sim_bridge_poll(esp_gsp_handle_t ui, uint32_t timeout_ms)
             wait = t->due > now ? (uint32_t)(t->due - now) : 0;
         }
     }
-    if (ui->count || bridge_media_pending(ui) || bridge_images_pending(ui)) {
+    if (ui->count || ui->pointer_count || bridge_media_pending(ui) || bridge_images_pending(ui)) {
         wait = 0;
     }
     if (!fence_writes(ui, gsp_sim_bridge_time_ms() + RPC_TIMEOUT_MS)) {
@@ -873,6 +925,16 @@ esp_gsp_err_t gsp_sim_bridge_poll(esp_gsp_handle_t ui, uint32_t timeout_ms)
         ui->head = (ui->head + 1) % EVENT_LIMIT; --ui->count;
         if (ui->callback) {
             ui->callback(ui, &event, ui->callback_ctx);
+        }
+    }
+    budget = POINTER_LIMIT;
+    while (ui->pointer_count && budget-- && !ui->failed) {
+        struct bridge_pointer_sample sample = ui->pointers[ui->pointer_head];
+        ui->pointer_head = (ui->pointer_head + 1) % POINTER_LIMIT;
+        --ui->pointer_count;
+        if (ui->pointer_observer) {
+            ui->pointer_observer(ui, sample.x, sample.y, sample.pressed,
+                                 ui->pointer_observer_ctx);
         }
     }
     now = gsp_sim_bridge_time_ms();
@@ -909,6 +971,7 @@ void bridge_payloads_shutdown(esp_gsp_handle_t ui)
     ui->canvas_queue_closed = true;
     bridge_canvas_cancel(ui);
     ui->image_enabled = false;
+    ui->widget_enabled = false;
     ui->drawing = true;
     bridge_images_close(ui, ui->failed ? GSP_ERR_IO : GSP_ERR_CANCELLED);
     ui->drawing = false;

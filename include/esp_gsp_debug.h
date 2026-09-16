@@ -15,6 +15,27 @@
 extern "C" {
 #endif
 
+/** One device-wide, 8-bit-addressable heap class, in bytes. */
+typedef struct {
+    size_t free_bytes;
+    size_t largest_free_block;
+} esp_gsp_heap_info_t;
+
+typedef struct {
+    esp_gsp_heap_info_t internal;
+    esp_gsp_heap_info_t psram;
+} esp_gsp_heap_stats_t;
+
+/** Read device-wide internal/PSRAM heaps on demand, including non-GSP users.
+ * Does not allocate or change budgets. Call from task context, not an ISR or
+ * every frame: heap inspection traverses allocator metadata. The two heaps
+ * are sampled separately; concurrent allocations can change the result.
+ * Returns false and zeroes the output on hosts without heap capabilities;
+ * also returns false for NULL. An absent PSRAM heap has zero values.
+ * These values are not DMA guarantees or a complete scene memory budget.
+ */
+bool esp_gsp_heap_stats(esp_gsp_heap_stats_t *out_stats);
+
 /** Monotonic count of rendered non-idle frames since startup. */
 uint32_t esp_gsp_frame_count(esp_gsp_handle_t gsp);
 
@@ -33,6 +54,30 @@ typedef struct {
 
 void esp_gsp_transition_stats(esp_gsp_handle_t gsp,
                               esp_gsp_transition_stats_t *out_stats);
+
+/** Why a drag snapshot opportunity stayed on live rendering. */
+typedef enum {
+    ESP_GSP_SNAPSHOT_NONE,
+    ESP_GSP_SNAPSHOT_DISABLED,
+    ESP_GSP_SNAPSHOT_NOT_VISIBLE,
+    ESP_GSP_SNAPSHOT_NO_MOVEMENT,
+    ESP_GSP_SNAPSHOT_UNSUPPORTED,
+    ESP_GSP_SNAPSHOT_RETRY_BLOCKED,
+    ESP_GSP_SNAPSHOT_BACKEND_LIMIT,
+    ESP_GSP_SNAPSHOT_BACKEND_ERROR,
+    ESP_GSP_SNAPSHOT_REASON_COUNT,
+} esp_gsp_snapshot_reason_t;
+typedef struct {
+    uint32_t attempts, started, reused;
+    uint32_t skipped[ESP_GSP_SNAPSHOT_REASON_COUNT];
+    esp_gsp_snapshot_reason_t last_reason;
+    int32_t last_backend_error;
+    bool active;
+} esp_gsp_drag_snapshot_stats_t;
+/** Cumulative List/Grid/MessageList and viewport drag snapshot accounting.
+ * Read from a serialized app callback, like the other debug counters. */
+void esp_gsp_drag_snapshot_stats(esp_gsp_handle_t gsp,
+                                 esp_gsp_drag_snapshot_stats_t *out_stats);
 
 /** Cumulative dirty-region planner accounting. */
 typedef struct {

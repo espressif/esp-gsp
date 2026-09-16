@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <metadata>GSP native-vector import coverage</metadata>
+  <defs>
+    <path id="ray" d="M64 8L67 19L64 23L61 19Z" fill="#eac773"/>
+    <linearGradient id="unused"><stop offset="0" stop-color="white"/><stop offset="1" stop-color="black"/></linearGradient>
+    <clipPath id="viewport"><rect width="128" height="128"/></clipPath>
+  </defs>
+  <g clip-path="url(#viewport)">
+  <use href="#ray"/><use href="#ray" transform="rotate(45 64 64)"/>
+  <use href="#ray" transform="rotate(90 64 64)"/><use href="#ray" transform="rotate(135 64 64)"/>
+  <use href="#ray" transform="rotate(180 64 64)"/><use href="#ray" transform="rotate(225 64 64)"/>
+  <use href="#ray" transform="rotate(270 64 64)"/><use href="#ray" transform="rotate(315 64 64)"/>
+  <path fill="#35b8ae" fill-rule="evenodd" d="M64 26A38 38 0 1 1 64 102A38 38 0 1 1 64 26Z M64 34A30 30 0 1 1 64 94A30 30 0 1 1 64 34Z"/>
+  <g opacity="0.65"><circle cx="55" cy="61" r="20" fill="#e87691"/></g>
+  <circle cx="73" cy="65" r="20" fill="#66bed8" fill-opacity="0.65"/>
+  <path d="M37 76Q64 37 91 76 M42 81C55 93 75 91 86 79" fill="none" stroke="#f6e2b6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

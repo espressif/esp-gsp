@@ -16,6 +16,9 @@ set(gsp_srcs
     "src/runtime/gsp_decode_task.c"
     "src/runtime/gsp_gfb.c"
     "src/runtime/gsp_grb.c"
+    "src/runtime/gsp_asset_file.c"
+    "src/runtime/gsp_asset_delta.c"
+    "src/platform/esp_idf/esp_gsp_assets.c"
     "src/runtime/gsp_bundle.c"
     "src/runtime/gsp_gsb.c"
     "src/runtime/gsp_image_cache.c"
@@ -34,6 +37,7 @@ set(gsp_srcs
     "src/runtime/gsp_update.c"
     "src/runtime/gsp_context.c"
     "src/runtime/gsp_font_catalog.c"
+    "src/runtime/esp_gsp_font_file.c"
     "src/runtime/gsp_anim.c"
     "src/codec/eaf/gfx_eaf_dec.c"
     "src/widget/gsp_widget.c"
@@ -59,6 +63,7 @@ set(gsp_srcs
     "src/ui/gsp_app.c"
     "src/ui/esp_gsp_ui.c"
     "src/ui/esp_gsp_list.c"
+    "src/ui/esp_gsp_chart.c"
     "src/ui/esp_gsp_widget.c"
     "src/ui/esp_gsp_anim.c"
     "src/ui/esp_gsp_text.c"
@@ -79,6 +84,11 @@ set(gsp_srcs
     "src/effect/gsp_transition_compose.c"
     "src/accel/gsp_accel.c"
     "src/renderer/gsp_renderer.c"
+    "src/renderer/gsp_procedural.c"
+    "src/renderer/gsp_flip_card.c"
+    "src/renderer/gsp_procedural_extended.c"
+    "src/renderer/gsp_procedural_controls.c"
+    "src/renderer/gsp_vector.c"
     "src/renderer/gsp_render_effect.c"
     "src/runtime/gsp_transform.c"
     "src/renderer/kernel_rgb565/gsp_kernel_rgb565.c"
@@ -98,10 +108,10 @@ set(gsp_priv_include_dirs
     "src/backend/esp_lcd"
     "src/platform/esp_idf")
 
-# esp_driver_ppa registers as an empty component on SoCs without a PPA,
-# so the dependency is unconditional; the backend source is gated by
-# the SoC capabilities internally.
-set(gsp_priv_requires log esp_driver_ppa esp_driver_dma esp_mm esp_timer esp_lcd esp_partition)
+# PPA and JPEG drivers register empty components on unsupported SoCs.
+# Require them even in minimal builds so capable targets compile the
+# hardware backends instead of silently selecting software decoding.
+set(gsp_priv_requires log esp_driver_ppa esp_driver_dma esp_driver_jpeg esp_mm esp_timer esp_lcd esp_partition espressif__freetype)
 list(APPEND gsp_srcs "src/codec/gsp_codec_jpeg.c")
 if(CONFIG_SOC_CPU_HAS_PIE)
     list(APPEND gsp_srcs
@@ -113,16 +123,25 @@ if(CONFIG_SOC_SIMD_INSTRUCTION_SUPPORTED AND CONFIG_IDF_TARGET_ARCH_XTENSA)
         "src/renderer/kernel_rgb565/gsp_kernel_rgb565_ee.S")
 endif()
 
+set(gsp_prebuilt_target "${IDF_TARGET}")
+if(CONFIG_IDF_TARGET_ESP32P4 AND CONFIG_ESP32P4_SELECTS_REV_LESS_V3)
+    set(gsp_prebuilt_target "esp32p4_rev_less_v3")
+endif()
 set(GSP_PREBUILT_LIB
-    "${CMAKE_CURRENT_LIST_DIR}/prebuilt/${IDF_TARGET}/libesp-gsp.a")
+    "${CMAKE_CURRENT_LIST_DIR}/prebuilt/${gsp_prebuilt_target}/libesp-gsp.a")
+if(NOT ESP_GSP_BUILD_PREBUILT AND CONFIG_ESP_GSP_PREBUILT_COMPONENT
+        AND NOT EXISTS "${GSP_PREBUILT_LIB}")
+    message(FATAL_ERROR "ESP-GSP prebuilt library is missing: ${GSP_PREBUILT_LIB}")
+endif()
 if(ESP_GSP_BUILD_PREBUILT)
     # Release archives must be self-contained: consumption-side packages do
     # not ship gsp_freetype.c and therefore cannot add the provider later.
     # This branch deliberately takes precedence over an existing archive so a
     # release build can never accidentally recycle stale CI artifacts.
     list(APPEND gsp_srcs "src/runtime/gsp_freetype.c")
-    list(APPEND gsp_priv_requires espressif__freetype)
-elseif(EXISTS "${GSP_PREBUILT_LIB}")
+elseif(CONFIG_ESP_GSP_PREBUILT_COMPONENT)
+    # Only packaged components consume release archives. A source checkout
+    # may retain archives from an earlier build; never select those implicitly.
     # Keep COMPONENT_LIB as a real STATIC target. Registering with no sources
     # makes ESP-IDF create an INTERFACE target, which application helpers cannot
     # safely configure. Generate the anchor in the build tree so the published
@@ -135,7 +154,7 @@ elseif(EXISTS "${GSP_PREBUILT_LIB}")
     set(gsp_srcs "${gsp_prebuilt_anchor}")
     set(gsp_priv_include_dirs "")
     set(gsp_use_prebuilt ON)
-    list(APPEND gsp_priv_requires espressif__esp_new_jpeg esp_driver_jpeg)
+    list(APPEND gsp_priv_requires espressif__esp_new_jpeg)
 endif()
 if(NOT ESP_GSP_BUILD_PREBUILT AND NOT gsp_use_prebuilt)
     list(APPEND gsp_srcs "adapters/esp_idf/esp_gsp_idf_touch.c")
@@ -157,15 +176,16 @@ if(ESP_GSP_BUILD_PREBUILT OR gsp_use_prebuilt)
         "${CMAKE_CURRENT_LIST_DIR}/adapters/esp_idf/esp_gsp_idf_touch.c")
 endif()
 
-# The project configuration is intentionally not part of libesp-gsp.a.  It is
-# compiled as an object target in the consuming build, so sdkconfig belongs to
-# the final firmware rather than to the release archive.
+# Project configuration and SDK-private adapters are compiled in the consuming
+# build, so their layout follows the final firmware rather than the release archive.
 set(gsp_project_config_source
     "${CMAKE_CURRENT_BINARY_DIR}/esp_gsp_project_config.c")
 configure_file(
     "${CMAKE_CURRENT_LIST_DIR}/cmake/esp_gsp_project_config.c.in"
     "${gsp_project_config_source}" COPYONLY)
-add_library(esp_gsp_project_config OBJECT "${gsp_project_config_source}")
+add_library(esp_gsp_project_config OBJECT "${gsp_project_config_source}"
+    "${CMAKE_CURRENT_LIST_DIR}/adapters/esp_idf/esp_gsp_idf_dma2d.c")
+target_link_libraries(esp_gsp_project_config PRIVATE idf::esp_driver_dma)
 target_include_directories(esp_gsp_project_config PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/include"
     "${CMAKE_BINARY_DIR}/config")
@@ -178,9 +198,7 @@ set_property(GLOBAL PROPERTY ESP_GSP_COMPONENT_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
 if(gsp_use_prebuilt)
     add_prebuilt_library(gsp_prebuilt "${GSP_PREBUILT_LIB}"
-        REQUIRES ${gsp_priv_requires}
-                 espressif__esp_new_jpeg
-                 esp_driver_jpeg espressif__freetype)
+        REQUIRES ${gsp_priv_requires})
     # idf_component_register() has already resolved public requirements to
     # their real component targets (including Registry namespace prefixes).
     # Reuse those links instead of looking up an unqualified component name
@@ -194,7 +212,7 @@ if(gsp_use_prebuilt)
     set_property(TARGET ${COMPONENT_LIB}
         PROPERTY ESP_GSP_PREBUILT TRUE)
 else()
-    idf_component_optional_requires(PRIVATE espressif__esp_new_jpeg esp_driver_jpeg)
+    idf_component_optional_requires(PRIVATE espressif__esp_new_jpeg)
     if(ESP_GSP_BUILD_PREBUILT)
         target_compile_definitions(${COMPONENT_LIB}
             PRIVATE GSP_ENABLE_FREETYPE=1)

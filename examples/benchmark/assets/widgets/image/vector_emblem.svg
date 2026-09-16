@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <g id="emblem">
+    <path fill="#ec647a" d="M64 12 C80 24 104 24 108 28 C108 76 88 104 64 116 C40 104 20 76 20 28 C24 24 48 24 64 12 Z"/>
+    <path fill="#ffd1bd" d="M40 38 C45 38 48 41 47 45 C42 57 43 67 47 75 C48 79 45 81 42 78 C34 66 32 48 36 41 C37 39 38 38 40 38 Z"/>
+  </g>
+  <path id="spark" fill="#4dd2b1" d="M112 4 L115 12 L123 15 L115 18 L112 26 L109 18 L101 15 L109 12 Z"/>
+</svg>

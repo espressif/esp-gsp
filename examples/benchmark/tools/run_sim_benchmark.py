@@ -13,6 +13,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from vector_cases import VECTOR_CASES, expected_commands
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -24,6 +25,25 @@ SUMMARY_RE = re.compile(
     r"gsp_sim: summary loops=(\d+) presented=(\d+) "
     r"elapsed_us=(\d+) fps=([0-9.]+)"
 )
+VECTOR_RE = re.compile(
+    r"^gsp_sim: vector\[(P_VECTOR_SIZE|P_VECTOR_ROTATE|P_VECTOR_TINT|P_VECTOR_MORPH|P_VECTOR_MOVE|P_VECTOR_FIT|P_VECTOR_STYLE|P_VECTOR_EYES)\]"
+    r" updates=(\d+) commands=(\d+) errors=(\d+)$", re.MULTILINE)
+
+
+def validate_vector_updates(output: str, pages: tuple[str, ...], frames: int, page_frames: int) -> None:
+    observed = set()
+    for name, updates, commands, errors in VECTOR_RE.findall(output):
+        if int(updates) == 0 or int(commands) != expected_commands(name, int(updates)) or int(errors):
+            raise RuntimeError(f"invalid vector updates for {name}")
+        observed.add(name)
+    for index, name in enumerate(pages):
+        visible_frames = min(page_frames, frames - index * page_frames)
+        if name in VECTOR_CASES and visible_frames >= (8 if name == "P_VECTOR_EYES" else 3) and name not in observed:
+            raise RuntimeError(f"missing vector updates for {name}")
+        if name == "P_VECTOR_EYES" and visible_frames >= 90:
+            eyes = re.findall(r"gsp_sim: eyes open=(\d+) closed=(\d+) errors=(\d+)", output)
+            if not eyes or not int(eyes[-1][0]) or not int(eyes[-1][1]) or int(eyes[-1][2]):
+                raise RuntimeError("eye animation did not reach open and closed states")
 
 
 def load_page_binds() -> tuple[str, ...]:
@@ -179,6 +199,7 @@ def run_case(size: int, args: argparse.Namespace) -> tuple[int, float]:
         )
     if not ppm_path.is_file() or ppm_path.stat().st_size == 0:
         raise RuntimeError(f"{size}: final frame missing: {ppm_path}")
+    validate_vector_updates(completed.stdout, args.page_binds, args.frames, args.page_frames)
     print(
         f"[sim-benchmark] {size}: PASS, {float(fps):.2f} fps, "
         f"log={log_path}",

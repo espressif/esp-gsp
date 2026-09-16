@@ -35,6 +35,35 @@ def simulator_command(override: str | None, version: str | None, component: Path
     return [sys.executable, "-m", "gsp.execute", "--version", version, "sim"]
 
 
+def dynamic_font_path(value: str | Path | None) -> Path | None:
+    """Return a host-safe font path, failing before the simulator is started."""
+    if value is None:
+        return None
+    path = Path(value).expanduser()
+    try:
+        path = path.resolve(strict=True)
+    except OSError as exc:
+        raise RuntimeError(f"Dynamic font not found: {path}") from exc
+    if not path.is_file():
+        raise RuntimeError(f"Dynamic font is not a regular file: {path}")
+    return path
+
+
+def host_command(host: list[str], manifest: dict, args: argparse.Namespace, ready: Path) -> list[str]:
+    """Build the sim_host command before it creates the UI/runtime instance."""
+    command = [*host, "--bundle", manifest["bundle"], "--frames", "0",
+               "--backend-enable", "--backend-required",
+               "--backend-idle-timeout", "30", "--ready-file", str(ready)]
+    font = dynamic_font_path(args.dynamic_font)
+    if font is not None:
+        # sim_host reads this before load_with_config(), which mirrors applying
+        # a device font-file configuration before esp_gsp_start().
+        command += ["--dynamic-font", str(font)]
+    if args.headless:
+        command.append("--headless")
+    return command
+
+
 def owns_simulator(parent_pid: int, pid: int) -> bool:
     if os.name != "nt":
         return os.getpgid(pid) == parent_pid
@@ -151,11 +180,7 @@ def run_backend(args: argparse.Namespace, manifest: dict) -> int:
     info = {}
     with tempfile.TemporaryDirectory(prefix="gsp-sim-bridge-") as temporary:
         ready = Path(temporary) / "ready.json"
-        command = [*host, "--bundle", manifest["bundle"], "--frames", "0",
-                   "--backend-enable", "--backend-required",
-                   "--backend-idle-timeout", "30", "--ready-file", str(ready)]
-        if args.headless:
-            command.append("--headless")
+        command = host_command(host, manifest, args, ready)
         try:
             sim = start(command)
             info = wait_ready(sim, ready, args.startup_timeout, managed=not args.host)
@@ -177,22 +202,31 @@ def run_backend(args: argparse.Namespace, manifest: dict) -> int:
             stop(sim, tree=True, child_pid=info.get("pid"))
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
+def add_run_arguments(parser: argparse.ArgumentParser) -> None:
     add_build_arguments(parser)
     parser.add_argument("--host", default=os.environ.get("GSP_SIM_EXECUTABLE") or
                         os.environ.get("GSP_SIM_HOST_EXECUTABLE"))
     parser.add_argument("--sim-version", default=os.environ.get("GSP_SIM_VERSION"),
                         help="Override simulator version; default is the linked ESP-GSP component version")
+    parser.add_argument("--dynamic-font", default=os.environ.get("GSP_SIM_DYNAMIC_FONT"),
+                        help="TrueType/OpenType font loaded by sim_host before UI startup")
     parser.add_argument("--headless", action="store_true")
     parser.add_argument("--no-browser", action="store_true")
     parser.add_argument("--duration", type=float, default=0, help="Backend running time in seconds; 0 runs until interrupted")
     parser.add_argument("--startup-timeout", type=float, default=180,
                         help="Seconds for simulator download/startup (default: 180)")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    add_run_arguments(parser)
     args = parser.parse_args()
     if args.duration < 0 or args.startup_timeout <= 0:
         parser.error("duration must be nonnegative and startup-timeout must be positive")
     try:
+        # Do this before an often-expensive native build.  host_command()
+        # repeats the normalization for callers that use run_backend() directly.
+        args.dynamic_font = dynamic_font_path(args.dynamic_font)
         return run_backend(args, build_project(args))
     except KeyboardInterrupt:
         return 130

@@ -1,10 +1,174 @@
 # Media and Application Data
 
 ESP-GSP keeps authored structure immutable while allowing product data to
-change through bounded state, runtime resources, Canvas producers, and
+change through state updates, runtime resources, Canvas producers, and
 recycled collections.
 
 ## Static images and fonts
+
+### Image storage and memory
+
+`raw` (also called `store`) keeps native pixels in the bundle. With `mmap_direct`,
+the renderer reads them directly; their Flash size is not a decoded-cache charge.
+Compressed images save Flash, while whole-image decoding needs pixel memory.
+For RGB565, a 240×240 image needs 115,200 bytes; a separate A8 plane adds 57,600
+bytes. Row alignment and JPEG decode alignment can increase these values.
+
+When the image cache is enabled, each static compressed raster must fit the
+declared cache budget. Several images can share the cache through LRU eviction;
+their combined size may exceed the budget. Frequent eviction can increase decode
+work. Reserve `preload` for resources that need to remain resident.
+
+On memory-constrained targets, region decoding handles supported lossless images
+without retaining every whole image. Select it with `image_cache_enabled: false`
+in the profile or `--default-disable-image-cache` for bundle compilation. JPEG
+uses the whole-image cache. Automatic encoding selects native pixels for image
+fit/rotation in region mode; explicitly compressed transformed images require
+the cache. When loading binaries directly, use the same cache mode in the runtime
+configuration. Bundle API headers apply the selected mode in their config helper.
+
+`gsp_add_bundle(... IMAGE_CACHE_BYTES 262144)` sets an explicit runtime cache
+budget and the compiler's matching budget, including with an explicit `PROFILE`.
+The CLI equivalent is `--image-cache-bytes 262144`. Profile budgets are compile-time
+constraints; automatic runtime sizing also depends on available heap and its largest
+free block. Check the final firmware size separately from decoded-image memory.
+
+With image caching enabled, the runtime synchronously prepares the scene's
+currently visible compiled compressed images before its first frame, then uses remaining cache space to prefetch hidden images. An
+incomplete hidden-image prefetch is normal and only appears in debug diagnostics.
+If the visible decoded working set exceeds the budget, the warning reports the
+budget, resident bytes and skipped count; skipped visible images can show the scene
+background placeholder on the first frame. A single image larger than the budget
+reports its required decoded bytes. Increase `IMAGE_CACHE_BYTES` only with heap
+headroom, or reduce decoded dimensions/use `raw` or region decoding where appropriate.
+
+The manifest and execution report separate shared resources, scene draw references
+and initial visibility:
+
+- `largest_static_decode_bytes`: largest static decode among the scene's draw references.
+- `largest_registered_static_decode_bytes`: largest static decode in the shared registry.
+- `initial_visible_static_decode_bytes_estimate`: total for unique static images intersecting
+  the screen and viewports in the default state, before application updates.
+
+Draw references include all pages and templates. The initial estimate follows selected
+pages, closed drawers and hidden groups. Budget preloaded and retained images, application-created instances, runtime
+images and animation/vector buffers separately. Use `esp_gsp_media_stats()` to inspect
+runtime cache usage and peaks. `runtime_peak_bytes`
+is reserved for runtime measurements and is null in compiler-only reports.
+
+Prefer the portable codec names `raw`, `lossless`, `jpeg`, and `auto`.
+The compiler and diagnostics also accept the existing names `store` (`raw`),
+`qoi` (`lossless`), `default` (`auto`), and explicit `rle16`.
+`hardware_jpeg` retains its compatibility behavior: JPEG with a hardware
+decoder, lossless encoding otherwise. It is not an alias for explicit `jpeg`.
+
+### Compiled SVG Images
+
+Start with the [vector image example](../../../examples/widgets/image/vector.json).
+
+Use `.svg` in an Image's `image` field with GSPC 0.4.0 and ESP-GSP/simulator
+1.3.0. GSPC stores these images as compiled curves for runtime rendering.
+The compiler records the required binary format versions in the output;
+use the [compatibility contract](../reference/compatibility.md) when pairing tools.
+
+Carousel, Flip Card and effect image sets rasterize accepted SVG inputs during compilation.
+Their resulting bitmap assets follow bitmap sizing and cache rules. Choose a named
+Image for runtime curve scaling, tinting or morphing.
+
+SVG paths retain their curves and are rasterized at the requested size. Use a
+named image with `fit`, `rotation`, and `scalable` as for raster images. For
+runtime box resizing, author `w` and `h` as bounded dynamic fields with semantic
+properties such as `width` and `height`; GSPC generates typed setters. Box
+resizing changes the drawing area; `scale` zooms inside that area and is clipped
+to it. Declared bounds must fit the scene's coordinate range.
+Width/height use the framework's existing 0..100 bounded-property interpolation;
+wide ranges therefore quantize pixel sizes. Keep bounds close to the intended
+sizes, or use the Q16.16 scale setter for fine uniform zoom inside the box.
+
+An optional `tint` color turns a scene image into a monochrome silhouette and
+generates a `set_tint()` setter. Without `tint`, source colors and transparency remain.
+Template SVG images use static colors and dimensions.
+
+The vector importer supports paths, basic shapes, solid fills, fill rules,
+static transforms and strokes expanded at compile time. Prepare artwork as follows:
+
+- Convert text and non-scaling strokes to paths in the source editor.
+- Keep painted bounds, including strokes and inherited transforms, inside the
+  SVG viewport. The import diagnostic identifies the element and any overflow.
+- Export artwork that needs embedded images, external references, gradients,
+  filters, active clips/masks or multi-paint group opacity as PNG to preserve
+  those effects. Reference that PNG as a bitmap image.
+- Keep the Image object's `opacity` at 255; use source paint alpha for transparency.
+
+Editor metadata, foreign-namespace content and unused gradient definitions are
+accepted. Single-paint group opacity is folded into paint alpha. A rectangular
+clip that contains all group paint is redundant and can be removed during import.
+Other unsupported drawing semantics produce a diagnostic, so select a compatible
+`svg_element` or supply the prepared bitmap.
+
+Raster `codec`, `store_scale` and `cache_policy` options apply to bitmap inputs.
+For vectors, edit source geometry and use the Image size, rotation and scale properties.
+
+Use `svg_element` to select a source element/group ID without splitting the
+asset into separate files. Inherited transforms are preserved and the result
+is cropped to its painted bounds. Scene `x/y/w/h` place and size this cropped
+image, not the original SVG viewport. Give each independently controlled part
+its own named Image and reuse position, rotation, visibility and color APIs.
+Duplicate IDs, empty IDs and selections without painted geometry are errors.
+
+For composite artwork, use `svg_layout: "canvas"` and give all parts the same
+authored `x/y/w/h` canvas rectangle. GSPC derives placement and emits tightly
+bounded curves with subpixel alignment preserved; it does not retain a full
+canvas pixel cache per part. X/Y move that part's canvas position; image
+rotation and in-box scaling operate on the selected part. Canvas layout
+clips rotation/zoom to the image box. It requires `svg_element`, static W/H and the default `fit: "stretch"`. Authored
+style/hit bounds remain the canvas rectangle; define interactive regions on
+parent controls explicitly. Use `content` layout for template images.
+Omitting the field, or choosing `content`, retains cropped-image placement.
+
+Run `gspc svg-info artwork.svg`, optionally with `--element iris`, to inspect
+canvas size, element IDs, stroke-inclusive normalized bounds, path/point counts, cache estimates
+and compatibility reasons. The JSON `supported` field indicates whether the
+source geometry can be compiled. The default element list is
+capped at 256 entries; `elements_truncated` reports truncation and `--element`
+can inspect a specific ID. This checks the source, not a scene's authoring
+options, a morph pair or the final target budget; build the actual scene too.
+A viewport-overflow reason identifies the source file and element (or unnamed
+selection), then reports the viewport, selected bounds, actual painted bounds
+and excess on each side.
+A selected compatible part can be imported without
+rendering unrelated decoration groups that need unsupported effects.
+
+`morph_to` supplies an end-state SVG; `morph` is the initial 0..100 percent
+progress, defaulting to zero. Generated `set_morph()`, `animate_morph()` and
+`animate_morph_to()` use the existing property/animation APIs. See the
+[vector motion example](../../../examples/widgets/image/vector_motion.json).
+The runtime interpolates curve points without XML parsing or full-frame
+bitmap sequences. Both states must have identical viewport dimensions,
+paint order/colors, contour structure and segment types. Preserve path start
+points and directions. Duplicate the source and edit node positions to keep
+corresponding points aligned; the compiler checks structural compatibility. Selected elements use a shared union
+of both endpoint bounds, so morphing does not recrop or shift the image.
+Use morphing on named scene Images; template images use static geometry.
+
+Vector Image input supports up to 2 MiB, 128 fill/stroke draws and 8192 outline points.
+Vector images support RGB565/RGB888 scenes. Rendering cost and memory use grow
+with image dimensions and complexity; measure continuous scaling, rotation and
+morphing on the target device. See [memory configuration](../reference/configuration.md).
+
+Use the execution plan's `vector` summary to inspect asset complexity and memory
+estimates. These estimates do not include total application memory. Keep SVGs
+self-contained and drive animation through GSP properties. Compare imported
+artwork with a reference image.
+
+Vector applications require additional Flash and RAM. The render-task stack is
+automatically raised when needed (at least 32 KiB with the supplied build);
+larger application settings remain effective. Include this in memory planning.
+Source builds without dynamic font support link only the outline rasterizer;
+enabling dynamic fonts, including in prebuilt packages, retains the full font
+engine. Compare firmware sizes using the same build mode and font features.
+
+### Raster Images and Fonts
 
 Reference assets relative to the scene file:
 
@@ -25,6 +189,20 @@ Set `font` and `default_font_size` on the scene or override them on a text
 element. The build tracks referenced assets and rebuilds the bundle when they
 change.
 
+For runtime text with a known vocabulary, set `font_charset_file` on the scene
+or text object to a UTF-8 corpus such as `assets/ui-words.txt`. Paths are relative
+to the scene; an object path overrides the scene path. GSPC merges its characters
+with `font_charset` and authored text, removes duplicate characters, and ignores
+an initial BOM and CR/LF line separators. Editing the corpus rebuilds the bundle.
+The generated `set_text()` helpers use these baked glyphs without FreeType.
+
+The optional scene-level `font_max_bytes` sets a positive byte limit for the sum
+of generated GFB resources across all fonts and sizes, before external linking.
+An over-budget build reports the required bytes; it does not remove characters
+or change rendering quality. This budget excludes dynamic font files, glyph-run
+storage and runtime caches. Existing resource reports list each font's size,
+glyph count and character set; compiler diagnostics identify missing codepoints.
+
 Compiled fonts contain the glyphs reachable from authored text. If runtime
 text may contain glyphs that are unknown during the build, add a dynamic
 TTF/OTF font:
@@ -35,6 +213,10 @@ gsp_add_bundle(${COMPONENT_LIB}
     PIXEL_FORMAT rgb565
     DYNAMIC_FONT "../scenes/assets/NotoSansSC-Regular.otf")
 ```
+
+With dynamic font fallback, each static GFB can contain up to 32768 glyphs.
+UI startup rejects larger packs in this combination. Static-only GFB packs
+can contain up to 65535 glyphs.
 
 Dynamic fonts use additional code, heap, and task stack. Size them from the
 actual character set and measured workload rather than enabling them for text
@@ -162,6 +344,12 @@ content and extent. Keep the message store in the application. Notify the
 framework when data is appended, prepended, replaced, or refreshed rather
 than rebuilding the scene structure.
 
+After binding a visible list, `esp_gsp_list_fling()` can be called immediately;
+the command activates the list before starting motion. To preserve visible
+history when prepending messages, keep their IDs stable and pass the inserted
+count to `esp_gsp_message_list_changed()`. The framework rebinds recycled rows
+to the corresponding messages as it adjusts the scroll anchor.
+
 As with Lists and Grids, row publication runs in framework callback context.
 Publish already available data and defer storage, networking, or slow decoding
 to application tasks.
@@ -197,7 +385,114 @@ the existing `esp_gsp_message_list_changed()` behavior.
   payload owned by the application.
 - Disabling the image cache changes which runtime image paths are available;
   review [Configuration](../reference/configuration.md) before using it on a no-PSRAM
-  target.
+  target. For no-cache runtime QOI updates, use a fixed-size `fit: "stretch"`
+  placeholder and encode replacements at its native dimensions. Fitting/scaling an encoded
+  runtime replacement requires decoded pixels in the image cache. A successful setter only
+  confirms submission; use `esp_gsp_set_image_ex()` completion to confirm
+  publication and diagnose rejected replacements.
 
 For exact callback and shutdown behavior, see
 [Application lifecycle](lifecycle.md).
+
+
+## JPEG animation frames
+
+GIF/APNG images accept these `animation_codec` policies:
+
+| Value | Compilation behavior |
+|---|---|
+| `lossless` | QOI delta patches; the default when no codec is specified |
+| `jpeg` | Full JPEG frames, even when larger than QOI |
+| `hardware_jpeg` | JPEG when the target profile declares `hardware_jpeg: true`, otherwise QOI |
+
+```json
+{"type":"image","name":"motion","x":0,"y":0,"w":256,"h":256,
+ "image":"assets/motion.png","animation_codec":"hardware_jpeg","quality":85}
+```
+
+Opaque animations use JPEG. If any frame has transparency, the entire animation uses JPEG+A8: lossy color and lossless alpha, with no silent transparency removal. GIF/APNG frames are composited onto complete canvases before encoding; frame durations and loop counts are preserved. `max_fps` still caps the imported frame rate. Explicit `codec: "jpeg"` also works for animations; `animation_codec` takes precedence when both are present. With `animation_codec`, omitted `quality` uses the profile's `jpeg_quality`.
+
+JPEG mode decodes and damages complete frames. It trades resource space for access to hardware decoding; sparse UI animations may still benefit more from QOI patches. `animation_frame_budget_bytes` limits decoded-frame storage, not encoded Flash size; inspect resource reports for encoded size. Reports distinguish `anim_qoi`, `anim_jpeg`, and `anim_jpeg_a8`.
+
+JPEG color conversion can differ between hardware and software decoders. Use
+`lossless` for icons, brand colors and other UI assets that need consistent color;
+JPEG+A8 preserves alpha, not exact RGB values.
+
+Omitted `quality` uses the Profile's `jpeg_quality`, for embedded and filesystem
+images alike. An explicit value also applies to automatic JPEG selection.
+`hardware_jpeg` falls back to lossless encoding when the Profile lacks hardware JPEG.
+
+For codec selection, compile with `lossless` and `jpeg` and compare the generated
+`*.execution.json`: `resources[].encoded_bytes` reports encoded size,
+`animation.frame_bytes` the full pixel frame, and `animation.patch_ratio` the
+fraction of patch pixels. Small ratios favor keeping patches; near-full updates
+are candidates for hardware JPEG measurement. These reports do not include actual
+SD throughput or total playback time; validate on the target board.
+
+The JPEG decoder chooses hardware or software according to platform, dimensions and layout. Small images may use software; non-MCU-aligned dimensions may need scratch storage. Measure frame reads, alpha processing and display submission as well as decode time. Update GSPC and the runtime together before enabling JPEG animations: older runtimes reject the new frame format. Default QOI animations retain their existing format.
+
+See [external assets](external-assets.md) for preprocessed SD/NAND images and frame streaming.
+
+For SD fonts, use the [font-file API](external-assets.md#fonts-on-sd) with an explicit size limit and lifetime.
+
+## Transparent rasters, previews and resource budgets
+
+RGB565+A8 and ARGB8888 rasters support `fit`, `rotation` and bounded dynamic rotation,
+including template images. The image box clips transformed content and source alpha
+participates in blending. Object `opacity` must still be 255. Transparent transforms
+use software sampling. `codec: raw` needs no
+decode cache, while compressed resources require sufficient decoded-image cache space.
+Encoded Flash size is not the runtime pixel-memory budget.
+
+For camera/decoder frames, author an opaque Image placeholder with a `bind`, then use
+`esp_gsp_canvas_push()` or `esp_gsp_canvas_try_push()`. Frames must match its dimensions
+and the target RGB565/RGB888 format. Use at least two producer buffers and reuse frames
+only after the release callback. Use Image setters for occasional replacements; see
+[external assets](external-assets.md) for filesystem resources.
+
+Prefer `codec: auto` across chips. Explicit `jpeg` is a strict requirement; incompatible
+targets diagnose the alternative. Without JPEG, use QOI/RLE lossless encoding and
+explicit `store_scale` where reduced detail is acceptable. Smaller stored images need
+a scaling-capable container codec and enough decoded cache. Budget the decoded
+surface alongside the Flash saving. Compare the image/font/bundle byte report with the application
+partition budget; the compiler never silently reduces resolution. Font diagnostics
+list all missing codepoints and identify authored text-use paths. Custom fonts without
+a question mark receive a visible replacement box instead of aliasing the first icon.
+
+`store_scale < 1` automatically selects fitting into the authored image box; it does
+not require the additional `scalable` flag. With reduced storage, `codec: auto` uses
+QOI. Explicit `raw` is unsupported for this option and diagnoses the object path and
+alternative encoding at compile time. Ordinary and template images share option
+parsing. Compressed thumbnails still require a decoded-image cache.
+
+Prefer original PNG and TTF/OTF sources when migrating. For LVGL C arrays or private
+binary assets, establish the LVGL version, pixel format, channel order, stride,
+alpha convention and compression before converting to supported input resources.
+A 32-bit pixel width alone does not determine channel order; private `.bin` files
+are not a single standard format.
+
+## Software JPEG and scale animation
+
+ESP-IDF builds can use the `esp_new_jpeg` software decoder on targets such as
+ESP32-S3. `gsp_add_bundle`/`gsp_add_assets` detect that dependency independently
+of the hardware JPEG engine and require a usable decoded-image cache for static
+JPEG resources. Standalone platform compilation can declare `--software-jpeg`.
+This enables explicit `codec: "jpeg"`; software availability alone does not make
+`auto` choose lossy JPEG. A finite declared cache budget must fit the decoded
+JPEG surface, including its alignment/alpha storage. JPEG saves Flash, not that
+pixel memory. Animation frame buffers have a separate budget.
+
+Use `animate_scale_q16` and `animate_scale_q16_to` to animate named scalable Images.
+65536 is 1× and 131072 is 2×. Call these helpers in the image's scene and choose values
+within its declared scale range.
+
+## Replacing images
+
+Add a resource `bind` to a scene image, for example `name: "cover", bind: "cover_image"`,
+to generate its replacement API. For template images, set `dynamic_image: true`.
+Size `ESP_GSP_FIELD_DEFAULT_DYNAMIC_IMAGE_SLOTS` for the number of simultaneously active
+image targets in application-created templates.
+
+Build precompiled asset packages with `gsp_add_assets()` and display them with the bound
+image's generated `set_asset()` helper. Use the generated asset references to select images;
+they carry the package information required by the API.

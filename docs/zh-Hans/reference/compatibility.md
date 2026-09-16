@@ -10,16 +10,16 @@ CMake 会立即停止并给出不匹配项，不会把问题推迟到设备运�
 
 | 项目 | 当前值 | 链接 |
 |---|---:|---|
-| ESP-GSP 组件 | `1.2.0` | [Component Registry](https://components.espressif.com/components/espressif/esp-gsp/versions/1.2.0/readme) |
-| ESP-GSP 模拟器 | `1.2.0` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/sim/v1.2.0/manifest.json) |
-| 推荐 GSPC | `0.3.0` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/gspc/v0.3.0/manifest.json) |
+| ESP-GSP 组件 | `1.3.0` | [Component Registry](https://components.espressif.com/components/espressif/esp-gsp/versions/1.3.0/readme) |
+| ESP-GSP 模拟器 | `1.3.0` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/sim/v1.3.0/manifest.json) |
+| 推荐 GSPC | `0.4.0` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/gspc/v0.4.0/manifest.json) |
 | GSB | `2.7` |  |
 | GRB | `1.4` |  |
 | GFB | `1.2` |  |
 | GSPB | `1.2` |  |
 | GSPB Deployable | `1.4` |  |
 | GSR | `1.0` |  |
-| GMD | `1.1` |  |
+| GMD | `1.2` |  |
 | GSR 需求记录 | `2` |  |
 | 配置 Schema / ABI | `2 / 3` |  |
 | GMD 运行时 ABI | `1.0` |  |

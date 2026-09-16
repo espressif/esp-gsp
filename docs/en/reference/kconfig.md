@@ -244,7 +244,7 @@ The complete grouped symbol map and memory relationships are in
 
 ## Validate a configuration change
 
-Use the narrowest evidence that proves the change:
+After changing configuration:
 
 1. Inspect the active `sdkconfig`, not only the defaults fragment.
 2. Build the selected target so Kconfig dependencies, scene generation,
@@ -252,7 +252,6 @@ Use the narrowest evidence that proves the change:
 3. Exercise the largest scene and the feature whose pool or switch changed.
 4. Measure stack high-water marks before reducing task stacks.
 5. Validate touch thresholds, scheduling, acceleration, and motion on the real
-   board; a host build cannot prove their feel or timing.
+   board.
 
-Report configuration, target build, board execution, and visual/touch
-acceptance separately.
+Record the effective settings and measured stack/memory use for future tuning.

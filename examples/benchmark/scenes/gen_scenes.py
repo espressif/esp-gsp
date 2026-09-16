@@ -635,6 +635,102 @@ def scene(width, height, rgb888=False):
             "rotation": {"default": 0, "min": -180, "max": 180},
         })
 
+    # Fixed envelopes keep the same vector workload on every panel size.
+    for page, names in (
+        ("p_vector_size", ("vector_size_color", "vector_size_mask")),
+        ("p_vector_rotate", ("vector_rotate_color", "vector_rotate_mask")),
+        ("p_vector_tint", ("vector_tint_a", "vector_tint_b")),
+        ("p_vector_morph", ("vector_morph_color", "vector_morph_mask")),
+        ("p_vector_move", ("vector_move_color", "vector_move_mask")),
+        ("p_vector_style", ("vector_paints_color", "vector_paints_mask")),
+    ):
+        p = b.page(page)
+        for index, name in enumerate(names):
+            obj = {
+                "type": "image", "parent": p, "name": name,
+                "x": (width - 200) // 2 + index * 104,
+                "y": (height - 96) // 2, "w": 96, "h": 96,
+                "image": "../assets/widgets/image/vector_planet.svg", "fit": "stretch",
+            }
+            if page == "p_vector_size":
+                obj["w"] = {"property": "width", "default": 64, "min": 32, "max": 96}
+                obj["h"] = {"property": "height", "default": 64, "min": 32, "max": 96}
+            if page == "p_vector_rotate":
+                obj["rotation"] = 0
+            if page == "p_vector_move":
+                obj["x"] = {"property": "x", "default": obj["x"], "min": obj["x"] - 8, "max": obj["x"] + 8}
+            if page == "p_vector_style":
+                obj["image"] = "../assets/widgets/image/vector_paints.svg"
+                if index == 1:
+                    obj.update(bind=name, bind_target="visible")
+            if page == "p_vector_morph":
+                obj.update(image="../assets/widgets/image/vector_emblem.svg",
+                           svg_element="emblem", morph=0, fit="contain",
+                           morph_to="../assets/widgets/image/vector_emblem_active.svg")
+            if index == 1 or page == "p_vector_tint":
+                obj["tint"] = "#2266ee"
+            b.add(obj)
+
+    # A bounded mixed page covers retained effects, baked glass and media.
+    p = b.page("p_effects")
+    left = width // 2 - 112
+    b.add({"type": "charging_orb", "name": "bench_effect_orb", "parent": p,
+           "x": left, "y": 28, "w": 64, "h": 64, "value": 60,
+           "ripple": 20, "particles": 2})
+    b.add({"type": "effect", "name": "bench_effect_pulse", "parent": p,
+           "x": left + 80, "y": 28, "w": 64, "h": 64, "effect": "pulse",
+           "runtime_style": True, "bg_color": "#FF503080", "fg_color": "#38BDF8C0"})
+    b.add({"type": "flip_card", "name": "bench_effect_flip", "parent": p,
+           "x": left + 160, "y": 28, "w": 64, "h": 64,
+           "front": "../assets/widgets/carousel/home.svg", "back": "../assets/widgets/carousel/music.svg"})
+    b.add({"type": "carousel", "name": "bench_effect_carousel", "parent": p,
+           "x": left, "y": 100, "w": 152, "h": 64,
+           "icons": ["../assets/widgets/carousel/home.svg", "../assets/widgets/carousel/music.svg", "../assets/widgets/carousel/water.svg"]})
+    b.add({"type": "image", "name": "bench_effect_backdrop", "parent": p,
+           "x": left + 160, "y": 100, "w": 64, "h": 64, "image": "bench_scale.png", "fit": "cover"})
+    b.add({"type": "glass", "name": "bench_effect_glass", "parent": p,
+           "x": left + 164, "y": 104, "w": 56, "h": 56,
+           "backdrop": "bench_effect_backdrop", "blur": 6, "radius": 8})
+    b.add({"type": "image", "name": "bench_effect_vector", "parent": p,
+           "x": left + 48, "y": 180, "w": 32, "h": 32,
+           "image": "../assets/widgets/image/vector_planet.svg", "fit": "contain"})
+    b.add({"type": "image", "name": "bench_effect_dynamic", "parent": p,
+           "x": left + 104, "y": 180, "w": 32, "h": 32,
+           "image": "bench_scale.png", "fit": "stretch", "bind": "effect_dynamic"})
+
+    p = b.page("p_vector_fit")
+    for index, fit in enumerate(("contain", "cover", "stretch")):
+        b.add({"type": "image", "name": f"vector_fit_{fit}", "parent": p,
+               "x": (width - 216) // 2 + index * 76, "y": (height - 96) // 2,
+               "w": 64, "h": 96, "image": "../assets/widgets/image/vector_planet.svg",
+               "fit": fit, "scalable": True, "min_scale": 0.75, "max_scale": 1.5})
+
+    p = b.page("p_vector_eyes")
+    eye_bg = "#101820"
+    b.add({"type": "rect", "parent": p, "x": 0, "y": 0, "w": width, "h": height, "bg_color": eye_bg})
+    eye_w = min(192, (width - 32) // 2)
+    scale = eye_w / 128
+    eye_h = round(112 * scale)
+    origin_y = (height - eye_h) // 2
+    gap = max(12, eye_w // 8)
+    for side, origin_x in (("left", (width - 2 * eye_w - gap) // 2),
+                           ("right", (width + gap) // 2)):
+        for part, tint in (("white", "#e9f5ec"), ("iris", None),
+                           ("mask", eye_bg), ("rim", "#598d91")):
+            obj = {"type": "image", "name": f"eye_{part}_{side}", "parent": p,
+                   "x": origin_x, "y": origin_y, "w": eye_w, "h": eye_h,
+                   "image": "../assets/widgets/image/vector_eye.svg", "svg_element": part,
+                   "svg_layout": "canvas"}
+            if tint:
+                obj["tint"] = tint
+            if part == "iris":
+                dx, dy = max(1, round(10 * scale)), max(1, round(6 * scale))
+                obj["x"] = {"property": "x", "default": obj["x"], "min": obj["x"] - dx, "max": obj["x"] + dx}
+                obj["y"] = {"property": "y", "default": obj["y"], "min": obj["y"] - dy, "max": obj["y"] + dy}
+            if part in ("mask", "rim"):
+                obj.update(morph_to="../assets/widgets/image/vector_eye_closed.svg", morph=0)
+            b.add(obj)
+
     # P13e canvas stream: a placeholder image drawn by the app's
     # synthetic camera / video / custom-stream producer.
     p = b.page("p_stream")
@@ -713,7 +809,7 @@ def scene(width, height, rgb888=False):
            "image": "bench_industrial_argb.png"})
 
     # P16c moving instances: template widgets swept across the full
-    # screen by the app (the lvgl moving-wallpaper counterpart).
+    # screen by the app.
     p = b.page("p_move")
     move_page = p
     b.add({"type": "label", "parent": p, "x": m,
@@ -1099,7 +1195,7 @@ def scene(width, height, rgb888=False):
     b.add({"type": "wheel", "name": "widget_wheel", "parent": p, "x": m, "y": y, "w": col,
            "h": height // 6,
            "items": ["one", "two", "three", "four", "five"],
-           "item_height": max(18, height // 14), "cyclic": True,
+           "item_height": max(18, height // 14), "cyclic": False,
            "bind": "w_whl", "font_size": small,
            "fg_color": "#DBF4FF", "bg_color": "#10283B"})
     b.add({"type": "progress", "parent": p, "x": m + col + gap,

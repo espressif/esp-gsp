@@ -26,8 +26,7 @@ CMake 会执行 `gspc compatibility` 兼容性检查并验证生成格式、需�
 ### 原生模拟器无法启动
 
 从终端执行 `gsp_sim --capabilities` 以保留 Loader 错误。确认资产匹配主机平台，并只
-安装发布说明列出的运行库。无法满足原生依赖时可使用浏览器/WASM 资产。模拟器启动只
-证明主机运行环境，不证明目标显示硬件。
+安装发布说明列出的运行库。无法满足原生依赖时可使用浏览器/WASM 资产。显示硬件的配置步骤见[显示集成](display.md)。
 
 ### 构建使用了错误的 ESP-GSP 副本
 
@@ -40,7 +39,7 @@ CMake 会执行 `gspc compatibility` 兼容性检查并验证生成格式、需�
 ### JSON 报告未知字段或控件
 
 以当前组件版本的[场景编写参考](../reference/authoring.md)和[控件库](../components/index.md)
-为准，不要借用 LVGL、其他 UI 框架或更新版本的字段。检查诊断给出的完整 JSON Path；
+为准，选择该版本支持的字段。检查诊断给出的完整 JSON Path；
 模板和组件配置会让出错叶子字段离根因较远。
 
 ### 找不到场景
@@ -69,7 +68,7 @@ CMake 会执行 `gspc compatibility` 兼容性检查并验证生成格式、需�
 4. 重新构建 Bundle。
 5. 检查 `<symbol>_gsp.h` 及其包含的场景头文件。
 
-不要手写猜测的函数，也不要修改生成头文件。
+使用生成头文件中的接口声明和编辑器补全。
 
 ### 旧的生成函数仍然存在
 
@@ -106,6 +105,12 @@ ESP-GSP 运行时 Surface 使用小端 RGB565，或 RGB888 的 B、G、R 紧凑�
 锁定同一场景、GSPC/组件版本、像素格式、显示 Profile 和 Target。先比较原生/WASM
 预览的几何，再测试开发板。Arc 粗细、裁剪和加速差异应作为框架或显示链路回归处理，
 不要用应用层覆盖掩盖。
+
+### 升级后绑定文本的位置上移
+
+左对齐的绑定 Label 在高度足够容纳两行时，从首帧起使用多行布局，即使初始内容只有一行。
+这样初始文本与后续 `set_text()` 更新的位置保持一致。若需要在较大的控件中居中显示单行
+标题，将 Label 高度设为一行，并调整文本框在控件内的位置。
 
 ## 状态与生命周期
 
@@ -147,6 +152,26 @@ Pinch 由应用处理。注册 `esp_gsp_on_pinch()`，在 `ESP_GSP_PINCH_BEGIN` 
 
 ## List、Grid 与运行时媒体
 
+### 循环 Wheel 滚到边界后停止或没有显示行
+
+在 Wheel 上设置 `cyclic: true`。有限的 `items` 数组是逻辑数据集，并不限制界面可以
+循环多少次。循环 Wheel 会生成 Bind Helper；只需用生成函数和空回调绑定一次，例如
+`gsp_widget_wheel_city_bind(ui, NULL, NULL)`；运行时会自动提供编译好的条目文字并复用
+Row Template，应用不需要处理 Slot ID。只有数据由应用动态维护时，才需要 Callback、
+`set_total()` 和 `refresh()`。
+
+条目会在运行时变化时，声明 `dynamic_items: true`。无论初始数组为空、较短还是超过
+视口，都会生成同一套 `bind`、`set_total()`、`refresh()` API。绑定一次并保存 Handle。
+使用编译好的条目文字时传 `NULL` 回调；由应用提供数据时使用回调，并通过
+`font_charset` 声明可能出现的字符。
+
+调试预编译 Runtime 时，先用相互匹配的组件、GSPC 与 Simulator 版本复现，并记录
+`gspc compatibility` 与固件启动摘要。Simulator
+日志面板可查看 Host 与 Runtime 诊断，API Bridge 也支持同一个生成式 Wheel Helper。
+设备端可用 `esp_gsp_set_pointer_observer()` 确认手势路由前的映射按下/抬起样本，并用
+`esp_gsp_render_error_stats()`、`esp_gsp_service_stats()` 查看渲染失败与服务队列工作量；
+这些公开诊断不要求取得 Runtime 源码。
+
 ### List 绑定最终返回 `ESP_GSP_LIST_NONE`
 
 每个逻辑 List/Wheel 在 UI 生命周期内只绑定一次并保存 Handle。不要在每次 Scene Ready
@@ -163,7 +188,7 @@ List Instance 和 Item 时发布。只有不可变编码内容才能复用稳定
 禁用。无 PSRAM 构建可能选择不支持运行时 PNG/JPEG 替换的有界区域解码路径。详见
 [配置参考](../reference/configuration.md)与[媒体和应用数据](media-and-data.md)。
 
-## 收集有效证据
+## 报告问题
 
 报告问题时至少提供：
 

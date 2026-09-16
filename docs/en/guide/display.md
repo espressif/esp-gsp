@@ -1,7 +1,7 @@
 # Display Presentation
 
 ESP-GSP delegates framebuffer ownership, tearing control, rotation and panel
-transfers to the bundled `esp_display_present` component. Applications provide
+transfers to the `esp_display_present` dependency. Applications provide
 one display target configuration and normally leave the presentation mode on
 `ESP_DISPLAY_PRESENT_MODE_AUTO`.
 
@@ -73,6 +73,18 @@ fade-through-black transitions then render visible partitions directly when
 the display contract permits it. A requested cross-fade cannot run without
 both scene snapshots and uses the zero-snapshot fade-through-black fallback
 instead.
+
+## Rendering and SDK integration
+
+Rendering optimizations apply automatically, including native RGB888 image
+opacity. Evaluate frame production and display submission separately when
+comparing performance; no additional application API is required.
+
+For P4 prebuilt builds, configure the ESP-IDF silicon revision to match the
+board. `CONFIG_ESP32P4_SELECTS_REV_LESS_V3` selects the pre-v3 library;
+other P4 builds select the v3-or-later library. Reconfigure and rebuild after
+changing the revision. The DMA2D adapter is compiled with the consuming ESP-IDF
+SDK so its driver configuration uses that SDK's structure layout.
 
 ## Ownership boundary
 

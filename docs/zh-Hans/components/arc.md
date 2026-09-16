@@ -11,16 +11,15 @@
 [安装 `esp-gsp-tools`](../guide/simulator-preview.md) 后，在解压后的组件或公共仓库根目录运行：
 
 ```sh
-mkdir -p build/widget-preview
-python -m gsp.execute --version 0.3.0 gspc pack \
+mkdir -p gsp-out/widget-preview
+python -m gsp.execute --version 0.4.0 gspc pack \
   examples/widgets/arc/arc.json \
-  --deployable -o build/widget-preview/arc.gspb
-python -m gsp.execute --version 1.2.0 sim \
-  --bundle build/widget-preview/arc.gspb
+  --deployable -o gsp-out/widget-preview/arc.gspb
+python -m gsp.execute --version 1.3.0 sim \
+  --bundle gsp-out/widget-preview/arc.gspb
 ```
 
-这些命令用 GSPC 编译下方同一份 JSON，并通过发布版 ESP-GSP 模拟器打开浏览器预览，
-不是 HTML 仿制控件。最终像素格式、字体、显示链路和性能仍需在目标硬件确认。
+这些命令编译下方 JSON，并在 ESP-GSP 模拟器中打开浏览器预览。
 
 此预览显示 JSON 中编写的初始状态。若要复现由应用驱动的动态变化，请通过模拟器后端/API 或设备代码更新对应属性。
 
@@ -28,7 +27,11 @@ python -m gsp.execute --version 1.2.0 sim \
 
 鼠标或触控输入通过与设备端相同的运行时属性路径更新组件保留态。
 
-为需要在 C 代码中读写的对象设置稳定的 `name`。GSPC 会为示例中的命名对象生成下方列出的类型化函数；JSON 中没有命名的对象不会产生无用 API。
+`start_angle` 的 0° 在正上方，正方向为顺时针：右 90°、下 180°、左 270°。`sweep` 为 1–360° 的顺时针跨度；value 从 min 到 max 时填充沿这个方向增长。
+
+![Arc angles](../../assets/arc-angles.svg)
+
+为需要在 C 代码中读写的对象设置稳定的 `name`。GSPC 为命名对象生成下方列出的类型化函数。
 
 ## 完整示例 JSON
 
@@ -80,6 +83,7 @@ python -m gsp.execute --version 1.2.0 sim \
 
 ```c
 const gsp_component_directory_t *const * gsp_arc_docs_component_directories(uint16_t *out_count)
+esp_err_t gsp_widget_arc_level_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
 esp_err_t gsp_widget_arc_level_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
 esp_err_t gsp_widget_arc_level_get_value(esp_gsp_handle_t gsp, int32_t *out_value)
 esp_err_t gsp_widget_arc_level_set_value(esp_gsp_handle_t gsp, int32_t value)
@@ -95,18 +99,18 @@ size_t gsp_arc_docs_dynamic_image_slots(void)
 |---|---|---:|---|---:|---|
 | `type` | `string` | 是 | — | — | 控件类型 |
 | `parent` | `int` | 是 | 默认 -1; -1…65534 | — | 父对象索引（-1 表示屏幕根节点） |
-| `x` | `int` | 是 | 默认 0; -32768…32767 | 是 | 相对于父对象的 x 坐标 |
-| `y` | `int` | 是 | 默认 0; -32768…32767 | 是 | 相对于父对象的 y 坐标 |
-| `w` | `int` | 是 | 0…65535 | 是 | 宽度（像素） |
-| `h` | `int` | 是 | 0…65535 | 是 | 高度（像素） |
+| `x` | `int` | 是 | 默认 0; -32768…32767 | 场景: 支持; 模板: 不支持 | 相对于父对象的 x 坐标 |
+| `y` | `int` | 是 | 默认 0; -32768…32767 | 场景: 支持; 模板: 不支持 | 相对于父对象的 y 坐标 |
+| `w` | `int` | 是 | 0…65535 | 场景: 不支持; 模板: 不支持 | 宽度（像素） |
+| `h` | `int` | 是 | 0…65535 | 场景: 不支持; 模板: 不支持 | 高度（像素） |
 | `name` | `identifier` | — | — | — | 稳定组件名称；生成 GSP_OBJ_KEY_&lt;NAME&gt; |
 | `fg_color` | `color` | — | — | — | 前景颜色（根据控件类型用于文字、旋钮、线条或标记） |
 | `bg_color` | `color` | — | — | 是 | 背景/填充颜色（#RRGGBB 或 #RRGGBBAA） |
 | `value` | `int` | — | — | 是 | 初始值（位于 min 到 max 范围内） |
 | `min` | `int` | — | 默认 0; -2147483648…2147483647 | — | 数值范围下限 |
 | `max` | `int` | — | 默认 100; -2147483648…2147483647 | — | 数值范围上限 |
-| `start_angle` | `int` | — | 默认 135; 0…359 | 是 | 圆弧起始角度（度） |
-| `sweep` | `int` | — | 默认 270; 1…360 | — | 圆弧扫过角度（度） |
+| `start_angle` | `int` | — | 默认 135; 0…359 | 场景: 支持; 模板: 不支持 | 圆弧起始角度：从顶部顺时针计，0 为上、90 为右 |
+| `sweep` | `int` | — | 默认 270; 1…360 | — | 顺时针圆弧跨度（度） |
 | `thickness` | `int` | — | 0…65535 | — | 描边粗细；省略时为 max(min(w,h)/8, 2)，0 会限制为 1 |
 
 <details><summary>查看此控件支持的其他字段</summary>
@@ -123,28 +127,37 @@ size_t gsp_arc_docs_dynamic_image_slots(void)
 | `grow` | `int` | — | 默认 0; 0…100 | — | 自动布局扩展权重 |
 | `margin` | `int` | — | 默认 0; 0…4096 | — | 子对象两侧的自动布局外边距 |
 | `hidden` | `bool` | — | 默认 `false` | 是 | 初始隐藏（通过动作或 set_visible 显示） |
-| `opacity` | `int` | — | 默认 255; 0…255 | 是 | 0–255 混合透明度 |
+| `opacity` | `int` | — | 默认 255; 0…255 | 场景: 不支持; 模板: 不支持 | 0–255 混合透明度 |
 | `bg_gradient` | `color` | — | — | — | 第二个渐变色标（与 bg_color 配合） |
 | `gradient_dir` | `enum` | — | 默认 vertical; `vertical`, `horizontal` | — | 渐变方向 |
-| `radius` | `int` | — | 默认 0; 0…65535 | 是 | 圆角半径（像素） |
+| `radius` | `int` | — | 默认 0; 0…65535 | 场景: 不支持; 模板: 不支持 | 圆角半径（像素） |
 | `border_color` | `color` | — | — | — | 边框描边颜色 |
 | `border_width` | `int` | — | 0…65535 | — | 边框描边宽度（需要 border_color） |
 | `text` | `string` | — | — | 是 | 静态文字内容（UTF-8） |
 | `text_align` | `enum` | — | `left`, `center`, `right` | — | 文字对齐方式 |
 | `overflow` | `enum` | — | 默认 clip; `clip`, `ellipsis` | — | 单行文字溢出方式 |
+| `font` | `path` | — | — | — | 单个对象的 TTF/OTF 字体覆盖路径 |
+| `font_size` | `int` | — | 1…255 | — | 单个对象的字体像素尺寸 |
 | `font_charset` | `string` | — | — | — | 运行时绑定文字可使用的字形；静态文字会自动加入 |
+| `font_charset_file` | `path` | — | — | — | 相对于场景的 UTF-8 字符集文件，与 font_charset 和静态文本合并 |
 | `font_link` | `enum` | — | `embedded`, `external`, `auto` | — | 字体存储策略：内嵌/外部/自动 |
 | `input` | `bool` | — | 默认 `false` | — | 文字输入字段：接入光标/键盘流程 |
-| `image` | `path` | — | — | 是 | 图片文件路径（PNG） |
-| `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto` | — | 图片编码格式 |
-| `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（0 表示使用 Profile 默认值） |
+| `animation_codec` | `enum` | — | `lossless`, `jpeg`, `hardware_jpeg` | — | 动画帧策略：无损增量帧、完整 JPEG 帧，或仅在目标具备硬件解码能力时使用 JPEG |
+| `svg_layout` | `enum` | — | `content`, `canvas` | — | SVG 部件定位：裁紧内容或保留原画布布局 |
+| `morph_to` | `path` | — | — | — | 路径结构和填充一致的 SVG 结束形状 |
+| `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
+| `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
+| `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
+| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `store`, `qoi`, `rle16`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
 | `max_fps` | `int` | — | 1…120 | — | GIF/动画帧率上限（0 表示不限制） |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
-| `rotation` | `int` | — | 默认 0; -32768…32767 | 是 | 不透明图片绕边界框中心顺时针旋转的角度；超出边界框的部分会被裁剪 |
+| `rotation` | `int` | — | 默认 0; -32768…32767 | 场景: 图片; 模板: 不支持 | 图片绕边界框中心顺时针旋转，支持源图透明度；超出边界框的部分会被裁剪 |
 | `scalable` | `bool` | — | 默认 `false` | — | 启用运行时图片缩放 |
 | `scale` | `number` | — | 默认 1.0; 0.0625…16.0 | — | 运行时图片初始缩放比例 |
 | `min_scale` | `number` | — | 默认 0.5; 0.0625…16.0 | — | 运行时图片最小缩放比例 |
@@ -155,7 +168,7 @@ size_t gsp_arc_docs_dynamic_image_slots(void)
 | `disabled_opacity` | `int` | — | 默认 112; 0…255 | — | 禁用态覆盖透明度 |
 | `bind` | `identifier` | — | — | — | 公开状态名称；生成 GSP_BIND_&lt;NAME&gt; |
 | `bind_target` | `enum` | — | `visible`, `value`, `color`, `text`, `resource` | — | 显式绑定状态类型 |
-| `callback` | `identifier` | — | — | — | 应用回调名称；生成 GSP_ACT_ID_&lt;NAME&gt; |
+| `callback` | `identifier` | — | — | — | 应用回调名称；生成按场景区分的事件辅助函数 |
 | `events` | `action_list` | — | — | — | 输入绑定：[{event, action, ...}] |
 | `template` | `identifier` | — | — | — | 将此子树声明为渲染模板 |
 | `max_instances` | `int` | — | 1…65535 | — | 同时存活模板实例的最大数量；计入自动推导的资源池需求 |
@@ -169,7 +182,5 @@ size_t gsp_arc_docs_dynamic_image_slots(void)
 | 字段 | 类型 | 必填 | 默认值 / 范围 | 可运行时更新 | 编译器定义 |
 |---|---|---:|---|---:|---|
 | `parent_name` | `string` | — | — | — | 使用名称而不是索引指定父对象 |
-| `font` | `path` | — | — | — | 单个对象的 TTF/OTF 字体覆盖路径 |
-| `font_size` | `int` | — | 1…255 | — | 单个对象的字体像素尺寸 |
 
 </details>

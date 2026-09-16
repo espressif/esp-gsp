@@ -1,6 +1,6 @@
 # Introduction
 
-ESP-GSP is an ahead-of-time UI toolchain and bounded graphics runtime for ESP-IDF. It is designed for products that need reviewable interface source, deterministic resources, a stable application contract and a display path owned by the BSP.
+ESP-GSP is an ahead-of-time UI toolchain and graphics runtime for ESP-IDF. It is designed for products that need reviewable interface source, deterministic resources, a stable application contract and a display path owned by the BSP.
 
 ## What it provides
 
@@ -21,9 +21,9 @@ ESP-GSP is an ahead-of-time UI toolchain and bounded graphics runtime for ESP-ID
 | Panel timing, rotation, buffers, touch mapping | BSP and ESP-LCD display target |
 | Rendering, input dispatch, component state | ESP-GSP runtime |
 
-The runtime does not replace a BSP, and JSON does not hide product logic. UI callbacks should request work from application tasks; completed application state is then written back through generated setters.
+UI callbacks request work from application tasks. Update the interface through generated setters after the application state changes.
 
-## When to use another path
+## Choose a data interface
 
 Use Canvas for camera/video or another producer that owns continuously changing pixels. Use runtime image APIs for occasional encoded image replacement. Use List, Grid, Wheel or Message List for large application-owned collections rather than creating one authored object per data item.
 

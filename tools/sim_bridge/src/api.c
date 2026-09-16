@@ -62,6 +62,159 @@ esp_gsp_err_t esp_gsp_set_text(esp_gsp_handle_t ui, uint16_t bind, const char *t
 {
     return text_command(ui, "set_text", "bind_id", bind, text);
 }
+
+esp_gsp_widget_t esp_gsp_widget_create(esp_gsp_handle_t ui, uint16_t template_id,
+                                       int16_t x, int16_t y)
+{
+    if (!ui || !bridge_widget_enabled(ui)) {
+        return ESP_GSP_WIDGET_NONE;
+    }
+    char params[128];
+    snprintf(params, sizeof(params), "{\"template_id\":%u,\"x\":%d,\"y\":%d}", template_id, x, y);
+    char *reply = bridge_rpc(ui, "widget_create", params);
+    int64_t widget = reply ? bridge_json_number(reply, "widget", ESP_GSP_WIDGET_NONE) : ESP_GSP_WIDGET_NONE;
+    free(reply);
+    return widget >= 0 && widget <= UINT16_MAX ? (esp_gsp_widget_t)widget : ESP_GSP_WIDGET_NONE;
+}
+
+static esp_gsp_err_t widget_command(esp_gsp_handle_t ui, const char *method,
+                                    esp_gsp_widget_t widget, const char *suffix)
+{
+    if (!ui || widget == ESP_GSP_WIDGET_NONE) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    if (!bridge_widget_enabled(ui)) {
+        return ESP_GSP_ERR_NOT_SUPPORTED;
+    }
+    size_t size = strlen(suffix) + 64;
+    char *params = malloc(size);
+    if (!params) {
+        return ESP_GSP_ERR_NO_MEM;
+    }
+    snprintf(params, size, "{\"widget\":%u%s}", widget, suffix);
+    esp_gsp_err_t rc = bridge_command(ui, method, params);
+    free(params);
+    return rc;
+}
+
+esp_gsp_err_t esp_gsp_widget_destroy(esp_gsp_handle_t ui, esp_gsp_widget_t widget)
+{
+    return widget_command(ui, "widget_destroy", widget, "");
+}
+esp_gsp_err_t esp_gsp_widget_set_value(esp_gsp_handle_t ui, esp_gsp_widget_t widget, uint16_t slot, uint32_t value)
+{
+    char s[96];
+    snprintf(s, sizeof(s), ",\"slot\":%u,\"value\":%" PRIu32, slot, value);
+    return widget_command(ui, "widget_set_value", widget, s);
+}
+esp_gsp_err_t esp_gsp_widget_set_color(esp_gsp_handle_t ui, esp_gsp_widget_t widget, uint16_t slot, uint32_t color)
+{
+    char s[96];
+    snprintf(s, sizeof(s), ",\"slot\":%u,\"color\":%" PRIu32, slot, color);
+    return widget_command(ui, "widget_set_color", widget, s);
+}
+esp_gsp_err_t esp_gsp_widget_set_text(esp_gsp_handle_t ui, esp_gsp_widget_t widget, uint16_t slot, const char *text)
+{
+    if (!text) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    char *quoted = bridge_json_quote(text); if (!quoted) return ESP_GSP_ERR_NO_MEM;
+    size_t n = strlen(quoted) + 96; char *s = malloc(n); if (!s) {
+        free(quoted);
+        return ESP_GSP_ERR_NO_MEM;
+    }
+    snprintf(s, n, ",\"slot\":%u,\"text\":%s", slot, quoted);
+    esp_gsp_err_t rc = widget_command(ui, "widget_set_text", widget, s); free(s); free(quoted); return rc;
+}
+esp_gsp_err_t esp_gsp_widget_value(esp_gsp_handle_t ui, esp_gsp_widget_t widget, uint32_t value)
+{
+    return esp_gsp_widget_set_value(ui, widget, UINT16_MAX, value);
+}
+esp_gsp_err_t esp_gsp_widget_color(esp_gsp_handle_t ui, esp_gsp_widget_t widget, uint32_t color)
+{
+    return esp_gsp_widget_set_color(ui, widget, UINT16_MAX, color);
+}
+esp_gsp_err_t esp_gsp_widget_text(esp_gsp_handle_t ui, esp_gsp_widget_t widget, const char *text)
+{
+    return esp_gsp_widget_set_text(ui, widget, UINT16_MAX, text);
+}
+esp_gsp_err_t esp_gsp_widget_set_visible(esp_gsp_handle_t ui, esp_gsp_widget_t widget, bool visible)
+{
+    return widget_command(ui, "widget_set_visible", widget, visible ? ",\"visible\":true" : ",\"visible\":false");
+}
+esp_gsp_err_t esp_gsp_widget_set_position(esp_gsp_handle_t ui, esp_gsp_widget_t widget, int16_t x, int16_t y)
+{
+    char s[96];
+    snprintf(s, sizeof(s), ",\"x\":%d,\"y\":%d", x, y);
+    return widget_command(ui, "widget_set_position", widget, s);
+}
+esp_gsp_err_t esp_gsp_widget_animate(esp_gsp_handle_t ui, esp_gsp_widget_t widget, int32_t from,
+                                     int32_t to, uint32_t duration_ms, esp_gsp_ease_t ease)
+{
+    char s[160];
+    snprintf(s, sizeof(s), ",\"from\":%" PRId32 ",\"to\":%" PRId32 ",\"duration_ms\":%" PRIu32 ",\"ease\":%u", from, to, duration_ms, (unsigned)ease);
+    return widget_command(ui, "widget_animate", widget, s);
+}
+
+static esp_gsp_err_t chart_validate(const esp_gsp_chart_series_t *series)
+{
+    return series && series->point_binds && series->capacity >= 2 &&
+           series->capacity <= ESP_GSP_CHART_MAX_POINTS &&
+           series->plot_top <= series->plot_bottom &&
+           series->value_min < series->value_max ? ESP_GSP_OK : ESP_GSP_ERR_INVALID_ARG;
+}
+
+esp_gsp_err_t esp_gsp_chart_set_series(esp_gsp_handle_t ui,
+                                       const esp_gsp_chart_series_t *series, const int32_t *values, size_t count)
+{
+    if (!ui || chart_validate(series) != ESP_GSP_OK || !values || count != series->capacity) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    size_t size = 256U + count * 32U;
+    char *params = malloc(size);
+    if (!params) {
+        return ESP_GSP_ERR_NO_MEM;
+    }
+    int n = snprintf(params, size,
+                     "{\"scene_content_id\":%" PRIu32 ",\"plot_top\":%d,\"plot_bottom\":%d,"
+                     "\"value_min\":%" PRId32 ",\"value_max\":%" PRId32 ",\"point_binds\":[",
+                     series->scene_content_id, series->plot_top, series->plot_bottom,
+                     series->value_min, series->value_max);
+    for (size_t i = 0; i < count && n > 0 && (size_t)n < size; ++i) {
+        n += snprintf(params + n, size - (size_t)n, "%s%u", i ? "," : "", series->point_binds[i]);
+    }
+    if (n > 0 && (size_t)n < size) {
+        n += snprintf(params + n, size - (size_t)n, "],\"values\":[");
+    }
+    for (size_t i = 0; i < count && n > 0 && (size_t)n < size; ++i) {
+        n += snprintf(params + n, size - (size_t)n, "%s%" PRId32, i ? "," : "", values[i]);
+    }
+    if (n <= 0 || (size_t)n >= size || snprintf(params + n, size - (size_t)n, "]}") >= (int)(size - (size_t)n)) {
+        free(params); return ESP_GSP_ERR_INVALID_SIZE;
+    }
+    esp_gsp_err_t rc = bridge_command(ui, "chart_set_series", params); free(params); return rc;
+}
+
+esp_gsp_err_t esp_gsp_chart_append(esp_gsp_handle_t ui,
+                                   const esp_gsp_chart_series_t *series, int32_t value)
+{
+    if (!ui || chart_validate(series) != ESP_GSP_OK) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    size_t size = 224U + (size_t)series->capacity * 8U; char *params = malloc(size);
+    if (!params) {
+        return ESP_GSP_ERR_NO_MEM;
+    }
+    int n = snprintf(params, size, "{\"scene_content_id\":%" PRIu32 ",\"plot_top\":%d,\"plot_bottom\":%d,\"value_min\":%" PRId32 ",\"value_max\":%" PRId32 ",\"value\":%" PRId32 ",\"point_binds\":[", series->scene_content_id, series->plot_top, series->plot_bottom, series->value_min, series->value_max, value);
+    for (size_t i = 0; i < series->capacity && n > 0 && (size_t)n < size; ++i) {
+        n += snprintf(params + n, size - (size_t)n, "%s%u", i ? "," : "", series->point_binds[i]);
+    }
+    if (n <= 0 || (size_t)n >= size || snprintf(params + n, size - (size_t)n, "]}") >= (int)(size - (size_t)n)) {
+        free(params);
+        return ESP_GSP_ERR_INVALID_SIZE;
+    }
+    esp_gsp_err_t rc = bridge_command(ui, "chart_append", params); free(params); return rc;
+}
 esp_gsp_err_t esp_gsp_component_set_text(esp_gsp_handle_t ui, gsp_component_key_t key, const char *text)
 {
     return text_command(ui, "component_set_text", "component_key", key, text);
@@ -110,6 +263,29 @@ COMPONENT_SETTER(esp_gsp_component_set_color, uint32_t, GSP_BRIDGE_COMPONENT_SET
 COMPONENT_SETTER(esp_gsp_component_set_visible, bool, GSP_BRIDGE_COMPONENT_SET_VISIBLE)
 COMPONENT_SETTER(esp_gsp_component_set_checked, bool, GSP_BRIDGE_COMPONENT_SET_CHECKED)
 COMPONENT_SETTER(esp_gsp_component_set_enabled, bool, GSP_BRIDGE_COMPONENT_SET_ENABLED)
+
+esp_gsp_err_t esp_gsp_component_set_color_rgb888(esp_gsp_handle_t ui,
+        gsp_component_key_t key, uint32_t rgb888)
+{
+    uint32_t args[8] = {key, rgb888};
+    return bridge_scalar(ui, GSP_BRIDGE_COMPONENT_SET_COLOR_RGB888, args, NULL);
+}
+
+esp_gsp_err_t esp_gsp_component_set_property_color_rgb888(esp_gsp_handle_t ui,
+        gsp_component_key_t component, gsp_property_key_t property, uint32_t rgb888)
+{
+    uint32_t args[8] = {component, property, rgb888};
+    return bridge_scalar(ui, GSP_BRIDGE_COMPONENT_SET_PROPERTY_COLOR_RGB888, args, NULL);
+}
+
+COMPONENT_GETTER(esp_gsp_component_get_color_rgb888, uint32_t,
+                 GSP_BRIDGE_COMPONENT_GET_COLOR_RGB888)
+
+esp_gsp_err_t esp_gsp_set_press_feedback_enabled(esp_gsp_handle_t ui, bool enabled)
+{
+    uint32_t args[8] = {enabled};
+    return bridge_scalar(ui, GSP_BRIDGE_SET_PRESS_FEEDBACK_ENABLED, args, NULL);
+}
 
 esp_gsp_err_t esp_gsp_component_get_info(esp_gsp_handle_t ui, gsp_component_key_t key, esp_gsp_component_info_t *out)
 {
@@ -199,6 +375,95 @@ esp_gsp_err_t esp_gsp_component_animate_property_to(esp_gsp_handle_t ui, gsp_com
     return bridge_scalar(ui, GSP_BRIDGE_ANIMATE_PROPERTY_TO, args, NULL);
 }
 
+esp_gsp_err_t esp_gsp_component_play_animation(esp_gsp_handle_t ui,
+        gsp_component_key_t component, gsp_property_key_t property,
+        const gsp_value_t *from, const gsp_value_t *to,
+        const esp_gsp_animation_config_t *config)
+{
+    if (!from || !to || !config || from->type != to->type ||
+            to->type > GSP_VALUE_COLOR || config->ease > ESP_GSP_EASE_IN_OUT) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    uint32_t packed = config->iterations |
+                      (config->alternate ? UINT32_C(1) << 16 : 0) |
+                      ((uint32_t)config->ease << 17);
+    uint32_t args[8] = {component, property, from->type, value_bits(from), value_bits(to),
+                        config->duration_ms, config->delay_ms, packed
+                       };
+    return bridge_scalar(ui, GSP_BRIDGE_COMPONENT_PLAY_ANIMATION, args, NULL);
+}
+
+esp_gsp_err_t esp_gsp_component_stop_animation(esp_gsp_handle_t ui,
+        gsp_component_key_t component, gsp_property_key_t property)
+{
+    uint32_t args[8] = {component, property};
+    return bridge_scalar(ui, GSP_BRIDGE_COMPONENT_STOP_ANIMATION, args, NULL);
+}
+
+esp_gsp_err_t esp_gsp_query_visibility(esp_gsp_handle_t ui,
+                                       const esp_gsp_visibility_target_t *target, bool *out_visible)
+{
+    if (!ui || !target || !out_visible ||
+            (target->visible_slot_count != 0 && target->visible_slots == NULL) ||
+            target->visible_slot_count > (1024U * 1024U - 256U) / 6U) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    if (!bridge_api_extensions_v2(ui)) {
+        return ESP_GSP_ERR_NOT_SUPPORTED;
+    }
+    size_t capacity = 256U + target->visible_slot_count * 6U;
+    char *params = malloc(capacity);
+    if (!params) {
+        return ESP_GSP_ERR_NO_MEM;
+    }
+    int written = snprintf(params, capacity,
+                           "{\"scene_content_id\":%" PRIu32 ",\"x1\":%" PRId32
+                           ",\"y1\":%" PRId32 ",\"x2\":%" PRId32 ",\"y2\":%" PRId32
+                           ",\"group_ref\":%u,\"visible_slots\":[",
+                           target->scene_content_id, target->bounds.x1, target->bounds.y1,
+                           target->bounds.x2, target->bounds.y2, target->group_ref);
+    if (written < 0 || (size_t)written >= capacity) {
+        free(params);
+        return ESP_GSP_FAIL;
+    }
+    size_t used = (size_t)written;
+    for (size_t i = 0; i < target->visible_slot_count; ++i) {
+        written = snprintf(params + used, capacity - used, "%s%u",
+                           i == 0 ? "" : ",", target->visible_slots[i]);
+        if (written < 0 || (size_t)written >= capacity - used) {
+            free(params);
+            return ESP_GSP_FAIL;
+        }
+        used += (size_t)written;
+    }
+    written = snprintf(params + used, capacity - used,
+                       "],\"width_slot_ref\":%u,\"height_slot_ref\":%u,\"width_min\":%" PRId32
+                       ",\"width_max\":%" PRId32 ",\"height_min\":%" PRId32
+                       ",\"height_max\":%" PRId32 "}",
+                       target->width_slot_ref, target->height_slot_ref, target->width_min,
+                       target->width_max, target->height_min, target->height_max);
+    if (written < 0 || (size_t)written >= capacity - used) {
+        free(params);
+        return ESP_GSP_FAIL;
+    }
+    char *reply = bridge_rpc(ui, "query_visibility", params);
+    free(params);
+    if (!reply) {
+        return ESP_GSP_FAIL;
+    }
+    int64_t rc = bridge_json_number(reply, "result_code", ESP_GSP_FAIL);
+    int64_t visible = bridge_json_number(reply, "visible", -1);
+    free(reply);
+    if (rc != ESP_GSP_OK) {
+        return (esp_gsp_err_t)rc;
+    }
+    if (visible < 0) {
+        return ESP_GSP_FAIL;
+    }
+    *out_visible = visible != 0;
+    return ESP_GSP_OK;
+}
+
 esp_gsp_err_t esp_gsp_goto_scene(esp_gsp_handle_t ui, uint16_t scene, esp_gsp_transition_t transition)
 {
     return pair(ui, "goto_scene", "scene", scene, "transition", transition);
@@ -261,4 +526,57 @@ esp_gsp_err_t esp_gsp_page_flow_set_page(esp_gsp_handle_t ui, gsp_component_key_
     char params[160];
     snprintf(params, sizeof(params), "{\"component_key\":%" PRIu32 ",\"page\":%u,\"animated\":%s}", key, page, animated ? "true" : "false");
     return bridge_command(ui, "page_flow_set_page", params);
+}
+esp_gsp_err_t esp_gsp_page_flow_get_page(esp_gsp_handle_t ui, gsp_component_key_t key,
+        uint16_t *out_page)
+{
+    if (!out_page) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    uint32_t args[8] = {key}, values[8];
+    esp_gsp_err_t rc = bridge_scalar(ui, GSP_BRIDGE_PAGE_FLOW_GET_PAGE, args, values);
+    if (rc == ESP_GSP_OK) {
+        *out_page = (uint16_t)values[0];
+    }
+    return rc;
+}
+esp_gsp_err_t esp_gsp_page_flow_get_offset(esp_gsp_handle_t ui, gsp_component_key_t key,
+        int32_t *out_offset_px)
+{
+    if (!out_offset_px) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    uint32_t args[8] = {key}, values[8];
+    esp_gsp_err_t rc = bridge_scalar(ui, GSP_BRIDGE_PAGE_FLOW_GET_OFFSET, args, values);
+    if (rc == ESP_GSP_OK) {
+        *out_offset_px = (int32_t)values[0];
+    }
+    return rc;
+}
+esp_gsp_err_t esp_gsp_page_flow_is_dragging(esp_gsp_handle_t ui, gsp_component_key_t key,
+        bool *out_dragging)
+{
+    if (!out_dragging) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    uint32_t args[8] = {key}, values[8];
+    esp_gsp_err_t rc = bridge_scalar(ui, GSP_BRIDGE_PAGE_FLOW_IS_DRAGGING, args, values);
+    if (rc == ESP_GSP_OK) {
+        *out_dragging = values[0] != 0;
+    }
+    return rc;
+}
+
+esp_gsp_err_t esp_gsp_set_pointer_observer(esp_gsp_handle_t ui,
+        esp_gsp_pointer_observer_cb_t cb, void *user_ctx)
+{
+    if (!ui) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    if (cb && !bridge_pointer_enabled(ui)) {
+        return ESP_GSP_ERR_NOT_SUPPORTED;
+    }
+    /* Delivery is serialized by gsp_sim_bridge_poll(), never during an RPC. */
+    bridge_set_pointer_observer(ui, cb, user_ctx);
+    return ESP_GSP_OK;
 }

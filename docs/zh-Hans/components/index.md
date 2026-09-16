@@ -21,12 +21,27 @@
 | [图片](./image.md) | `image` | 支持 contain、cover 和 stretch 的静态或动态图片。 | [`image.json`](../../../examples/widgets/image/image.json) |
 | [标签](./label.md) | `label` | 支持对齐、溢出和运行时绑定的 UTF-8 文本。 | [`label.json`](../../../examples/widgets/label/label.json) |
 
+## 数据与选择
+
+| 控件 | JSON 类型 | 用途 | 示例 |
+|---|---|---|---|
+| [立体图标轮盘](./carousel.md) | `carousel` | 使用编译期缩略图、前后排序和吸附选择的图标轮盘。 | [`carousel.json`](../../../examples/widgets/carousel/carousel.json) |
+| [下拉选择](./dropdown.md) | `dropdown` | 展开选项面板的紧凑型单选控件。 | [`dropdown.json`](../../../examples/widgets/dropdown/dropdown.json) |
+| [网格](./grid.md) | `grid` | 由可复用单元模板驱动的虚拟化多列集合。 | [`grid.json`](../../../examples/widgets/grid/grid.json) |
+| [列表](./list.md) | `list` | 支持固定数据或应用数据源的纵向滚动列表。 | [`list.json`](../../../examples/widgets/list/list.json) |
+| [消息列表](./message_list.md) | `message_list` | 带收发气泡样式的虚拟化会话视口。 | [`message_list.json`](../../../examples/widgets/message_list/message_list.json) |
+| [滚轮选择器](./wheel.md) | `wheel` | 支持行吸附与首尾连续循环的虚拟化选择滚轮。 | [`wheel.json`](../../../examples/widgets/wheel/wheel.json) |
+
 ## 可视化
 
 | 控件 | JSON 类型 | 用途 | 示例 |
 |---|---|---|---|
-| [图表](./chart.md) | `chart` | 用于展示固定数值序列的紧凑型折线图。 | [`chart.json`](../../../examples/widgets/chart/chart.json) |
+| [充电球](./charging_orb.md) | `charging_orb` | 提供水波、柔光光环和彩色光环，可配置充电粒子和膜状波纹。 | [`charging_orb.json`](../../../examples/widgets/charging_orb/charging_orb.json) |
+| [图表](./chart.md) | `chart` | 支持固定容量多曲线、批量更新与追加采样的折线图。 | [`chart.json`](../../../examples/widgets/chart/chart.json) |
 | [时钟](./clock.md) | `clock` | 指针与刻度可独立配置的模拟时钟。 | [`clock.json`](../../../examples/widgets/clock/clock.json) |
+| [参数特效](./effect.md) | `effect` | 支持自动播放的呼吸、光环、水波进度和扫光。 | [`effect.json`](../../../examples/widgets/effect/effect.json) |
+| [翻转卡片](./flip_card.md) | `flip_card` | 两张静态图片之间的透视翻转，支持中断和反向切换。 | [`flip_card.json`](../../../examples/widgets/flip_card/flip_card.json) |
+| [毛玻璃](./glass.md) | `glass` | 构建期生成静态背景的磨砂裁剪，运行时使用原生图片绘制。 | [`glass.json`](../../../examples/widgets/glass/glass.json) |
 | [指针](./needle.md) | `needle` | 枢轴、角度和尾长可配置的旋转仪表指针。 | [`needle.json`](../../../examples/widgets/needle/needle.json) |
 | [矩形](./rect.md) | `rect` | 支持填充、边框、圆角和透明度的轻量矩形图元。 | [`rect.json`](../../../examples/widgets/rect/rect.json) |
 | [形状](./shape.md) | `shape` | 无需图片资源即可绘制矩形、圆角、圆形或线条。 | [`shape.json`](../../../examples/widgets/shape/shape.json) |
@@ -36,7 +51,7 @@
 
 | 控件 | JSON 类型 | 用途 | 示例 |
 |---|---|---|---|
-| [容器](./container.md) | `container` | 用于分组、裁剪和自动布局的样式化父容器。 | [`container.json`](../../../examples/widgets/container/container.json) |
+| [容器](./container.md) | `container` | 支持分组、可选矩形子树裁剪和自动布局的父容器。 | [`container.json`](../../../examples/widgets/container/container.json) |
 | [图层](./layer.md) | `layer` | 用于覆盖层和可见性分组的全屏或局部图层。 | [`layer.json`](../../../examples/widgets/layer/layer.json) |
 
 ## 导航
@@ -47,16 +62,6 @@
 | [页面流](./page_flow.md) | `page_flow` | 支持横向或纵向滑动的多页面视口。 | [`page_flow.json`](../../../examples/widgets/page_flow/page_flow.json) |
 | [堆栈视图](./stackview.md) | `stackview` | 通过动画切换实现页面入栈和出栈的导航容器。 | [`stackview.json`](../../../examples/widgets/stackview/stackview.json) |
 | [选项卡视图](./tabview.md) | `tabview` | 包含标签栏和可滑动内容页的组合组件。 | [`tabview.json`](../../../examples/widgets/tabview/tabview.json) |
-
-## 数据与选择
-
-| 控件 | JSON 类型 | 用途 | 示例 |
-|---|---|---|---|
-| [下拉选择](./dropdown.md) | `dropdown` | 展开选项面板的紧凑型单选控件。 | [`dropdown.json`](../../../examples/widgets/dropdown/dropdown.json) |
-| [网格](./grid.md) | `grid` | 由可复用单元模板驱动的虚拟化多列集合。 | [`grid.json`](../../../examples/widgets/grid/grid.json) |
-| [列表](./list.md) | `list` | 支持固定数据或应用数据源的纵向滚动列表。 | [`list.json`](../../../examples/widgets/list/list.json) |
-| [消息列表](./message_list.md) | `message_list` | 带收发气泡样式的虚拟化会话视口。 | [`message_list.json`](../../../examples/widgets/message_list/message_list.json) |
-| [滚轮选择器](./wheel.md) | `wheel` | 支持循环与吸附选择的单列滚动选择器。 | [`wheel.json`](../../../examples/widgets/wheel/wheel.json) |
 
 ## 组合组件
 
