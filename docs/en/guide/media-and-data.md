@@ -66,8 +66,8 @@ decoder, lossless encoding otherwise. It is not an alias for explicit `jpeg`.
 
 Start with the [vector image example](../../../examples/widgets/image/vector.json).
 
-Use `.svg` in an Image's `image` field with GSPC 0.4.0 and ESP-GSP/simulator
-1.3.0. GSPC stores these images as compiled curves for runtime rendering.
+Use `.svg` in an Image's `image` field with GSPC 0.4.1 and ESP-GSP/simulator
+1.3.1. GSPC stores these images as compiled curves for runtime rendering.
 The compiler records the required binary format versions in the output;
 use the [compatibility contract](../reference/compatibility.md) when pairing tools.
 

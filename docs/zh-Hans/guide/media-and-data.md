@@ -68,7 +68,7 @@ manifest 和 execution 报告分别列出共享资源、场景绘制引用和初
 
 可从 [矢量图片示例](../../../examples/widgets/image/vector.json) 开始。
 
-使用 GSPC 0.4.0 与 ESP-GSP/模拟器 1.3.0，可在 Image 的 `image` 字段中引用 `.svg`。
+使用 GSPC 0.4.1 与 ESP-GSP/模拟器 1.3.1，可在 Image 的 `image` 字段中引用 `.svg`。
 GSPC 将它编译为运行时绘制的曲线资源，并记录产物所需的二进制格式版本。
 工具配套关系见[兼容性契约](../reference/compatibility.md)。
 

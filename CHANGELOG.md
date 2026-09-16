@@ -5,8 +5,15 @@
 - Add child clipping, state images, cyclic wheels and dynamic chart series.
 - Fix scrolling, text layout, generated APIs and image preparation.
 - Improve resource diagnostics and UI development guidance.
+- Reduce component package size while retaining all supported targets and examples.
 
 Rebuild GSPC and the runtime together for the new controls.
+
+## 1.3.1
+
+- Fix a crash when clearing message lists during session changes.
+- Fix text alignment, ellipsis and multiline layout in dynamic labels and template rows.
+- Preserve list state when layout updates or binding submissions fail.
 
 ## 1.3.0
 

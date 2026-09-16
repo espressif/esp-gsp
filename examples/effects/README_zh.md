@@ -23,7 +23,7 @@ Ring、脉冲和 SVG 页面使用 **Pause / Play**。轮盘由拖动或选中项
 
 ## 先用模拟器预览
 
-使用 GSPC 0.4.0，并配套 ESP-GSP 和模拟器 1.3.0。
+使用 GSPC 0.4.1，并配套 ESP-GSP 和模拟器 1.3.1。
 在仓库根目录执行：
 
 ```sh
@@ -33,7 +33,7 @@ GSP_SIM_APPLICATION_SOURCE="$PWD/ci/host/effects_sim_application.c" \
 ```
 
 应用钩子与硬件示例共用按钮控制逻辑。无应用钩子时只显示初始页面。
-模拟器用于检查观感、交互和像素；帧率与内存仍需在目标硬件验证。
+使用模拟器预览观感、交互和像素，在目标板上测量帧率与内存。
 
 ## 充电球配置
 
@@ -95,13 +95,13 @@ Ring 使用 `type: "effect"`、`effect: "ring"`，通过
 图标在构建期生成缩略图；运行时复用它们，并按投影轮廓进行点击测试。
 吸附复用框架动画池，通过有限时长缓动结束；新输入可中断。
 
-## 平台与边界
+## 硬件配置
 
 本例提供 S3 SPI、C3 SPI、S3 QSPI、P4 MIPI-DSI、S31 RGB565/RGB888 配置。
-构建命令见[英文说明](README.md#hardware)。每个配置使用独立 build/sdkconfig，顺序构建。
+构建命令见[英文说明](README.md#hardware)。每个配置使用独立的 build/sdkconfig。
 S31 使用 `idf.py --preview`，RGB888 增加 `-D GSP_EFFECTS_RGB888=ON`。
 
-`GSP_EFFECTS_AUTOPLAY=ON` 仅用于自动验收：每十秒切页，每两秒切换样式。
+`GSP_EFFECTS_AUTOPLAY=ON` 开启自动预览：每十秒切页，每两秒切换样式。
 默认 OFF，方便手动观察。C3 SPI 与 S31 RGB888 的共享板级实现没有触摸，可用自动模式预览。
 
 特效宽高上限 512；充电球、光环、脉冲使用正方形。轮盘最小边长 32，缩略图最大边长
@@ -265,4 +265,4 @@ ESP_ERROR_CHECK(gsp_effects_card_set_image_set(ui, 1));
 隐藏后自动归零并释放动画槽，按钮禁用时不会触发。按住按钮仍使用原生按下反馈。
 本例点击光效页面直接使用该动作；脉冲、点击柔光、翻转页均只保留一个实例。
 
-这些控制能力使用 GSB 2.12，需配套 GSPC 0.4.0 和 ESP-GSP 1.3.0。
+这些控制能力使用 GSB 2.12，需配套 GSPC 0.4.1 和 ESP-GSP 1.3.1。

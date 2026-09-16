@@ -194,7 +194,7 @@ bad-block and wear management belong to the driver. fseek/ftell limits apply
 
 examples/external_assets includes SDSPI mounting, board pins, a BSP-managed
 SDMMC/NAND alternative and built-in fallbacks. It never formats on mount failure.
-Use GSPC 0.4.0 with ESP-GSP 1.3.0.
+Use GSPC 0.4.1 with ESP-GSP 1.3.1.
 
 ## Fonts on SD
 

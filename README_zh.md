@@ -36,7 +36,7 @@ ESP-GSP 适用于界面结构在构建期确定，但文字、数值、图片、
 直接从 ESP Component Registry 创建最小完整示例：
 
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.3.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.3.1:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -54,7 +54,7 @@ python -m pip install -U esp-gsp-tools
 在 ESP-IDF 工程根目录运行：
 
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.3.0"
+idf.py add-dependency "espressif/esp-gsp^1.3.1"
 python -m pip install -U esp-gsp-tools
 ```
 

@@ -15,7 +15,7 @@ If you want to evaluate ESP-GSP before integrating it, start with the maintained
 example:
 
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.3.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.3.1:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -42,14 +42,14 @@ orientation.
 From the ESP-IDF project root:
 
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.3.0"
+idf.py add-dependency "espressif/esp-gsp^1.3.1"
 ```
 
 The equivalent component manifest entry is:
 
 ```yaml
 dependencies:
-  espressif/esp-gsp: "^1.3.0"
+  espressif/esp-gsp: "^1.3.1"
 ```
 
 For a local ESP-GSP component directory, use Component Manager `override_path`
@@ -73,7 +73,7 @@ version for an IDF project, create `.gspc_version` in the project root; the
 project marker takes precedence over the component marker:
 
 ```sh
-echo '0.4.0' > .gspc_version # Pin GSPC 0.4.0
+echo '0.4.1' > .gspc_version # Pin GSPC 0.4.1
 idf.py build
 ```
 

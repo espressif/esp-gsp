@@ -38,7 +38,7 @@ products that need predictable memory use and reviewable UI sources.
 Create the smallest complete example directly from the ESP Component Registry:
 
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.3.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.3.1:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -60,7 +60,7 @@ pinning, offline use and recovery from installation errors.
 From the ESP-IDF project root:
 
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.3.0"
+idf.py add-dependency "espressif/esp-gsp^1.3.1"
 python -m pip install -U esp-gsp-tools
 ```
 

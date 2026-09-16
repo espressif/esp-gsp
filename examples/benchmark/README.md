@@ -42,9 +42,8 @@ time to finish an in-flight drawer cycle or transition.
 | Transitions and gestures | Four slide directions, cross-fade, fade-through-black, drag commit/cancel/flick/fade |
 
 All 34 authored widget types in GSPC's registry are present at every supported
-resolution. Presence alone does not prove every interaction or backend: see
-the [coverage matrix and boundaries](COVERAGE.md) for the actual drivers and
-checks. The stable case table is [`main/bench_cases.inc`](main/bench_cases.inc).
+resolution. The [coverage matrix](COVERAGE.md) lists the drivers and checks
+for each case. The stable case table is [`main/bench_cases.inc`](main/bench_cases.inc).
 
 The visual language combines native navy/cyan/amber geometry, generated
 industrial artwork, transparent machinery overlays and a looping radar
@@ -344,7 +343,7 @@ logs retain their original case coverage; protocol 20 retains 52 cases and
 protocol 21 retains 53 cases.
 Do not compare aggregate scores across these protocols: the measured workload has changed.
 
-From the repository root, preview a vector case with GSPC 0.4.0 and simulator 1.3.0:
+From the repository root, preview a vector case with GSPC 0.4.1 and simulator 1.3.1:
 
 ```sh
 export GSPC_EXECUTABLE="$PWD/ci/gspc-dev"
@@ -495,6 +494,6 @@ measured trailer requires nonzero updates, five accepted command submissions
 per update, zero submission errors and successful asynchronous image
 publication with no failures. The 32x32 QOI inputs also match the placeholder
 on no-cache targets; global media checks still validate the complete cycle. Use `GSP_BENCH_SOAK_CASE=P_EFFECTS` for focused
-stress. The host opacity oracle verifies static versus runtime pixels and
-incremental damage in RGB565/RGB888; serial counters do not replace visual
-acceptance of effects, clipping or panel output.
+stress. The host opacity oracle compares static and runtime pixels and checks
+incremental damage in RGB565/RGB888. Inspect the target display for effect
+appearance, clipping and panel output.

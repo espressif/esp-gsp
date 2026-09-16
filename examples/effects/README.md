@@ -9,7 +9,7 @@ pause button. Visibility changes are submitted as one batch.
 
 Start with [the minimal integration example](minimal/README.md) for application code.
 See [the Chinese guide](README_zh.md) for complete authoring examples and options.
-Use GSPC 0.4.0 with ESP-GSP and simulator 1.3.0. Procedural scenes use GSB 2.10;
+Use GSPC 0.4.1 with ESP-GSP and simulator 1.3.1. Procedural scenes use GSB 2.10;
 flip-card and soft-shimmer scenes use GSB 2.11.
 
 ## Simulator
@@ -23,8 +23,8 @@ GSP_SIM_APPLICATION_SOURCE="$PWD/ci/host/effects_sim_application.c" \
 ```
 
 The simulator hook and device application share the same preview controller.
-Without the hook, only the initial page is displayed. Inspect simulator frames
-before hardware qualification; simulator FPS is not a device performance claim.
+Without the hook, the initial page is displayed. Use the simulator to preview
+appearance and interaction, and the target board to measure frame rate and memory.
 
 ## Styles
 
@@ -73,9 +73,9 @@ idf.py -B build_s3_spi -p PORT flash monitor
 
 S31 uses `idf.py --preview`. RGB888 requires `-D GSP_EFFECTS_RGB888=ON`.
 This example uses a 3 MiB application partition.
-`-D GSP_EFFECTS_AUTOPLAY=ON` is a qualification option: change style every two
-seconds, page every ten seconds, and exercise carousel selection. Leave it OFF
-for manual previews. C3 SPI and S31 RGB888 have no touch in the shared board layer.
+`-D GSP_EFFECTS_AUTOPLAY=ON` changes style every two seconds, switches pages
+every ten seconds, and cycles carousel selection. The default is OFF for manual
+previews. C3 SPI and S31 RGB888 have no touch in the shared board layer.
 
 Samples include frames, wall-time FPS, average frame-production busy time,
 raster/submit time, render errors and internal heap. An idle carousel stops
@@ -115,7 +115,7 @@ RGB565 glow uses stable spatial dithering but remains subject to panel color dep
 - Flip card: `front`, `back`, `flipped`, `depth` and `period_ms`; tap to flip by default; generated `set_flipped()` drives an interruptible transition. Hidden cards settle immediately. Faces are baked to at most 256 pixels per side. Start with a 160..220 pixel card width on constrained devices.
 - Glass: `backdrop` names an earlier opaque static Image with the same parent. `blur`, `tint_color`, `tint_opacity` and `radius` are baked into a cropped native bitmap. Backdrops must fit within 2048×2048; glass within 512×512. This does not blur other widgets or track runtime backdrop changes. Use preconfigured variants for themes.
 
-The preview uses nine pages; automatic qualification takes 90 seconds per cycle. A Halo with both ripple and particles disabled no longer advances an invisible animation.
+The preview has nine pages; autoplay completes a cycle in 90 seconds. Halo animation stops when both ripple and particles are disabled.
 
 ## Runtime appearance and compiled image groups
 
@@ -147,4 +147,4 @@ to 850 ms and accepts 100..60000 ms. Repeated clicks restart the fade; hiding th
 target clears it and frees its animation slot. Disabled buttons do not trigger it.
 The preview's pulse, touch-glow and flip pages now each use one retained instance.
 
-These controls use GSB 2.12 and require GSPC 0.4.0 with ESP-GSP 1.3.0.
+These controls use GSB 2.12 and require GSPC 0.4.1 with ESP-GSP 1.3.1.

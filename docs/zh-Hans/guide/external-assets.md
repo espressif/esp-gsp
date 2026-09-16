@@ -176,7 +176,7 @@ if (ret == ESP_GSP_OK) {
 小于 2 GiB，可拆包。该文件服务通过 ESP-IDF API 使用，PC 桥接没有对应端点。
 
 `examples/external_assets` 提供 SDSPI 挂载、板级引脚配置、BSP 已挂载 SDMMC/NAND
-入口及内置占位图。挂载失败不会格式化存储。使用 GSPC 0.4.0 并配套 ESP-GSP 1.3.0。
+入口及内置占位图。挂载失败不会格式化存储。使用 GSPC 0.4.1 并配套 ESP-GSP 1.3.1。
 
 ## SD 字体
 

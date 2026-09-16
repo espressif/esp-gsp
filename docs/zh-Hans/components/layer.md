@@ -12,10 +12,10 @@
 
 ```sh
 mkdir -p gsp-out/widget-preview
-python -m gsp.execute --version 0.4.0 gspc pack \
+python -m gsp.execute --version 0.4.1 gspc pack \
   examples/widgets/layer/layer.json \
   --deployable -o gsp-out/widget-preview/layer.gspb
-python -m gsp.execute --version 1.3.0 sim \
+python -m gsp.execute --version 1.3.1 sim \
   --bundle gsp-out/widget-preview/layer.gspb
 ```
 

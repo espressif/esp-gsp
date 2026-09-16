@@ -13,10 +13,10 @@ unpacked component or public repository root:
 
 ```sh
 mkdir -p gsp-out/widget-preview
-python -m gsp.execute --version 0.4.0 gspc pack \
+python -m gsp.execute --version 0.4.1 gspc pack \
   examples/widgets/grid/grid.json \
   --deployable -o gsp-out/widget-preview/grid.gspb
-python -m gsp.execute --version 1.3.0 sim \
+python -m gsp.execute --version 1.3.1 sim \
   --bundle gsp-out/widget-preview/grid.gspb
 ```
 

@@ -1,6 +1,6 @@
 # ESP-GSP Authoring Reference
 
-GSPC version: 0.4.0.
+GSPC version: 0.4.1.
 
 Declare runtime-update fields using the dynamic forms listed in the tables. See [dynamic property scope](../guide/scenes.md#dynamic-property-scope) for declaration forms and object-versus-subtree behavior.
 
