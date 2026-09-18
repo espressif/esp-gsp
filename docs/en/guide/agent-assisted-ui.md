@@ -1,6 +1,6 @@
 # Agent-assisted UI development
 
-ESP-GSP provides one installable Codex Skill for turning product requirements,
+ESP-GSP provides an installable coding-agent Skill for turning product requirements,
 reference images, or existing designs into validated scene JSON and generated
 C API integration. The Skill uses the GSPC and ESP-GSP version selected by the
 application and reads its schema, API reference and examples.
@@ -8,16 +8,17 @@ application and reads its schema, API reference and examples.
 ## Install the Skill
 
 The canonical Skill is `skills/esp-gsp-ui` in the
-[ESP-GSP repository](https://github.com/espressif/esp-gsp). Ask Codex to install
-that path from repository `espressif/esp-gsp` at ref `master` with
-`$skill-installer`.
+[ESP-GSP repository](https://github.com/espressif/esp-gsp). Install it from the
+same tag or commit as the ESP-GSP version used by the project. For Codex,
+`$skill-installer` can install that path.
 
 ```text
 Use $skill-installer to install skills/esp-gsp-ui from espressif/esp-gsp at
-ref master.
+the ref used by this project.
 ```
 
-From an existing source checkout, it can also be installed manually:
+From an existing source checkout, copy or link it into the skills directory
+used by your coding agent. For example, with Codex:
 
 ```sh
 mkdir -p ~/.codex/skills
@@ -28,14 +29,16 @@ Invoke it as `$esp-gsp-ui` on the next turn. The Skill belongs to the GitHub
 development experience and is not included in the ESP-IDF
 component archive. A project using the managed component still has the
 bilingual documentation, widget examples, and generated references that the
-Skill reads.
+Skill reads. Without installing the Skill, follow this guide and use
+`gspc doctor`, `gspc cards`, and `gspc diagnose` directly.
 
 ## Give it a useful requirement
 
 Provide the project path and describe the desired page behavior. The Skill
 reads existing target, display, bundle and tool settings from the project.
-For a new project, supply display size and orientation when known; it asks
-about missing choices as needed.
+For a new project, include the display size or orientation when it is relevant.
+Existing project configuration is used when available, and product decisions
+that are not represented in the project can be supplied in the request.
 
 Useful details include page states, dynamic data, navigation, available assets,
 and the interactions you want checked. You do not need to know generated API
@@ -46,8 +49,8 @@ A concise creation request can be:
 ```text
 Use $esp-gsp-ui in this ESP-IDF project. Create scenes/settings.json for a
 480x320 RGB888 display with a brightness slider, Wi-Fi toggle, language
-dropdown, and Back action. Integrate the generated API and run scene and target
-build validation. Do not change the BSP.
+dropdown, and Back action. Integrate the generated API, build the project, and
+preview the page in the simulator.
 ```
 
 For a reference image, attach it and state whether it is a visual reference or
@@ -81,10 +84,20 @@ The Skill follows the same ownership model as the
 2. reads the current Schema, relevant Widget page, and checked Widget example;
 3. keeps layout and declarative behavior in JSON, product state in the
    application, and panel behavior in the BSP;
-4. runs `gspc compatibility` and `gspc diagnose` against the real scene;
-5. generates bundle headers, integrates their APIs, and builds application changes;
-6. resolves or builds the simulator for requested previews and checks interactions;
+4. uses `gspc cards` for the target widget, then runs `gspc compatibility` and
+   `gspc diagnose` against the real scene (diagnostics include `suggestions`);
+5. generates bundle headers and `*.api.json`, integrates their APIs, and builds
+   application changes;
+6. when preview is requested, resolves or builds the simulator, loads the
+   `--api-json` from the same compile, and verifies named input, state and
+   inspection against the compiled initial layout; with an application backend,
+   state writes and navigation stay backend-owned;
 7. summarizes changes, build results and preview checks.
+
+When an ESP-IDF build already exists, run `gspc doctor <project> --build
+<build-dir>` first. Use its observed target and component contract for the
+agent workflow; an unavailable build description must remain an unknown rather
+than being replaced with a host assumption.
 
 Use [Scene JSON](scenes.md) to understand authored structure,
 [Runtime and generated API](runtime-api.md) for application integration, and
@@ -96,6 +109,12 @@ Review the source JSON and application changes, then rebuild to refresh generate
 headers and bundles. Check object names, callback responsiveness, resource ownership
 and capacity for simultaneously active objects. Preview layout and interaction in the
 simulator, then follow [Display integration](display.md) to check the board.
+
+For a source-checkout release gate, run
+`python3 tools/sim_host/tests/agent_loop_smoke.py --host <sim-host> --gspc <gspc>`.
+It checks one deterministic diagnose-and-repair path and then loads the matching
+Bundle/API sidecar into the simulator. It does not replace the owning ESP-IDF
+build or board acceptance.
 
 The Skill reads the selected component's schema, headers and examples and follows
 the language used in your request.

@@ -16,7 +16,7 @@ ESP_ERROR_CHECK(esp_gsp_esp_lcd_start(&app, &lcd, &ui));
 
 ## 生成对象操作
 
-只有控件类型和 JSON 动态属性支持时，GSPC 才生成对应操作。配置 `name` 和 `fg_color` 的 Slider 会生成 `get_value()`、`set_value()`；带文字 `bind` 的命名 Label 会生成文字 setter；`callback` 会生成事件判断函数。应查看生成头文件，或各[控件示例页](../components/index.md)展示的真实签名。
+只有控件类型和 JSON 动态属性支持时，GSPC 才生成对应操作。配置 `name` 和 `fg_color` 的 Slider 会生成 `get_value()`、`set_value()`；带文字 `bind` 的命名 Label 会生成文字 setter；`callback` 会生成事件判断函数。应查看生成头文件旁的 `*.api.json`、或各[控件示例页](../components/index.md)展示的真实签名。
 
 ESP-IDF 中 setter 是异步的。成功表示命令已入队；渲染任务随后提交状态，并按变更安排刷新。
 `esp_gsp_flush()` 用于确定性测试、截图或明确的同步边界。
@@ -59,6 +59,22 @@ UI 事件 → 短回调 → 应用任务 → 产品状态改变
 重试；成功后再释放 Bundle、字体、回调上下文、显示目标和 BSP 资源。
 
 详细所有权规则见[生命周期](lifecycle.md)，完整签名见[函数级 API 参考](../reference/api-functions.md)。
+
+## 公共错误码
+
+生成 setter 和 `esp_gsp_*` 返回已有的 `esp_gsp_err_t`。不要另造错误类型。
+
+| 宏 | 值 | 含义 |
+|---|---|---|
+| `ESP_GSP_OK` | `0` | 已接受（异步入队成功，不是渲染完成） |
+| `ESP_GSP_FAIL` | `-1` | 未分类失败 |
+| `ESP_GSP_ERR_NO_MEM` | `0x101` | 分配失败 |
+| `ESP_GSP_ERR_INVALID_ARG` | `0x102` | 参数无效 |
+| `ESP_GSP_ERR_INVALID_STATE` | `0x103` | 当前状态不允许该调用 |
+| `ESP_GSP_ERR_INVALID_SIZE` | `0x104` | 缓冲区或容量不足 |
+| `ESP_GSP_ERR_NOT_FOUND` | `0x105` | 对象、绑定或资源不存在 |
+| `ESP_GSP_ERR_NOT_SUPPORTED` | `0x106` | 当前控件或配置不支持该操作 |
+| `ESP_GSP_ERR_TIMEOUT` | `0x107` | 等待队列或停止超时；句柄仍有效，可重试 |
 
 
 ## 颜色与按下反馈

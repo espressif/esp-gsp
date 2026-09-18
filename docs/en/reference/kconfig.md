@@ -233,6 +233,7 @@ tuning.
 | More dynamic text | `CONFIG_ESP_GSP_TEXT_SLOTS`, `CONFIG_ESP_GSP_LIST_TEXT_SLOTS` | `ESP_GSP_BUILD_CAP_TEXT_CAPACITY` is only the inline command threshold; longer strings use framework-owned heap storage |
 | Application pinch handling | Always available since 0.2.0 | `ESP_GSP_BUILD_CAP_MAX_TOUCH_POINTS` is two; product settings do not compile pinch out |
 | Runtime PNG/JPEG or compiled JPEG | `CONFIG_ESP_GSP_ENABLE_IMAGE_CACHE` and its budget | Disabling the cache makes those paths unavailable in region-decode mode |
+| Less Flash in a product that never decodes JPEG | `CONFIG_ESP_GSP_ENABLE_JPEG=n` | Link capability, not a runtime switch: the decoder and its hardware/software JPEG dependencies leave the firmware image, authored `codec: "jpeg"` fails the build, `gsp_add_bundle`/`gsp_add_assets` exclude jpeg/jpeg_a8 from an explicit `PROFILE`'s resolved capability instead of rejecting it, and a runtime JPEG submission is accepted but completes with `GSP_ERR_UNSUPPORTED`. See [Media and data](../guide/media-and-data.md) |
 | Lower internal-SRAM use | First reduce measured pool demand; then consider PSRAM task stacks | Do not shrink stacks without high-water-mark evidence |
 | Lower decode-task memory | `CONFIG_ESP_GSP_ENABLE_ASYNC_DECODE` | Disabling moves decode work to the render task and may increase frame latency |
 | Lower transition peak memory | `CONFIG_ESP_GSP_ENABLE_TRANSITION_SNAPSHOTS` | Disabling changes supported transitions to the no-snapshot path |

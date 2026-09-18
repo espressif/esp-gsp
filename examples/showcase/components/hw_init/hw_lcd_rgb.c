@@ -13,6 +13,9 @@
 #include "driver/gpio.h"
 #include "esp_lcd_panel_rgb.h"
 #include "esp_log.h"
+#if CONFIG_IDF_TARGET_ESP32S3
+#include "esp_psram.h"
+#endif
 
 static const char *TAG = "hw_lcd_rgb";
 
@@ -21,25 +24,36 @@ static const char *TAG = "hw_lcd_rgb";
 #define HW_LCD_DMA_BURST_SIZE 128
 #define HW_LCD_DATA_WIDTH     24
 #define HW_LCD_COLOR_FORMAT   LCD_COLOR_FMT_RGB888
+#define HW_LCD_CLK_SRC        LCD_CLK_SRC_DEFAULT
 #elif CONFIG_IDF_TARGET_ESP32S3
 #define HW_LCD_PIXEL_CLOCK_HZ (18 * 1000 * 1000)
 #define HW_LCD_DMA_BURST_SIZE 64
 #define HW_LCD_DATA_WIDTH     16
 #define HW_LCD_COLOR_FORMAT   LCD_COLOR_FMT_RGB565
+#define HW_LCD_CLK_SRC        LCD_CLK_SRC_PLL160M
 #else
 #define HW_LCD_PIXEL_CLOCK_HZ (26 * 1000 * 1000)
-// #define HW_LCD_PIXEL_CLOCK_HZ (20 * 1000 * 1000)
 #define HW_LCD_DMA_BURST_SIZE 128
 #define HW_LCD_DATA_WIDTH     16
 #define HW_LCD_COLOR_FORMAT   LCD_COLOR_FMT_RGB565
+#define HW_LCD_CLK_SRC        LCD_CLK_SRC_DEFAULT
 #endif
 
+#if CONFIG_IDF_TARGET_ESP32S3
+#define HW_LCD_HSYNC 40
+#define HW_LCD_HBP   40
+#define HW_LCD_HFP   48
+#define HW_LCD_VSYNC 23
+#define HW_LCD_VBP   32
+#define HW_LCD_VFP   13
+#else
 #define HW_LCD_HSYNC 1
 #define HW_LCD_HBP   40
 #define HW_LCD_HFP   20
 #define HW_LCD_VSYNC 1
 #define HW_LCD_VBP   10
 #define HW_LCD_VFP   5
+#endif
 
 #if CONFIG_IDF_TARGET_ESP32S31
 #define HW_LCD_RGB_VSYNC  GPIO_NUM_45
@@ -73,7 +87,7 @@ static const char *TAG = "hw_lcd_rgb";
 #define HW_LCD_RGB_DATA22 GPIO_NUM_5
 #define HW_LCD_RGB_DATA23 GPIO_NUM_7
 #endif
-#else
+#elif CONFIG_IDF_TARGET_ESP32S3
 #define HW_LCD_RGB_VSYNC  GPIO_NUM_3
 #define HW_LCD_RGB_HSYNC  GPIO_NUM_46
 #define HW_LCD_RGB_DE     GPIO_NUM_17
@@ -85,8 +99,8 @@ static const char *TAG = "hw_lcd_rgb";
 #define HW_LCD_RGB_DATA3  GPIO_NUM_13
 #define HW_LCD_RGB_DATA4  GPIO_NUM_14
 #define HW_LCD_RGB_DATA5  GPIO_NUM_21
-#define HW_LCD_RGB_DATA6  GPIO_NUM_8
-#define HW_LCD_RGB_DATA7  GPIO_NUM_18
+#define HW_LCD_RGB_DATA6  GPIO_NUM_47
+#define HW_LCD_RGB_DATA7  GPIO_NUM_48
 #define HW_LCD_RGB_DATA8  GPIO_NUM_45
 #define HW_LCD_RGB_DATA9  GPIO_NUM_38
 #define HW_LCD_RGB_DATA10 GPIO_NUM_39
@@ -95,6 +109,8 @@ static const char *TAG = "hw_lcd_rgb";
 #define HW_LCD_RGB_DATA13 GPIO_NUM_42
 #define HW_LCD_RGB_DATA14 GPIO_NUM_2
 #define HW_LCD_RGB_DATA15 GPIO_NUM_1
+#else
+#error "RGB hw_init supports only ESP32-S3 and ESP32-S31"
 #endif
 
 #define HW_LCD_BOUNCE_BUFFER_HEIGHT 20
@@ -108,7 +124,7 @@ esp_err_t hw_lcd_init(
              HW_LCD_H_RES, HW_LCD_V_RES, HW_LCD_DATA_WIDTH,
              HW_LCD_PIXEL_CLOCK_HZ, HW_LCD_DMA_BURST_SIZE);
     esp_lcd_rgb_panel_config_t panel_config = {
-        .clk_src = LCD_CLK_SRC_DEFAULT,
+        .clk_src = HW_LCD_CLK_SRC,
         .dma_burst_size = HW_LCD_DMA_BURST_SIZE,
         .data_width = HW_LCD_DATA_WIDTH,
         .in_color_format = HW_LCD_COLOR_FORMAT,
@@ -150,6 +166,17 @@ esp_err_t hw_lcd_init(
         .bounce_buffer_size_px = HW_LCD_H_RES * HW_LCD_BOUNCE_BUFFER_HEIGHT,
 #endif
     };
+#if CONFIG_IDF_TARGET_ESP32S3
+    /* Match esp32_s3_lcd_ev_board: R16 modules route DATA6/7 to 8/18,
+     * while R8 modules use 47/48. The module is identified by PSRAM size. */
+    if (esp_psram_get_size() > (8 * 1024 * 1024)) {
+        panel_config.data_gpio_nums[6] = GPIO_NUM_8;
+        panel_config.data_gpio_nums[7] = GPIO_NUM_18;
+        ESP_LOGI(TAG, "ESP32-S3 RGB module profile: R16");
+    } else {
+        ESP_LOGI(TAG, "ESP32-S3 RGB module profile: R8/default");
+    }
+#endif
     esp_lcd_panel_handle_t panel;
     ESP_ERROR_CHECK(esp_lcd_new_rgb_panel(&panel_config, &panel));
     ESP_ERROR_CHECK(esp_lcd_panel_reset(panel));

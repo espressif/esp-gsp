@@ -1,21 +1,22 @@
 # Agent 辅助 UI 开发
 
-ESP-GSP 提供一份可安装的 Codex Skill，用于把产品需求、参考图或现有设计转换为
+ESP-GSP 提供一份可安装的编码 Agent Skill，用于把产品需求、参考图或现有设计转换为
 经过验证的场景 JSON 和生成式 C API 集成。Skill 使用应用实际选中的 GSPC 与
 ESP-GSP 版本，并读取对应的控件 Schema、API 参考和示例。
 
 ## 安装 Skill
 
 权威 Skill 位于 [ESP-GSP 仓库](https://github.com/espressif/esp-gsp)的
-`skills/esp-gsp-ui`。可以让 Codex 使用 `$skill-installer`，从
-`espressif/esp-gsp` 仓库的 `master` ref 安装该路径。
+`skills/esp-gsp-ui`。应从工程实际使用的 ESP-GSP 标签或提交安装同版本 Skill。
+Codex 可以通过 `$skill-installer` 安装该路径。
 
 ```text
-使用 $skill-installer，从 espressif/esp-gsp 仓库的 master ref 安装
+使用 $skill-installer，从 espressif/esp-gsp 仓库中本工程使用的 ref 安装
 skills/esp-gsp-ui。
 ```
 
-如果已经取得源码仓库，也可以在仓库根目录手动安装：
+如果已经取得源码仓库，也可以复制或链接到当前编码 Agent 的 Skill 目录。
+例如 Codex：
 
 ```sh
 mkdir -p ~/.codex/skills
@@ -24,12 +25,14 @@ cp -R skills/esp-gsp-ui ~/.codex/skills/
 
 下一轮对话通过 `$esp-gsp-ui` 调用。Skill 属于 GitHub 开发体验，不进入
 ESP-IDF 组件压缩包。使用托管组件的工程仍然包含中英文文档、控件示例与生成参考，
-Skill 会读取这些与组件版本匹配的内容。
+Skill 会读取这些与组件版本匹配的内容。未安装 Skill 时，也可以直接按本指南运行
+`gspc doctor`、`gspc cards` 和 `gspc diagnose`。
 
 ## 提供有效需求
 
 提供工程路径，描述希望实现的页面行为即可。Skill 会从现有工程读取芯片、显示、
-Bundle 和工具配置。新工程可以补充已知的显示尺寸与方向，缺少必要信息时再确认。
+Bundle 和工具配置。新工程可在需求中补充相关的显示尺寸或方向；已有工程配置会优先
+用于确定这些信息，工程中没有表达且会影响产品行为的选择可以直接写在需求里。
 
 页面状态、动态数据、导航、可用资源和需要检查的交互，都有助于明确需求。
 无需事先了解生成 API 名称或资源 slot 规则。
@@ -67,10 +70,14 @@ Skill 遵循与[推荐工程工作流](workflow.md)相同的职责模型：
 1. 识别实际选中的组件、Target、GSPC、Bundle、场景和 BSP；
 2. 读取当前 Schema、相关控件页和经过检查的控件示例；
 3. 布局和声明式行为放在 JSON，产品状态放在应用，面板行为放在 BSP；
-4. 对真实场景执行 `gspc compatibility` 和 `gspc diagnose`；
-5. 生成 Bundle 头文件，接入其中的 API，并构建应用修改；
-6. 按预览需求查找或构建模拟器，检查页面与交互；
+4. 用 `gspc cards` 查看目标控件字段，对真实场景执行 `gspc compatibility` 和 `gspc diagnose`（诊断含 `suggestions`）；
+5. 生成 Bundle 头文件和 `*.api.json`，接入其中的 API，并构建应用修改；
+6. 需要预览时查找或构建模拟器，加载同一次编译生成的 `--api-json`，按名验证输入、状态和编译初始布局；连接应用 Backend 时，状态写入与导航仍由 Backend 负责；
 7. 汇总修改内容、构建结果和预览情况。
+
+已有 ESP-IDF 构建时，先运行 `gspc doctor <project> --build <build-dir>`。
+使用其中报告的 Target、组件和配置契约；如果找不到构建描述，应保持为未知，
+不能用 host 默认配置代替。
 
 [场景 JSON](scenes.md)解释编写结构，
 [运行时与生成 API](runtime-api.md)解释应用集成，
@@ -81,5 +88,10 @@ Skill 遵循与[推荐工程工作流](workflow.md)相同的职责模型：
 检查源 JSON 和应用代码变更，重新构建以更新生成头文件和 Bundle。确认对象命名、
 回调响应、资源所有权和同时活跃对象的容量。先在模拟器中预览布局与交互，再按
 [显示集成](display.md)检查开发板上的运行效果。
+
+源码 checkout 需要执行发布前 agent 门禁时，可运行
+`python3 tools/sim_host/tests/agent_loop_smoke.py --host <sim-host> --gspc <gspc>`。
+它会验证一次确定性的“诊断—修复”路径，再把同一次编译生成的 Bundle/API sidecar
+交给模拟器检查；它不能替代 ESP-IDF 工程构建和开发板验收。
 
 Skill 读取所选组件的 Schema、头文件和示例，并按提问语言选择说明与文档。

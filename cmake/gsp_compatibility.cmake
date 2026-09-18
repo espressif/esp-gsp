@@ -63,6 +63,26 @@ function(esp_gsp_validate_gspc_compatibility compatibility_json)
     _esp_gsp_json_get(actual "${compatibility_json}" config abi_version)
     _esp_gsp_require_equal("configuration ABI" "${actual}"
         "${ESP_GSP_COMPATIBILITY_CONFIG_ABI}")
+
+    # Matching binary formats do not imply support for every compiler option.
+    # Only require this feature when the project actually excludes JPEG.
+    if(DEFINED CONFIG_ESP_GSP_ENABLE_JPEG AND NOT CONFIG_ESP_GSP_ENABLE_JPEG)
+        string(JSON feature_type ERROR_VARIABLE feature_error TYPE
+            "${compatibility_json}" compiler_features jpeg_disable_constraint)
+        if(NOT feature_error AND feature_type STREQUAL "BOOLEAN")
+            string(JSON jpeg_constraint GET
+                "${compatibility_json}" compiler_features jpeg_disable_constraint)
+        else()
+            set(jpeg_constraint OFF)
+        endif()
+        if(NOT jpeg_constraint)
+            message(FATAL_ERROR
+                "esp-gsp: CONFIG_ESP_GSP_ENABLE_JPEG=n requires GSPC with "
+                "--disable-jpeg support. Update/rebuild GSPC together with "
+                "this component, then update the project .gspc_version or "
+                "GSPC_EXECUTABLE. Alternatively keep JPEG enabled.")
+        endif()
+    endif()
 endfunction()
 
 function(esp_gsp_check_gspc executable output_version)

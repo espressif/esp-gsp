@@ -110,6 +110,7 @@ also available through the API channel at runtime.
 | `--dump-format <FMT>` | Screenshot format: `ppm` (default) / `png` / `raw` |
 | `--api-enable` | Enable API control channel (defaults to stdio) |
 | `--api-listen <URL>` | API endpoint; implies `--api-enable` |
+| `--api-json <PATH>` | Load a GSPC `*.api.json` for named tap/set, inspect/hit_test, and callback names |
 | `--backend-enable` | Enable application backend on a random local port |
 | `--backend-listen <URL>` | Backend endpoint; implies `--backend-enable` |
 | `--backend-required` | Pause frame progression until backend connects |
@@ -166,6 +167,19 @@ JSON-RPC 2.0. Enable it with `--api-enable` (defaults to stdio) or
 `--api-listen <URL>`. Supported transports: stdio, loopback TCP
 (`tcp://127.0.0.1:PORT`), and Unix socket (`unix:///path/to/sim.sock`).
 
+For stable named automation, compile with `--api-header` and load the resulting
+bundle sidecar:
+
+```sh
+gsp_sim_host --bundle build/app.gspb --api-json build/app_gsp.api.json \
+    --api-listen tcp://127.0.0.1:8266 --frames 0
+```
+
+`capabilities.named_api` confirms that the map is active. The sidecar must come
+from the same compile as the bundle; mismatched schema, byte length, or CRC is
+rejected at startup. Named bounds describe the compiled initial layout, so use
+screenshots or coordinate input after runtime movement and animation.
+
 ### Methods
 
 #### Input
@@ -173,6 +187,7 @@ JSON-RPC 2.0. Enable it with `--api-enable` (defaults to stdio) or
 | Method | Parameters | Description |
 |---|---|---|
 | `tap` | `{ "x": N, "y": N }` | Simulate a tap |
+| `tap_object` | `{ "name": "...", "scene": N }` | Tap a named object's compiled center; `scene` is optional |
 | `drag` | `{ "x1": N, "y1": N, "x2": N, "y2": N }` | Simulate a drag gesture |
 | `feed_pointer` | `{ "x": N, "y": N, "pressed": bool }` | Low-level pointer input |
 | `feed_touch` | `{ "id": N, "x": N, "y": N, "pressed": bool }` | Low-level multi-touch input |
@@ -183,6 +198,7 @@ JSON-RPC 2.0. Enable it with `--api-enable` (defaults to stdio) or
 |---|---|---|
 | `goto_scene` | `{ "scene": N, "transition": N }` | Switch to a 0-based scene; `transition` is optional |
 | `reset` | — | Reload the scene bundle |
+| `set_property` | `{ "name": "...", "property": "...", "value": ... }` | Set a named property using sidecar type/range metadata |
 | `set_value` | `{ "bind_id": N, "value": N }` | Set an integer binding |
 | `set_text` | `{ "bind_id": N, "text": "..." }` | Set a text binding |
 | `set_color` | `{ "bind_id": N, "color": N }` | Set a color binding |
@@ -207,7 +223,10 @@ JSON-RPC 2.0. Enable it with `--api-enable` (defaults to stdio) or
 | Method | Parameters | Description |
 |---|---|---|
 | `ping` | — | Heartbeat; returns `"pong"` |
-| `capabilities` | — | Query display size, scene count, and runtime ABI |
+| `capabilities` | — | Query display size, scene count, runtime ABI, and `named_api` |
+| `list_objects` | `{ "scene": N }` | List named objects; `scene` is optional |
+| `inspect_object` | `{ "name": "...", "scene": N }` | Inspect named operations, properties, and compiled bounds |
+| `hit_test` | `{ "x": N, "y": N, "scene": N }` | Find the smallest named compiled bound at a point |
 | `frame_info` | — | Get latest frame commit info |
 | `wait` | `{ "frames": N }` | Respond after N frames |
 | `invalidate` | — | Force full-screen redraw next frame |
@@ -228,7 +247,7 @@ Events are delivered as JSON-RPC notifications (no `id`). Register with
 | Event | Parameters | Description |
 |---|---|---|
 | `scene_changed` | `{ "from": N, "to": N }` | Scene transition |
-| `callback` | `{ "action_id": N, "arg": N, "scene_id": N, "list": N, "item": N }` | Component callback |
+| `callback` | `{ "action_id": N, "arg": N, "scene_id": N, "list": N, "item": N, "callback"?: "name" }` | Component callback; includes the compiled callback name when `--api-json` is loaded |
 | `frame` | `{ "index": N }` | Per-frame tick |
 | `list_bind` | `{ "list": N, "slot": N, "instance": N, "item": N, "resource_slot": N, "text_slot": N }` | Backend dynamic List/Grid row request; Grid member slots, 65535 means absent (both absent for List) |
 | `list_bind_overflow` | `{ "dropped": N, "level": "warn", "message": "..." }` | Backend row-request loss; native bridge requires a session restart |

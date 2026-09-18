@@ -109,6 +109,132 @@ void esp_gsp_service_stats(esp_gsp_handle_t gsp,
                            uint64_t *out_service_us,
                            uint32_t *out_commands);
 
+/** Component update accounting, in two units. Populated only by a library
+ *  built with the GSP_PROFILE_SERVICE instrumentation; see
+ *  esp_gsp_property_stats() for how an ordinary build answers.
+ *
+ *  A *batch* is one atomic component update transaction: one
+ *  esp_gsp_component_set_properties() or esp_gsp_component_set_many() call,
+ *  including the single-value convenience setters
+ *  (esp_gsp_component_set_property(), _set_position(), _set_value(),
+ *  _set_color_rgb888(), esp_gsp_image_set_scale(), ...) that resolve to one
+ *  of them. An *entry* is one component+property+value item inside a batch,
+ *  so a single-value setter is one batch with one entry and
+ *  esp_gsp_component_set_position() is one batch with two.
+ *
+ *  Each accepted batch is processed twice by design: the caller validates it
+ *  so an invalid update fails immediately, and a second pass applies it
+ *  inside its own transaction. The validate_* fields account for the first
+ *  pass, the apply_* fields for the second. Both are counted even where a
+ *  single task performs both.
+ *
+ *  Each timing field is measured around the work it names. Which one
+ *  contains which depends on where the apply pass ran, and a single build
+ *  mixes several such paths, so never add them together:
+ *   - validate_us is always the calling task, around the validation pass
+ *     only.
+ *   - apply_us is measured wherever the batch is actually applied, which is
+ *     one of three places:
+ *       * Queued drain. The caller is an ordinary task, so the batch is
+ *         handed to the platform adapter's queue and applied when the render
+ *         task drains it. That drain is part of what service_us of
+ *         esp_gsp_service_stats() measures, so this apply_us falls inside
+ *         service_us.
+ *       * Render-task inline. The caller already is the render task — an
+ *         application timer, input or decode callback invoked from the frame
+ *         loop — and the adapter applies the batch inline rather than
+ *         queueing it. This apply_us falls inside whichever render-task
+ *         window the callback ran in: step_us for a callback under
+ *         esp_gsp_ui_step(), service_us for one reached from the command
+ *         drain or the pointer poll.
+ *       * No adapter. The update is always applied inline on the calling
+ *         task, so it falls inside no render-task window unless that caller
+ *         was itself running under esp_gsp_ui_step().
+ *     apply_us is one total over all three, so it can only be treated as a
+ *     breakdown of service_us or of step_us by an integration that is known
+ *     to use a single path.
+ *   - step_us is the esp_gsp_ui_step() body. It may therefore contain
+ *     apply_us spans, and is disjoint from the render_us/submit_us of
+ *     esp_gsp_render_phases().
+ *
+ *  Neither coalescing nor no-op suppression exists on this path, and the
+ *  update transaction does not report whether a committed value differed
+ *  from the previous one, so no coalesced or no-op count is offered.
+ */
+typedef struct {
+    /** Bytes of this structure the library filled; always the first field. */
+    uint16_t struct_size;
+    /** Non-zero when this build carries the counter instrumentation. Zero
+     *  means every count below is a zeroed placeholder. */
+    uint8_t counters_available;
+    /** Non-zero when the port has a microsecond clock, so the _us and max_*
+     *  fields carry real measurements. Ports without one (the host and
+     *  simulator builds, which stay bit-exact across runs) report zero here
+     *  and leave those fields at 0 while the counts remain valid. */
+    uint8_t timing_available;
+    /** Batches that ran caller-side validation, and their entries. */
+    uint32_t validated_batches;
+    uint32_t validated_entries;
+    /** Batches rejected by caller-side validation; nothing was queued. */
+    uint32_t validate_failures;
+    /** Batches that passed validation but could not be queued. */
+    uint32_t submit_failures;
+    /** Batches committed by the render task, and their entries. */
+    uint32_t applied_batches;
+    uint32_t applied_entries;
+    /** Batches whose apply-time transaction failed; nothing was committed. */
+    uint32_t apply_failures;
+    /** Batches the render task skipped before opening a transaction, in
+     *  practice because their scene was no longer current on arrival. */
+    uint32_t apply_dropped_batches;
+    /** Batches whose entry count exceeded the inline update scratch, counted
+     *  once per pass, so the pass had to stage its transaction on the heap. */
+    uint32_t heap_scratch_batches;
+    /** Completed UI-core state advances, one per esp_gsp_ui_step() body.
+     *  gsp_app_step() resolves a pending scene transition before entering
+     *  that body, so the transition and its adapter calls are outside both
+     *  this count and step_us. */
+    uint32_t steps;
+    uint32_t max_validate_us;
+    uint32_t max_apply_us;
+    uint32_t max_step_us;
+    uint64_t validate_us;
+    uint64_t apply_us;
+    uint64_t step_us;
+} esp_gsp_property_stats_t;
+
+/** Snapshot the component update counters. Pass
+ *  sizeof(esp_gsp_property_stats_t) as @p stats_size; the library fills the
+ *  common prefix and reports it in struct_size, so a caller built against a
+ *  different header revision still reads the fields it knows.
+ *
+ *  Returns true only when this library carries the GSP_PROFILE_SERVICE
+ *  instrumentation and @p gsp is valid. An ordinary build has no counters at
+ *  all: the call then writes @p stats_size zeroed bytes, sets struct_size,
+ *  leaves counters_available at 0 and returns false, so a zeroed reading is
+ *  never mistaken for measured traffic.
+ *
+ *  Two cases write nothing at all and return false: @p out_stats is NULL, or
+ *  @p stats_size is under sizeof(uint32_t) and so cannot hold even the
+ *  struct_size and availability prefix. In both the caller's buffer is left
+ *  exactly as it was. Every other @p stats_size is fully written.
+ *
+ *  Counters are cumulative and wrap; take two snapshots and subtract. Every
+ *  field is read with a single atomic load, so snapshots do not race with
+ *  counter updates or report torn values. Fields are sampled one after
+ *  another and may belong to slightly different moments; this is not an
+ *  atomic snapshot of the entire pipeline.
+ *
+ *  Atomic operations use the target toolchain's implementation. On targets
+ *  without native support, including 64-bit totals on supported 32-bit SoCs,
+ *  ESP-IDF helpers use brief interrupt-disabled critical sections or spinlocks.
+ *  Reads and updates can therefore delay another task; the overhead depends
+ *  on the target and contention. These helpers do not acquire UI/state
+ *  mutexes, and this cost only exists in an instrumented build. */
+bool esp_gsp_property_stats(esp_gsp_handle_t gsp,
+                            esp_gsp_property_stats_t *out_stats,
+                            size_t stats_size);
+
 /** Cumulative image, animation and canvas pipeline counters. */
 typedef struct {
     uint32_t decoded_images;

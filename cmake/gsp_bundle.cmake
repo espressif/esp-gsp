@@ -38,6 +38,9 @@ function(gsp_enable_freetype)
     idf_build_get_property(build_components BUILD_COMPONENTS)
     get_target_property(gsp_freetype_enabled
         ${gsp_lib} ESP_GSP_FREETYPE_ENABLED)
+    # A weak runtime reference leaves this member out of AOT consumer links.
+    # Explicit enablement roots it, including when building release archives.
+    target_link_libraries(${gsp_lib} INTERFACE "-Wl,-u,esp_gsp_freetype_provider")
     if(gsp_freetype_enabled)
         return()
     endif()
@@ -68,7 +71,8 @@ function(gsp_enable_freetype)
         return()
     endif()
     target_sources(${gsp_lib} PRIVATE
-        "${gsp_root}/src/runtime/gsp_freetype.c")
+        "${gsp_root}/src/runtime/gsp_freetype.c"
+        "${gsp_root}/src/ui/esp_gsp_freetype.c")
     target_compile_definitions(${gsp_lib} PRIVATE GSP_ENABLE_FREETYPE=1)
     target_link_libraries(${gsp_lib} PRIVATE ${freetype_lib})
     set_property(TARGET ${gsp_lib}
@@ -76,8 +80,37 @@ function(gsp_enable_freetype)
     message(STATUS "esp-gsp: FreeType enabled by application")
 endfunction()
 
+function(_esp_gsp_jpeg_enabled out_var)
+    if(DEFINED CONFIG_ESP_GSP_ENABLE_JPEG AND NOT CONFIG_ESP_GSP_ENABLE_JPEG)
+        set(${out_var} OFF PARENT_SCOPE)
+    else()
+        set(${out_var} ON PARENT_SCOPE)
+    endif()
+endfunction()
+
+# Align compiler capabilities with the firmware link setting for both derived
+# and explicit profiles. Keep this idempotent because assets can inherit the
+# argument list from gsp_add_bundle().
+function(_esp_gsp_apply_jpeg_disable_constraint out_var)
+    set(args "${${out_var}}")
+    _esp_gsp_jpeg_enabled(jpeg_enabled)
+    if(NOT jpeg_enabled AND NOT "--disable-jpeg" IN_LIST args)
+        list(APPEND args --disable-jpeg)
+    endif()
+    set(${out_var} "${args}" PARENT_SCOPE)
+endfunction()
+
+# CONFIG_ESP_GSP_ENABLE_JPEG=n removes the decoder from the firmware, so the
+# derived target profile must stop advertising JPEG. gspc then keeps
+# `codec: auto` on a lossless encoding and reports GSPC-RS-CAPABILITY for an
+# explicitly authored JPEG instead of emitting a resource this firmware could
+# not decode.
 function(_esp_gsp_jpeg_profile_args out_var decoded_cache_available)
     set(jpeg_profile_args "")
+    _esp_gsp_jpeg_enabled(jpeg_enabled)
+    if(NOT jpeg_enabled)
+        set(decoded_cache_available FALSE)
+    endif()
     if(decoded_cache_available)
         if(CONFIG_SOC_JPEG_CODEC_SUPPORTED)
             list(APPEND jpeg_profile_args --hardware-jpeg)
@@ -285,6 +318,7 @@ function(gsp_add_bundle target)
             "${scene_dir}/${scene_stem}_actions.h"
             "${scene_dir}/${scene_stem}_objects.h"
             "${scene_dir}/${scene_stem}_templates.h"
+            "${scene_dir}/${scene_stem}.api.json"
             "${scene_dir}/${scene_stem}.execution.json"
             "${scene_dir}/${scene_stem}.manifest.md")
         if(ARG_DEPLOYABLE)
@@ -343,6 +377,7 @@ function(gsp_add_bundle target)
     if(DEFINED ARG_IMAGE_CACHE_BYTES AND NOT "${ARG_IMAGE_CACHE_BYTES}" STREQUAL "")
         list(APPEND profile_args --image-cache-bytes "${ARG_IMAGE_CACHE_BYTES}")
     endif()
+    _esp_gsp_apply_jpeg_disable_constraint(profile_args)
 
     # A component's ordinary assets inherit the same target/profile decisions.
     get_target_property(previous_profile ${target} ESP_GSP_ASSET_PROFILE_ARGS)
@@ -356,6 +391,7 @@ function(gsp_add_bundle target)
     add_custom_command(
         OUTPUT "${bundle_path}" "${api_header}"
         BYPRODUCTS ${scene_api_byproducts}
+                   "${gen_dir}/${ARG_SYMBOL}_gsp.api.json"
         COMMAND ${CMAKE_COMMAND} -E env "GSPC_RESOURCE_SUMMARY=pretty"
                 ${gspc_command} compile ${scene_paths}
                 ${profile_args} -o "${bundle_path}"
@@ -458,6 +494,9 @@ function(gsp_add_assets target)
         set(profile_args --profile "${profile}")
         list(APPEND dependencies "${profile}")
     elseif(NOT ARG_PIXEL_FORMAT AND inherited_profile)
+        # gsp_add_bundle already applied the CONFIG_ESP_GSP_ENABLE_JPEG=n
+        # constraint to this list before storing it, so it carries
+        # --disable-jpeg whenever it needs to.
         set(profile_args ${inherited_profile})
         get_target_property(inherited_deps ${target} ESP_GSP_ASSET_PROFILE_DEPS)
         if(inherited_deps)
@@ -479,6 +518,7 @@ function(gsp_add_assets target)
             "${decoded_cache_available}")
         list(APPEND profile_args ${jpeg_profile_args})
     endif()
+    _esp_gsp_apply_jpeg_disable_constraint(profile_args)
     if(gspc_command STREQUAL "${gsp_root}/ci/gspc-dev")
         file(GLOB_RECURSE source_deps CONFIGURE_DEPENDS
             "${gsp_root}/tools/gspc/*.rs" "${gsp_root}/tools/gspc/*/Cargo.toml")

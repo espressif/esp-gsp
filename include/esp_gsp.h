@@ -653,7 +653,15 @@ typedef enum {
  * Reports the terminal result of one accepted runtime-image request. The
  * callback runs exactly once from the render or decode task. GSP_OK means the
  * new image was published; GSP_ERR_CANCELLED means a newer request or shutdown
- * superseded it. Keep the callback short and non-blocking. In particular, do
+ * superseded it. Any other status means this request will never publish:
+ * GSP_ERR_INVALID_FORMAT for an unreadable container, and GSP_ERR_UNSUPPORTED
+ * when the container is readable but this firmware cannot decode it — which
+ * includes JPEG and JPEG_A8 in a build configured without the JPEG decoder.
+ * Container sniffing is independent of the linked decoders, so the submitting
+ * call still returns ESP_GSP_OK and the refusal is reported here. Applications
+ * that must distinguish "superseded" from "never going to work" should branch
+ * on the status rather than assume a retry will eventually succeed.
+ * Keep the callback short and non-blocking. In particular, do
  * not call esp_gsp_stop() from this callback; defer shutdown to the application
  * task. UI submissions from the decode task never wait for queue space and
  * may return ESP_GSP_ERR_TIMEOUT when the queue is full.

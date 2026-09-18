@@ -36,6 +36,17 @@ CMake 会执行 `gspc compatibility` 兼容性检查并验证生成格式、需�
 
 ## 场景生成
 
+### 结构化修复建议
+
+`gspc diagnose scene.json --format json` 会为常见字段和控件类型错误指出 JSON 路径与
+源码范围。若控件注册信息中有唯一的相近名称，`suggestions` 可能提供 `replacement`。
+将该文本替换到报告的范围后重新诊断，不要再次添加引号，也不要把建议标题当作代码。
+名称或位置不明确时不提供自动替换；编译器不会修改输入文件。
+
+不支持的有界动态属性会提供说明性建议，列出适用字段或使用条件。
+`replacement: null` 表示说明，不是文本修改。有界表达式与运行时样式 Setter 是
+不同能力，应结合生成 API 和对应控件的动态字段说明使用。
+
 ### JSON 报告未知字段或控件
 
 以当前组件版本的[场景编写参考](../reference/authoring.md)和[控件库](../components/index.md)

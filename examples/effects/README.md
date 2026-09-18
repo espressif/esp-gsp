@@ -9,7 +9,7 @@ pause button. Visibility changes are submitted as one batch.
 
 Start with [the minimal integration example](minimal/README.md) for application code.
 See [the Chinese guide](README_zh.md) for complete authoring examples and options.
-Use GSPC 0.4.1 with ESP-GSP and simulator 1.3.1. Procedural scenes use GSB 2.10;
+Use GSPC 0.5.0 with ESP-GSP and simulator 1.4.0. Procedural scenes use GSB 2.10;
 flip-card and soft-shimmer scenes use GSB 2.11.
 
 ## Simulator
@@ -147,4 +147,4 @@ to 850 ms and accepts 100..60000 ms. Repeated clicks restart the fade; hiding th
 target clears it and frees its animation slot. Disabled buttons do not trigger it.
 The preview's pulse, touch-glow and flip pages now each use one retained instance.
 
-These controls use GSB 2.12 and require GSPC 0.4.1 with ESP-GSP 1.3.1.
+These controls use GSB 2.12 and require GSPC 0.5.0 with ESP-GSP 1.4.0.

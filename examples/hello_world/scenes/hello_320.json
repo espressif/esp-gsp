@@ -8,6 +8,7 @@
   "objects": [
     {
       "type": "container",
+      "name": "root",
       "parent": -1,
       "x": 0,
       "y": 0,
@@ -17,7 +18,8 @@
     },
     {
       "type": "container",
-      "parent": 0,
+      "name": "card",
+      "parent_name": "root",
       "x": 24,
       "y": 28,
       "w": 272,
@@ -29,7 +31,7 @@
     },
     {
       "type": "label",
-      "parent": 1,
+      "parent_name": "card",
       "x": 20,
       "y": 14,
       "w": 200,
@@ -39,7 +41,7 @@
     },
     {
       "type": "label",
-      "parent": 1,
+      "parent_name": "card",
       "x": 20,
       "y": 48,
       "w": 220,
@@ -50,7 +52,7 @@
     },
     {
       "type": "label",
-      "parent": 0,
+      "parent_name": "root",
       "x": 24,
       "y": 140,
       "w": 150,
@@ -61,7 +63,7 @@
     },
     {
       "type": "progress",
-      "parent": 0,
+      "parent_name": "root",
       "x": 24,
       "y": 170,
       "w": 272,

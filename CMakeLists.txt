@@ -108,11 +108,25 @@ set(gsp_priv_include_dirs
     "src/backend/esp_lcd"
     "src/platform/esp_idf")
 
-# PPA and JPEG drivers register empty components on unsupported SoCs.
-# Require them even in minimal builds so capable targets compile the
-# hardware backends instead of silently selecting software decoding.
-set(gsp_priv_requires log esp_driver_ppa esp_driver_dma esp_driver_jpeg esp_mm esp_timer esp_lcd esp_partition espressif__freetype)
-list(APPEND gsp_srcs "src/codec/gsp_codec_jpeg.c")
+# CONFIG_ESP_GSP_ENABLE_JPEG selects which archive members reach the firmware,
+# so it is resolved here rather than in the project-config bridge. A release
+# archive must stay self-contained and always carries the decoder; only the
+# consuming build decides whether to root its member.
+set(gsp_jpeg_enabled ON)
+if(DEFINED CONFIG_ESP_GSP_ENABLE_JPEG AND NOT CONFIG_ESP_GSP_ENABLE_JPEG
+        AND NOT ESP_GSP_BUILD_PREBUILT)
+    set(gsp_jpeg_enabled OFF)
+endif()
+
+# The PPA driver registers an empty component on unsupported SoCs. Require it
+# even in minimal builds so capable targets compile the hardware backend
+# instead of silently selecting software rendering. The JPEG driver follows
+# the same rule, but only while JPEG itself is linked.
+set(gsp_priv_requires log esp_driver_ppa esp_driver_dma esp_mm esp_timer esp_lcd esp_partition espressif__freetype)
+if(gsp_jpeg_enabled)
+    list(APPEND gsp_priv_requires esp_driver_jpeg)
+    list(APPEND gsp_srcs "src/codec/gsp_codec_jpeg.c")
+endif()
 if(CONFIG_SOC_CPU_HAS_PIE)
     list(APPEND gsp_srcs
         "src/renderer/kernel_rgb565/gsp_kernel_rgb565_pie.S"
@@ -138,7 +152,7 @@ if(ESP_GSP_BUILD_PREBUILT)
     # not ship gsp_freetype.c and therefore cannot add the provider later.
     # This branch deliberately takes precedence over an existing archive so a
     # release build can never accidentally recycle stale CI artifacts.
-    list(APPEND gsp_srcs "src/runtime/gsp_freetype.c")
+    list(APPEND gsp_srcs "src/runtime/gsp_freetype.c" "src/ui/esp_gsp_freetype.c")
 elseif(CONFIG_ESP_GSP_PREBUILT_COMPONENT)
     # Only packaged components consume release archives. A source checkout
     # may retain archives from an earlier build; never select those implicitly.
@@ -154,7 +168,9 @@ elseif(CONFIG_ESP_GSP_PREBUILT_COMPONENT)
     set(gsp_srcs "${gsp_prebuilt_anchor}")
     set(gsp_priv_include_dirs "")
     set(gsp_use_prebuilt ON)
-    list(APPEND gsp_priv_requires espressif__esp_new_jpeg)
+    if(gsp_jpeg_enabled)
+        list(APPEND gsp_priv_requires espressif__esp_new_jpeg)
+    endif()
 endif()
 if(NOT ESP_GSP_BUILD_PREBUILT AND NOT gsp_use_prebuilt)
     list(APPEND gsp_srcs "adapters/esp_idf/esp_gsp_idf_touch.c")
@@ -212,11 +228,27 @@ if(gsp_use_prebuilt)
     set_property(TARGET ${COMPONENT_LIB}
         PROPERTY ESP_GSP_PREBUILT TRUE)
 else()
-    idf_component_optional_requires(PRIVATE espressif__esp_new_jpeg)
+    if(gsp_jpeg_enabled)
+        idf_component_optional_requires(PRIVATE espressif__esp_new_jpeg)
+    endif()
     if(ESP_GSP_BUILD_PREBUILT)
         target_compile_definitions(${COMPONENT_LIB}
             PRIVATE GSP_ENABLE_FREETYPE=1)
         set_property(TARGET ${COMPONENT_LIB}
             PROPERTY ESP_GSP_FREETYPE_ENABLED TRUE)
     endif()
+endif()
+
+# The runtime holds a weak reference to the JPEG member, so an enabled build
+# has to root it explicitly. Doing it here, once, keeps the result independent
+# of how many times and in which order application helpers run, and applies
+# equally to a source checkout and a release archive.
+set_property(TARGET ${COMPONENT_LIB}
+    PROPERTY ESP_GSP_JPEG_ENABLED ${gsp_jpeg_enabled})
+if(gsp_jpeg_enabled)
+    target_link_libraries(${COMPONENT_LIB} INTERFACE
+        "-Wl,-u,gsp_codec_jpeg_provider")
+else()
+    message(STATUS "esp-gsp: JPEG decoding disabled by "
+        "CONFIG_ESP_GSP_ENABLE_JPEG=n")
 endif()

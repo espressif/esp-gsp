@@ -2,12 +2,19 @@
 
 ## Unreleased
 
-- Add child clipping, state images, cyclic wheels and dynamic chart series.
+## 1.4.0
+
+- Reduce Flash and RAM usage with optional font/JPEG support and scene-local resources.
+- Improve Arc rendering and resource handling.
+- Add clipping, state images, cyclic wheels, and dynamic chart series.
+- Improve diagnostics, resource budgets, and build compatibility.
 - Fix scrolling, text layout, generated APIs and image preparation.
 - Improve resource diagnostics and UI development guidance.
+- Add agent-oriented GSPC cards, versioned API sidecars and named simulator automation.
 - Reduce component package size while retaining all supported targets and examples.
 
-Rebuild GSPC and the runtime together for the new controls.
+Update GSPC and ESP-GSP together. Applications using runtime TTF data must enable
+[dynamic font support](docs/en/guide/media-and-data.md#raster-images-and-fonts).
 
 ## 1.3.1
 

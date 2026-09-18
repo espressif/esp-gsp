@@ -30,6 +30,37 @@ config ESP_GSP_ENABLE_IMAGE_CACHE
         Runtime product setting. Disable to use bounded region decoding.
         The prebuilt archive still contains both implementations.
 
+config ESP_GSP_ENABLE_JPEG
+    bool "Link the JPEG decoder"
+    default y
+    help
+        Build-time link capability, not a runtime switch. Keep it enabled to
+        decode compiled, runtime and external JPEG/JPEG_A8 resources with the
+        hardware engine where the target has one and the software decoder
+        otherwise.
+
+        Disabling keeps the decoder, the hardware JPEG driver and the
+        esp_new_jpeg software decoder out of the firmware image, for a source
+        checkout and for the prebuilt component alike. The managed
+        dependencies are still downloaded and built; only this component stops
+        referencing them, so another component in the same application can
+        still use JPEG on its own.
+
+        With the decoder excluded, gsp_add_bundle() and gsp_add_assets() stop
+        advertising JPEG to the compiler, so an explicitly authored
+        codec: "jpeg" fails the build instead of producing an undecodable
+        resource. This also applies to an explicit PROFILE: the compiler
+        excludes jpeg and jpeg_a8 from the resolved profile's capability
+        after loading it, so a hand-written profile keeps its own budgets
+        and settings but cannot re-introduce JPEG. Runtime image submissions
+        can still be accepted; their completion callback reports
+        GSP_ERR_UNSUPPORTED.
+        Bundles or asset packages compiled elsewhere are checked when their
+        JPEG resources are used, not when the package is loaded.
+
+        Every other codec, image probing and container detection are
+        unaffected, and the host simulator keeps its full codec set.
+
 config ESP_GSP_ENABLE_ASYNC_DECODE
     bool "Decode images in the background"
     default y

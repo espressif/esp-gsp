@@ -143,10 +143,17 @@ For installation and example requests, see
 [Agent-assisted UI development](agent-assisted-ui.md).
 
 ```sh
+gspc doctor .
+gspc cards slider
 gspc schema --authoring -o scene.schema.json
 gspc diagnose scenes/*.json --format json -o diagnostics.json
 gspc docs -o authoring-reference.md
 ```
+
+Start with `gspc cards` for one widget. Add schema, docs, or inventory when the
+task needs field ranges, version details, or the full registry. `compile` /
+`pack` also write `*.api.json` next to generated headers so tools can map
+object names to helpers, binds and simulator RPC.
 
 The schema describes fields and ranges; diagnostics identify the JSON paths to edit.
 Give the agent the scene path, resolution, pixel format, interactions, assets and a

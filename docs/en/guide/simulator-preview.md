@@ -154,21 +154,25 @@ for the protocol.
 Enable the JSON-RPC control channel for programmatic access:
 
 ```sh
-gsp_sim_host --bundle app.gspb --frames 0 --api-enable
+gsp_sim_host --bundle app.gspb --frames 0 --api-enable \
+    --api-json app_gsp.api.json
 ```
 
 Then drive the simulator from any JSON-RPC client. A typical verification
 flow:
 
-1. `capabilities` — confirm display size and scene count.
-2. `tap` / `drag` — inject pointer input.
-3. `wait` — let the animation settle.
-4. `screenshot` — capture the result.
-5. `quit` — shut down.
+1. `capabilities` — confirm display size, scene count and `named_api`.
+2. `list_objects` / `inspect_object` — discover the target in the current scene.
+3. `tap_object` / `set_property` — drive named input or state.
+4. `wait` — let the animation settle.
+5. `screenshot` — capture the result.
+6. `quit` — shut down.
 
 The channel supports stdio (default), loopback TCP, and Unix sockets. Set
 `--input-mode api-exclusive` when the automation must be the sole input
 source and the browser preview is open simultaneously.
+The sidecar must come from the same compile as the bundle. Without one, use
+coordinate input and numeric bindings.
 
 ## Full-stack simulation with a backend
 
@@ -186,6 +190,8 @@ the UI and drives the display through `set_text`, `set_value`, `drawer_open`,
 the backend endpoint is enabled, application state writes and scene navigation
 are backend-exclusive: browser controls and API calls cannot bypass the
 business backend.
+The API channel may still perform input, named inspection, waits and screenshots;
+state writes and `goto_scene` must be sent by the backend.
 
 To reuse device-side C application logic, keep LCD, touch, GPIO, Wi-Fi, NVS,
 and FreeRTOS initialization in a platform layer. Keep timers,

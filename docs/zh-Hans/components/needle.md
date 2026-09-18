@@ -12,10 +12,10 @@
 
 ```sh
 mkdir -p gsp-out/widget-preview
-python -m gsp.execute --version 0.4.1 gspc pack \
+python -m gsp.execute --version 0.5.0 gspc pack \
   examples/widgets/needle/needle.json \
   --deployable -o gsp-out/widget-preview/needle.gspb
-python -m gsp.execute --version 1.3.1 sim \
+python -m gsp.execute --version 1.4.0 sim \
   --bundle gsp-out/widget-preview/needle.gspb
 ```
 

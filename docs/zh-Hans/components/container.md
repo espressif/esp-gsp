@@ -12,10 +12,10 @@
 
 ```sh
 mkdir -p gsp-out/widget-preview
-python -m gsp.execute --version 0.4.1 gspc pack \
+python -m gsp.execute --version 0.5.0 gspc pack \
   examples/widgets/container/container.json \
   --deployable -o gsp-out/widget-preview/container.gspb
-python -m gsp.execute --version 1.3.1 sim \
+python -m gsp.execute --version 1.4.0 sim \
   --bundle gsp-out/widget-preview/container.gspb
 ```
 
@@ -56,7 +56,7 @@ python -m gsp.execute --version 1.3.1 sim \
     },
     {
       "type": "label",
-      "parent": 0,
+      "parent_name": "card",
       "x": 0,
       "y": 0,
       "w": 326,
@@ -67,7 +67,7 @@ python -m gsp.execute --version 1.3.1 sim \
     },
     {
       "type": "label",
-      "parent": 0,
+      "parent_name": "card",
       "x": 0,
       "y": 0,
       "w": 326,
@@ -78,7 +78,8 @@ python -m gsp.execute --version 1.3.1 sim \
     },
     {
       "type": "container",
-      "parent": 0,
+      "parent_name": "card",
+      "name": "nested",
       "x": 0,
       "y": 0,
       "w": 326,
@@ -88,7 +89,7 @@ python -m gsp.execute --version 1.3.1 sim \
     },
     {
       "type": "label",
-      "parent": 3,
+      "parent_name": "nested",
       "x": 16,
       "y": 16,
       "w": 294,
@@ -109,6 +110,8 @@ python -m gsp.execute --version 1.3.1 sim \
 const gsp_component_directory_t *const * gsp_container_docs_component_directories(uint16_t *out_count)
 esp_err_t gsp_widget_container_card_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
 esp_err_t gsp_widget_container_card_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_container_nested_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_container_nested_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
 esp_gsp_config_t gsp_container_docs_config(void)
 size_t gsp_container_docs_dynamic_image_slots(void)
 ```
@@ -121,6 +124,7 @@ size_t gsp_container_docs_dynamic_image_slots(void)
 |---|---|---:|---|---:|---|
 | `type` | `string` | 是 | — | — | 控件类型 |
 | `parent` | `int` | 是 | 默认 -1; -1…65534 | — | 父对象索引（-1 表示屏幕根节点） |
+| `parent_name` | `string` | — | — | — | 使用名称而不是索引指定父对象 |
 | `x` | `int` | 是 | 默认 0; -32768…32767 | 场景: 支持; 模板: 自身填充 | 相对于父对象的 x 坐标 |
 | `y` | `int` | 是 | 默认 0; -32768…32767 | 场景: 支持; 模板: 自身填充 | 相对于父对象的 y 坐标 |
 | `w` | `int` | 是 | 0…65535 | 场景: 自身填充; 模板: 自身填充 | 宽度（像素） |
@@ -197,6 +201,5 @@ size_t gsp_container_docs_dynamic_image_slots(void)
 
 | 字段 | 类型 | 必填 | 默认值 / 范围 | 可运行时更新 | 编译器定义 |
 |---|---|---:|---|---:|---|
-| `parent_name` | `string` | — | — | — | 使用名称而不是索引指定父对象 |
 
 </details>

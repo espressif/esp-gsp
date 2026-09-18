@@ -13,10 +13,10 @@ unpacked component or public repository root:
 
 ```sh
 mkdir -p gsp-out/widget-preview
-python -m gsp.execute --version 0.4.1 gspc pack \
+python -m gsp.execute --version 0.5.0 gspc pack \
   examples/widgets/container/container.json \
   --deployable -o gsp-out/widget-preview/container.gspb
-python -m gsp.execute --version 1.3.1 sim \
+python -m gsp.execute --version 1.4.0 sim \
   --bundle gsp-out/widget-preview/container.gspb
 ```
 
@@ -58,7 +58,7 @@ Give every object that application code must read or update a stable `name`. GSP
     },
     {
       "type": "label",
-      "parent": 0,
+      "parent_name": "card",
       "x": 0,
       "y": 0,
       "w": 326,
@@ -69,7 +69,7 @@ Give every object that application code must read or update a stable `name`. GSP
     },
     {
       "type": "label",
-      "parent": 0,
+      "parent_name": "card",
       "x": 0,
       "y": 0,
       "w": 326,
@@ -80,7 +80,8 @@ Give every object that application code must read or update a stable `name`. GSP
     },
     {
       "type": "container",
-      "parent": 0,
+      "parent_name": "card",
+      "name": "nested",
       "x": 0,
       "y": 0,
       "w": 326,
@@ -90,7 +91,7 @@ Give every object that application code must read or update a stable `name`. GSP
     },
     {
       "type": "label",
-      "parent": 3,
+      "parent_name": "nested",
       "x": 16,
       "y": 16,
       "w": 294,
@@ -111,6 +112,8 @@ This is `examples/widgets/container/container.json`. Copy any relative assets re
 const gsp_component_directory_t *const * gsp_container_docs_component_directories(uint16_t *out_count)
 esp_err_t gsp_widget_container_card_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
 esp_err_t gsp_widget_container_card_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
+esp_err_t gsp_widget_container_nested_get_effective_visible(esp_gsp_handle_t gsp, bool *out_visible)
+esp_err_t gsp_widget_container_nested_get_info(esp_gsp_handle_t gsp, esp_gsp_component_info_t *out_info)
 esp_gsp_config_t gsp_container_docs_config(void)
 size_t gsp_container_docs_dynamic_image_slots(void)
 ```
@@ -123,6 +126,7 @@ These signatures come from the actual compiler output for this JSON.
 |---|---|---:|---|---:|---|
 | `type` | `string` | yes | — | — | widget type |
 | `parent` | `int` | yes | default -1; -1…65534 | — | parent object index (-1 = screen root) |
+| `parent_name` | `string` | — | — | — | parent by name instead of index |
 | `x` | `int` | yes | default 0; -32768…32767 | scene: yes; template: own fill | x relative to parent |
 | `y` | `int` | yes | default 0; -32768…32767 | scene: yes; template: own fill | y relative to parent |
 | `w` | `int` | yes | 0…65535 | scene: own fill; template: own fill | width in px |
@@ -199,6 +203,5 @@ These signatures come from the actual compiler output for this JSON.
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
-| `parent_name` | `string` | — | — | — | parent by name instead of index |
 
 </details>

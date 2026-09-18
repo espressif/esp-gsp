@@ -1,6 +1,6 @@
 ---
 name: esp-gsp-ui
-description: Create, modify, review, diagnose, preview, or integrate ESP-GSP JSON scenes in ESP-IDF projects. Use when Codex needs to turn UI requirements or reference images into scenes/*.json, select ESP-GSP widgets and assets, validate scenes with gspc, integrate generated bundle APIs, connect dynamic data or events, or troubleshoot scene, build, simulator, and display behavior.
+description: Create, modify, review, diagnose, preview, or integrate ESP-GSP JSON scenes in ESP-IDF projects. Use when a coding agent needs to turn UI requirements or reference images into scenes/*.json, select ESP-GSP widgets and assets, validate scenes with gspc, integrate generated bundle APIs, connect dynamic data or events, or troubleshoot scene, build, simulator, and display behavior.
 ---
 
 # ESP-GSP UI
@@ -19,7 +19,8 @@ project or conversation. Choose the smallest complete path:
   generate and preview, then connect application behavior when requested.
 - **Change an existing screen:** inspect the affected scene and its application
   callers, preserve its names and registration, and validate the changed layout
-  or interaction. Export schema or inventory only when a field is unclear.
+  or interaction. Use cards and the widget page first; add schema or inventory
+  when a field or version detail is unclear.
 - **Connect live data:** identify the data source, update rate, maximum live
   items and ownership; generate the appropriate setters or collection binders,
   integrate them, and build the owning application.
@@ -45,8 +46,11 @@ bundle registration and affected scenes. Read logical resolution, pixel format
 and required interactions for scene work; inspect `IDF_TARGET`, BSP display
 path and PSRAM when integrating or diagnosing the device.
 
-Use `build/project_description.json` to identify the component selected by an
-existing build. If no build exists, inspect the project dependency and CMake
+Use `gspc doctor <project> --build <build-dir>` when an ESP-IDF build exists; it
+reads `build/project_description.json` and reports the observed Target, build
+revision, selected `esp-gsp` component path, sdkconfig capabilities and relevant
+CMake options. Use that contract to identify the component selected by the
+build. If no build exists, inspect the project dependency and CMake
 configuration without assuming that a nearby ESP-GSP checkout is active. Resolve
 GSPC from the CMake cache or `GSPC_EXECUTABLE`. Otherwise read `.gspc_version`
 from the application root first and the selected component second, then use
@@ -91,15 +95,29 @@ then load only the pages needed for the task:
   concrete control.
 
 Query GSPC instead of copying field or version tables into the project or this
-skill. Run only the exports needed by the task; a focused widget edit normally
-needs its checked example, component page, and `diagnose`, not all three files:
+skill. Start with the widget card, its component page, and the checked example;
+add schema, docs, or inventory when the task needs field ranges or the full
+registry:
 
 ```sh
-mkdir -p build/esp-gsp-agent
-gspc schema --authoring -o build/esp-gsp-agent/scene.schema.json
-gspc docs -o build/esp-gsp-agent/authoring-reference.md
-gspc inventory --format json -o build/esp-gsp-agent/widget-inventory.json
+mkdir -p build/gsp-agent-cache
+gspc cards slider
+gspc schema --authoring -o build/gsp-agent-cache/scene.schema.json
+gspc docs -o build/gsp-agent-cache/authoring-reference.md
+gspc inventory --format json -o build/gsp-agent-cache/widget-inventory.json
 ```
+
+After compile or pack, read the sidecar `*.api.json` next to generated headers
+for object names, typed operations, helpers, bind/component keys and callbacks.
+Use the bundle-level sidecar produced by the same compile as the preview bundle;
+the simulator rejects mismatched bundle length/CRC metadata. Those mappings
+come from the compiler sidecar, not from inspecting GSPB bytes.
+For `gsp_add_bundle`, use the sidecar path reported by the build next to
+`<symbol>_gsp.h`. For direct GSPC use, pass `--api-header`; its extension is
+replaced with `.api.json`.
+`gspc doctor [project]` reports the compiler contract, sidecar commands and
+scene files; when a build description is available it also reports target
+facts. An unavailable build contract is unknown, not a host-profile fallback.
 
 Keep these disposable exports below the ignored build tree.
 The installed compiler schema, selected component documentation, public
@@ -191,8 +209,9 @@ the project or user:
 gspc diagnose scenes/main.json --format json
 ```
 
-Fix diagnostics at their reported JSON paths. Use the properties defined by
-the installed ESP-GSP Schema and widget reference.
+Fix diagnostics at their reported JSON paths. Apply `suggestions` when present.
+Use the properties defined by the installed ESP-GSP Schema, `gspc cards`, and
+widget reference.
 
 Generate the bundle and headers through `gsp_add_bundle()` or the matching GSPC
 before using new application APIs. Inspect compiler diagnostics, execution
@@ -244,7 +263,8 @@ example is for a single scene; include the registered scenes for cross-scene
 navigation checks. Open the browser preview:
 
 ```sh
-gspc pack scenes/main.json --deployable -o build/app.gspb
+gspc pack scenes/main.json --deployable -o build/app.gspb \
+    --api-header build/app_gsp.h --symbol app
 gsp_sim_host --bundle build/app.gspb --frames 0
 ```
 
@@ -275,18 +295,21 @@ preferred approach for automated verification:
 
 ```sh
 gsp_sim_host --bundle build/app.gspb --frames 0 \
+    --api-json build/app_gsp.api.json \
     --api-listen tcp://127.0.0.1:8266
 ```
 
 Drive the simulator through JSON-RPC 2.0 over TCP with Content-Length
 framing. The typical agent verification sequence:
 
-1. `capabilities` — confirm display size and scene count.
-2. `goto_scene` — navigate to the target scene.
-3. `tap` / `drag` — inject pointer input at known coordinates.
-4. `wait` — let animation settle (e.g. 3–5 frames).
-5. `screenshot` — capture the result for comparison.
-6. `quit` — shut down the simulator.
+1. `capabilities` — confirm display size, scene count, and `named_api`.
+2. `goto_scene` — navigate to the target scene when no application backend is connected.
+3. `list_objects` / `inspect_object` / `hit_test` to confirm compiled names and bounds.
+4. `tap_object` / `set_property` with `name` when `named_api` is true; otherwise
+   `tap` / `drag` at known coordinates or numeric `bind_id`.
+5. `wait` — let animation settle (e.g. 3–5 frames).
+6. `screenshot` — capture the result for comparison.
+7. `quit` — shut down the simulator.
 
 Use `--input-mode api-exclusive` when the automation must be the sole input
 source. Subscribe to `callback` and `scene_changed` events to observe UI
@@ -300,9 +323,21 @@ gsp_sim_host --bundle build/app.gspb --frames 0 \
     --api-listen tcp://127.0.0.1:8266
 ```
 
-The backend responds to `callback` notifications and drives UI updates
-through `set_text`, `set_value`, `goto_scene`, etc., mirroring the firmware
-C API behavior.
+The backend responds to `callback` notifications (optional `callback` name
+when `--api-json` is loaded) and drives UI updates through `set_text`,
+`set_value`, `goto_scene`, etc., mirroring the firmware C API behavior.
+When a backend is enabled, it owns state writes and scene navigation; use the
+API channel for named input, inspection, waits and screenshots.
+Named `set_*` parameters accept `{ "name": "<object>", ... }` in addition to
+`bind_id`; `set_property` uses the sidecar's property type and range. Numeric
+methods remain valid when no api.json is loaded. Compiled bounds are initial
+layout metadata, so re-check screenshots after runtime movement or animation.
+
+For a source-checkout release gate, run
+`python3 tools/sim_host/tests/agent_loop_smoke.py --host <sim-host> --gspc <gspc>`.
+It covers a deterministic diagnose-and-repair case before exercising the
+matching Bundle/API sidecar in the simulator. It is a host/simulator test, not
+a substitute for the owning ESP-IDF build or board acceptance.
 
 ### Visual regression
 
@@ -328,6 +363,29 @@ an unrun layer as passed. Report missing fonts, assets, target facts, simulator
 availability, and framework capability gaps explicitly. Do not hide a missing
 public framework capability in private-header coupling or an application-side
 workaround.
+
+## Keep implementation documentation product-facing
+
+When the user asks for an implementation document, write it as a durable
+product or engineering artifact. Describe the implemented behavior, public
+interfaces and usage, configuration and dependencies, ownership and lifecycle,
+validation evidence, and any genuine product or framework constraints that
+affect integration or acceptance.
+
+Keep implementation documents product-facing. Describe public behavior, actual
+dependencies, verified evidence and genuine product or framework constraints;
+omit authoring-process details, temporary workspace state and internal decision
+rationale. Do not turn an unrun check or an unavailable observation into a
+product limitation.
+
+If work is incomplete, record the status in the validation or handoff section
+with the exact missing check and evidence. State a limitation in the
+implementation document only when it is established by the selected public
+contract, source behavior, compiler diagnostic, or executed test; distinguish
+not implemented, not supported by the selected version, not validated on the
+target, and environment-blocked cases. Prefer affirmative, user-actionable
+wording and keep internal optimization notes in the agent response or change
+log rather than in implementation documentation.
 
 ## Deliver a usable result
 

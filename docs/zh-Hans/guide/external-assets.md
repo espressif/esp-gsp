@@ -176,7 +176,7 @@ if (ret == ESP_GSP_OK) {
 小于 2 GiB，可拆包。该文件服务通过 ESP-IDF API 使用，PC 桥接没有对应端点。
 
 `examples/external_assets` 提供 SDSPI 挂载、板级引脚配置、BSP 已挂载 SDMMC/NAND
-入口及内置占位图。挂载失败不会格式化存储。使用 GSPC 0.4.1 并配套 ESP-GSP 1.3.1。
+入口及内置占位图。挂载失败不会格式化存储。使用 GSPC 0.5.0 并配套 ESP-GSP 1.4.0。
 
 ## SD 字体
 
@@ -185,7 +185,7 @@ if (ret == ESP_GSP_OK) {
 超过上限在分配前拒绝；文件整体驻留 RAM，ESP-IDF 优先使用 PSRAM。这不是按需读取字形，
 上限只约束文件字节数，仍需预留对齐、句柄、FreeType 和字形缓存开销。
 
-动态字体的源码工程先调用 `gsp_enable_freetype()`，再从已挂载的文件系统加载：
+动态字体的源码和预编译组件工程均需先调用 `gsp_enable_freetype()`，再从已挂载的文件系统加载：
 
 ```c
 #include "esp_gsp_font_file.h"

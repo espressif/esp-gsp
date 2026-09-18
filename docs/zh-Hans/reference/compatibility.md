@@ -10,9 +10,9 @@ CMake 会立即停止并给出不匹配项，不会把问题推迟到设备运�
 
 | 项目 | 当前值 | 链接 |
 |---|---:|---|
-| ESP-GSP 组件 | `1.3.1` | [Component Registry](https://components.espressif.com/components/espressif/esp-gsp/versions/1.3.1/readme) |
-| ESP-GSP 模拟器 | `1.3.1` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/sim/v1.3.1/manifest.json) |
-| 推荐 GSPC | `0.4.1` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/gspc/v0.4.1/manifest.json) |
+| ESP-GSP 组件 | `1.4.0` | [Component Registry](https://components.espressif.com/components/espressif/esp-gsp/versions/1.4.0/readme) |
+| ESP-GSP 模拟器 | `1.4.0` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/sim/v1.4.0/manifest.json) |
+| 推荐 GSPC | `0.5.0` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/gspc/v0.5.0/manifest.json) |
 | GSB | `2.7` |  |
 | GRB | `1.4` |  |
 | GFB | `1.2` |  |
@@ -28,4 +28,10 @@ CMake 会立即停止并给出不匹配项，不会把问题推迟到设备运�
 上表是当前推荐组合。安装 `esp-gsp-tools` 后可运行
 `python -m gsp.execute --version '<GSPC version>' gspc compatibility` 查看机器可读
 能力及构建 commit。CMake 默认读取组件的 `.gspc_version`；IDF 工程根目录下的同名文件
-优先级更高，`GSPC_EXECUTABLE` 保留为手动覆盖方式。
+优先级更高，`GSPC_EXECUTABLE` 保留为手动覆盖方式。关闭 JPEG 时，CMake 还会检查
+编译器是否声明 `jpeg_disable_constraint` 能力。版本字符串或二进制格式匹配不代表支持
+`--disable-jpeg`；不支持该能力的旧编译器会在配置阶段被明确拒绝。
+
+Registry 组件中的每个预编译库都带有 `prebuilt/<variant>/build-info.json`。
+该机器可读文件记录组件源码、ESP-IDF 与编译器版本、目标芯片 revision 范围、实际
+优化选项和库文件 SHA-256，供包审计和兼容性诊断使用，应用运行时无需解析它。

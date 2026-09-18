@@ -14,7 +14,7 @@ menu "Example HW Init"
             depends on IDF_TARGET_ESP32P4
 
         config EXAMPLE_LCD_INTERFACE_RGB
-            bool "ESP32-S31/S3: 16-bit RGB 800x480 + GT1151"
+            bool "ESP32-S31/S3: 16-bit RGB 800x480 + GT1151 (S3 LCD-EV SUB3)"
             depends on IDF_TARGET_ESP32S31 || IDF_TARGET_ESP32S3
 
         config EXAMPLE_LCD_INTERFACE_RGB24

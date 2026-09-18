@@ -6,5 +6,5 @@ idf_component_register(
          "hw_lcd_spi_gc9a01.c" "hw_lcd_spi_ili9341.c" "hw_touch.c"
     INCLUDE_DIRS "include"
     REQUIRES esp_display_present esp_lcd_touch
-    PRIV_REQUIRES esp_lcd esp_driver_gpio esp_driver_spi esp_driver_i2c
+    PRIV_REQUIRES esp_lcd esp_psram esp_driver_gpio esp_driver_spi esp_driver_i2c
 )

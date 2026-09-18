@@ -48,6 +48,20 @@ nearby component directory overrides a managed component automatically.
 
 ## Scene generation
 
+### Structured repair suggestions
+
+`gspc diagnose scene.json --format json` reports the JSON path and source range
+for common field and widget-type errors. A unique nearby name from the widget
+registry may include a `suggestions` entry with a `replacement`. Apply that
+text only to the reported range, then diagnose again; do not add quotes or
+interpret the suggestion title as an edit. Ambiguous names or source locations
+have no automatic replacement. The compiler never changes the input file.
+
+Unsupported bounded dynamic properties include explanatory suggestions listing
+applicable fields or their requirements. A `replacement: null` is guidance, not
+a text edit. Bounded expressions and runtime-style setters are different
+capabilities; use the generated API and the widget's documented dynamic fields.
+
 ### JSON reports an unknown field or component
 
 Use [Scene authoring](../reference/authoring.md) for the installed component

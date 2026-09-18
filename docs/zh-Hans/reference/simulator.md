@@ -105,6 +105,7 @@ gsp_sim_host: browser preview listening at http://127.0.0.1:3222/
 | `--dump-format <FMT>` | 截图格式：`ppm`（默认）/ `png` / `raw` |
 | `--api-enable` | 启用 API 控制通道（默认 stdio） |
 | `--api-listen <URL>` | API 端点；隐含 `--api-enable` |
+| `--api-json <PATH>` | 加载 GSPC `*.api.json`，按对象名点按/设值/检查包围盒并补全回调名 |
 | `--backend-enable` | 在随机本地端口启用应用后端 |
 | `--backend-listen <URL>` | 应用后端端点；隐含 `--backend-enable` |
 | `--backend-required` | 在后端连接之前暂停帧推进 |
@@ -159,6 +160,17 @@ API 控制通道支持脚本驱动和 AI agent 自动化，使用 JSON-RPC 2.0 �
 支持的传输方式：stdio、回环 TCP（`tcp://127.0.0.1:PORT`）、Unix 套接字
 （`unix:///path/to/sim.sock`）。
 
+需要稳定的按名自动化时，通过 `--api-header` 编译并加载对应的 bundle sidecar：
+
+```sh
+gsp_sim_host --bundle build/app.gspb --api-json build/app_gsp.api.json \
+    --api-listen tcp://127.0.0.1:8266 --frames 0
+```
+
+`capabilities.named_api` 用于确认映射已启用。sidecar 必须与 bundle 来自同一次编译；
+schema、字节数或 CRC 不匹配时宿主会拒绝启动。按名包围盒表示编译初始布局，运行时
+移动或动画后应通过截图或坐标输入复核。
+
 ### 方法
 
 #### 输入
@@ -166,6 +178,7 @@ API 控制通道支持脚本驱动和 AI agent 自动化，使用 JSON-RPC 2.0 �
 | 方法 | 参数 | 说明 |
 |---|---|---|
 | `tap` | `{ "x": N, "y": N }` | 模拟点按 |
+| `tap_object` | `{ "name": "...", "scene": N }` | 点按命名对象的编译中心；`scene` 可省略 |
 | `drag` | `{ "x1": N, "y1": N, "x2": N, "y2": N }` | 模拟拖拽手势 |
 | `feed_pointer` | `{ "x": N, "y": N, "pressed": bool }` | 低级指针输入 |
 | `feed_touch` | `{ "id": N, "x": N, "y": N, "pressed": bool }` | 低级多点触控输入 |
@@ -176,6 +189,7 @@ API 控制通道支持脚本驱动和 AI agent 自动化，使用 JSON-RPC 2.0 �
 |---|---|---|
 | `goto_scene` | `{ "scene": N, "transition": N }` | 切换到 0-based 索引的场景；`transition` 可省略 |
 | `reset` | — | 重新加载场景包 |
+| `set_property` | `{ "name": "...", "property": "...", "value": ... }` | 按 sidecar 类型和范围设置命名属性 |
 | `set_value` | `{ "bind_id": N, "value": N }` | 设置绑定的整数值 |
 | `set_text` | `{ "bind_id": N, "text": "..." }` | 设置文本绑定 |
 | `set_color` | `{ "bind_id": N, "color": N }` | 设置颜色绑定 |
@@ -200,7 +214,10 @@ API 控制通道支持脚本驱动和 AI agent 自动化，使用 JSON-RPC 2.0 �
 | 方法 | 参数 | 说明 |
 |---|---|---|
 | `ping` | — | 心跳检测；返回 `"pong"` |
-| `capabilities` | — | 查询画面尺寸、场景数和运行时 ABI |
+| `capabilities` | — | 查询画面尺寸、场景数、运行时 ABI 和 `named_api` |
+| `list_objects` | `{ "scene": N }` | 列出命名对象；`scene` 可省略 |
+| `inspect_object` | `{ "name": "...", "scene": N }` | 查看命名操作、属性和编译包围盒 |
+| `hit_test` | `{ "x": N, "y": N, "scene": N }` | 返回该点最小的命名编译包围盒 |
 | `frame_info` | — | 获取最近一帧的提交信息 |
 | `wait` | `{ "frames": N }` | 延迟 N 帧后响应 |
 | `invalidate` | — | 强制下一帧全屏重绘 |
@@ -220,7 +237,7 @@ API 通道默认不订阅任何事件。
 | 事件 | 参数 | 说明 |
 |---|---|---|
 | `scene_changed` | `{ "from": N, "to": N }` | 场景切换 |
-| `callback` | `{ "action_id": N, "arg": N, "scene_id": N, "list": N, "item": N }` | 组件回调 |
+| `callback` | `{ "action_id": N, "arg": N, "scene_id": N, "list": N, "item": N, "callback"?: "name" }` | 组件回调；加载 `--api-json` 后附带编译得到的回调名 |
 | `frame` | `{ "index": N }` | 每帧推送 |
 | `list_bind` | `{ "list": N, "slot": N, "instance": N, "item": N, "resource_slot": N, "text_slot": N }` | Backend 动态 List/Grid 行请求；Grid 成员槽位，65535 表示缺失（List 两者均缺失） |
 | `list_bind_overflow` | `{ "dropped": N, "level": "warn", "message": "..." }` | Backend 行请求丢失；原生桥接器要求重启会话 |

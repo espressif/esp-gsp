@@ -63,7 +63,7 @@ immutable while open. This example demonstrates mounted filesystems; raw NAND
 bad-block/ECC management remains the responsibility of its storage driver.
 The file adapter uses the platform's `fseek`/`ftell` range (2 GiB on 32-bit long).
 
-Use GSPC 0.4.1 with ESP-GSP 1.3.1. To validate source changes from this
+Use GSPC 0.5.0 with ESP-GSP 1.4.0. To validate source changes from this
 example directory, select the source compiler and rebuild the runtime:
 
 ```sh

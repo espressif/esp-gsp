@@ -42,11 +42,16 @@ background placeholder on the first frame. A single image larger than the budget
 reports its required decoded bytes. Increase `IMAGE_CACHE_BYTES` only with heap
 headroom, or reduce decoded dimensions/use `raw` or region decoding where appropriate.
 
-The manifest and execution report separate shared resources, scene draw references
+Linked bundles share encoded assets. Each scene registers its own
+compiled image resources, including hidden controls and templates. Images used
+exclusively by other scenes do not enter its startup preparation or cache sizing.
+Recompile existing bundles to apply per-scene resource registration.
+
+The manifest and execution report separate registered resources, scene draw references
 and initial visibility:
 
 - `largest_static_decode_bytes`: largest static decode among the scene's draw references.
-- `largest_registered_static_decode_bytes`: largest static decode in the shared registry.
+- `largest_registered_static_decode_bytes`: largest static decode in the scene's registered resource set.
 - `initial_visible_static_decode_bytes_estimate`: total for unique static images intersecting
   the screen and viewports in the default state, before application updates.
 
@@ -62,12 +67,39 @@ The compiler and diagnostics also accept the existing names `store` (`raw`),
 `hardware_jpeg` retains its compatibility behavior: JPEG with a hardware
 decoder, lossless encoding otherwise. It is not an alias for explicit `jpeg`.
 
+### Reading scene resource budgets
+
+The current `*.execution.json` contract is schema version 2. It reflects the
+resource reachability and nullable decode-size fields emitted by the current
+GSPC; consumers should select the schema by `schema_version` rather than by
+the GSPC product version.
+
+Each `*.execution.json` includes a `resource_budget` summary. `resource_blob_bytes`
+counts this scene's resource blobs, including their headers; `image_payload_bytes`
+and `font_blob_bytes` identify the image payload and font portions. These are not
+firmware Flash totals: scene GSB, bundle tables/alignment and runtime code are
+separate, and shared blobs must not be summed across scene reports.
+
+`resources[].source_path` identifies the input behind a compiled resource.
+`inclusion` distinguishes an initial draw, a draw/template reference, and a
+scene-addressable resource. These labels describe compiled reachability, not
+actual preparation or residency. `source_variants` groups multiple encoded
+variants of one source; their sizes and codecs help identify expensive authored
+uses, but different variants are not necessarily redundant.
+
+`initial_static_set_exceeds_cache_budget` is advisory: it compares the initial
+static decode estimate against an explicit enabled cache budget. It is null for
+an automatic or disabled cache. An excess can cause eviction; it is not a measured
+RAM peak or proof of allocation failure. Review `esp_gsp_media_stats()` before
+increasing memory. `requested_codec: "generated"` means per-resource authoring
+provenance is unavailable; the profile's encoding policy is reported separately.
+
 ### Compiled SVG Images
 
 Start with the [vector image example](../../../examples/widgets/image/vector.json).
 
-Use `.svg` in an Image's `image` field with GSPC 0.4.1 and ESP-GSP/simulator
-1.3.1. GSPC stores these images as compiled curves for runtime rendering.
+Use `.svg` in an Image's `image` field with GSPC 0.5.0 and ESP-GSP/simulator
+1.4.0. GSPC stores these images as compiled curves for runtime rendering.
 The compiler records the required binary format versions in the output;
 use the [compatibility contract](../reference/compatibility.md) when pairing tools.
 
@@ -213,6 +245,12 @@ gsp_add_bundle(${COMPONENT_LIB}
     PIXEL_FORMAT rgb565
     DYNAMIC_FONT "../scenes/assets/NotoSansSC-Regular.otf")
 ```
+
+Dynamic fonts are an optional link feature, including in prebuilt components.
+`DYNAMIC_FONT` enables it automatically; applications supplying a font blob at
+runtime must call `gsp_enable_freetype()` in CMake. AOT-only applications do not
+link the full font engine. The outline rasterizer used by vectors remains
+available independently.
 
 With dynamic font fallback, each static GFB can contain up to 32768 glyphs.
 UI startup rejects larger packs in this combination. Static-only GFB packs
@@ -470,6 +508,57 @@ binary assets, establish the LVGL version, pixel format, channel order, stride,
 alpha convention and compression before converting to supported input resources.
 A 32-bit pixel width alone does not determine channel order; private `.bin` files
 are not a single standard format.
+
+## Removing JPEG from the firmware
+
+JPEG decoding is enabled by default for compiled resources, runtime images and
+external assets, including hardware-to-software fallback. If the application
+never uses JPEG, omit its decoder code from the firmware with:
+
+```ini
+CONFIG_ESP_GSP_ENABLE_JPEG=n
+```
+
+For an existing project, clear **Link the JPEG decoder** under **ESP-GSP** in
+`idf.py menuconfig`. New projects can place the setting in `sdkconfig.defaults`.
+The option works with source and prebuilt components and takes effect at link
+time. Keep the component's build files and archive from the same release.
+
+### Resource compilation
+
+`gsp_add_bundle()` and `gsp_add_assets()` pass `--disable-jpeg` to GSPC. Explicit
+`PROFILE` settings remain supported: JPEG is excluded while other capabilities
+and custom budgets are preserved. A profile allowing only JPEG produces a
+configuration error; declare the required non-JPEG codecs or keep JPEG enabled.
+Standalone builds should pass the same flag. CMake checks compiler support
+during configuration and explains how to update an incompatible compiler.
+
+- For still images, `codec: auto` selects a lossless encoding. An explicit
+  `codec: "jpeg"` produces `GSPC-RS-CAPABILITY`; this also covers its derived
+  `jpeg_a8` output for transparent images.
+- For animations, use `animation_codec: "lossless"`. An explicit
+  `animation_codec: "jpeg"` produces the same diagnostic; changing `codec`
+  alone does not override it. `animation_codec: "hardware_jpeg"` selects
+  lossless frames when JPEG is disabled.
+
+PNG, native pixels, supported lossless rasters, compiled SVG and QOI animations
+remain available. Container probing can still identify JPEG. Decoder selection
+is explicit, so an application with no bundled JPEG can retain support for JPEG
+images supplied later at runtime.
+
+### Runtime images and external assets
+
+An accepted runtime-image request containing JPEG completes with
+`GSP_ERR_UNSUPPORTED` before a decode surface is reserved. Use the completion
+callback to observe the result; buffer ownership and release rules are unchanged.
+Externally compiled bundles and asset packages are checked when their JPEG
+resources are used. Compiled JPEG animations fail when opened, and external JPEG
+frame streams fail before allocating a frame canvas.
+
+The software decoder dependency remains part of component resolution. JPEG code
+can still be linked if another component uses it. Host and WASM/WASI simulators
+retain their codec support; successful preview alone does not establish that a
+device built with JPEG disabled can display the same external JPEG data.
 
 ## Software JPEG and scale animation
 

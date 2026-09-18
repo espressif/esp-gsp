@@ -46,10 +46,14 @@ Profile 预算用于编译检查；运行时自动分配还取决于可用堆及
 占位。单张图片超过预算时还会给出所需解码字节。仅在堆仍有余量时增大
 `IMAGE_CACHE_BYTES`，也可缩小解码尺寸，或在适用时改用 `raw`／分区解码。
 
-manifest 和 execution 报告分别列出共享资源、场景绘制引用和初始可见图片：
+多场景 Bundle 共享编码后的资源。每个场景只注册自身的编译图片资源，包含隐藏
+控件和模板。仅供其他场景使用的图片不参与该场景的启动准备和缓存容量估算。
+重新编译现有 Bundle 即可应用按场景注册的资源范围。
+
+manifest 和 execution 报告分别列出注册资源、场景绘制引用和初始可见图片：
 
 - `largest_static_decode_bytes`：场景绘制引用中最大的静态图片解码量。
-- `largest_registered_static_decode_bytes`：共享注册资源中最大的静态图片解码量。
+- `largest_registered_static_decode_bytes`：该场景注册资源中最大的静态图片解码量。
 - `initial_visible_static_decode_bytes_estimate`：应用更新前，默认状态下与屏幕和视口
   相交的静态图片解码量合计，同一资源只计一次。
 
@@ -64,11 +68,33 @@ manifest 和 execution 报告分别列出共享资源、场景绘制引用和初
 `hardware_jpeg` 保留兼容行为：有硬件解码器时使用 JPEG，否则使用无损编码；
 它不等同于显式 `jpeg`。
 
+### 阅读场景资源预算
+
+当前 `*.execution.json` 合同为 schema version 2，包含当前 GSPC
+输出的资源可达性和可为空的解码大小字段。消费者应根据
+`schema_version` 选择 schema，而不要根据 GSPC 产品版本猜测报告格式。
+
+`*.execution.json` 的 `resource_budget` 汇总场景资源：`resource_blob_bytes` 包含
+资源块及其头部，`image_payload_bytes` 与 `font_blob_bytes` 分别统计图片载荷和字体。
+这些值不是固件 Flash 总量：场景 GSB、Bundle 目录／对齐和运行时代码另计；共享资源
+不能跨场景报告重复累加。
+
+`resources[].source_path` 标识资源来源。`inclusion` 区分初始绘制、绘制／模板引用和
+场景可寻址资源，描述的是编译后的引用关系，不代表实际准备或常驻状态。
+`source_variants` 汇总同一来源的多个编码变体，方便检查尺寸与编码成本；不同变体
+可能有必要用途，不能仅凭数量判定为冗余。
+
+`initial_static_set_exceeds_cache_budget` 只比较初始静态解码估算与明确启用的缓存预算，
+自动预算或关闭缓存时为 null。超过预算可能引起淘汰，不是实测 RAM 峰值，也不代表
+必然分配失败；应结合 `esp_gsp_media_stats()` 再决定是否增加内存。
+`requested_codec: "generated"` 表示缺少逐资源的原始编码声明信息，全局 profile
+策略单独报告，不冒充用户对每张图片的选择。
+
 ### 编译式 SVG 图片
 
 可从 [矢量图片示例](../../../examples/widgets/image/vector.json) 开始。
 
-使用 GSPC 0.4.1 与 ESP-GSP/模拟器 1.3.1，可在 Image 的 `image` 字段中引用 `.svg`。
+使用 GSPC 0.5.0 与 ESP-GSP/模拟器 1.4.0，可在 Image 的 `image` 字段中引用 `.svg`。
 GSPC 将它编译为运行时绘制的曲线资源，并记录产物所需的二进制格式版本。
 工具配套关系见[兼容性契约](../reference/compatibility.md)。
 
@@ -179,6 +205,10 @@ gsp_add_bundle(${COMPONENT_LIB}
     PIXEL_FORMAT rgb565
     DYNAMIC_FONT "../scenes/assets/NotoSansSC-Regular.otf")
 ```
+
+动态字体是可选链接功能，预编译组件同样按需启用。`DYNAMIC_FONT` 会自动启用；
+在运行时自行提供字体 Blob 的应用需在 CMake 中调用 `gsp_enable_freetype()`。
+仅使用 AOT 字体的应用不会链接完整字体引擎，矢量绘制所需的轮廓栅格化仍独立可用。
 
 启用动态字体回退时，每个静态 GFB 最多包含 32768 个字形；超过时 UI 启动明确报错。
 仅使用静态字库时，每个 GFB 最多包含 65535 个字形。
@@ -348,6 +378,49 @@ Flash 优化。检查资源报告的图片、字体与 Bundle 字节数，对照
 迁移时优先使用原始 PNG 和 TTF/OTF。只有 LVGL C 数组或私有二进制时，必须先确定
 LVGL 版本、像素格式、通道顺序、Stride、Alpha 是否预乘及压缩格式，再转换为编译器
 接受的资源。32 位像素不能仅凭位数判断通道顺序；私有 `.bin` 也不是统一格式。
+
+## 从固件中移除 JPEG
+
+JPEG 解码默认开启，支持编译资源、运行时图片、外部资源包及硬件到软件的回退。
+应用完全不使用 JPEG 时，可将对应解码代码从固件中裁掉：
+
+```ini
+CONFIG_ESP_GSP_ENABLE_JPEG=n
+```
+
+已有工程可在 `idf.py menuconfig` 的 **ESP-GSP** 菜单中关闭
+**Link the JPEG decoder**；新工程可将该设置放入 `sdkconfig.defaults`。
+该选项适用于源码和预编译组件，在链接阶段生效。组件构建文件与预编译库应来自
+同一发布版本。
+
+### 资源编译
+
+`gsp_add_bundle()` 和 `gsp_add_assets()` 会向 GSPC 传入 `--disable-jpeg`。
+显式 `PROFILE` 仍可使用：编译器排除 JPEG，保留其他能力与自定义预算。
+若 profile 只允许 JPEG，则会报配置冲突；请声明所需的非 JPEG 编码或保留 JPEG。
+独立编译资源时应传入同一参数。CMake 会在配置阶段检查编译器是否支持该能力，
+并为不兼容的编译器给出更新方法。
+
+- 静态图片可使用 `codec: auto` 选择无损编码。显式 `codec: "jpeg"` 会报
+  `GSPC-RS-CAPABILITY`，也适用于透明图片派生的 `jpeg_a8` 输出。
+- 动画可使用 `animation_codec: "lossless"`。显式 `animation_codec: "jpeg"`
+  会报同类错误，仅修改 `codec` 不会覆盖它。关闭 JPEG 时，
+  `animation_codec: "hardware_jpeg"` 会选择无损帧。
+
+PNG、原生像素、支持的无损位图、编译式 SVG 和 QOI 动画仍可使用，容器探测也能
+识别 JPEG。解码能力由配置明确选择，因此没有内置 JPEG 的应用仍可保留解码器，
+用于日后从运行时输入的 JPEG 图片。
+
+### 运行时图片与外部资源
+
+已接受的 JPEG 运行时图片请求会在分配解码面前以 `GSP_ERR_UNSUPPORTED` 完成。
+通过完成回调获取结果，缓冲区所有权和释放规则保持不变。由其他工程编译的 Bundle
+或资源包在使用其 JPEG 资源时检查能力。编译式 JPEG 动画在打开时失败，外部 JPEG
+逐帧流在分配帧画布前失败。
+
+软件解码器依赖仍参与组件解析；应用中的其他组件使用 JPEG 时，相应代码仍可能
+被链接。Host 和 WASM/WASI 模拟器保留自身的编码支持，预览成功并不代表关闭 JPEG
+的设备固件能够显示相同的外部 JPEG 数据。
 
 ## 软件 JPEG 与缩放动画
 

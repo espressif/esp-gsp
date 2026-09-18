@@ -238,6 +238,12 @@ idf.py -B build_esp32s3_spi \
   -D 'SDKCONFIG_DEFAULTS=sdkconfig.defaults;sdkconfig.defaults.esp32s3_spi' \
   set-target esp32s3 build
 
+# ESP32-S3 LCD-EV-Board SUB3, 16-bit RGB 800x480
+idf.py -B build_esp32s3_rgb \
+  -D SDKCONFIG=build_esp32s3_rgb/sdkconfig \
+  -D 'SDKCONFIG_DEFAULTS=sdkconfig.defaults;sdkconfig.defaults.esp32s3_rgb' \
+  set-target esp32s3 build
+
 # ESP32-S31, RGB565
 idf.py --preview -B build_esp32s31 \
   -D SDKCONFIG=build_esp32s31/sdkconfig \
@@ -343,7 +349,7 @@ logs retain their original case coverage; protocol 20 retains 52 cases and
 protocol 21 retains 53 cases.
 Do not compare aggregate scores across these protocols: the measured workload has changed.
 
-From the repository root, preview a vector case with GSPC 0.4.1 and simulator 1.3.1:
+From the repository root, preview a vector case with GSPC 0.5.0 and simulator 1.4.0:
 
 ```sh
 export GSPC_EXECUTABLE="$PWD/ci/gspc-dev"

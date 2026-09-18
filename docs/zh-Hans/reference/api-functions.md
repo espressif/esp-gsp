@@ -2158,6 +2158,17 @@ void esp_gsp_render_phases(esp_gsp_handle_t gsp, uint64_t *out_render_us, uint64
 void esp_gsp_service_stats(esp_gsp_handle_t gsp, uint32_t *out_iterations, uint64_t *out_service_us, uint32_t *out_commands);
 ```
 
+### `esp_gsp_property_stats()`
+
+读取组件属性更新的批次、条目与分层计时统计。
+
+- **头文件:** `include/esp_gsp_debug.h`
+- **返回类型:** `bool`
+
+```c
+bool esp_gsp_property_stats(esp_gsp_handle_t gsp, esp_gsp_property_stats_t *out_stats, size_t stats_size);
+```
+
 ### `esp_gsp_media_stats()`
 
 读取图片、动画和 Canvas 流水线统计。

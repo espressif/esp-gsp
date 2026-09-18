@@ -131,19 +131,22 @@ RPC 执行上传，release 不表示宿主接受或呈现。`capabilities.bridge
 启用 JSON-RPC 控制通道以进行编程控制：
 
 ```sh
-gsp_sim_host --bundle app.gspb --frames 0 --api-enable
+gsp_sim_host --bundle app.gspb --frames 0 --api-enable \
+    --api-json app_gsp.api.json
 ```
 
 然后从任意 JSON-RPC 客户端驱动模拟器。典型验证流程：
 
-1. `capabilities` — 确认画面尺寸和场景数。
-2. `tap` / `drag` — 注入指针输入。
-3. `wait` — 等待动画完成。
-4. `screenshot` — 截图保存结果。
-5. `quit` — 关闭模拟器。
+1. `capabilities` — 确认画面尺寸、场景数和 `named_api`。
+2. `list_objects` / `inspect_object` — 发现当前场景中的目标对象。
+3. `tap_object` / `set_property` — 按名注入输入或设置状态。
+4. `wait` — 等待动画完成。
+5. `screenshot` — 截图保存结果。
+6. `quit` — 关闭模拟器。
 
 通道支持 stdio（默认）、回环 TCP 和 Unix 套接字。当自动化需要独占输入且浏览器
 预览同时打开时，设置 `--input-mode api-exclusive`。
+sidecar 必须与 bundle 来自同一次编译；没有 sidecar 时使用坐标输入和数值 bind。
 
 ## 带后端的全栈模拟
 
@@ -159,6 +162,8 @@ gsp_sim_host --bundle app.gspb --frames 0 \
 `drawer_open`、`page_flow_set_page`、`list_snap` 和 `goto_scene` 等方法驱动画面更新。
 启用 Backend 后，应用状态写入和场景导航均由 Backend 专属：浏览器控件和 API 调用
 不能绕过业务后端。
+API 通道仍可执行输入、按名检查、等待和截图；状态写入与 `goto_scene` 必须由
+Backend 发送。
 
 如果要复用设备端 C 业务逻辑，建议把 LCD、touch、GPIO、Wi-Fi、NVS 和 FreeRTOS
 初始化隔离在平台层。业务层保留 timer、`esp_gsp_on_event()` 和 `esp_gsp_*` UI

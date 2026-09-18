@@ -8,7 +8,11 @@
 
 #if HW_USE_TOUCH
 
+#include "driver/gpio.h"
 #include "driver/i2c_master.h"
+#if CONFIG_IDF_TARGET_ESP32S3
+#include "esp_psram.h"
+#endif
 #include "esp_check.h"
 #include "esp_log.h"
 
@@ -32,9 +36,12 @@ static const char *TAG = "hw_touch";
 #if CONFIG_IDF_TARGET_ESP32S31
 #define PIN_NUM_TOUCH_SDA 0
 #define PIN_NUM_TOUCH_SCL 1
+#elif CONFIG_IDF_TARGET_ESP32S3
+/* ESP32-S3-LCD-EV-Board SUB3 uses 8/18 on R8 modules and 47/48 on R16. */
+#define PIN_NUM_TOUCH_SDA GPIO_NUM_8
+#define PIN_NUM_TOUCH_SCL GPIO_NUM_18
 #else
-#define PIN_NUM_TOUCH_SDA 47
-#define PIN_NUM_TOUCH_SCL 48
+#error "RGB touch hw_init supports only ESP32-S3 and ESP32-S31"
 #endif
 #define TOUCH_NAME "GT1151"
 #define TOUCH_MIRROR_X 0
@@ -77,11 +84,25 @@ static const char *TAG = "hw_touch";
 esp_err_t hw_touch_init(esp_lcd_touch_handle_t *out_touch)
 {
     ESP_LOGI(TAG, "Initializing touch controller (%s)", TOUCH_NAME);
+#if CONFIG_IDF_TARGET_ESP32S3 && CONFIG_EXAMPLE_LCD_INTERFACE_RGB
+    gpio_num_t touch_sda = PIN_NUM_TOUCH_SDA;
+    gpio_num_t touch_scl = PIN_NUM_TOUCH_SCL;
+    if (esp_psram_get_size() > (8 * 1024 * 1024)) {
+        touch_sda = GPIO_NUM_47;
+        touch_scl = GPIO_NUM_48;
+        ESP_LOGI(TAG, "ESP32-S3 RGB touch module profile: R16");
+    } else {
+        ESP_LOGI(TAG, "ESP32-S3 RGB touch module profile: R8/default");
+    }
+#else
+    const gpio_num_t touch_sda = PIN_NUM_TOUCH_SDA;
+    const gpio_num_t touch_scl = PIN_NUM_TOUCH_SCL;
+#endif
     i2c_master_bus_handle_t bus;
     i2c_master_bus_config_t bus_config = {
         .clk_source = I2C_CLK_SRC_DEFAULT,
-        .sda_io_num = PIN_NUM_TOUCH_SDA,
-        .scl_io_num = PIN_NUM_TOUCH_SCL,
+        .sda_io_num = touch_sda,
+        .scl_io_num = touch_scl,
         .i2c_port = I2C_NUM_0,
     };
     ESP_RETURN_ON_ERROR(i2c_new_master_bus(&bus_config, &bus), TAG,

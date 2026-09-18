@@ -16,7 +16,7 @@ ESP_ERROR_CHECK(esp_gsp_esp_lcd_start(&app, &lcd, &ui));
 
 ## Generated object operations
 
-GSPC generates operations only when the Widget and authored dynamic properties support them. A Slider with `name` and `fg_color` generates `get_value()` and `set_value()`; a named Label with a text `bind` generates a text setter; callbacks produce event predicates. Inspect the generated header or the exact signatures shown on each [Widget example page](../components/index.md).
+GSPC generates operations only when the Widget and authored dynamic properties support them. A Slider with `name` and `fg_color` generates `get_value()` and `set_value()`; a named Label with a text `bind` generates a text setter; callbacks produce event predicates. Inspect the sidecar `*.api.json` next to the generated header, or the exact signatures shown on each [Widget example page](../components/index.md).
 
 Setters are asynchronous in ESP-IDF. Success confirms queue admission; the render task commits changes and schedules redraws. Use `esp_gsp_flush()` for deterministic tests, captures and explicit synchronization boundaries.
 
@@ -54,6 +54,22 @@ Buffer ownership must use the documented COPY, BORROW or TAKE mode. Stop produce
 ## Shut down cleanly
 
 Application code owns external producers and should stop them before stopping the UI. Do not call blocking teardown from a framework callback. See the detailed [application lifecycle](lifecycle.md) and [API reference](../reference/api.md).
+
+## Public error codes
+
+Generated setters and `esp_gsp_*` return the existing `esp_gsp_err_t`. Do not invent another error type.
+
+| Macro | Value | Meaning |
+|---|---|---|
+| `ESP_GSP_OK` | `0` | Accepted (queued, not rendered) |
+| `ESP_GSP_FAIL` | `-1` | Unclassified failure |
+| `ESP_GSP_ERR_NO_MEM` | `0x101` | Allocation failed |
+| `ESP_GSP_ERR_INVALID_ARG` | `0x102` | Invalid argument |
+| `ESP_GSP_ERR_INVALID_STATE` | `0x103` | Call is not valid in the current state |
+| `ESP_GSP_ERR_INVALID_SIZE` | `0x104` | Buffer or capacity is too small |
+| `ESP_GSP_ERR_NOT_FOUND` | `0x105` | Object, bind, or resource does not exist |
+| `ESP_GSP_ERR_NOT_SUPPORTED` | `0x106` | The widget or configuration does not support this operation |
+| `ESP_GSP_ERR_TIMEOUT` | `0x107` | Queue or stop timed out; the handle remains valid and can retry |
 
 
 ## Colors and press feedback

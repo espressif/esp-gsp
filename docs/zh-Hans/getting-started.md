@@ -13,7 +13,7 @@ GSP 创建和资源校验同步运行在调用者任务中。新工程可先采�
 如果希望先体验 ESP-GSP，再集成到现有工程，可以直接创建维护示例：
 
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.3.1:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.4.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -39,14 +39,14 @@ python -m pip install -U esp-gsp-tools
 
 ```sh
 cd /path/to/your/esp-idf-project
-idf.py add-dependency "espressif/esp-gsp^1.3.1"
+idf.py add-dependency "espressif/esp-gsp^1.4.0"
 ```
 
 ### `idf_component.yml`
 
 ```yaml
 dependencies:
-  espressif/esp-gsp: "^1.3.1"
+  espressif/esp-gsp: "^1.4.0"
 ```
 
 ### 本地覆盖
@@ -54,7 +54,7 @@ dependencies:
 ```yaml
 dependencies:
   espressif/esp-gsp:
-    version: "^1.3.1"
+    version: "^1.4.0"
     override_path: /absolute/path/to/esp-gsp
 ```
 
@@ -74,7 +74,7 @@ ESP-IDF 工程指定其他版本，可在工程根目录创建 `.gspc_version`�
 组件标记：
 
 ```sh
-echo '0.4.1' > .gspc_version # 指定使用 0.4.1 版本的 GSPC
+echo '0.5.0' > .gspc_version # 指定使用 0.5.0 版本的 GSPC
 idf.py build
 ```
 

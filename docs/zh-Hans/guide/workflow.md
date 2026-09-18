@@ -75,12 +75,16 @@ Canvas 回调不得阻塞；存储、网络、应用解码和停止操作都交�
 ## 编译器辅助开发
 
 ```sh
+gspc doctor .
+gspc cards slider
 gspc schema --authoring -o scene.schema.json
 gspc diagnose scenes/*.json --format json -o diagnostics.json
 gspc docs -o authoring-reference.md
 ```
 
 这些机器可读产物让编辑器、脚本和 AI 助手都跟随同一编译器注册表。
+优先用 `gspc cards` 查看单个控件；需要字段范围、版本或完整注册表时再导出 Schema、docs 或 inventory。
+编译或打包还会在头文件旁写出 `*.api.json`，用于按对象名对照生成 API 与模拟器映射。
 
 ## Agent 辅助编写
 

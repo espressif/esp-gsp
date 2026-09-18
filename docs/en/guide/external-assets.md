@@ -194,7 +194,7 @@ bad-block and wear management belong to the driver. fseek/ftell limits apply
 
 examples/external_assets includes SDSPI mounting, board pins, a BSP-managed
 SDMMC/NAND alternative and built-in fallbacks. It never formats on mount failure.
-Use GSPC 0.4.1 with ESP-GSP 1.3.1.
+Use GSPC 0.5.0 with ESP-GSP 1.4.0.
 
 ## Fonts on SD
 
@@ -205,8 +205,8 @@ The whole file stays in RAM, preferring PSRAM on ESP-IDF. This is not demand-pag
 glyph IO. The limit covers file bytes; alignment, handles, FreeType and glyph caches
 need additional headroom.
 
-For dynamic fonts in source builds, call `gsp_enable_freetype()` in CMake, then load
-from the mounted filesystem:
+For dynamic fonts in source or prebuilt builds, call `gsp_enable_freetype()` in
+CMake, then load from the mounted filesystem:
 
 ```c
 #include "esp_gsp_font_file.h"

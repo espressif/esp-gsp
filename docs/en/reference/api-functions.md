@@ -1001,7 +1001,7 @@ esp_gsp_err_t esp_gsp_assets_close_wait(esp_gsp_assets_t *assets, uint32_t timeo
 
 ### `esp_gsp_font_file_open()`
 
-Loads a TTF/OTF/TTC or a GSPB font catalog from a mounted filesystem. max_bytes is a required, nonzero limit on the file size. Oversized files fail before allocation. The entire file stays in RAM (PSRAM preferred on ESP-IDF); this is not on-demand glyph IO. Catalogs are CRC-checked; dynamic fonts are checked by FreeType when the UI starts. Their signature is checked here. TTC uses its first face. Dynamic fonts require gsp_enable_freetype() in source builds. With dynamic fallback, each static GFB must contain at most 32768 glyphs; UI startup rejects larger packs with NOT_SUPPORTED. Call from an application task: open performs blocking file IO. On failure *out_font is NULL. Glyph caches and FreeType working memory are separate.
+Loads a TTF/OTF/TTC or a GSPB font catalog from a mounted filesystem. max_bytes is a required, nonzero limit on the file size. Oversized files fail before allocation. The entire file stays in RAM (PSRAM preferred on ESP-IDF); this is not on-demand glyph IO. Catalogs are CRC-checked; dynamic fonts are checked by FreeType when the UI starts. Their signature is checked here. TTC uses its first face. Dynamic fonts require gsp_enable_freetype() in source and prebuilt builds. With dynamic fallback, each static GFB must contain at most 32768 glyphs; UI startup rejects larger packs with NOT_SUPPORTED. Call from an application task: open performs blocking file IO. On failure *out_font is NULL. Glyph caches and FreeType working memory are separate.
 
 - **Header:** `include/esp_gsp_font_file.h`
 - **Return type:** `esp_gsp_err_t`
@@ -2213,6 +2213,43 @@ Render-task service-loop profile. Values are zero unless the integration enables
 ```c
 void esp_gsp_service_stats(esp_gsp_handle_t gsp, uint32_t *out_iterations, uint64_t *out_service_us, uint32_t *out_commands);
 ```
+
+### `esp_gsp_property_stats()`
+
+Snapshot the component update counters. Pass sizeof(esp_gsp_property_stats_t) as `stats_size`; the library fills the common prefix and reports it in struct_size, so a caller built against a different header revision still reads the fields it knows.
+
+- **Header:** `include/esp_gsp_debug.h`
+- **Return type:** `bool`
+
+```c
+bool esp_gsp_property_stats(esp_gsp_handle_t gsp, esp_gsp_property_stats_t *out_stats, size_t stats_size);
+```
+
+**Contract details**
+
+Returns true only when this library carries the GSP_PROFILE_SERVICE
+instrumentation and `gsp` is valid. An ordinary build has no counters at
+all: the call then writes `stats_size` zeroed bytes, sets struct_size,
+leaves counters_available at 0 and returns false, so a zeroed reading is
+never mistaken for measured traffic.
+
+Two cases write nothing at all and return false: `out_stats` is NULL, or
+`stats_size` is under sizeof(uint32_t) and so cannot hold even the
+struct_size and availability prefix. In both the caller's buffer is left
+exactly as it was. Every other `stats_size` is fully written.
+
+Counters are cumulative and wrap; take two snapshots and subtract. Every
+field is read with a single atomic load, so snapshots do not race with
+counter updates or report torn values. Fields are sampled one after
+another and may belong to slightly different moments; this is not an
+atomic snapshot of the entire pipeline.
+
+Atomic operations use the target toolchain's implementation. On targets
+without native support, including 64-bit totals on supported 32-bit SoCs,
+ESP-IDF helpers use brief interrupt-disabled critical sections or spinlocks.
+Reads and updates can therefore delay another task; the overhead depends
+on the target and contention. These helpers do not acquire UI/state
+mutexes, and this cost only exists in an instrumented build.
 
 ### `esp_gsp_media_stats()`
 

@@ -18,8 +18,8 @@ typedef struct esp_gsp_font_file esp_gsp_font_file_t;
  * ESP-IDF); this is not on-demand glyph IO. Catalogs are CRC-checked; dynamic
  * fonts are checked by FreeType when the UI starts. Their signature is checked
  * here. TTC uses its first face. Dynamic fonts require gsp_enable_freetype()
- * in source builds. With dynamic fallback, each static GFB must contain at
- * most 32768 glyphs; UI startup rejects larger packs with NOT_SUPPORTED.
+ * in source and prebuilt builds. With dynamic fallback, each static GFB must
+ * contain at most 32768 glyphs; UI startup rejects larger packs with NOT_SUPPORTED.
  * Call from an application task: open performs blocking file IO. On failure
  * *out_font is NULL. Glyph caches and FreeType working memory are separate.
  */
