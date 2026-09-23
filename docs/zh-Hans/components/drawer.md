@@ -8,14 +8,15 @@
 
 ## 本地交互预览
 
-[安装 `esp-gsp-tools`](../guide/simulator-preview.md) 后，在解压后的组件或公共仓库根目录运行：
+先按[兼容性页的工具命令](../reference/compatibility.md#工具命令)配置 `gspc` 和
+`gsp_sim_host`，再在解压后的组件或公共仓库根目录运行：
 
 ```sh
 mkdir -p gsp-out/widget-preview
-python -m gsp.execute --version 0.5.0 gspc pack \
-  examples/widgets/drawer/drawer.json \
+gspc pack \
+  examples/usage/widgets/drawer/drawer.json \
   --deployable -o gsp-out/widget-preview/drawer.gspb
-python -m gsp.execute --version 1.4.0 sim \
+gsp_sim_host \
   --bundle gsp-out/widget-preview/drawer.gspb
 ```
 
@@ -35,7 +36,7 @@ python -m gsp.execute --version 1.4.0 sim \
   "w": 480,
   "h": 320,
   "screen_bg": "#0E1726",
-  "font": "../../common/fonts/DejaVuSans.ttf",
+  "font": "../../../common/fonts/DejaVuSans.ttf",
   "objects": [
     {
       "type": "label",
@@ -187,7 +188,7 @@ python -m gsp.execute --version 1.4.0 sim \
 }
 ```
 
-该文件来自 `examples/widgets/drawer/drawer.json`。复制时请一并复制它引用的相对资源。
+该文件来自 `examples/usage/widgets/drawer/drawer.json`。复制时请一并复制它引用的相对资源。
 
 ## 此示例生成的 C API
 
@@ -220,6 +221,10 @@ size_t gsp_drawer_docs_dynamic_image_slots(void)
 
 | 字段 | 类型 | 必填 | 默认值 / 范围 | 可运行时更新 | 编译器定义 |
 |---|---|---:|---|---:|---|
+| `min_width` | `int` | — | 0…65535 | — | 编译期最小宽度，单位像素 |
+| `max_width` | `int` | — | 0…65535 | — | 编译期最大宽度，单位像素 |
+| `min_height` | `int` | — | 0…65535 | — | 编译期最小高度，单位像素 |
+| `max_height` | `int` | — | 0…65535 | — | 编译期最大高度，单位像素 |
 | `layout` | `enum` | — | `row`, `column` | — | 子对象自动布局：行/列 |
 | `gap` | `int` | — | 默认 0; 0…4096 | — | 自动布局间距（像素） |
 | `padding` | `int` | — | 默认 0; 0…4096 | — | 自动布局内边距（像素） |
@@ -229,14 +234,35 @@ size_t gsp_drawer_docs_dynamic_image_slots(void)
 | `padding_bottom` | `int` | — | 0…4096 | — | 列布局末尾内边距覆盖值 |
 | `grow` | `int` | — | 默认 0; 0…100 | — | 自动布局扩展权重 |
 | `margin` | `int` | — | 默认 0; 0…4096 | — | 子对象两侧的自动布局外边距 |
+| `margin_left` | `int` | — | 0…4096 | — | 自动布局 x 轴起始外边距 |
+| `margin_right` | `int` | — | 0…4096 | — | 自动布局 x 轴末尾外边距 |
+| `margin_top` | `int` | — | 0…4096 | — | 自动布局 y 轴起始外边距 |
+| `margin_bottom` | `int` | — | 0…4096 | — | 自动布局 y 轴末尾外边距 |
+| `align_main` | `enum` | — | `start`, `center`, `end`, `space_between` | — | 自动布局主轴对齐方式 |
+| `align_cross` | `enum` | — | `start`, `center`, `end`, `stretch` | — | 自动布局交叉轴对齐方式 |
 | `hidden` | `bool` | — | 默认 `false` | 是 | 初始隐藏（通过动作或 set_visible 显示） |
 | `fg_color` | `color` | — | — | — | 前景颜色（根据控件类型用于文字、旋钮、线条或标记） |
 | `opacity` | `int` | — | 默认 255; 0…255 | 场景: 自身填充; 模板: 自身填充 | 0–255 混合透明度 |
 | `bg_gradient` | `color` | — | — | — | 第二个渐变色标（与 bg_color 配合） |
 | `gradient_dir` | `enum` | — | 默认 vertical; `vertical`, `horizontal` | — | 渐变方向 |
 | `radius` | `int` | — | 默认 0; 0…65535 | 场景: 自身填充; 模板: 自身填充 | 圆角半径（像素） |
+| `shadow_color` | `color` | — | — | — | 静态硬阴影颜色 |
+| `shadow_opacity` | `int` | — | 默认 96; 0…255 | — | 静态硬阴影透明度 |
+| `shadow_offset_x` | `int` | — | -32768…32767 | — | 静态硬阴影 x 偏移 |
+| `shadow_offset_y` | `int` | — | -32768…32767 | — | 静态硬阴影 y 偏移 |
+| `shadow_spread` | `int` | — | 0…4096 | — | 静态硬阴影扩散范围（像素） |
+| `shadow_radius` | `int` | — | 0…65535 | — | 静态硬阴影圆角半径 |
+| `bg_opacity` | `int` | — | 默认 255; 0…255 | — | 仅背景透明度，与 opacity 和颜色 alpha 相乘 |
 | `border_color` | `color` | — | — | — | 边框描边颜色 |
 | `border_width` | `int` | — | 0…65535 | — | 边框描边宽度（需要 border_color） |
+| `border_opacity` | `int` | — | 默认 255; 0…255 | — | 边框描边透明度 |
+| `outline_color` | `color` | — | — | — | 外部轮廓颜色 |
+| `outline_width` | `int` | — | 默认 0; 0…65535 | — | 外部轮廓宽度 |
+| `outline_opacity` | `int` | — | 默认 255; 0…255 | — | 外部轮廓透明度 |
+| `outline_pad` | `int` | — | 默认 0; 0…4096 | — | 元素与外部轮廓之间的间隔 |
+| `border_side` | `enum` | — | 默认 all; `all`, `none`, `top`, `bottom`, `left`, `right`, `horizontal`, `vertical` | — | 内侧边框选择；局部边要求静态直角矩形几何 |
+| `text_line_space` | `int` | — | 默认 0; 0…4096 | — | 静态文字行之间的额外间距，单位像素 |
+| `text_vertical_align` | `enum` | — | 默认 auto; `auto`, `top`, `center`, `bottom` | — | 静态文字块的垂直对齐；auto 保留单行居中、多行顶部对齐 |
 | `text` | `string` | — | — | 是 | 静态文字内容（UTF-8） |
 | `text_align` | `enum` | — | `left`, `center`, `right` | — | 文字对齐方式 |
 | `overflow` | `enum` | — | 默认 clip; `clip`, `ellipsis` | — | 单行文字溢出方式 |
@@ -253,11 +279,13 @@ size_t gsp_drawer_docs_dynamic_image_slots(void)
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
 | `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
-| `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `store`, `qoi`, `rle16`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
+| `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
+| `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 1…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -270,7 +298,7 @@ size_t gsp_drawer_docs_dynamic_image_slots(void)
 | `disabled_color` | `color` | — | 默认 #808080 | — | 禁用态覆盖颜色 |
 | `disabled_opacity` | `int` | — | 默认 112; 0…255 | — | 禁用态覆盖透明度 |
 | `bind` | `identifier` | — | — | — | 公开状态名称；生成 GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | `enum` | — | `visible`, `value`, `color`, `text`, `resource` | — | 显式绑定状态类型 |
+| `bind_target` | `enum` | — | `visible`, `value`, `color`, `text`, `resource`, `data` | — | 显式绑定状态类型 |
 | `callback` | `identifier` | — | — | — | 应用回调名称；生成按场景区分的事件辅助函数 |
 | `events` | `action_list` | — | — | — | 输入绑定：[{event, action, ...}] |
 | `template` | `identifier` | — | — | — | 将此子树声明为渲染模板 |

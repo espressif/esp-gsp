@@ -36,7 +36,8 @@ GIF/APNG 是素材输入，构建时会转换为 GSP 资源；它们不是额外
 
 `gsp_add_bundle(... IMAGE_CACHE_BYTES 262144)` 同时设置运行时缓存预算和对应的
 编译预算，也适用于显式 `PROFILE`。CLI 对应参数为 `--image-cache-bytes 262144`。
-Profile 预算用于编译检查；运行时自动分配还取决于可用堆及最大连续空闲块。
+单独设置 Profile 的 `image_cache_budget_bytes` 只约束编译选择，运行时仍自动推导预算。
+需要两端一致时传入 `IMAGE_CACHE_BYTES`。运行时自动预算还取决于可用堆及最大连续空闲块。
 固件 Flash 体积与图片解码内存应分别检查。
 
 启用图片缓存时，运行时会在首帧前同步准备场景中已编译的可见压缩图片，
@@ -62,9 +63,30 @@ manifest 和 execution 报告分别列出注册资源、场景绘制引用和初
 运行时可用 `esp_gsp_media_stats()` 查看缓存占用与峰值。
 `runtime_peak_bytes` 用于运行时实测，编译报告中为 null。
 
-建议使用可移植的编码名称 `raw`、`lossless`、`jpeg` 和 `auto`。
+建议使用可移植的编码名称 `auto`、`speed`、`size`、`raw`、`lossless` 和 `jpeg`。
+使用独立安装的 GSPC 时，先运行 `gspc compatibility`，确认
+`compiler_features.image_policy_modes` 包含所需策略；当前源码工具已支持这些值。
+`auto` 是默认选择，按目标能力、缓存预算和压缩收益选 STORE、QOI/RLE 或硬件 JPEG。
+`speed` 偏重运行开销：小图可用 STORE；压缩收益明显的大图可用 QOI/RLE；合适的图片
+可用硬件 JPEG/JPEG+A8。`size` 比较可用编码的实际字节数，也可在软件解码目标上选
+JPEG。JPEG 质量默认 85，可用 `quality`（1–100）调整。要求像素完全一致时用
+`lossless`，或在 Profile 设置 `image_auto_allow_lossy: false`。
+
+硬件 JPEG 要求图片宽、高至少 64 像素。RGB888 透明图还须按 16 像素对齐，
+`auto` 和 `speed` 才会自动选择 JPEG+A8；`size` 与显式 `jpeg` 可处理未对齐尺寸，
+但解码时可能使用 MCU 临时缓冲。`size` 会把该临时缓冲与解码图像一起计入
+候选预算；实际内存峰值还受其他资源影响。JPEG+A8 的颜色有损，A8 透明度无损。
+压缩选择不会自动缩小像素尺寸；可按资源报告比较最终编码字节数和解码预算。
+编译资源的 `size` 不把 PNG 纳入候选：PNG 解码需要整张图片的解压临时缓冲，
+且不能按区域解码；仅以编码文件大小比较会低估设备 RAM 峰值。PNG 仍可作为运行时输入。
 编译和诊断也接受已有名称 `store`（`raw`）、`qoi`（`lossless`）、
-`default`（`auto`）以及显式 `rle16`。
+`default`（`auto`）以及显式 `rle16`（不透明 RGB565）、`rle16_a8`（透明 RGB565）和
+`rle32`（RGB888）。显式 RLE 与目标像素格式不匹配时编译报错。
+ARGB8888 叠加 Profile 只存储原生像素；显式请求其他编码或使用 `store_scale`
+会在编译时报错。
+`cache_policy` 可与三种策略一起使用。`mmap_direct` 仅适用于最终选为 STORE 的图片；
+压缩图片指定 `mmap_direct` 会在编译时报错。既有场景可为 STORE 声明 `preload` 或
+`decode_lru`，但 STORE 仍直接映射，不会因此进入解码缓存；新场景无需为 STORE 指定这两项。
 `hardware_jpeg` 保留兼容行为：有硬件解码器时使用 JPEG，否则使用无损编码；
 它不等同于显式 `jpeg`。
 
@@ -92,16 +114,21 @@ manifest 和 execution 报告分别列出注册资源、场景绘制引用和初
 
 ### 编译式 SVG 图片
 
-可从 [矢量图片示例](../../../examples/widgets/image/vector.json) 开始。
+可从 [矢量图片示例](../../../examples/usage/widgets/image/vector.json) 开始。
 
-使用 GSPC 0.5.0 与 ESP-GSP/模拟器 1.4.0，可在 Image 的 `image` 字段中引用 `.svg`。
+可在 Image 的 `image` 字段中引用 `.svg`。
 GSPC 将它编译为运行时绘制的曲线资源，并记录产物所需的二进制格式版本。
 工具配套关系见[兼容性契约](../reference/compatibility.md)。
 
 Carousel、Flip Card 和特效图片集合会在编译时将可导入的 SVG 素材栅格化，产物按位图的尺寸
 和缓存规则使用。需要运行时曲线缩放、改色或形变时，使用命名 Image。
 
-SVG 保留曲线，按目标尺寸栅格化。图片命名后可沿用 `fit`、`rotation` 和
+SVG 保留曲线，按目标尺寸栅格化。复用大尺寸矢量时，图片缓存预算需要覆盖可见工作集：
+未染色缓存每像素占 4 字节，染色遮罩每像素占 1 字节。矢量缓存与已解码图片、在途
+解码共享场景图片缓存预算；位图解码需要空间时优先回收矢量缓存。预算或分配失败时，
+渲染继续使用有界临时分块。
+
+图片命名后可沿用 `fit`、`rotation` 和
 `scalable`。动态调整图片框时，将 `w`、`h` 声明为有界动态字段，并指定
 `width`、`height` 等语义属性名，编译器会生成对应 setter。
 改变宽高会改变绘制区域，`scale` 则在框内缩放，并受图片框裁剪。
@@ -150,7 +177,7 @@ JSON 输出包括画布尺寸、元素 ID、含描边的标准化边界、路径
 
 `morph_to` 指定结束 SVG，`morph` 为 0..100 的初始进度，默认 0。
 编译后生成 `set_morph()`、`animate_morph()` 和 `animate_morph_to()`；动画沿用现有
-时长、缓动、中断和批量更新机制。参见[矢量动效示例](../../../examples/widgets/image/vector_motion.json)。
+时长、缓动、中断和批量更新机制。参见[矢量动效示例](../../../examples/usage/widgets/image/vector_motion.json)。
 运行时插值曲线控制点，不解析 XML，不展开完整位图帧序列。
 起止 SVG 必须具有相同视口尺寸、绘制路径顺序、填充/描边展开结果结构和绘制颜色；
 各路径须保持相同轮廓、段类型、起点和方向。复制同一素材并编辑节点位置，
@@ -321,7 +348,7 @@ GIF/APNG 的 `animation_codec` 可以选择：
 
 | 值 | 编译行为 |
 |---|---|
-| `lossless` | QOI 增量帧；未指定编码时保持此默认策略 |
+| `lossless` | 强制 QOI 增量帧；未校准目标的 `auto` 默认采用此策略 |
 | `jpeg` | 完整 JPEG 序列帧，不因体积更大而退回 QOI |
 | `hardware_jpeg` | 目标 profile 声明 `hardware_jpeg: true` 时使用 JPEG，否则使用 QOI |
 
@@ -333,6 +360,16 @@ GIF/APNG 的 `animation_codec` 可以选择：
 不透明动画编码为 JPEG；任一帧含透明度时，整段动画编码为 JPEG+A8，颜色有损、A8 无损，不会静默丢弃透明区域。GIF/APNG 先合成为完整画布帧，再编码，保留帧时长和循环次数。`max_fps` 仍可限制导入帧率。显式 `codec: "jpeg"` 也适用于动画；若同时提供 `animation_codec`，后者优先。使用 `animation_codec` 时，未写 `quality` 则使用 profile 的 `jpeg_quality`。
 
 JPEG 模式使用整帧解码和整帧刷新，适合愿意用资源空间换取硬件解码机会的场景；稀疏变化的 UI 动画仍可能更适合 QOI 增量帧。`animation_frame_budget_bytes` 限制解码帧缓冲预算，编码后的 Flash 大小应查看资源报告。报告区分 `anim_qoi`、`anim_jpeg`、`anim_jpeg_a8`。
+
+未指定 `animation_codec` 时，`size` 比较整段 QOI 差分与 JPEG/JPEG+A8 的字节数。
+`auto` 和 `speed` 仅在 Profile 设置 `animation_speed_hardware_jpeg: true`、帧变化密集、
+画面不透明且尺寸按 16 对齐时考虑硬件 JPEG。`auto` 还要求 JPEG 至少节省 20% 空间；
+`speed` 允许最多增加 10%。这个板级设置默认关闭，应根据实际显示路径测量后启用。
+在已验证的板级 Profile 中设置 `hardware_jpeg: true` 与
+`animation_speed_hardware_jpeg: true`，即可让上述规则参与编译。
+透明动画自动保留 QOI；需要 JPEG+A8 时显式设置 `animation_codec: hardware_jpeg`。
+显式 `animation_codec` 始终优先。
+动画使用独立帧缓冲；对动画设置静态图片的 `cache_policy` 或 `store_scale` 会报错。
 
 硬件与软件 JPEG 解码器的色彩转换可能不同。图标、品牌色等要求颜色一致的 UI
 素材应使用 `lossless`；JPEG+A8 的透明度无损，RGB 颜色使用有损压缩。
@@ -364,7 +401,9 @@ RGB565+A8 和 ARGB8888 位图可使用 `fit`、`rotation` 及有界动态旋转�
 RGB565/RGB888 格式。至少准备双缓冲，并在释放回调后复用旧帧。偶尔替换图片使用
 Image Setter；文件资源接入见[外部资源](external-assets.md)。
 
-跨芯片场景优先 `codec: auto`；显式 `jpeg` 是严格要求，不支持的目标会指出替代方式。
+跨芯片场景优先 `codec: auto`；按资源侧重点可改用 `speed` 或 `size`。
+例如 `{"type":"image","image":"assets/photo.png","w":240,"h":240,"codec":"size","quality":75}`
+将这张图片的候选 JPEG 质量设为 75。显式 `jpeg` 是严格要求，不支持的目标会指出替代方式。
 无 JPEG 目标可使用现有 QOI/RLE 无损编码，并对允许降低细节的图片显式配置
 `store_scale`。缩小存储需要支持缩放的容器编码及足够缓存，不能作为无 RAM 成本的
 Flash 优化。检查资源报告的图片、字体与 Bundle 字节数，对照应用分区预算；工具不会
@@ -372,7 +411,8 @@ Flash 优化。检查资源报告的图片、字体与 Bundle 字节数，对照
 没有问号字形的自定义字体会烘焙可见替代框，避免显示不相关的第一个图标。
 
 `store_scale < 1` 会自动选择适配声明图片框的 fit 绘制路径，无需额外开启 `scalable`。
-`codec: auto` 配合缩小存储采用 QOI；显式 `raw` 不支持此存储选项，会在编译期指出对象
+`codec: auto` 或 `speed` 配合缩小存储采用 QOI；`size` 则比较缩小后的 QOI 与可用
+JPEG。显式 `raw` 不支持此存储选项，会在编译期指出对象
 路径和替代编码。普通图片与模板图片复用同一套编码选项解析。压缩缩略资源仍需要解码缓存。
 
 迁移时优先使用原始 PNG 和 TTF/OTF。只有 LVGL C 数组或私有二进制时，必须先确定

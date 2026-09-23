@@ -29,7 +29,7 @@ python -m gsp.execute --version '<ESP-GSP version>' sim --capabilities
 gsp_sim_host --bundle app.gspb --frames 0
 ```
 
-宿主将预览 URL 输出到 stderr 并打开浏览器页面，提供：
+宿主将预览 URL 输出到 stderr；手动在浏览器中打开该地址，可使用：
 
 - 实时 Canvas 渲染模拟画面；
 - 鼠标点击和拖拽映射为指针输入；
@@ -38,7 +38,7 @@ gsp_sim_host --bundle app.gspb --frames 0
 - 分标签的日志面板，显示回调事件和运行时输出。
 
 在编写场景时使用此模式，可以实时查看布局变化、动画和导航效果，无需 Target 构建。
-关闭浏览器或按 Ctrl-C 停止模拟器。
+关闭浏览器不会停止宿主；按 Ctrl-C 或通过控制 API 发送 `quit` 退出。
 
 ## Headless 测试与截图
 
@@ -73,7 +73,7 @@ IDF 工程解析 ESP-GSP 依赖后（例如执行 `idf.py reconfigure`），在�
 ```sh
 python -m pip install -U esp-gsp-tools
 python managed_components/espressif__esp-gsp/tools/sim_bridge/run.py \
-  --project managed_components/espressif__esp-gsp/examples/hello_world/pc
+  --project managed_components/espressif__esp-gsp/examples/usage/hello_world/pc
 ```
 
 Windows 使用开发者终端和 `C:/path/to/tool.exe` 路径。原生构建不要求激活 ESP-IDF
@@ -111,7 +111,8 @@ CMake 将场景以 `--deployable` 打包，并在同次构建中生成匹配的
 已支持 API，工作线程需经应用队列交接数据。支持范围包括常用状态读写、标量属性、
 动画、事件、定时器和部分导航。报告 `capabilities.bridge_media_version: 1` 的宿主
 还支持原生动态 List/Grid binder、PNG/JPEG/QOI COPY 图片以及 Canvas push/draw。
-binder 可同步更新行；Canvas 回调则先画完整本地离屏缓冲再上传，时机与分块方式
+binder 可同步更新行；Canvas 回调仍先画完整本地离屏缓冲，支持时小脏区使用紧凑
+patch 传输，大改动使用全帧。时机与分块方式
 不同于设备端，回调内的 GSP 状态写入会被拒绝。进入场景时需重新注册 draw callback。
 `capabilities.bridge_image_version: 1` 进一步支持图片 BORROW/TAKE、完成/释放
 回调和缓存键。传输仍会复制；原生输入保留到 GSP 释放或本地会话关闭。
@@ -140,7 +141,8 @@ gsp_sim_host --bundle app.gspb --frames 0 --api-enable \
 1. `capabilities` — 确认画面尺寸、场景数和 `named_api`。
 2. `list_objects` / `inspect_object` — 发现当前场景中的目标对象。
 3. `tap_object` / `set_property` — 按名注入输入或设置状态。
-4. `wait` — 等待动画完成。
+4. `wait_component` — 检查 `capabilities.wait_component_version` 后，等待
+   PageFlow/Drawer 静止并达到预期值；`wait` 仅数帧，不保证动画完成。
 5. `screenshot` — 截图保存结果。
 6. `quit` — 关闭模拟器。
 
@@ -190,4 +192,4 @@ binder，PNG/JPEG/QOI 图片与完整 Canvas 帧使用 COPY 型二进制上传�
 ## 在开发板上运行
 
 模拟器适合在烧录前检查布局、文字和交互。烧录后检查面板接线、显示方向、字节序、
-触控映射和性能；具体步骤见[显示集成](../guide/display.md)。
+触控映射和性能；具体步骤见[显示集成](display.md)。

@@ -115,6 +115,8 @@
         "bg_color",
         "fg_color",
         "border_color",
+        "outline_color",
+        "shadow_color",
         "bg_gradient",
         "knob_color"
       ],
@@ -130,9 +132,9 @@
     "widget_registry",
     "authoring"
   ],
-  "compiler_version": "0.5.0",
+  "compiler_version": "0.6.0",
   "protocol_version": 1,
-  "registry_hash": "crc32:b8d5f67a",
+  "registry_hash": "crc32:eff622c5",
   "schema_version": 2,
   "widgets": {
     "arc": {
@@ -144,6 +146,26 @@
         "value"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "animation_codec": {
           "choices": [
             "lossless",
@@ -172,7 +194,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -181,11 +204,29 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -197,9 +238,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -334,6 +379,17 @@
           "doc": "text field: attaches the caret/keyboard flow",
           "type": "bool"
         },
+        "interactive": {
+          "default": true,
+          "doc": "allow pointer interaction",
+          "type": "bool"
+        },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
+        },
         "layout": {
           "choices": [
             "row",
@@ -349,6 +405,30 @@
           "minimum": 0,
           "type": "int"
         },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max": {
           "default": 100,
           "doc": "value range upper bound",
@@ -359,7 +439,13 @@
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -375,11 +461,23 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min": {
           "default": 0,
           "doc": "value range lower bound",
           "maximum": 2147483647,
           "minimum": -2147483648,
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "min_scale": {
@@ -388,6 +486,12 @@
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "morph": {
           "doc": "SVG shape interpolation progress (percent); generates a runtime setter",
@@ -415,6 +519,31 @@
             "template_property": "field_name"
           },
           "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
           "minimum": 0,
           "type": "int"
         },
@@ -532,6 +661,41 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "start_angle": {
           "default": 135,
           "doc": "arc start angle clockwise from top (0 top, 90 right)",
@@ -588,6 +752,24 @@
             "right"
           ],
           "doc": "text alignment",
+          "type": "enum"
+        },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
           "type": "enum"
         },
         "thickness": {
@@ -673,6 +855,26 @@
         "long"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "animation_codec": {
           "choices": [
             "lossless",
@@ -691,6 +893,13 @@
           "doc": "second gradient stop (with bg_color)",
           "type": "color"
         },
+        "bg_opacity": {
+          "default": 255,
+          "doc": "background-only opacity; multiplied by opacity and color alpha",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "bind": {
           "doc": "public state name; generates GSP_BIND_<NAME>",
           "type": "identifier"
@@ -701,7 +910,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -710,11 +920,44 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "border_side": {
+          "choices": [
+            "all",
+            "none",
+            "top",
+            "bottom",
+            "left",
+            "right",
+            "horizontal",
+            "vertical"
+          ],
+          "default": "all",
+          "doc": "inside border selection; partial sides require static rectangular geometry",
+          "type": "enum"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -737,9 +980,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -878,6 +1125,12 @@
           "doc": "text field: attaches the caret/keyboard flow",
           "type": "bool"
         },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
+        },
         "layout": {
           "choices": [
             "row",
@@ -893,10 +1146,40 @@
           "minimum": 0,
           "type": "int"
         },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -912,12 +1195,30 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min_scale": {
           "default": 0.5,
           "doc": "minimum runtime image scale",
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "morph": {
           "doc": "SVG shape interpolation progress (percent); generates a runtime setter",
@@ -945,6 +1246,31 @@
             "template_property": "field_name"
           },
           "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
           "minimum": 0,
           "type": "int"
         },
@@ -1070,6 +1396,41 @@
           "doc": "selected-state image path",
           "type": "path"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "store_scale": {
           "doc": "pre-scale factor applied when encoding",
           "maximum": 1.0,
@@ -1104,6 +1465,24 @@
             "right"
           ],
           "doc": "text alignment",
+          "type": "enum"
+        },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
           "type": "enum"
         },
         "tint": {
@@ -1184,7 +1563,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -1410,7 +1790,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -1646,6 +2027,26 @@
         "long"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "animation_codec": {
           "choices": [
             "lossless",
@@ -1674,7 +2075,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -1683,11 +2085,29 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -1699,9 +2119,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -1843,6 +2267,12 @@
           "doc": "text field: attaches the caret/keyboard flow",
           "type": "bool"
         },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
+        },
         "layout": {
           "choices": [
             "row",
@@ -1858,6 +2288,30 @@
           "minimum": 0,
           "type": "int"
         },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max": {
           "default": 100,
           "doc": "business value range upper bound",
@@ -1866,7 +2320,13 @@
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -1882,9 +2342,21 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min": {
           "default": 0,
           "doc": "business value range lower bound",
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "min_scale": {
@@ -1893,6 +2365,12 @@
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "morph": {
           "doc": "SVG shape interpolation progress (percent); generates a runtime setter",
@@ -1920,6 +2398,31 @@
             "template_property": "field_name"
           },
           "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
           "minimum": 0,
           "type": "int"
         },
@@ -2045,6 +2548,41 @@
           "doc": "fixed-capacity chart series objects",
           "type": "chart_series"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "store_scale": {
           "doc": "pre-scale factor applied when encoding",
           "maximum": 1.0,
@@ -2079,6 +2617,24 @@
             "right"
           ],
           "doc": "text alignment",
+          "type": "enum"
+        },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
           "type": "enum"
         },
         "thickness": {
@@ -2155,6 +2711,26 @@
         "long"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "animation_codec": {
           "choices": [
             "lossless",
@@ -2183,7 +2759,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -2192,11 +2769,29 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -2214,9 +2809,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -2352,6 +2951,12 @@
           "doc": "text field: attaches the caret/keyboard flow",
           "type": "bool"
         },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
+        },
         "layout": {
           "choices": [
             "row",
@@ -2367,10 +2972,40 @@
           "minimum": 0,
           "type": "int"
         },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -2386,12 +3021,30 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min_scale": {
           "default": 0.5,
           "doc": "minimum runtime image scale",
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "morph": {
           "doc": "SVG shape interpolation progress (percent); generates a runtime setter",
@@ -2419,6 +3072,31 @@
             "template_property": "field_name"
           },
           "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
           "minimum": 0,
           "type": "int"
         },
@@ -2536,6 +3214,41 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "store_scale": {
           "doc": "pre-scale factor applied when encoding",
           "maximum": 1.0,
@@ -2570,6 +3283,24 @@
             "right"
           ],
           "doc": "text alignment",
+          "type": "enum"
+        },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
           "type": "enum"
         },
         "tint": {
@@ -2639,6 +3370,26 @@
         "long"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "animation_codec": {
           "choices": [
             "lossless",
@@ -2667,7 +3418,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -2676,11 +3428,29 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -2692,9 +3462,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -2847,6 +3621,12 @@
           "doc": "text field: attaches the caret/keyboard flow",
           "type": "bool"
         },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
+        },
         "layout": {
           "choices": [
             "row",
@@ -2862,10 +3642,40 @@
           "minimum": 0,
           "type": "int"
         },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -2881,12 +3691,30 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min_scale": {
           "default": 0.5,
           "doc": "minimum runtime image scale",
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "minute_angle": {
           "default": 0,
@@ -2925,6 +3753,31 @@
             "template_property": "field_name"
           },
           "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
           "minimum": 0,
           "type": "int"
         },
@@ -3053,6 +3906,41 @@
           "doc": "second-hand color",
           "type": "color"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "store_scale": {
           "doc": "pre-scale factor applied when encoding",
           "maximum": 1.0,
@@ -3087,6 +3975,24 @@
             "right"
           ],
           "doc": "text alignment",
+          "type": "enum"
+        },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
           "type": "enum"
         },
         "tick_color": {
@@ -3160,6 +4066,26 @@
         "long"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "animation_codec": {
           "choices": [
             "lossless",
@@ -3178,6 +4104,13 @@
           "doc": "second gradient stop (with bg_color)",
           "type": "color"
         },
+        "bg_opacity": {
+          "default": 255,
+          "doc": "background-only opacity; multiplied by opacity and color alpha",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "bind": {
           "doc": "public state name; generates GSP_BIND_<NAME>",
           "type": "identifier"
@@ -3188,7 +4121,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -3197,11 +4131,44 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "border_side": {
+          "choices": [
+            "all",
+            "none",
+            "top",
+            "bottom",
+            "left",
+            "right",
+            "horizontal",
+            "vertical"
+          ],
+          "default": "all",
+          "doc": "inside border selection; partial sides require static rectangular geometry",
+          "type": "enum"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -3218,9 +4185,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -3355,6 +4326,12 @@
           "doc": "text field: attaches the caret/keyboard flow",
           "type": "bool"
         },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
+        },
         "layout": {
           "choices": [
             "row",
@@ -3370,10 +4347,40 @@
           "minimum": 0,
           "type": "int"
         },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -3389,12 +4396,30 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min_scale": {
           "default": 0.5,
           "doc": "minimum runtime image scale",
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "morph": {
           "doc": "SVG shape interpolation progress (percent); generates a runtime setter",
@@ -3422,6 +4447,31 @@
             "template_property": "field_name"
           },
           "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
           "minimum": 0,
           "type": "int"
         },
@@ -3539,6 +4589,41 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "store_scale": {
           "doc": "pre-scale factor applied when encoding",
           "maximum": 1.0,
@@ -3573,6 +4658,24 @@
             "right"
           ],
           "doc": "text alignment",
+          "type": "enum"
+        },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
           "type": "enum"
         },
         "tint": {
@@ -3642,6 +4745,26 @@
         "long"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "animation_codec": {
           "choices": [
             "lossless",
@@ -3660,6 +4783,13 @@
           "doc": "second gradient stop (with bg_color)",
           "type": "color"
         },
+        "bg_opacity": {
+          "default": 255,
+          "doc": "background-only opacity; multiplied by opacity and color alpha",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "bind": {
           "doc": "public state name; generates GSP_BIND_<NAME>",
           "type": "identifier"
@@ -3670,7 +4800,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -3679,11 +4810,44 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "border_side": {
+          "choices": [
+            "all",
+            "none",
+            "top",
+            "bottom",
+            "left",
+            "right",
+            "horizontal",
+            "vertical"
+          ],
+          "default": "all",
+          "doc": "inside border selection; partial sides require static rectangular geometry",
+          "type": "enum"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -3695,9 +4859,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -3843,6 +5011,12 @@
           "doc": "text field: attaches the caret/keyboard flow",
           "type": "bool"
         },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
+        },
         "layout": {
           "choices": [
             "row",
@@ -3858,10 +5032,40 @@
           "minimum": 0,
           "type": "int"
         },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -3877,12 +5081,30 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min_scale": {
           "default": 0.5,
           "doc": "minimum runtime image scale",
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "morph": {
           "doc": "SVG shape interpolation progress (percent); generates a runtime setter",
@@ -3917,6 +5139,31 @@
           "default": false,
           "doc": "initial drawer state",
           "type": "bool"
+        },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "overflow": {
           "choices": [
@@ -4032,6 +5279,41 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "store_scale": {
           "doc": "pre-scale factor applied when encoding",
           "maximum": 1.0,
@@ -4066,6 +5348,24 @@
             "right"
           ],
           "doc": "text alignment",
+          "type": "enum"
+        },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
           "type": "enum"
         },
         "tint": {
@@ -4350,7 +5650,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -4600,7 +5901,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -4940,6 +6242,26 @@
         "long"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "animation_codec": {
           "choices": [
             "lossless",
@@ -4968,7 +6290,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -4977,11 +6300,29 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -4998,9 +6339,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -5156,6 +6501,12 @@
           "minimum": 0,
           "type": "int"
         },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
+        },
         "layout": {
           "choices": [
             "row",
@@ -5171,10 +6522,40 @@
           "minimum": 0,
           "type": "int"
         },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -5190,12 +6571,30 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min_scale": {
           "default": 0.5,
           "doc": "minimum runtime image scale",
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "morph": {
           "doc": "SVG shape interpolation progress (percent); generates a runtime setter",
@@ -5223,6 +6622,31 @@
             "template_property": "field_name"
           },
           "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
           "minimum": 0,
           "type": "int"
         },
@@ -5352,6 +6776,41 @@
           "doc": "cache two viewport frames while scrolling; falls back to live rendering when memory is unavailable",
           "type": "bool"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "store_scale": {
           "doc": "pre-scale factor applied when encoding",
           "maximum": 1.0,
@@ -5386,6 +6845,24 @@
             "right"
           ],
           "doc": "text alignment",
+          "type": "enum"
+        },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
           "type": "enum"
         },
         "tint": {
@@ -5455,6 +6932,26 @@
         "long"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "animation_codec": {
           "choices": [
             "lossless",
@@ -5473,6 +6970,13 @@
           "doc": "second gradient stop (with bg_color)",
           "type": "color"
         },
+        "bg_opacity": {
+          "default": 255,
+          "doc": "background-only opacity; multiplied by opacity and color alpha",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "bind": {
           "doc": "public state name; generates GSP_BIND_<NAME>",
           "type": "identifier"
@@ -5483,7 +6987,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -5492,11 +6997,44 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "border_side": {
+          "choices": [
+            "all",
+            "none",
+            "top",
+            "bottom",
+            "left",
+            "right",
+            "horizontal",
+            "vertical"
+          ],
+          "default": "all",
+          "doc": "inside border selection; partial sides require static rectangular geometry",
+          "type": "enum"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -5508,9 +7046,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -5640,10 +7182,23 @@
           "dynamic": true,
           "type": "path"
         },
+        "image_opacity": {
+          "default": 255,
+          "doc": "image-only opacity; fixed raster transforms may bake alpha at compile time",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "input": {
           "default": false,
           "doc": "text field: attaches the caret/keyboard flow",
           "type": "bool"
+        },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
         },
         "layout": {
           "choices": [
@@ -5660,10 +7215,40 @@
           "minimum": 0,
           "type": "int"
         },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -5679,12 +7264,30 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min_scale": {
           "default": 0.5,
           "doc": "minimum runtime image scale",
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "morph": {
           "doc": "SVG shape interpolation progress (percent); generates a runtime setter",
@@ -5712,6 +7315,31 @@
             "template_property": "field_name"
           },
           "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
           "minimum": 0,
           "type": "int"
         },
@@ -5829,6 +7457,41 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "store_scale": {
           "doc": "pre-scale factor applied when encoding",
           "maximum": 1.0,
@@ -5863,6 +7526,24 @@
             "right"
           ],
           "doc": "text alignment",
+          "type": "enum"
+        },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
           "type": "enum"
         },
         "tint": {
@@ -6151,6 +7832,26 @@
         "long"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "animation_codec": {
           "choices": [
             "lossless",
@@ -6169,6 +7870,13 @@
           "doc": "second gradient stop (with bg_color)",
           "type": "color"
         },
+        "bg_opacity": {
+          "default": 255,
+          "doc": "background-only opacity; multiplied by opacity and color alpha",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "bind": {
           "doc": "public state name; generates GSP_BIND_<NAME>",
           "type": "identifier"
@@ -6179,7 +7887,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -6188,11 +7897,44 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "border_side": {
+          "choices": [
+            "all",
+            "none",
+            "top",
+            "bottom",
+            "left",
+            "right",
+            "horizontal",
+            "vertical"
+          ],
+          "default": "all",
+          "doc": "inside border selection; partial sides require static rectangular geometry",
+          "type": "enum"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -6204,9 +7946,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -6342,6 +8088,12 @@
           "doc": "text field: attaches the caret/keyboard flow",
           "type": "bool"
         },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
+        },
         "layout": {
           "choices": [
             "row",
@@ -6357,10 +8109,40 @@
           "minimum": 0,
           "type": "int"
         },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -6376,12 +8158,30 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min_scale": {
           "default": 0.5,
           "doc": "minimum runtime image scale",
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "morph": {
           "doc": "SVG shape interpolation progress (percent); generates a runtime setter",
@@ -6409,6 +8209,31 @@
             "template_property": "field_name"
           },
           "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
           "minimum": 0,
           "type": "int"
         },
@@ -6526,6 +8351,41 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "store_scale": {
           "doc": "pre-scale factor applied when encoding",
           "maximum": 1.0,
@@ -6560,6 +8420,24 @@
             "right"
           ],
           "doc": "text alignment",
+          "type": "enum"
+        },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
           "type": "enum"
         },
         "tint": {
@@ -6629,6 +8507,26 @@
         "long"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "animation_codec": {
           "choices": [
             "lossless",
@@ -6647,6 +8545,13 @@
           "doc": "second gradient stop (with bg_color)",
           "type": "color"
         },
+        "bg_opacity": {
+          "default": 255,
+          "doc": "background-only opacity; multiplied by opacity and color alpha",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "bind": {
           "doc": "public state name; generates GSP_BIND_<NAME>",
           "type": "identifier"
@@ -6657,7 +8562,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -6671,11 +8577,44 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "border_side": {
+          "choices": [
+            "all",
+            "none",
+            "top",
+            "bottom",
+            "left",
+            "right",
+            "horizontal",
+            "vertical"
+          ],
+          "default": "all",
+          "doc": "inside border selection; partial sides require static rectangular geometry",
+          "type": "enum"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -6692,9 +8631,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -6829,6 +8772,12 @@
           "doc": "text field: attaches the caret/keyboard flow",
           "type": "bool"
         },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
+        },
         "layout": {
           "choices": [
             "row",
@@ -6844,10 +8793,40 @@
           "minimum": 0,
           "type": "int"
         },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -6863,12 +8842,30 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min_scale": {
           "default": 0.5,
           "doc": "minimum runtime image scale",
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "morph": {
           "doc": "SVG shape interpolation progress (percent); generates a runtime setter",
@@ -6896,6 +8893,31 @@
             "template_property": "field_name"
           },
           "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
           "minimum": 0,
           "type": "int"
         },
@@ -7013,6 +9035,41 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "store_scale": {
           "doc": "pre-scale factor applied when encoding",
           "maximum": 1.0,
@@ -7047,6 +9104,24 @@
             "right"
           ],
           "doc": "text alignment",
+          "type": "enum"
+        },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
           "type": "enum"
         },
         "tint": {
@@ -7116,6 +9191,26 @@
         "long"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "animation_codec": {
           "choices": [
             "lossless",
@@ -7144,7 +9239,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -7153,11 +9249,29 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -7169,9 +9283,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -7335,6 +9453,12 @@
           "minimum": 0,
           "type": "int"
         },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
+        },
         "layout": {
           "choices": [
             "row",
@@ -7350,10 +9474,40 @@
           "minimum": 0,
           "type": "int"
         },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -7369,12 +9523,30 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min_scale": {
           "default": 0.5,
           "doc": "minimum runtime image scale",
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "morph": {
           "doc": "SVG shape interpolation progress (percent); generates a runtime setter",
@@ -7402,6 +9574,31 @@
             "template_property": "field_name"
           },
           "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
           "minimum": 0,
           "type": "int"
         },
@@ -7536,6 +9733,41 @@
           "minimum": 0,
           "type": "int"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "snap_to_item": {
           "default": false,
           "doc": "scrolling snaps to row boundaries",
@@ -7575,6 +9807,24 @@
             "right"
           ],
           "doc": "text alignment",
+          "type": "enum"
+        },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
           "type": "enum"
         },
         "tint": {
@@ -7656,18 +9906,21 @@
           "type": "color"
         },
         "bubble_padding_x": {
+          "default": 14,
           "doc": "bubble horizontal padding",
           "maximum": 1024,
           "minimum": 0,
           "type": "int"
         },
         "bubble_padding_y": {
+          "default": 10,
           "doc": "bubble vertical padding",
           "maximum": 1024,
           "minimum": 0,
           "type": "int"
         },
         "bubble_radius": {
+          "default": 14,
           "doc": "message bubble radius",
           "maximum": 1024,
           "minimum": 0,
@@ -7735,24 +9988,27 @@
         },
         "item_height": {
           "default": 0,
-          "doc": "row height",
+          "doc": "minimum message row height; 0 or omitted uses 2 * bubble_padding_y + message_gap + 1",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
         },
         "max_bubble_width": {
-          "doc": "maximum bubble width",
+          "default": 0,
+          "doc": "maximum bubble width; 0 or omitted uses 76% of viewport width",
           "maximum": 32767,
           "minimum": 0,
           "type": "int"
         },
         "max_message_height": {
+          "default": 320,
           "doc": "maximum message height",
           "maximum": 32767,
           "minimum": 16,
           "type": "int"
         },
         "message_gap": {
+          "default": 8,
           "doc": "message gap",
           "maximum": 1024,
           "minimum": 0,
@@ -7799,6 +10055,7 @@
           "type": "bool"
         },
         "side_margin": {
+          "default": 12,
           "doc": "message side margin",
           "maximum": 4096,
           "minimum": 0,
@@ -7936,7 +10193,7 @@
           "type": "int"
         },
         "hidden": {
-          "default": false,
+          "default": true,
           "doc": "start hidden",
           "dynamic": true,
           "type": "bool"
@@ -8012,6 +10269,26 @@
         "long"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "angle": {
           "default": 0,
           "doc": "clockwise angle (0=up)",
@@ -8047,7 +10324,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -8056,11 +10334,29 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -8072,9 +10368,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -8209,6 +10509,12 @@
           "doc": "text field: attaches the caret/keyboard flow",
           "type": "bool"
         },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
+        },
         "layout": {
           "choices": [
             "row",
@@ -8224,10 +10530,40 @@
           "minimum": 0,
           "type": "int"
         },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -8243,12 +10579,30 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min_scale": {
           "default": 0.5,
           "doc": "minimum runtime image scale",
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "morph": {
           "doc": "SVG shape interpolation progress (percent); generates a runtime setter",
@@ -8276,6 +10630,31 @@
             "template_property": "field_name"
           },
           "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
           "minimum": 0,
           "type": "int"
         },
@@ -8393,6 +10772,41 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "store_scale": {
           "doc": "pre-scale factor applied when encoding",
           "maximum": 1.0,
@@ -8434,6 +10848,24 @@
             "right"
           ],
           "doc": "text alignment",
+          "type": "enum"
+        },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
           "type": "enum"
         },
         "thickness": {
@@ -8510,6 +10942,26 @@
         "long"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "animation_codec": {
           "choices": [
             "lossless",
@@ -8544,6 +10996,13 @@
           "doc": "second gradient stop (with bg_color)",
           "type": "color"
         },
+        "bg_opacity": {
+          "default": 255,
+          "doc": "background-only opacity; multiplied by opacity and color alpha",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "bind": {
           "doc": "public state name; generates GSP_BIND_<NAME>",
           "type": "identifier"
@@ -8554,7 +11013,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -8563,11 +11023,44 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "border_side": {
+          "choices": [
+            "all",
+            "none",
+            "top",
+            "bottom",
+            "left",
+            "right",
+            "horizontal",
+            "vertical"
+          ],
+          "default": "all",
+          "doc": "inside border selection; partial sides require static rectangular geometry",
+          "type": "enum"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -8579,9 +11072,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -8739,6 +11236,12 @@
           "minimum": 0,
           "type": "int"
         },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
+        },
         "layout": {
           "choices": [
             "row",
@@ -8754,10 +11257,40 @@
           "minimum": 0,
           "type": "int"
         },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -8773,12 +11306,30 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min_scale": {
           "default": 0.5,
           "doc": "minimum runtime image scale",
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "morph": {
           "doc": "SVG shape interpolation progress (percent); generates a runtime setter",
@@ -8806,6 +11357,31 @@
             "template_property": "field_name"
           },
           "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
           "minimum": 0,
           "type": "int"
         },
@@ -8948,6 +11524,41 @@
           "minimum": 0,
           "type": "int"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "snap_to_item": {
           "default": false,
           "doc": "scrolling snaps to row boundaries",
@@ -8992,6 +11603,24 @@
             "right"
           ],
           "doc": "text alignment",
+          "type": "enum"
+        },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
           "type": "enum"
         },
         "tint": {
@@ -9068,6 +11697,26 @@
         "long"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "animation_codec": {
           "choices": [
             "lossless",
@@ -9096,7 +11745,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -9105,11 +11755,29 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -9121,9 +11789,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -9258,6 +11930,12 @@
           "doc": "text field: attaches the caret/keyboard flow",
           "type": "bool"
         },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
+        },
         "layout": {
           "choices": [
             "row",
@@ -9273,6 +11951,30 @@
           "minimum": 0,
           "type": "int"
         },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max": {
           "default": 100,
           "doc": "value range upper bound",
@@ -9283,7 +11985,13 @@
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -9299,11 +12007,23 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min": {
           "default": 0,
           "doc": "value range lower bound",
           "maximum": 2147483647,
           "minimum": -2147483648,
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "min_scale": {
@@ -9312,6 +12032,12 @@
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "morph": {
           "doc": "SVG shape interpolation progress (percent); generates a runtime setter",
@@ -9339,6 +12065,31 @@
             "template_property": "field_name"
           },
           "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
           "minimum": 0,
           "type": "int"
         },
@@ -9456,6 +12207,41 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "store_scale": {
           "doc": "pre-scale factor applied when encoding",
           "maximum": 1.0,
@@ -9490,6 +12276,24 @@
             "right"
           ],
           "doc": "text alignment",
+          "type": "enum"
+        },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
           "type": "enum"
         },
         "tint": {
@@ -9569,6 +12373,26 @@
         "long"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "animation_codec": {
           "choices": [
             "lossless",
@@ -9597,7 +12421,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -9606,11 +12431,29 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -9628,9 +12471,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -9766,6 +12613,12 @@
           "doc": "text field: attaches the caret/keyboard flow",
           "type": "bool"
         },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
+        },
         "layout": {
           "choices": [
             "row",
@@ -9781,10 +12634,40 @@
           "minimum": 0,
           "type": "int"
         },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -9800,12 +12683,30 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min_scale": {
           "default": 0.5,
           "doc": "minimum runtime image scale",
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "morph": {
           "doc": "SVG shape interpolation progress (percent); generates a runtime setter",
@@ -9833,6 +12734,31 @@
             "template_property": "field_name"
           },
           "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
           "minimum": 0,
           "type": "int"
         },
@@ -9950,6 +12876,41 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "store_scale": {
           "doc": "pre-scale factor applied when encoding",
           "maximum": 1.0,
@@ -9984,6 +12945,24 @@
             "right"
           ],
           "doc": "text alignment",
+          "type": "enum"
+        },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
           "type": "enum"
         },
         "tint": {
@@ -10053,6 +13032,26 @@
         "long"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "animation_codec": {
           "choices": [
             "lossless",
@@ -10071,6 +13070,13 @@
           "doc": "second gradient stop (with bg_color)",
           "type": "color"
         },
+        "bg_opacity": {
+          "default": 255,
+          "doc": "background-only opacity; multiplied by opacity and color alpha",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "bind": {
           "doc": "public state name; generates GSP_BIND_<NAME>",
           "type": "identifier"
@@ -10081,7 +13087,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -10090,11 +13097,44 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "border_side": {
+          "choices": [
+            "all",
+            "none",
+            "top",
+            "bottom",
+            "left",
+            "right",
+            "horizontal",
+            "vertical"
+          ],
+          "default": "all",
+          "doc": "inside border selection; partial sides require static rectangular geometry",
+          "type": "enum"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -10106,9 +13146,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -10189,6 +13233,13 @@
           "minimum": 1,
           "type": "int"
         },
+        "gap": {
+          "default": 0,
+          "doc": "auto-layout gap in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "gradient_dir": {
           "choices": [
             "vertical",
@@ -10197,6 +13248,13 @@
           "default": "vertical",
           "doc": "gradient direction",
           "type": "enum"
+        },
+        "grow": {
+          "default": 0,
+          "doc": "auto-layout grow weight",
+          "maximum": 100,
+          "minimum": 0,
+          "type": "int"
         },
         "h": {
           "doc": "height in px",
@@ -10229,10 +13287,61 @@
           "doc": "text field: attaches the caret/keyboard flow",
           "type": "bool"
         },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
+        },
+        "layout": {
+          "choices": [
+            "row",
+            "column"
+          ],
+          "doc": "child auto-layout: row/column",
+          "type": "enum"
+        },
+        "margin": {
+          "default": 0,
+          "doc": "auto-layout space on both child sides",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -10248,12 +13357,30 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min_scale": {
           "default": 0.5,
           "doc": "minimum runtime image scale",
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "morph": {
           "doc": "SVG shape interpolation progress (percent); generates a runtime setter",
@@ -10284,6 +13411,31 @@
           "minimum": 0,
           "type": "int"
         },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "overflow": {
           "choices": [
             "clip",
@@ -10292,6 +13444,37 @@
           "default": "clip",
           "doc": "single-line overflow",
           "type": "enum"
+        },
+        "padding": {
+          "default": 0,
+          "doc": "auto-layout padding in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "padding_bottom": {
+          "doc": "column layout: trailing padding override",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "padding_left": {
+          "doc": "row layout: leading padding override",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "padding_right": {
+          "doc": "row layout: trailing padding override",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "padding_top": {
+          "doc": "column layout: leading padding override",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
         },
         "parent": {
           "default": -1,
@@ -10367,6 +13550,41 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "store_scale": {
           "doc": "pre-scale factor applied when encoding",
           "maximum": 1.0,
@@ -10401,6 +13619,24 @@
             "right"
           ],
           "doc": "text alignment",
+          "type": "enum"
+        },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
           "type": "enum"
         },
         "tint": {
@@ -10470,6 +13706,26 @@
         "long"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "animation_codec": {
           "choices": [
             "lossless",
@@ -10498,7 +13754,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -10507,11 +13764,29 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -10523,9 +13798,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -10660,6 +13939,12 @@
           "doc": "text field: attaches the caret/keyboard flow",
           "type": "bool"
         },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
+        },
         "layout": {
           "choices": [
             "row",
@@ -10686,10 +13971,40 @@
           "minimum": 0,
           "type": "int"
         },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -10705,12 +14020,30 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min_scale": {
           "default": 0.5,
           "doc": "minimum runtime image scale",
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "morph": {
           "doc": "SVG shape interpolation progress (percent); generates a runtime setter",
@@ -10738,6 +14071,31 @@
             "template_property": "field_name"
           },
           "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
           "minimum": 0,
           "type": "int"
         },
@@ -10855,6 +14213,41 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "shape": {
           "choices": [
             "rect",
@@ -10903,6 +14296,24 @@
           "doc": "text alignment",
           "type": "enum"
         },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
+          "type": "enum"
+        },
         "tint": {
           "doc": "SVG silhouette color; generates a runtime color setter",
           "type": "color"
@@ -10930,11 +14341,11 @@
         "x": {
           "default": 0,
           "doc": "x relative to parent",
-          "dynamic": false,
+          "dynamic": true,
           "dynamic_expression": {
             "max": 32767,
             "min": -32768,
-            "scene": "unsupported",
+            "scene": "supported",
             "template": "unsupported",
             "template_property": "field_name"
           },
@@ -10946,11 +14357,11 @@
         "y": {
           "default": 0,
           "doc": "y relative to parent",
-          "dynamic": false,
+          "dynamic": true,
           "dynamic_expression": {
             "max": 32767,
             "min": -32768,
-            "scene": "unsupported",
+            "scene": "supported",
             "template": "unsupported",
             "template_property": "field_name"
           },
@@ -10971,6 +14382,26 @@
         "value"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "animation_codec": {
           "choices": [
             "lossless",
@@ -10999,7 +14430,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -11008,11 +14440,29 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -11024,9 +14474,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -11161,6 +14615,12 @@
           "doc": "text field: attaches the caret/keyboard flow",
           "type": "bool"
         },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
+        },
         "knob": {
           "default": true,
           "doc": "knob enabled",
@@ -11186,6 +14646,30 @@
           "minimum": 0,
           "type": "int"
         },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max": {
           "default": 100,
           "doc": "value range upper bound",
@@ -11196,7 +14680,13 @@
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -11212,11 +14702,23 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min": {
           "default": 0,
           "doc": "value range lower bound",
           "maximum": 2147483647,
           "minimum": -2147483648,
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "min_scale": {
@@ -11225,6 +14727,12 @@
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "morph": {
           "doc": "SVG shape interpolation progress (percent); generates a runtime setter",
@@ -11252,6 +14760,31 @@
             "template_property": "field_name"
           },
           "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
           "minimum": 0,
           "type": "int"
         },
@@ -11369,6 +14902,41 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "store_scale": {
           "doc": "pre-scale factor applied when encoding",
           "maximum": 1.0,
@@ -11403,6 +14971,24 @@
             "right"
           ],
           "doc": "text alignment",
+          "type": "enum"
+        },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
           "type": "enum"
         },
         "tint": {
@@ -11489,6 +15075,26 @@
         "long"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "animation_codec": {
           "choices": [
             "lossless",
@@ -11517,7 +15123,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -11526,11 +15133,29 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -11542,9 +15167,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -11679,6 +15308,12 @@
           "doc": "text field: attaches the caret/keyboard flow",
           "type": "bool"
         },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
+        },
         "layout": {
           "choices": [
             "row",
@@ -11694,10 +15329,40 @@
           "minimum": 0,
           "type": "int"
         },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -11713,12 +15378,30 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min_scale": {
           "default": 0.5,
           "doc": "minimum runtime image scale",
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "morph": {
           "doc": "SVG shape interpolation progress (percent); generates a runtime setter",
@@ -11746,6 +15429,31 @@
             "template_property": "field_name"
           },
           "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
           "minimum": 0,
           "type": "int"
         },
@@ -11863,6 +15571,41 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "speed": {
           "default": 1000,
           "doc": "rotation speed in ms per revolution",
@@ -11904,6 +15647,24 @@
             "right"
           ],
           "doc": "text alignment",
+          "type": "enum"
+        },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
           "type": "enum"
         },
         "thickness": {
@@ -11980,6 +15741,26 @@
         "long"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "animation_codec": {
           "choices": [
             "lossless",
@@ -12007,6 +15788,13 @@
           "doc": "second gradient stop (with bg_color)",
           "type": "color"
         },
+        "bg_opacity": {
+          "default": 255,
+          "doc": "background-only opacity; multiplied by opacity and color alpha",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "bind": {
           "doc": "public state name; generates GSP_BIND_<NAME>",
           "type": "identifier"
@@ -12017,7 +15805,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -12026,11 +15815,44 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "border_side": {
+          "choices": [
+            "all",
+            "none",
+            "top",
+            "bottom",
+            "left",
+            "right",
+            "horizontal",
+            "vertical"
+          ],
+          "default": "all",
+          "doc": "inside border selection; partial sides require static rectangular geometry",
+          "type": "enum"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -12049,9 +15871,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -12193,6 +16019,12 @@
           "doc": "text field: attaches the caret/keyboard flow",
           "type": "bool"
         },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
+        },
         "layout": {
           "choices": [
             "row",
@@ -12208,10 +16040,40 @@
           "minimum": 0,
           "type": "int"
         },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -12227,12 +16089,30 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min_scale": {
           "default": 0.5,
           "doc": "minimum runtime image scale",
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "morph": {
           "doc": "SVG shape interpolation progress (percent); generates a runtime setter",
@@ -12260,6 +16140,31 @@
             "template_property": "field_name"
           },
           "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
           "minimum": 0,
           "type": "int"
         },
@@ -12383,6 +16288,41 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "store_scale": {
           "doc": "pre-scale factor applied when encoding",
           "maximum": 1.0,
@@ -12417,6 +16357,24 @@
             "right"
           ],
           "doc": "text alignment",
+          "type": "enum"
+        },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
           "type": "enum"
         },
         "tint": {
@@ -12860,6 +16818,26 @@
         "long"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "animation_codec": {
           "choices": [
             "lossless",
@@ -12889,7 +16867,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -12898,11 +16877,29 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -12920,9 +16917,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -13058,6 +17059,12 @@
           "doc": "text field: attaches the caret/keyboard flow",
           "type": "bool"
         },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
+        },
         "knob": {
           "default": true,
           "doc": "knob enabled",
@@ -13083,10 +17090,40 @@
           "minimum": 0,
           "type": "int"
         },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -13102,12 +17139,30 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min_scale": {
           "default": 0.5,
           "doc": "minimum runtime image scale",
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "morph": {
           "doc": "SVG shape interpolation progress (percent); generates a runtime setter",
@@ -13135,6 +17190,31 @@
             "template_property": "field_name"
           },
           "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
           "minimum": 0,
           "type": "int"
         },
@@ -13252,6 +17332,41 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "store_scale": {
           "doc": "pre-scale factor applied when encoding",
           "maximum": 1.0,
@@ -13286,6 +17401,24 @@
             "right"
           ],
           "doc": "text alignment",
+          "type": "enum"
+        },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
           "type": "enum"
         },
         "tint": {
@@ -13362,6 +17495,26 @@
         "long"
       ],
       "fields": {
+        "align_cross": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ],
+          "doc": "auto-layout cross-axis placement",
+          "type": "enum"
+        },
+        "align_main": {
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "space_between"
+          ],
+          "doc": "auto-layout main-axis placement",
+          "type": "enum"
+        },
         "animation_codec": {
           "choices": [
             "lossless",
@@ -13390,7 +17543,8 @@
             "value",
             "color",
             "text",
-            "resource"
+            "resource",
+            "data"
           ],
           "doc": "explicit bind state family",
           "type": "enum"
@@ -13399,11 +17553,29 @@
           "doc": "border stroke color",
           "type": "color"
         },
+        "border_opacity": {
+          "default": 255,
+          "doc": "border stroke opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "border_width": {
           "doc": "border stroke width (needs border_color)",
           "maximum": 65535,
           "minimum": 0,
           "type": "int"
+        },
+        "cache_policy": {
+          "choices": [
+            "mmap_direct",
+            "mmap",
+            "decode_lru",
+            "lru",
+            "preload"
+          ],
+          "doc": "image cache policy: mmap_direct, decode_lru or preload",
+          "type": "enum"
         },
         "callback": {
           "doc": "app callback name; generates scene-qualified event helpers",
@@ -13415,9 +17587,13 @@
             "lossless",
             "jpeg",
             "auto",
+            "speed",
+            "size",
             "store",
             "qoi",
             "rle16",
+            "rle16_a8",
+            "rle32",
             "default",
             "hardware_jpeg"
           ],
@@ -13586,6 +17762,12 @@
           "minimum": 0,
           "type": "int"
         },
+        "jpeg_quality": {
+          "doc": "legacy JPEG quality alias",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "int"
+        },
         "layout": {
           "choices": [
             "row",
@@ -13601,10 +17783,40 @@
           "minimum": 0,
           "type": "int"
         },
+        "margin_bottom": {
+          "doc": "auto-layout trailing margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_left": {
+          "doc": "auto-layout leading margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_right": {
+          "doc": "auto-layout trailing margin on the x axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "margin_top": {
+          "doc": "auto-layout leading margin on the y axis",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "max_fps": {
           "doc": "GIF/animation frame-rate cap (0 = uncapped)",
           "maximum": 120,
-          "minimum": 1,
+          "minimum": 0,
+          "type": "int"
+        },
+        "max_height": {
+          "doc": "compile-time maximum height in px",
+          "maximum": 65535,
+          "minimum": 0,
           "type": "int"
         },
         "max_instances": {
@@ -13620,12 +17832,30 @@
           "minimum": 0.0625,
           "type": "number"
         },
+        "max_width": {
+          "doc": "compile-time maximum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "min_height": {
+          "doc": "compile-time minimum height in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
         "min_scale": {
           "default": 0.5,
           "doc": "minimum runtime image scale",
           "maximum": 16.0,
           "minimum": 0.0625,
           "type": "number"
+        },
+        "min_width": {
+          "doc": "compile-time minimum width in px",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
         },
         "morph": {
           "doc": "SVG shape interpolation progress (percent); generates a runtime setter",
@@ -13653,6 +17883,31 @@
             "template_property": "field_name"
           },
           "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_color": {
+          "doc": "outside outline color",
+          "type": "color"
+        },
+        "outline_opacity": {
+          "default": 255,
+          "doc": "outside outline opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_pad": {
+          "default": 0,
+          "doc": "gap between the element and its outline",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "outline_width": {
+          "default": 0,
+          "doc": "outside outline width",
+          "maximum": 65535,
           "minimum": 0,
           "type": "int"
         },
@@ -13782,6 +18037,41 @@
           "minimum": 0,
           "type": "int"
         },
+        "shadow_color": {
+          "doc": "static hard-shadow color",
+          "type": "color"
+        },
+        "shadow_offset_x": {
+          "doc": "static hard-shadow x offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_offset_y": {
+          "doc": "static hard-shadow y offset",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "int"
+        },
+        "shadow_opacity": {
+          "default": 96,
+          "doc": "static hard-shadow opacity",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_radius": {
+          "doc": "static hard-shadow corner radius",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "shadow_spread": {
+          "doc": "static hard-shadow spread in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
         "snap_to_item": {
           "default": true,
           "doc": "scrolling snaps to row boundaries",
@@ -13821,6 +18111,24 @@
             "right"
           ],
           "doc": "text alignment",
+          "type": "enum"
+        },
+        "text_line_space": {
+          "default": 0,
+          "doc": "extra spacing between static text rows in px",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
+        },
+        "text_vertical_align": {
+          "choices": [
+            "auto",
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "auto",
+          "doc": "static text block placement; auto preserves single-line center and multiline top",
           "type": "enum"
         },
         "tint": {

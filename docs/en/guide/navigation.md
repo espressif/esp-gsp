@@ -48,9 +48,10 @@ one successful capture restores the normal retry cadence.
 
 PageFlow and Drawer follow the pointer during a drag and settle after release.
 Their release policy matches scene navigation: a deliberate quarter-extent
-pull commits by position, while a shorter fast pull commits from measured
-velocity. Settle duration is velocity-adaptive (normally 80–220 ms), so a
-phone-style flick completes promptly and a slow drag still lands smoothly.
+pull commits by position, while a shorter flick uses recent velocity or
+displacement. A confirmed reversal cancels before the final quarter of travel.
+Settle duration is velocity-adaptive (normally 80–220 ms), so a phone-style
+flick completes promptly and a slow drag still lands smoothly.
 On the ESP-LCD adapter, release is confirmed after two consecutive empty touch
 reports. This masks a single controller dropout during an active drag while
 adding only one active input poll (normally 10 ms) to a real finger lift.
@@ -85,6 +86,11 @@ Overlay drawers are a different split: the base page stays put and only the
 panel travels, so a band is the base frame plus whichever slice of the panel
 has entered. This behavior is consistent for drawers on all four edges.
 
+An animated Drawer open/close request can reverse a running settle from its
+current position. Repeating the current target does not restart the animation.
+Use the component motion event to observe completion instead of polling before
+each request.
+
 ## Gesture priority
 
 Interactive children take priority over their container. The effective order
@@ -98,6 +104,8 @@ A slider inside a drawer therefore changes the slider instead of moving the
 drawer. Scene swipe runs only when no component has claimed the gesture.
 Click-driven overlays such as Dropdown claim their authored hits before scene
 navigation, so opening or selecting an option cannot become a page swipe.
+Before ownership locks, the dominant axis selects scrolling or paging, so
+small cross-axis drift does not steal the gesture.
 
 Use `block_scene_swipe` on a visible `layer` when a modal or detail layer must
 prevent top-level navigation.

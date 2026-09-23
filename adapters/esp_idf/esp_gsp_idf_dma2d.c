@@ -13,15 +13,14 @@
 #include "esp_idf_version.h"
 #include "esp_private/dma2d.h"
 
-/* The private SDK layout and burst-length encoding changed in IDF 6.1.
- * Keep this configuration in the consuming build, including for prebuilt cores. */
+/* IDF 6.0.1 changed this private layout. Keep the ability in the consuming
+ * build so source and prebuilt cores both follow the final firmware's IDF. */
 const void *esp_gsp_idf_dma2d_copy_ability(void)
 {
-    /* Short bursts limit contention with scanout. Keep the callback's data
-     * in internal RAM and share it across all pending copy slots. */
+    /* Short bursts reduce scanout contention; keep this in internal RAM. */
     static const DRAM_ATTR dma2d_transfer_ability_t ability = {
         .desc_burst_en = true,
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 1, 0)
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 1)
         .data_burst_length = 16,
         .access_ext_mem = true,
 #else

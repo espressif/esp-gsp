@@ -8,46 +8,46 @@ Current GSPC registry coverage.
 |---|---:|
 | Registered widgets | 28 |
 | Compile-time composites | 6 |
-| Total field definitions | 1892 |
-| Dynamic capability fields | 234 |
+| Total field definitions | 2496 |
+| Dynamic capability fields | 236 |
 
 ## Components
 
 | Component | Kind | Facets | Fields | Events |
 |---|---|---|---:|---|
-| `container` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 67 | yes |
-| `label` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 66 | yes |
-| `button` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `text`, `border`, `image`, `boolean`, `interaction`, `template` | 71 | yes |
-| `image` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `image`, `text`, `interaction`, `template` | 66 | yes |
-| `rect` | `Widget` | `core`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 57 | yes |
-| `shape` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `shape`, `interaction`, `template` | 68 | yes |
-| `progress` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `interaction`, `template` | 70 | yes |
-| `chart` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `stroke`, `interaction`, `template` | 72 | yes |
-| `slider` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `slider`, `interaction`, `template` | 73 | yes |
-| `arc` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `arc`, `interaction`, `template` | 73 | yes |
-| `needle` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `needle`, `stroke`, `interaction`, `template` | 69 | yes |
-| `spinner` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `spinner`, `stroke`, `interaction`, `template` | 68 | yes |
+| `container` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 94 | yes |
+| `label` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 93 | yes |
+| `button` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `text`, `background_opacity`, `border`, `border_side`, `image`, `boolean`, `interaction`, `template` | 98 | yes |
+| `image` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `image`, `text`, `interaction`, `template` | 94 | yes |
+| `rect` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 93 | yes |
+| `shape` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `shape`, `interaction`, `template` | 93 | yes |
+| `progress` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `interaction`, `template` | 95 | yes |
+| `chart` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `stroke`, `interaction`, `template` | 97 | yes |
+| `slider` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `slider`, `interaction`, `template` | 98 | yes |
+| `arc` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `arc`, `interaction`, `template` | 99 | yes |
+| `needle` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `needle`, `stroke`, `interaction`, `template` | 94 | yes |
+| `spinner` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `spinner`, `stroke`, `interaction`, `template` | 93 | yes |
 | `effect` | `Widget` | `core`, `visibility`, `interaction` | 29 | yes |
 | `charging_orb` | `Widget` | `core`, `visibility`, `interaction` | 30 | yes |
 | `carousel` | `Widget` | `core`, `visibility`, `interaction` | 26 | yes |
 | `flip_card` | `Widget` | `core`, `visibility`, `interaction` | 25 | yes |
 | `glass` | `Widget` | `core`, `visibility` | 15 | no |
-| `toggle` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `slider`, `interaction`, `template` | 70 | yes |
-| `checkbox` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 67 | yes |
-| `radio` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 67 | yes |
-| `clock` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 74 | yes |
-| `page_flow` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `interaction`, `template` | 79 | yes |
-| `stackview` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 72 | yes |
-| `drawer` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 68 | yes |
-| `layer` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 68 | yes |
+| `toggle` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `slider`, `interaction`, `template` | 95 | yes |
+| `checkbox` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 92 | yes |
+| `radio` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 92 | yes |
+| `clock` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 99 | yes |
+| `page_flow` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `data`, `interaction`, `template` | 106 | yes |
+| `stackview` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 99 | yes |
+| `drawer` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 95 | yes |
+| `layer` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 95 | yes |
 | `tabview` | `Composite` | `core` | 25 | yes |
 | `dropdown` | `Composite` | `core` | 26 | yes |
 | `msgbox` | `Composite` | `composite_core` | 21 | yes |
 | `table` | `Composite` | `core` | 19 | yes |
 | `keyboard` | `Composite` | `core` | 36 | yes |
-| `list` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `list_data`, `scroll_snapshot`, `interaction`, `template` | 76 | yes |
-| `wheel` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `wheel_behavior`, `data`, `list_data`, `interaction`, `template` | 76 | yes |
-| `grid` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `grid_data`, `scroll_snapshot`, `interaction`, `template` | 72 | yes |
+| `list` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `list_data`, `scroll_snapshot`, `interaction`, `template` | 101 | yes |
+| `wheel` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `wheel_behavior`, `data`, `list_data`, `interaction`, `template` | 101 | yes |
+| `grid` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `grid_data`, `scroll_snapshot`, `interaction`, `template` | 97 | yes |
 | `message_list` | `Composite` | `core`, `visibility`, `row_template`, `message_list` | 31 | yes |
 
 ## Fields by widget
@@ -64,6 +64,10 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
 | `layout` | `enum` | no | no | — | child auto-layout: row/column |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
@@ -73,6 +77,12 @@ Current GSPC registry coverage.
 | `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
 | `grow` | `int` | no | no | `0` | auto-layout grow weight |
 | `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -80,8 +90,23 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
+| `bg_opacity` | `int` | no | no | `255` | background-only opacity; multiplied by opacity and color alpha |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `border_side` | `enum` | no | no | `"all"` | inside border selection; partial sides require static rectangular geometry |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -100,7 +125,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -136,6 +163,10 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
 | `layout` | `enum` | no | no | — | child auto-layout: row/column |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
@@ -145,6 +176,12 @@ Current GSPC registry coverage.
 | `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
 | `grow` | `int` | no | no | `0` | auto-layout grow weight |
 | `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | `"#FFFFFF"` | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -152,8 +189,23 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
+| `bg_opacity` | `int` | no | no | `255` | background-only opacity; multiplied by opacity and color alpha |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `border_side` | `enum` | no | no | `"all"` | inside border selection; partial sides require static rectangular geometry |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -172,7 +224,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -207,6 +261,10 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
 | `layout` | `enum` | no | no | — | child auto-layout: row/column |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
@@ -216,6 +274,12 @@ Current GSPC registry coverage.
 | `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
 | `grow` | `int` | no | no | `0` | auto-layout grow weight |
 | `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -223,6 +287,14 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -232,8 +304,15 @@ Current GSPC registry coverage.
 | `font_charset_file` | `path` | no | no | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | `enum` | no | no | — | font storage policy: embedded/external/auto |
 | `input` | `bool` | no | no | `false` | text field: attaches the caret/keyboard flow |
+| `bg_opacity` | `int` | no | no | `255` | background-only opacity; multiplied by opacity and color alpha |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `border_side` | `enum` | no | no | `"all"` | inside border selection; partial sides require static rectangular geometry |
 | `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
 | `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
 | `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
@@ -243,7 +322,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -283,6 +364,10 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
 | `layout` | `enum` | no | no | — | child auto-layout: row/column |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
@@ -292,6 +377,12 @@ Current GSPC registry coverage.
 | `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
 | `grow` | `int` | no | no | `0` | auto-layout grow weight |
 | `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -299,8 +390,21 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
+| `bg_opacity` | `int` | no | no | `255` | background-only opacity; multiplied by opacity and color alpha |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `border_side` | `enum` | no | no | `"all"` | inside border selection; partial sides require static rectangular geometry |
 | `animation_codec` | `enum` | no | no | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
 | `svg_layout` | `enum` | no | no | — | SVG part placement: cropped content or original canvas |
 | `morph_to` | `path` | no | no | — | SVG end shape with matching paths and paints |
@@ -310,7 +414,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -321,6 +427,8 @@ Current GSPC registry coverage.
 | `scale` | `number` | no | no | `1` | initial runtime image scale |
 | `min_scale` | `number` | no | no | `0.5` | minimum runtime image scale |
 | `max_scale` | `number` | no | no | `4` | maximum runtime image scale |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -341,6 +449,7 @@ Current GSPC registry coverage.
 | `max_instances` | `int` | no | no | — | maximum simultaneously live template instances; included in the automatic pool requirement |
 | `dynamic_color` | `bool` | no | no | — | template member exposes a per-instance color slot |
 | `dynamic_image` | `bool` | no | no | — | template image exposes a per-instance resource slot |
+| `image_opacity` | `int` | no | no | `255` | image-only opacity; fixed raster transforms may bake alpha at compile time |
 
 ### `rect`
 
@@ -354,6 +463,25 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `gap` | `int` | no | no | `0` | auto-layout gap in px |
+| `padding` | `int` | no | no | `0` | auto-layout padding in px |
+| `padding_left` | `int` | no | no | — | row layout: leading padding override |
+| `padding_right` | `int` | no | no | — | row layout: trailing padding override |
+| `padding_top` | `int` | no | no | — | column layout: leading padding override |
+| `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
+| `grow` | `int` | no | no | `0` | auto-layout grow weight |
+| `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -361,8 +489,23 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
+| `bg_opacity` | `int` | no | no | `255` | background-only opacity; multiplied by opacity and color alpha |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `border_side` | `enum` | no | no | `"all"` | inside border selection; partial sides require static rectangular geometry |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -381,7 +524,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -416,6 +561,10 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
 | `layout` | `enum` | no | no | — | child auto-layout: row/column |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
@@ -425,6 +574,12 @@ Current GSPC registry coverage.
 | `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
 | `grow` | `int` | no | no | `0` | auto-layout grow weight |
 | `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -432,8 +587,21 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -452,7 +620,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -489,6 +659,10 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
 | `layout` | `enum` | no | no | — | child auto-layout: row/column |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
@@ -498,6 +672,12 @@ Current GSPC registry coverage.
 | `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
 | `grow` | `int` | no | no | `0` | auto-layout grow weight |
 | `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -505,8 +685,21 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -525,7 +718,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -564,6 +759,10 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
 | `layout` | `enum` | no | no | — | child auto-layout: row/column |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
@@ -573,6 +772,12 @@ Current GSPC registry coverage.
 | `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
 | `grow` | `int` | no | no | `0` | auto-layout grow weight |
 | `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -580,8 +785,21 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -600,7 +818,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -641,6 +861,10 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
 | `layout` | `enum` | no | no | — | child auto-layout: row/column |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
@@ -650,6 +874,12 @@ Current GSPC registry coverage.
 | `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
 | `grow` | `int` | no | no | `0` | auto-layout grow weight |
 | `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -657,8 +887,21 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -677,7 +920,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -719,6 +964,10 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
 | `layout` | `enum` | no | no | — | child auto-layout: row/column |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
@@ -728,6 +977,12 @@ Current GSPC registry coverage.
 | `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
 | `grow` | `int` | no | no | `0` | auto-layout grow weight |
 | `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -735,8 +990,21 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -755,7 +1023,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -784,6 +1054,7 @@ Current GSPC registry coverage.
 | `dynamic_color` | `bool` | no | no | — | template member exposes a per-instance color slot |
 | `dynamic_image` | `bool` | no | no | — | template image exposes a per-instance resource slot |
 | `thickness` | `int` | no | no | — | stroke thickness; omitted = max(min(w,h)/8, 2); 0 clamps to 1 |
+| `interactive` | `bool` | no | no | `true` | allow pointer interaction |
 
 ### `needle`
 
@@ -797,6 +1068,10 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
 | `layout` | `enum` | no | no | — | child auto-layout: row/column |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
@@ -806,6 +1081,12 @@ Current GSPC registry coverage.
 | `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
 | `grow` | `int` | no | no | `0` | auto-layout grow weight |
 | `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -813,8 +1094,21 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -833,7 +1127,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -871,6 +1167,10 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
 | `layout` | `enum` | no | no | — | child auto-layout: row/column |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
@@ -880,6 +1180,12 @@ Current GSPC registry coverage.
 | `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
 | `grow` | `int` | no | no | `0` | auto-layout grow weight |
 | `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -887,8 +1193,21 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -907,7 +1226,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -1094,6 +1415,10 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
 | `layout` | `enum` | no | no | — | child auto-layout: row/column |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
@@ -1103,6 +1428,12 @@ Current GSPC registry coverage.
 | `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
 | `grow` | `int` | no | no | `0` | auto-layout grow weight |
 | `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | `"#22c55e"` | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -1110,8 +1441,21 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -1130,7 +1474,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -1169,6 +1515,10 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
 | `layout` | `enum` | no | no | — | child auto-layout: row/column |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
@@ -1178,6 +1528,12 @@ Current GSPC registry coverage.
 | `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
 | `grow` | `int` | no | no | `0` | auto-layout grow weight |
 | `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | `"#50B878"` | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -1185,8 +1541,21 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -1205,7 +1574,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -1241,6 +1612,10 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
 | `layout` | `enum` | no | no | — | child auto-layout: row/column |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
@@ -1250,6 +1625,12 @@ Current GSPC registry coverage.
 | `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
 | `grow` | `int` | no | no | `0` | auto-layout grow weight |
 | `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | `"#55A0E8"` | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -1257,8 +1638,21 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -1277,7 +1671,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -1313,6 +1709,10 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
 | `layout` | `enum` | no | no | — | child auto-layout: row/column |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
@@ -1322,6 +1722,12 @@ Current GSPC registry coverage.
 | `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
 | `grow` | `int` | no | no | `0` | auto-layout grow weight |
 | `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -1329,8 +1735,21 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -1349,7 +1768,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -1392,6 +1813,10 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
 | `layout` | `enum` | no | no | — | child auto-layout: row/column |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
@@ -1401,6 +1826,12 @@ Current GSPC registry coverage.
 | `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
 | `grow` | `int` | no | no | `0` | auto-layout grow weight |
 | `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -1408,8 +1839,23 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
+| `bg_opacity` | `int` | no | no | `255` | background-only opacity; multiplied by opacity and color alpha |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `border_side` | `enum` | no | no | `"all"` | inside border selection; partial sides require static rectangular geometry |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -1428,7 +1874,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -1476,6 +1924,10 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
 | `layout` | `enum` | no | no | — | child auto-layout: row/column |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
@@ -1485,6 +1937,12 @@ Current GSPC registry coverage.
 | `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
 | `grow` | `int` | no | no | `0` | auto-layout grow weight |
 | `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -1492,8 +1950,23 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
+| `bg_opacity` | `int` | no | no | `255` | background-only opacity; multiplied by opacity and color alpha |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `border_side` | `enum` | no | no | `"all"` | inside border selection; partial sides require static rectangular geometry |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -1512,7 +1985,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -1553,6 +2028,10 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
 | `layout` | `enum` | no | no | — | child auto-layout: row/column |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
@@ -1562,6 +2041,12 @@ Current GSPC registry coverage.
 | `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
 | `grow` | `int` | no | no | `0` | auto-layout grow weight |
 | `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -1569,8 +2054,23 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
+| `bg_opacity` | `int` | no | no | `255` | background-only opacity; multiplied by opacity and color alpha |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `border_side` | `enum` | no | no | `"all"` | inside border selection; partial sides require static rectangular geometry |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -1589,7 +2089,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -1626,6 +2128,10 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
 | `layout` | `enum` | no | no | — | child auto-layout: row/column |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
@@ -1635,6 +2141,12 @@ Current GSPC registry coverage.
 | `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
 | `grow` | `int` | no | no | `0` | auto-layout grow weight |
 | `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -1642,8 +2154,23 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
+| `bg_opacity` | `int` | no | no | `255` | background-only opacity; multiplied by opacity and color alpha |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `border_side` | `enum` | no | no | `"all"` | inside border selection; partial sides require static rectangular geometry |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -1662,7 +2189,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -1768,7 +2297,7 @@ Current GSPC registry coverage.
 | `radius` | `int` | no | yes | `0` | corner radius |
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
-| `hidden` | `bool` | no | yes | `false` | start hidden |
+| `hidden` | `bool` | no | yes | `true` | start hidden |
 | `dismissable` | `bool` | no | no | `false` | scrim tap closes |
 | `enabled` | `bool` | no | no | — | initial interaction state; when present, exposes a runtime enabled property inherited by descendant controls |
 | `disabled_color` | `color` | no | no | `"#808080"` | disabled-state overlay color |
@@ -1851,6 +2380,10 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
 | `layout` | `enum` | no | no | — | child auto-layout: row/column |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
@@ -1860,6 +2393,12 @@ Current GSPC registry coverage.
 | `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
 | `grow` | `int` | no | no | `0` | auto-layout grow weight |
 | `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -1867,8 +2406,21 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -1887,7 +2439,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -1932,6 +2486,10 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
 | `layout` | `enum` | no | no | — | child auto-layout: row/column |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
@@ -1941,6 +2499,12 @@ Current GSPC registry coverage.
 | `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
 | `grow` | `int` | no | no | `0` | auto-layout grow weight |
 | `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -1948,8 +2512,21 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -1968,7 +2545,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -2013,6 +2592,10 @@ Current GSPC registry coverage.
 | `w` | `int` | yes | yes | — | width in px |
 | `h` | `int` | yes | yes | — | height in px |
 | `name` | `identifier` | no | no | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | `int` | no | no | — | compile-time minimum width in px |
+| `max_width` | `int` | no | no | — | compile-time maximum width in px |
+| `min_height` | `int` | no | no | — | compile-time minimum height in px |
+| `max_height` | `int` | no | no | — | compile-time maximum height in px |
 | `layout` | `enum` | no | no | — | child auto-layout: row/column |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
@@ -2022,6 +2605,12 @@ Current GSPC registry coverage.
 | `padding_bottom` | `int` | no | no | — | column layout: trailing padding override |
 | `grow` | `int` | no | no | `0` | auto-layout grow weight |
 | `margin` | `int` | no | no | `0` | auto-layout space on both child sides |
+| `margin_left` | `int` | no | no | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | no | no | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | no | no | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | no | no | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | no | no | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | no | no | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | no | yes | `false` | start hidden (show via actions or set_visible) |
 | `fg_color` | `color` | no | no | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | `int` | no | yes | `255` | 0-255 blend opacity |
@@ -2029,8 +2618,21 @@ Current GSPC registry coverage.
 | `bg_gradient` | `color` | no | no | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | no | no | `"vertical"` | gradient direction |
 | `radius` | `int` | no | yes | `0` | corner radius in px |
+| `shadow_color` | `color` | no | no | — | static hard-shadow color |
+| `shadow_opacity` | `int` | no | no | `96` | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | no | no | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | no | no | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | no | no | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | no | no | — | static hard-shadow corner radius |
 | `border_color` | `color` | no | no | — | border stroke color |
 | `border_width` | `int` | no | no | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | no | no | `255` | border stroke opacity |
+| `outline_color` | `color` | no | no | — | outside outline color |
+| `outline_width` | `int` | no | no | `0` | outside outline width |
+| `outline_opacity` | `int` | no | no | `255` | outside outline opacity |
+| `outline_pad` | `int` | no | no | `0` | gap between the element and its outline |
+| `text_line_space` | `int` | no | no | `0` | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | no | no | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | no | yes | — | static text content (UTF-8) |
 | `text_align` | `enum` | no | no | — | text alignment |
 | `overflow` | `enum` | no | no | `"clip"` | single-line overflow |
@@ -2049,7 +2651,9 @@ Current GSPC registry coverage.
 | `image` | `path` | no | yes | — | image file path (raster or compiled SVG) |
 | `codec` | `enum` | no | no | — | image codec |
 | `quality` | `int` | no | no | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | no | no | — | legacy JPEG quality alias |
 | `compress` | `bool` | no | no | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | no | no | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | no | no | — | pre-scale factor applied when encoding |
 | `max_fps` | `int` | no | no | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | no | no | `"stretch"` | image fit mode |
@@ -2097,19 +2701,19 @@ Current GSPC registry coverage.
 | `outgoing_color` | `color` | no | no | `"#246BFD"` | outgoing bubble color |
 | `message_text_color` | `color` | no | no | `"#111827"` | message text color |
 | `outgoing_text_color` | `color` | no | no | `"#FFFFFF"` | outgoing text color |
-| `bubble_radius` | `int` | no | no | — | message bubble radius |
-| `bubble_padding_x` | `int` | no | no | — | bubble horizontal padding |
-| `bubble_padding_y` | `int` | no | no | — | bubble vertical padding |
-| `message_gap` | `int` | no | no | — | message gap |
-| `side_margin` | `int` | no | no | — | message side margin |
-| `max_bubble_width` | `int` | no | no | — | maximum bubble width |
-| `max_message_height` | `int` | no | no | — | maximum message height |
+| `bubble_radius` | `int` | no | no | `14` | message bubble radius |
+| `bubble_padding_x` | `int` | no | no | `14` | bubble horizontal padding |
+| `bubble_padding_y` | `int` | no | no | `10` | bubble vertical padding |
+| `message_gap` | `int` | no | no | `8` | message gap |
+| `side_margin` | `int` | no | no | `12` | message side margin |
+| `max_bubble_width` | `int` | no | no | `0` | maximum bubble width; 0 or omitted uses 76% of viewport width |
+| `max_message_height` | `int` | no | no | `320` | maximum message height |
 | `callback` | `identifier` | no | no | — | app callback name |
 | `font` | `path` | no | no | — | per-object TTF/OTF override |
 | `font_size` | `int` | no | no | — | per-object font pixel size |
 | `font_charset` | `string` | no | no | — | glyphs available to runtime-bound message text |
 | `scroll_snapshot` | `bool` | no | no | `true` | cache two viewport frames while scrolling; falls back to live rendering when memory is unavailable |
-| `item_height` | `int` | no | no | `0` | row height |
+| `item_height` | `int` | no | no | `0` | minimum message row height; 0 or omitted uses 2 * bubble_padding_y + message_gap + 1 |
 | `enabled` | `bool` | no | no | — | initial interaction state; when present, exposes a runtime enabled property inherited by descendant controls |
 | `disabled_color` | `color` | no | no | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | `int` | no | no | `112` | disabled-state overlay opacity |

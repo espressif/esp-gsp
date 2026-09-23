@@ -128,9 +128,9 @@
 | 配置或能力 | 作用 | 默认值 | 类型 / 范围 | 预编译组件 | JSON 自适应 |
 |---|---|---:|---|---|---|
 | `CONFIG_ESP_GSP_TAP_SLOP_PX` | 点击判定允许的移动范围（像素） | `16` | `int` / `0..128` | 可配置 | 否 |
-| `CONFIG_ESP_GSP_DRAG_START_PX` | 拖动或手势开始阈值（像素） | `24` | `int` / `0..256` | 可配置 | 否 |
+| `CONFIG_ESP_GSP_DRAG_START_PX` | 拖动或手势开始阈值（像素） | `12` | `int` / `0..256` | 可配置 | 否 |
 | `CONFIG_ESP_GSP_SWIPE_FLICK_PX` | Flick 提交距离（像素） | `12` | `int` / `0..256` | 可配置 | 否 |
-| `CONFIG_ESP_GSP_SCENE_SWIPE_MIN_FLING_PX` | 场景滑动最小 Fling 距离（像素） | `32` | `int` / `0..512` | 可配置 | 否 |
+| `CONFIG_ESP_GSP_SCENE_SWIPE_MIN_FLING_PX` | Scene、PageFlow 或 Drawer 的最小 Fling 位移（像素） | `24` | `int` / `0..512` | 可配置 | 否 |
 | `CONFIG_ESP_GSP_COMPONENT_SWIPE_COMMIT_DIVISOR` | 组件滑动提交距离除数 | `4` | `int` / `2..16` | 可配置 | 否 |
 | `CONFIG_ESP_GSP_SCENE_SWIPE_COMMIT_DIVISOR` | 场景滑动提交距离除数 | `5` | `int` / `2..16` | 可配置 | 否 |
 | `CONFIG_ESP_GSP_SWIPE_VELOCITY_NUMERATOR` | 滑动归位速度计算分子 | `3` | `int` / `1..16` | 可配置 | 否 |

@@ -55,6 +55,11 @@ current component.
 The bundle bytes, generated component directories and optional TTF bytes must
 remain valid until `esp_gsp_stop()` succeeds.
 
+Treat compiled bundle bytes as immutable. Startup may reuse successful CRC
+checks for scenes and shared embedded images and fonts within that load; structure and
+bounds checks still run. Verification results are not retained across UI
+instances, and external font catalogs are checked separately.
+
 For a deployable bundle, both the borrowed GSPB bytes and the
 `esp_gsp_deployable_bundle_t` handle must remain valid until the UI stops.
 Close the handle only after `esp_gsp_stop()`; closing it never frees the

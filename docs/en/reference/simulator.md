@@ -66,6 +66,9 @@ When the backend endpoint is enabled, scene navigation buttons and direct
 application-state writes are rejected by the server. When `--input-mode` is `api-exclusive`, mouse clicks are rejected
 with an `input_busy` error. Both conditions are reported in the log panel.
 
+Open the printed URL manually; the host does not launch a browser. Closing a
+browser does not stop the host; use Ctrl-C or the control API `quit` method.
+
 Multiple browsers may connect simultaneously; each maintains independent
 keyframe state and subscriptions.
 
@@ -80,7 +83,7 @@ Run `gsp_sim_host --help` for the built-in help.
 | `--bundle <PATH>` | Scene bundle file (`.gspb`), required |
 | `--dynamic-font <PATH>` | Optional TrueType font file |
 | `--fps <N>` | Simulated frame rate, default `60` |
-| `--frames <N>` | Frame limit; `0` = run until `quit`; default `300` |
+| `--frames <N>` | Frame limit; default `0` = no frame limit; exits on `quit`, script/replay completion or termination |
 
 ### Preview and input
 
@@ -229,6 +232,8 @@ screenshots or coordinate input after runtime movement and animation.
 | `hit_test` | `{ "x": N, "y": N, "scene": N }` | Find the smallest named compiled bound at a point |
 | `frame_info` | — | Get latest frame commit info |
 | `wait` | `{ "frames": N }` | Respond after N frames |
+| `component_get_motion` | `{ "name": "...", "scene": N }` | Query PageFlow/Drawer state; alternatively use `component_key`; `scene` is optional |
+| `wait_component` | `{ "name": "...", "value": N, "max_frames": N }` | Wait for rest and optional value; see conditions below |
 | `invalidate` | — | Force full-screen redraw next frame |
 | `screenshot` | `{ "path": "...", "format": "png" }` | Save current frame to file |
 | `subscribe` | `{ "events": [...] }` | Subscribe to server notifications |
@@ -239,6 +244,32 @@ The API channel remains JSON-only. The application backend additionally has
 asynchronous dynamic-data and binary-media extensions described below; the
 Browser never receives their data-source requests or binary-upload access.
 
+### Component motion and conditional waiting
+
+Probe `capabilities.component_motion_version`, `component_events_version` and
+`wait_component_version` (1 = supported, 0 = unavailable with the loaded WASM).
+`component_get_motion` accepts `{"name":"pages"}` or a numeric `component_key`,
+plus an optional current `scene`. Its result contains `result_code` and `state`:
+`value` is the committed page/open state, `target` is the destination, and
+`dragging`/`settling` indicate motion. A failed query may return `state: null`;
+check the result code.
+
+`wait_component` accepts the same target and optional `value` and `max_frames`
+(default 300, range 1–36000). It returns `status: "settled"`, final `state` and
+`frames_waited` when motion stops and the requested value matches. Omitting
+`value` waits only for rest. The limit counts successfully advanced simulation
+frames, not wall-clock time. Timeout returns `-32020` with
+`data.reason: "timeout"` and the last state; scene changes/reset cancel the wait.
+Unsupported or failed state queries also return errors. These observation
+methods remain available while Backend owns state writes.
+
+Subscribe to `component_event` to receive `component_key`, `scene_id`, `kind`,
+`flags` and `state`. Flags are bitwise: value changed = 1, settled = 2,
+motion changed = 4. Events are coalesced per UI step, not a history of every
+request. Use the control API for assertions: Browser notifications share a
+droppable frame queue. `wait` only counts frames and `render_fence` marks a
+render boundary; neither proves animation or business completion.
+
 ### Notification events
 
 Events are delivered as JSON-RPC notifications (no `id`). Register with
@@ -247,6 +278,7 @@ Events are delivered as JSON-RPC notifications (no `id`). Register with
 | Event | Parameters | Description |
 |---|---|---|
 | `scene_changed` | `{ "from": N, "to": N }` | Scene transition |
+| `component_event` | `{ "component_key": N, "scene_id": N, "kind": N, "flags": N, "state": {...} }` | Coalesced PageFlow/Drawer state notification; explicitly subscribe |
 | `callback` | `{ "action_id": N, "arg": N, "scene_id": N, "list": N, "item": N, "callback"?: "name" }` | Component callback; includes the compiled callback name when `--api-json` is loaded |
 | `frame` | `{ "index": N }` | Per-frame tick |
 | `list_bind` | `{ "list": N, "slot": N, "instance": N, "item": N, "resource_slot": N, "text_slot": N }` | Backend dynamic List/Grid row request; Grid member slots, 65535 means absent (both absent for List) |
@@ -267,55 +299,32 @@ Events are delivered as JSON-RPC notifications (no `id`). Register with
 | `-32602` | Invalid Params | Missing or wrong parameter type |
 | `-32603` | Internal Error | Host internal error |
 | `-32010` | Input Busy | `--input-mode` blocked input from this channel |
+| `-32020` | Component wait failed | Inspect `data.reason` for timeout, cancellation, unsupported capability or query failure |
+
+`not_allowed` and `backend_exclusive` are documentation labels, both with code
+`-32601`. Their messages are `method not allowed for this channel: ...` and
+`method reserved for backend while backend is enabled: ...`, respectively.
+`widget_*`, `bridge_call`, `query_visibility`, `render_fence` and remote data/media
+extensions are always Backend-only; API/Browser calls return `not_allowed`
+regardless of whether Backend is enabled.
 
 ### Python client example
 
+Examples share [rpc_client.py](../../../tools/sim_bridge/rpc_client.py). From the repository root run
+`PYTHONPATH=tools/sim_bridge python3 your_script.py` (use the component path for
+an installed package). The client preserves consecutive frames and interleaved
+notifications and raises on EOF. Use one caller per connection; `call()` returns
+the complete response, including `error`. Check errors and `result_code`.
+
 ```python
-import json, socket
+from rpc_client import connect
 
-def connect(host="127.0.0.1", port=8266):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((host, port))
-    return sock
-
-def send_request(sock, method, params=None, request_id=1):
-    body = json.dumps({
-        "jsonrpc": "2.0",
-        "id": request_id,
-        "method": method,
-        "params": params or {},
-    }).encode("utf-8")
-    header = f"Content-Length: {len(body)}\r\n\r\n".encode("ascii")
-    sock.sendall(header + body)
-
-def read_response(sock):
-    buf = b""
-    while b"\r\n\r\n" not in buf:
-        chunk = sock.recv(4096)
-        if not chunk:
-            raise ConnectionError("connection closed")
-        buf += chunk
-    header, _, rest = buf.partition(b"\r\n\r\n")
-    length = int(header.split(b":")[1].strip())
-    body = rest
-    while len(body) < length:
-        body += sock.recv(length - len(body))
-    return json.loads(body[:length])
-
-sock = connect(port=8266)
-send_request(sock, "capabilities", request_id=1)
-caps = read_response(sock)
-print(f"Display: {caps['result']['width']}x{caps['result']['height']}")
-
-send_request(sock, "tap", {"x": 160, "y": 120}, request_id=2)
-print(read_response(sock))
-
-send_request(sock, "wait", {"frames": 5}, request_id=3)
-print(read_response(sock))
-
-send_request(sock, "screenshot", {"path": "/tmp/shot.png", "format": "png"}, request_id=4)
-print(read_response(sock))
-sock.close()
+with connect(port=8266) as api:
+    caps = api.call("capabilities")
+    print(caps)
+    print(api.call("tap", {"x": 160, "y": 120}))
+    print(api.call("wait", {"frames": 5}))
+    print(api.call("screenshot", {"path": "/tmp/shot.png", "format": "png"}))
 ```
 
 ## Application backend
@@ -328,7 +337,8 @@ When the backend endpoint is enabled:
 
 - Application state writes (`set_*`, component, Drawer, PageFlow and List
   controls) plus `goto_scene` and `reset` become backend-exclusive. API calls
-  receive `backend_exclusive`; Browser calls are always `method not allowed`.
+  receive `backend_exclusive`. Browser state writes return `not_allowed`, while
+  `goto_scene` and `reset` return `backend_exclusive` when Backend is enabled.
 - The backend automatically subscribes to `callback`, `scene_changed`, `list_bind`, `list_bind_overflow`, `binary_result`, `image_complete`, and `image_release`.
 - Only one backend connection is allowed at a time.
 
@@ -341,7 +351,8 @@ List/Wheel operations. It may also bind dynamic collections with
 `list_bind_remote` / `grid_bind_remote`, set their size with `list_set_total`,
 and answer `list_bind` notifications with token-checked `row_publish` updates.
 Rows can be recycled while a backend is working: a nonzero row result code
-means the token is stale and must be discarded.
+can mean a stale token or another failure, such as an invalid field slot.
+Inspect the result code; never retry a token known to be stale.
 
 Backend TCP/Unix connections accept COPY-only Content-Length binary uploads:
 `X-GSP-Kind: image` and `row-image` accept PNG, JPEG, or QOI; `canvas` accepts
@@ -358,60 +369,17 @@ capability bitmap advertises this decoder support as `ESP_GSP_SIM_CAP_QOI`
 ### Backend Python example
 
 ```python
-import json, socket
+from rpc_client import connect
 
-class SimBackend:
-    def __init__(self, host="127.0.0.1", port=8684):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((host, port))
-        self.next_id = 1
-
-    def call(self, method, params=None):
-        rid = self.next_id
-        self.next_id += 1
-        body = json.dumps({
-            "jsonrpc": "2.0", "id": rid,
-            "method": method, "params": params or {},
-        }).encode("utf-8")
-        header = f"Content-Length: {len(body)}\r\n\r\n".encode("ascii")
-        self.sock.sendall(header + body)
-        while True:
-            msg = self._read()
-            if msg.get("id") == rid:
-                return msg.get("result")
-            self._on_notification(msg)
-
-    def _read(self):
-        buf = b""
-        while b"\r\n\r\n" not in buf:
-            chunk = self.sock.recv(4096)
-            if not chunk:
-                raise ConnectionError("closed")
-            buf += chunk
-        header, _, rest = buf.partition(b"\r\n\r\n")
-        length = int(header.split(b":")[1].strip())
-        body = rest
-        while len(body) < length:
-            body += self.sock.recv(length - len(body))
-        return json.loads(body[:length])
-
-    def _on_notification(self, msg):
-        method = msg.get("method", "")
-        params = msg.get("params", {})
-        if method == "callback":
-            print(f"callback: action_id={params.get('action_id')}")
-
-backend = SimBackend(port=8684)
-caps = backend.call("capabilities")
-print(f"Scenes: {caps['scene_count']}")
-
-backend.call("set_text", {"bind_id": 1, "text": "Ready"})
-backend.call("set_value", {"bind_id": 2, "value": 75})
-
-while True:
-    msg = backend._read()
-    if msg.get("method"):
-        backend._on_notification(msg)
+with connect(port=8684) as backend:
+    print(backend.call("capabilities"))
+    # Use bind IDs from your generated scene.
+    print(backend.call("set_text", {"bind_id": 1, "text": "Ready"}))
+    print(backend.call("set_value", {"bind_id": 2, "value": 75}))
+    while True:
+        event = backend.notification(timeout=None)
+        print(event["method"], event["params"])
+        # Handle callback/scene_changed here; backend.call() retains notifications.
 ```
 
 ## Native C Backend projects
@@ -432,14 +400,16 @@ automatic reconnection or state replay after reset.
 
 With `capabilities.bridge_media_version: 1`, the library also maps dynamic
 List/Grid binders, row fields, COPY PNG/JPEG/QOI images, and Canvas
-push/draw/invalidate/stop. See `examples/sim_bridge_media` for a runnable
+push/draw/invalidate/stop. See `examples/usage/sim_bridge_media` for a runnable
 project. A List must have a compiled runtime row template; Grid template
 images need `dynamic_image: true`. Grid callbacks receive actual resource/text
 slots. Row tokens are reusable until invalidated by recycling; overflow is
 fatal, not silently replayed.
 
-Canvas draw runs on a full native offscreen buffer at poll time, followed by
-full-frame upload, including for dirty invalidation. It is not the device's
+Canvas draw runs on a full native offscreen buffer at poll time. Hosts with
+`bridge_canvas_patch_version: 1` transfer small dirty invalidations as packed
+row patches after an initial keyframe; large or unsynchronized updates use a
+full frame. It is not the device's
 render-task/tile callback contract. Only read-only GSP queries are permitted
 inside draw; scene changes disable callbacks until re-registered. Explicit
 sync push disables that target's callback and invokes release once before
@@ -493,7 +463,8 @@ The host adds two Backend-only methods:
 Existing methods such as `set_value`, `set_text` and `set_component_i32`
 are reused directly. `capabilities` reports `bridge_version: 1`,
 `bridge_media_version: 1`, `bridge_image_version: 1` and
-`bridge_fence_version: 1` and `current_scene` for initial negotiation.
+`bridge_fence_version: 1`, `bridge_canvas_patch_version: 1` and `current_scene`
+for initial negotiation.
 Applications normally use the C wrappers rather than encode these operations.
 The component includes `tools/sim_bridge/protocol.h` for the scalar operation IDs.
 

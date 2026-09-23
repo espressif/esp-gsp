@@ -9,7 +9,9 @@
  * Arguments/results are arrays of eight uint32_t words. Signed values use
  * their two's-complement bit pattern. Append operations; never renumber. */
 #define GSP_SIM_BRIDGE_VERSION 1
+#define GSP_SIM_BRIDGE_API_VERSION 3
 enum gsp_sim_bridge_op {
+    GSP_BRIDGE_QUERY_API_VERSION = 0,
     GSP_BRIDGE_GET_VALUE = 1,
     GSP_BRIDGE_GET_COLOR,
     GSP_BRIDGE_GET_VISIBLE,
@@ -45,4 +47,5 @@ enum gsp_sim_bridge_op {
     GSP_BRIDGE_SET_PRESS_FEEDBACK_ENABLED,
     GSP_BRIDGE_COMPONENT_PLAY_ANIMATION,
     GSP_BRIDGE_COMPONENT_STOP_ANIMATION,
+    GSP_BRIDGE_COMPONENT_SET_POSITION,
 };

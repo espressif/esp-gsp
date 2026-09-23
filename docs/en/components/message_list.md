@@ -8,15 +8,15 @@ Use it when a familiar interaction is best delivered as a ready-made group of na
 
 ## Local interactive preview
 
-After [installing `esp-gsp-tools`](../guide/simulator-preview.md), run from an
-unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
+then run from an unpacked component or public repository root:
 
 ```sh
 mkdir -p gsp-out/widget-preview
-python -m gsp.execute --version 0.5.0 gspc pack \
-  examples/widgets/message_list/message_list.json \
+gspc pack \
+  examples/usage/widgets/message_list/message_list.json \
   --deployable -o gsp-out/widget-preview/message_list.gspb
-python -m gsp.execute --version 1.4.0 sim \
+gsp_sim_host \
   --bundle gsp-out/widget-preview/message_list.gspb
 ```
 
@@ -39,7 +39,7 @@ Give every object that application code must read or update a stable `name`. GSP
   "w": 480,
   "h": 320,
   "screen_bg": "#101827",
-  "font": "../../common/fonts/DejaVuSans.ttf",
+  "font": "../../../common/fonts/DejaVuSans.ttf",
   "font_charset": " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,?—'",
   "objects": [
     {
@@ -103,7 +103,7 @@ Give every object that application code must read or update a stable `name`. GSP
 }
 ```
 
-This is `examples/widgets/message_list/message_list.json`. Copy any relative assets referenced by the scene with it.
+This is `examples/usage/widgets/message_list/message_list.json`. Copy any relative assets referenced by the scene with it.
 
 ## Generated C API for this example
 
@@ -158,13 +158,13 @@ These signatures come from the actual compiler output for this JSON.
 | `outgoing_color` | `color` | — | default #246BFD | — | outgoing bubble color |
 | `message_text_color` | `color` | — | default #111827 | — | message text color |
 | `outgoing_text_color` | `color` | — | default #FFFFFF | — | outgoing text color |
-| `bubble_radius` | `int` | — | 0…1024 | — | message bubble radius |
-| `bubble_padding_x` | `int` | — | 0…1024 | — | bubble horizontal padding |
-| `bubble_padding_y` | `int` | — | 0…1024 | — | bubble vertical padding |
-| `message_gap` | `int` | — | 0…1024 | — | message gap |
-| `side_margin` | `int` | — | 0…4096 | — | message side margin |
-| `max_bubble_width` | `int` | — | 0…32767 | — | maximum bubble width |
-| `max_message_height` | `int` | — | 16…32767 | — | maximum message height |
+| `bubble_radius` | `int` | — | default 14; 0…1024 | — | message bubble radius |
+| `bubble_padding_x` | `int` | — | default 14; 0…1024 | — | bubble horizontal padding |
+| `bubble_padding_y` | `int` | — | default 10; 0…1024 | — | bubble vertical padding |
+| `message_gap` | `int` | — | default 8; 0…1024 | — | message gap |
+| `side_margin` | `int` | — | default 12; 0…4096 | — | message side margin |
+| `max_bubble_width` | `int` | — | default 0; 0…32767 | — | maximum bubble width; 0 or omitted uses 76% of viewport width |
+| `max_message_height` | `int` | — | default 320; 16…32767 | — | maximum message height |
 | `font_size` | `int` | — | 1…255 | — | per-object font pixel size |
 
 <details><summary>Show other fields supported by this Widget</summary>
@@ -177,7 +177,7 @@ These signatures come from the actual compiler output for this JSON.
 | `font` | `path` | — | — | — | per-object TTF/OTF override |
 | `font_charset` | `string` | — | — | — | glyphs available to runtime-bound message text |
 | `scroll_snapshot` | `bool` | — | default `true` | — | cache two viewport frames while scrolling; falls back to live rendering when memory is unavailable |
-| `item_height` | `int` | — | default 0; 0…65535 | — | row height |
+| `item_height` | `int` | — | default 0; 0…65535 | — | minimum message row height; 0 or omitted uses 2 * bubble_padding_y + message_gap + 1 |
 | `enabled` | `bool` | — | — | — | initial interaction state; when present, exposes a runtime enabled property inherited by descendant controls |
 | `disabled_color` | `color` | — | default #808080 | — | disabled-state overlay color |
 | `disabled_opacity` | `int` | — | default 112; 0…255 | — | disabled-state overlay opacity |

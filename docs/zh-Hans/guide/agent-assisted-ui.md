@@ -70,7 +70,7 @@ Skill 遵循与[推荐工程工作流](workflow.md)相同的职责模型：
 1. 识别实际选中的组件、Target、GSPC、Bundle、场景和 BSP；
 2. 读取当前 Schema、相关控件页和经过检查的控件示例；
 3. 布局和声明式行为放在 JSON，产品状态放在应用，面板行为放在 BSP；
-4. 用 `gspc cards` 查看目标控件字段，对真实场景执行 `gspc compatibility` 和 `gspc diagnose`（诊断含 `suggestions`）；
+4. 用 `gspc cards` 查看目标控件字段，对真实场景执行 `gspc compatibility` 和 `gspc diagnose`（诊断含 `suggestions`）。CLI 诊断包含编译检查；daemon 的 `diagnostics/pull` 默认只检查 Schema，`doctor/get` 声明支持后可使用 `level: "compile"` 检查资源和 Profile；
 5. 生成 Bundle 头文件和 `*.api.json`，接入其中的 API，并构建应用修改；
 6. 需要预览时查找或构建模拟器，加载同一次编译生成的 `--api-json`，按名验证输入、状态和编译初始布局；连接应用 Backend 时，状态写入与导航仍由 Backend 负责；
 7. 汇总修改内容、构建结果和预览情况。
@@ -82,6 +82,33 @@ Skill 遵循与[推荐工程工作流](workflow.md)相同的职责模型：
 [场景 JSON](scenes.md)解释编写结构，
 [运行时与生成 API](runtime-api.md)解释应用集成，
 [控件库](../components/index.md)覆盖当前支持的全部控件。
+卡片中的 `example` 是编写片段，不是完整场景；使用 `example_path` 和文档路径读取完整示例与字段参考。
+PageFlow/Drawer 自动化前先从 `capabilities` 确认组件运动支持，再使用
+`component_get_motion`、`wait_component(name, 可选 value, max_frames)` 或
+`component_event`；成功等待必须满足 idle，指定 `value` 时还需匹配目标值，超时返回 JSON-RPC 错误。
+编译得到的 bounds 只是初始布局元数据，不能当作运行时命中证明。
+
+## 选择预览路径
+
+只检查场景布局、声明式动作和控件交互时，使用[模拟器预览与测试](simulator-preview.md)
+中的独立模拟器流程。它适合快速查看场景，但不会运行应用自己的 C 任务和产品状态逻辑。
+
+如果验收依赖应用 C 回调、定时器、动态集合或实时状态，优先使用组件自带的
+`sim_bridge`。它能在 PC 上运行可移植的应用 C 代码，并把界面交给模拟器渲染。
+ESP-GSP 组件已安装到工程后（例如执行 `idf.py reconfigure`），已有 PC 工程可从应用根目录运行：
+
+```sh
+python -m pip install -U esp-gsp-tools
+python managed_components/espressif__esp-gsp/tools/sim_bridge/run.py --project pc
+```
+
+可以先用组件中的 `examples/usage/hello_world/pc` 或
+`examples/usage/sim_bridge_media/pc` 熟悉流程；将示例路径作为 `--project` 参数即可。
+源码 checkout 可直接使用当前组件的 `tools/sim_bridge/run.py`。完整要求、工具版本选择、
+PC HAL/mock 以及支持的 API 子集见[sim_bridge 使用说明](../../../tools/sim_bridge/README.md)。
+
+sim_bridge 用于验证应用逻辑，不等同于 ESP-IDF 任务调度、外设、面板时序或设备性能验证。
+它运行的 API 子集和单线程 Backend 契约也应纳入检查。仍需构建目标工程，并按需要上板验收。
 
 ## 检查生成结果
 

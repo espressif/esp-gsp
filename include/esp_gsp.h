@@ -202,6 +202,53 @@ typedef void (*esp_gsp_event_cb_t)(esp_gsp_handle_t gsp,
                                    const esp_gsp_event_t *event,
                                    void *user_ctx);
 
+/** Committed PageFlow/Drawer state, independent of a pending destination.
+ * value/target are page indices for PageFlow and 0/1 for Drawer.
+ * settling includes PageFlow coasting; no pixel progress is reported. */
+typedef struct {
+    uint16_t value;
+    uint16_t target;
+    bool dragging;
+    bool settling;
+} esp_gsp_component_motion_t;
+
+typedef enum {
+    ESP_GSP_COMPONENT_EVENT_VALUE_CHANGED = 1U << 0,
+    ESP_GSP_COMPONENT_EVENT_MOTION_FINISHED = 1U << 1,
+    ESP_GSP_COMPONENT_EVENT_MOTION_CHANGED = 1U << 2,
+} esp_gsp_component_event_flag_t;
+
+typedef struct {
+    gsp_component_key_t key;
+    gsp_component_kind_t kind;
+    uint16_t scene_id;
+    uint16_t flags;             /*!< combination of component event flags */
+    esp_gsp_component_motion_t state;
+} esp_gsp_component_event_t;
+
+typedef void (*esp_gsp_component_event_cb_t)(esp_gsp_handle_t gsp,
+        const esp_gsp_component_event_t *event, void *user_ctx);
+
+/** Subscribe to PageFlow/Drawer changes without polling. Registration is
+ * serialized like setters; NULL unsubscribes. No initial event is emitted.
+ * Notifications are coalesced per component per UI step and dispatched after
+ * driver updates, outside driver iteration. The event contains final committed
+ * state; intermediate requests within a step are not an event history.
+ * MOTION_FINISHED also covers a return to the original value and an effective
+ * non-animated change. An idle same-value request emits nothing. Scene teardown
+ * discards pending notifications. Existing esp_gsp_on_event is unaffected.
+ * Callbacks may use setters but must not block, flush or destroy the app.
+ * With a continuously attached ESP-IDF runtime, an external task can unsubscribe
+ * and successfully flush before freeing user_ctx. Do not concurrently tear down
+ * or replace the runtime. Portable apps require caller serialization instead. */
+esp_gsp_err_t esp_gsp_on_component_event(esp_gsp_handle_t gsp,
+        esp_gsp_component_event_cb_t cb, void *user_ctx);
+
+/** Query committed and target motion state for PageFlow or Drawer. Like other
+ * component getters, use from the UI task or a caller-serialized portable app. */
+esp_gsp_err_t esp_gsp_component_get_motion(esp_gsp_handle_t gsp,
+        gsp_component_key_t key, esp_gsp_component_motion_t *out_state);
+
 typedef void (*esp_gsp_timer_cb_t)(esp_gsp_handle_t gsp, void *user_ctx);
 
 /** Optional pointer observer: receives mapped touch samples on the
@@ -463,8 +510,13 @@ esp_gsp_err_t esp_gsp_component_set_properties(
     const gsp_component_property_update_t *updates,
     size_t count);
 
-/** Atomically moves a compiled static component subtree. X/Y are authored
- *  scene pixels stored in runtime SRAM; compiled commands remain read-only. */
+/** Atomically moves a compiled component subtree. Both x and y must have
+ *  bounded dynamic declarations; a literal axis has no writable runtime
+ *  property and returns NOT_FOUND without changing either axis. Use the
+ *  individual property setter when only one axis is dynamic. X/Y are authored
+ *  scene pixels stored in runtime SRAM; compiled commands remain read-only.
+ *  esp_gsp_update_error_stats() in esp_gsp_debug.h can identify the rejected
+ *  property and asynchronous application failures. */
 esp_gsp_err_t esp_gsp_component_set_position(
     esp_gsp_handle_t gsp, gsp_component_key_t component,
     int32_t x, int32_t y);
@@ -615,7 +667,8 @@ esp_gsp_err_t esp_gsp_stack_view_is_animating(esp_gsp_handle_t gsp,
         bool *out_animating);
 
 /** Overlay Drawer state. Gesture and Close-button actions use this same
- * settle state machine. */
+ * settle state machine. Animated requests can reverse an active settle from
+ * its current position; repeating its target does not restart the animation. */
 esp_gsp_err_t esp_gsp_drawer_open(esp_gsp_handle_t gsp,
                                   gsp_component_key_t key, bool animated);
 esp_gsp_err_t esp_gsp_drawer_close(esp_gsp_handle_t gsp,
@@ -1191,9 +1244,27 @@ esp_gsp_err_t esp_gsp_canvas_try_push_dirty(
 esp_gsp_err_t esp_gsp_canvas_stop(esp_gsp_handle_t gsp, uint16_t bind);
 
 /** Periodic callback in render-task context (lv_timer equivalent).
- *  Returns a handle usable with esp_gsp_timer_delete; NULL on error. */
+ *  Returns a handle usable with esp_gsp_timer_delete; NULL on error.
+ *  With the ESP-IDF runtime attached, creation and deletion may be called from
+ *  application tasks or timer callbacks, but not from an ISR. Keep the app and
+ *  runtime alive throughout these calls. Unattached portable apps require
+ *  caller serialization with app stepping and other timer operations.
+ *  The caller owns user_ctx and must keep it alive until callbacks have exited. */
 void *esp_gsp_timer_create(esp_gsp_handle_t gsp, uint32_t period_ms,
                            esp_gsp_timer_cb_t cb, void *user_ctx);
+/** Stops future scheduling; a callback already selected for execution may
+ *  still run. This call does not wait for that callback to return.
+ *  The handle must belong to this app and must not be used after deletion
+ *  (timer slots may be reused). Callbacks may delete their own timer.
+ *
+ *  An external task using a continuously attached ESP-IDF runtime can wait
+ *  for an in-flight callback by successfully deleting the timer and then
+ *  successfully calling esp_gsp_flush(). Keep user_ctx alive if flush fails
+ *  or times out. Do not use this wait from a timer callback, concurrently with
+ *  app/runtime teardown or replacement, or while holding a lock needed by the
+ *  callback. This does not cover asynchronous work launched by the callback or
+ *  other timers sharing/re-registering user_ctx. Unattached portable apps do
+ *  not provide this cross-task flush barrier. */
 esp_gsp_err_t esp_gsp_timer_delete(esp_gsp_handle_t gsp, void *timer);
 
 /* --- Template widgets: runtime instances of gspc-declared templates

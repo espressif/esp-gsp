@@ -264,6 +264,16 @@ COMPONENT_SETTER(esp_gsp_component_set_visible, bool, GSP_BRIDGE_COMPONENT_SET_V
 COMPONENT_SETTER(esp_gsp_component_set_checked, bool, GSP_BRIDGE_COMPONENT_SET_CHECKED)
 COMPONENT_SETTER(esp_gsp_component_set_enabled, bool, GSP_BRIDGE_COMPONENT_SET_ENABLED)
 
+esp_gsp_err_t esp_gsp_component_set_position(esp_gsp_handle_t ui,
+        gsp_component_key_t key, int32_t x, int32_t y)
+{
+    if (ui == NULL) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    uint32_t args[8] = {key, (uint32_t)x, (uint32_t)y};
+    return bridge_scalar(ui, GSP_BRIDGE_COMPONENT_SET_POSITION, args, NULL);
+}
+
 esp_gsp_err_t esp_gsp_component_set_color_rgb888(esp_gsp_handle_t ui,
         gsp_component_key_t key, uint32_t rgb888)
 {
@@ -520,6 +530,32 @@ esp_gsp_err_t esp_gsp_drawer_is_open(esp_gsp_handle_t ui, gsp_component_key_t ke
         return ESP_GSP_FAIL;
     }
     *out = value != 0; return ESP_GSP_OK;
+}
+
+esp_gsp_err_t esp_gsp_component_get_motion(esp_gsp_handle_t ui,
+        gsp_component_key_t key, esp_gsp_component_motion_t *out)
+{
+    if (ui == NULL || out == NULL) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    if (bridge_drawing(ui)) {
+        return ESP_GSP_ERR_INVALID_STATE;
+    }
+    if (!bridge_component_motion_enabled(ui)) {
+        return ESP_GSP_ERR_NOT_SUPPORTED;
+    }
+    char params[80];
+    snprintf(params, sizeof(params), "{\"component_key\":%" PRIu32 "}", key);
+    char *reply = bridge_rpc(ui, "component_get_motion", params);
+    if (reply == NULL) {
+        return ESP_GSP_FAIL;
+    }
+    esp_gsp_err_t result = (esp_gsp_err_t)bridge_json_number(reply, "result_code", ESP_GSP_FAIL);
+    if (result == ESP_GSP_OK && !bridge_json_motion(reply, out)) {
+        result = ESP_GSP_FAIL;
+    }
+    free(reply);
+    return result;
 }
 esp_gsp_err_t esp_gsp_page_flow_set_page(esp_gsp_handle_t ui, gsp_component_key_t key, uint16_t page, bool animated)
 {

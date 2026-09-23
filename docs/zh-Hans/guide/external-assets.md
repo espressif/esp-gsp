@@ -56,9 +56,12 @@ gspc assets assets/assets.json --platform-soc esp32s31 --psram --hardware-jpeg -
 
 | `codec` | 行为 |
 |---|---|
-| `auto`（默认） | 静态图片沿用目标自动策略；动画使用无损 QOI 差分帧 |
+| `auto`（默认） | 静态图片沿用目标自动策略；动画默认 QOI 差分，已校准目标的密集帧可选硬件 JPEG |
+| `speed` | 静态图片按解码与体积选择 STORE、QOI/RLE 或硬件 JPEG；动画仅在 Profile 有板级实测提示且帧变化密集时考虑硬件 JPEG，否则用 QOI 差分 |
+| `size` | 静态图片取可用格式中更小者；动画比较 QOI 差分与 JPEG/JPEG+A8 整段大小 |
 | `lossless` | 无损 QOI，保留透明度 |
-| `speed` / `hardware_jpeg` | 目标具有相应硬件能力时使用 JPEG/JPEG+A8，否则使用无损 QOI |
+| `qoi` / `rle16` / `rle16_a8` / `rle32` | 显式选择已有无损编码；RLE 须匹配像素格式与透明度 |
+| `hardware_jpeg` | 目标具有相应硬件能力时使用 JPEG/JPEG+A8，否则使用无损 QOI |
 | `jpeg` | 显式 JPEG/JPEG+A8，也允许软件解码；颜色有损、透明度无损 |
 | `raw` | 静态图片使用原生像素；动画沿用无损策略，可用 animation_codec 覆盖 |
 
@@ -92,8 +95,9 @@ Row 使用 binder 提供的令牌，槽位使用生成常量。读取结束后�
 导出保留透明度、帧时长和循环信息。
 
 清单支持与场景 Image 相同的 `animation_codec`：`lossless`、`jpeg`、`hardware_jpeg`，
-优先于 `codec` 的动画策略。默认无损差分；`hardware_jpeg` 按目标能力选择。`speed`
-保留为旧清单的便捷别名。静态图片仍由 `codec` 控制，动画上的 `codec: "raw"` 与场景
+优先于 `codec` 的动画策略。`auto` 或未指定编码时在未校准目标上默认无损差分；
+`auto` 和 `speed` 使用板级实测提示，`size` 比较编码字节数，`hardware_jpeg` 按目标能力选择。
+静态图片仍由 `codec` 控制，动画上的 `codec: "raw"` 与场景
 保持一致，使用无损动画路径。画布大小需符合 Profile 的动画帧预算。
 
 错误动画帧不会修改已显示图片；新请求从首帧开始。关闭图片缓存时也支持 JPEG
@@ -175,8 +179,9 @@ if (ret == ESP_GSP_OK) {
 磨损管理由存储驱动负责。文件大小受平台 `fseek/ftell` 范围限制，32 位 long 下需
 小于 2 GiB，可拆包。该文件服务通过 ESP-IDF API 使用，PC 桥接没有对应端点。
 
-`examples/external_assets` 提供 SDSPI 挂载、板级引脚配置、BSP 已挂载 SDMMC/NAND
-入口及内置占位图。挂载失败不会格式化存储。使用 GSPC 0.5.0 并配套 ESP-GSP 1.4.0。
+`examples/usage/external_assets` 提供 SDSPI 挂载、板级引脚配置、BSP 已挂载 SDMMC/NAND
+入口及内置占位图。挂载失败不会格式化存储。工具配套关系见
+[兼容性契约](../reference/compatibility.md)。
 
 ## SD 字体
 

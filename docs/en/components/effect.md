@@ -8,15 +8,15 @@ Use it to communicate status, measurement, motion, or visual hierarchy.
 
 ## Local interactive preview
 
-After [installing `esp-gsp-tools`](../guide/simulator-preview.md), run from an
-unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
+then run from an unpacked component or public repository root:
 
 ```sh
 mkdir -p gsp-out/widget-preview
-python -m gsp.execute --version 0.5.0 gspc pack \
-  examples/widgets/effect/effect.json \
+gspc pack \
+  examples/usage/widgets/effect/effect.json \
   --deployable -o gsp-out/widget-preview/effect.gspb
-python -m gsp.execute --version 1.4.0 sim \
+gsp_sim_host \
   --bundle gsp-out/widget-preview/effect.gspb
 ```
 
@@ -37,7 +37,7 @@ Give every object that application code must read or update a stable `name`. GSP
   "w": 320,
   "h": 240,
   "screen_bg": "#0B1424",
-  "font": "../../common/fonts/DejaVuSans.ttf",
+  "font": "../../../common/fonts/DejaVuSans.ttf",
   "objects": [
     {
       "type": "label",
@@ -118,7 +118,7 @@ Give every object that application code must read or update a stable `name`. GSP
 }
 ```
 
-This is `examples/widgets/effect/effect.json`. Copy any relative assets referenced by the scene with it.
+This is `examples/usage/widgets/effect/effect.json`. Copy any relative assets referenced by the scene with it.
 
 ## Generated C API for this example
 
@@ -204,7 +204,7 @@ These signatures come from the actual compiler output for this JSON.
 | `disabled_color` | `color` | — | default #808080 | — | disabled-state overlay color |
 | `disabled_opacity` | `int` | — | default 112; 0…255 | — | disabled-state overlay opacity |
 | `bind` | `identifier` | — | — | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | `enum` | — | `visible`, `value`, `color`, `text`, `resource` | — | explicit bind state family |
+| `bind_target` | `enum` | — | `visible`, `value`, `color`, `text`, `resource`, `data` | — | explicit bind state family |
 | `callback` | `identifier` | — | — | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | — | — | — | input bindings: [{event, action, ...}] |
 | `runtime_style` | `bool` | — | default `false` | — | generate runtime appearance setters |

@@ -250,15 +250,20 @@ signature scheme. Without this option, bundle output and the generated-header
 startup path remain unchanged.
 
 The default platform profile uses `codec: auto`. On targets that advertise a
-hardware JPEG decoder, an image takes the hardware JPEG path when it clears
-`image_auto_min_pixels`, is not runtime-scaled, its decoded surface fits the
-cache budget, and JPEG is smaller than STORE. The floor is a pixel count rather
-than a per-side limit, matching the decoder, which only constrains the total. This hardware
-decision runs before QOI/RLE size heuristics. Alpha images use the JPEG_A8
-container: the colour plane decodes in hardware, the A8 plane stays lossless.
+hardware JPEG decoder, an image of at least 16,384 pixels can take the JPEG
+path when its decoded surface fits the cache, its lossless candidate is still
+large, and JPEG clears the profile savings threshold and is at least 20% smaller
+than that lossless candidate. `image_auto_min_pixels` can raise the floor; it
+cannot lower the 16,384-pixel JPEG floor. Both dimensions must also be at least
+64 pixels for the hardware decoder. This hardware decision runs before the
+QOI/RLE fallback. Transparent images can use
+JPEG_A8 when its colour plane can use hardware JPEG and the target supports
+the lossless A8 plane. RGB888 alpha requires MCU-aligned dimensions for
+automatic latency-oriented selection; explicit `jpeg` and `size` can also
+encode other dimensions, with possible scratch storage.
 Use explicit `codec: raw` for zero-decode MMAP data, `codec: lossless` for
 exact pixels, or set `image_auto_allow_lossy: false` in an expert profile to
-disable automatic JPEG. RGB888 alpha has no JPEG container and stays lossless.
+disable automatic JPEG.
 The compiler emits 4:2:0 JPEG, so the hardware decoder processes 16x16 MCU
 blocks. For non-aligned dimensions it automatically edge-extends the encoded
 image and allocates an MCU-aligned cache surface while preserving the authored

@@ -73,7 +73,13 @@ typedef struct esp_gsp_esp_lcd_session esp_gsp_esp_lcd_session_t;
 /** Opaque pause token used while another display producer owns the presenter. */
 typedef struct esp_gsp_esp_lcd_pause esp_gsp_esp_lcd_pause_t;
 
-/** Configure an activated UI on its render task before its first frame. */
+/** Configure an activated UI on its render task before its first frame.
+ * The UI clock is synchronized before invocation. Setters execute on that
+ * task; keep the callback short and check their return values. Do not call
+ * flush, stop, pause, suspend or replace from this callback. It has no error
+ * return and cannot cancel startup; application-owned registrations and their
+ * contexts must remain valid until startup completes or fails.
+ */
 typedef void (*esp_gsp_esp_lcd_prepare_cb_t)(esp_gsp_handle_t gsp,
         void *user_ctx);
 
@@ -157,6 +163,21 @@ esp_err_t esp_gsp_esp_lcd_session_destroy(
 esp_err_t esp_gsp_esp_lcd_start(const esp_gsp_config_t *app_config,
                                 const esp_gsp_esp_lcd_config_t *esp_config,
                                 esp_gsp_handle_t *out_gsp);
+
+/** Like start(), with an optional callback on the render task before its first
+ * frame. Use it to install contributors, event handlers and timers without
+ * racing the initial render. A NULL callback is equivalent to start().
+ * If invoked, the callback completes before this function returns, including
+ * first-frame failure. Its void return cannot report preparation failures;
+ * the returned error covers framework startup and the first render attempt.
+ * A context retained by a registered callback must outlive that registration.
+ */
+esp_err_t esp_gsp_esp_lcd_start_prepared(
+    const esp_gsp_config_t *app_config,
+    const esp_gsp_esp_lcd_config_t *esp_config,
+    esp_gsp_esp_lcd_prepare_cb_t prepare,
+    void *prepare_ctx,
+    esp_gsp_handle_t *out_gsp);
 
 #ifdef __cplusplus
 }

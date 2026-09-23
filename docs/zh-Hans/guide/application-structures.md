@@ -80,7 +80,8 @@ Canvas 绘制回调运行在渲染任务，可能分区调用。不得在其中�
 
 - 配置由应用从生成/BSP 初始化器创建；其引用的 Bundle、字体和显示资源按文档保持有效。
 - Event、Pinch、Row/Cell 令牌和 Canvas Surface 是框架拥有的回调视图。
-- 图片选项与 Message Source 上下文由应用拥有，必须覆盖已注册回调的生命周期。
+- 图片 options 结构体的成员在提交时复制，可以使用局部变量；它引用的缓冲区及回调上下文
+  仍须遵守[媒体所有权](lifecycle.md#媒体所有权)。Message Source 上下文须覆盖绑定的生命周期。
 - 模板 ID、属性 ID、场景 ID 和内部 `__...` 对象都不应手写；只使用当前构建产物公开的符号。
 
 函数签名与完整头文件契约见[函数级 API 参考](../reference/api-functions.md)。

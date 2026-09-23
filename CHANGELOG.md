@@ -1,6 +1,24 @@
 # Changelog
 
-## Unreleased
+## 1.5.0
+
+- Improve gestures, page transitions and component motion events.
+- Reduce rendering memory usage and speed up bundle validation and startup.
+- Fix transparency, timer and diagnostic concurrency, image handling and chart redraws.
+- Extend simulator automation and PC bridge controls.
+- Expand HMI examples and media setup; add GSPC image policies and authoring improvements.
+
+### Upgrading from 1.4.0
+
+Use GSPC 0.6.0 with ESP-GSP and simulator 1.5.0. Rebuild bundles, generated headers
+and application code with matching libraries. Existing bundles and public ABI versions
+remain supported; new transparency features require the matching runtime.
+
+- GSPC now rejects previously ignored invalid or unknown widget fields.
+- Default `CONFIG_ESP_GSP_DRAG_START_PX` changes 24 → 12 and
+  `CONFIG_ESP_GSP_SCENE_SWIPE_MIN_FLING_PX` changes 32 → 24; explicit settings are unchanged.
+- Example media downloads at build time; prepare a cache for
+  [offline builds](examples/README.md#example-asset-retrieval).
 
 ## 1.4.0
 

@@ -847,12 +847,12 @@ Absolute-pixel tap window; panel noise and touch resolution differ per product. 
 
 Drag / gesture start threshold in pixels
 
-- Project default: `24`
+- Project default: `12`
 - Type/range: `int` / `0..256`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
-Distance a finger must move before a drag, scroll or swipe gesture starts.
+Distance a finger must move before a component drag or scene swipe starts. List scrolling uses the tap-slop threshold.
 
 ### `CONFIG_ESP_GSP_SWIPE_FLICK_PX`
 
@@ -863,18 +863,18 @@ Flick commit distance in pixels
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
-Recent pointer movement (sum of the last ~3 samples) above this commits a page swipe regardless of drag distance.
+Recent pointer movement (sum of the last ~3 samples) above this can select a fling, subject to the minimum fling distance configured by ESP_GSP_SCENE_SWIPE_MIN_FLING_PX.
 
 ### `CONFIG_ESP_GSP_SCENE_SWIPE_MIN_FLING_PX`
 
-Scene swipe minimum fling distance in pixels
+Swipe minimum fling distance in pixels
 
-- Project default: `32`
+- Project default: `24`
 - Type/range: `int` / `0..512`
 - Prebuilt component: configurable
 - JSON AUTO-derived: no
 
-Fallback velocity/fling gate for scene navigation.
+Minimum release displacement for velocity or flick to commit a Scene, PageFlow or Drawer below its normal position threshold.
 
 ### `CONFIG_ESP_GSP_COMPONENT_SWIPE_COMMIT_DIVISOR`
 

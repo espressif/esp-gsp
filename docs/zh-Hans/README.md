@@ -42,7 +42,7 @@
 ## 控件、示例与预览
 
 [控件库](components/index.md)与当前 GSPC 注册表、字段定义和
-`examples/widgets/` 中的真实 JSON 保持一致。每个控件页包含：
+`examples/usage/widgets/` 中的真实 JSON 保持一致。每个控件页包含：
 
 - 适用场景与运行行为；
 - 可直接复制的完整 JSON；

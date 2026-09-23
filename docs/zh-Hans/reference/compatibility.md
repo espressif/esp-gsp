@@ -10,9 +10,9 @@ CMake 会立即停止并给出不匹配项，不会把问题推迟到设备运�
 
 | 项目 | 当前值 | 链接 |
 |---|---:|---|
-| ESP-GSP 组件 | `1.4.0` | [Component Registry](https://components.espressif.com/components/espressif/esp-gsp/versions/1.4.0/readme) |
-| ESP-GSP 模拟器 | `1.4.0` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/sim/v1.4.0/manifest.json) |
-| 推荐 GSPC | `0.5.0` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/gspc/v0.5.0/manifest.json) |
+| ESP-GSP 组件 | `1.5.0` | [Component Registry](https://components.espressif.com/components/espressif/esp-gsp/versions/1.5.0/readme) |
+| ESP-GSP 模拟器 | `1.5.0` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/sim/v1.5.0/manifest.json) |
+| 推荐 GSPC | `0.6.0` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/gspc/v0.6.0/manifest.json) |
 | GSB | `2.7` |  |
 | GRB | `1.4` |  |
 | GFB | `1.2` |  |
@@ -35,3 +35,18 @@ CMake 会立即停止并给出不匹配项，不会把问题推迟到设备运�
 Registry 组件中的每个预编译库都带有 `prebuilt/<variant>/build-info.json`。
 该机器可读文件记录组件源码、ESP-IDF 与编译器版本、目标芯片 revision 范围、实际
 优化选项和库文件 SHA-256，供包审计和兼容性诊断使用，应用运行时无需解析它。
+
+## 工具命令
+
+控件指南使用 `gspc` 和 `gsp_sim_host` 命令。PATH 中已有兼容可执行文件时可直接使用；
+否则在 POSIX shell 中复制执行一次下列配置，函数会为当前终端选择上表配套版本：
+
+```sh
+python -m pip install -U esp-gsp-tools
+gspc() { python -m gsp.execute --version 0.6.0 gspc "$@"; }
+gsp_sim_host() { python -m gsp.execute --version 1.5.0 sim "$@"; }
+```
+
+其他 shell 可使用 `python -m gsp.execute --version VERSION gspc` 或
+`python -m gsp.execute --version VERSION sim`，将 VERSION 替换为上表对应版本。
+复现已有应用时，应保留该工程明确指定的版本覆盖。

@@ -25,7 +25,7 @@ project or conversation. Choose the smallest complete path:
   items and ownership; generate the appropriate setters or collection binders,
   integrate them, and build the owning application.
 - **Draw application content:** inspect the existing Canvas contract in
-  `guide/media-and-data.md` and `examples/sim_bridge_media`. Choose direct draw
+  `guide/media-and-data.md` and `examples/usage/sim_bridge_media`. Choose direct draw
   or frame submission according to target geometry and producer ownership.
   Use the selected version's actual image/bind syntax and public APIs.
 - **Reproduce a problem:** record the actual component/tool versions and input,
@@ -91,7 +91,9 @@ then load only the pages needed for the task:
 - `reference/configuration.md` for `gsp_add_bundle()` and runtime configuration;
 - `reference/simulator.md` for simulator CLI, automation API, and evidence limits;
 - `guide/simulator-preview.md` for preview workflows and testing strategies;
-- `components/<widget>.md` and `examples/widgets/<widget>/<widget>.json` for a
+- `tools/sim_bridge/README.md` for running portable application C code with the
+  simulator and the bridge's supported API subset;
+- `components/<widget>.md` and `examples/usage/widgets/<widget>/<widget>.json` for a
   concrete control.
 
 Query GSPC instead of copying field or version tables into the project or this
@@ -122,6 +124,12 @@ facts. An unavailable build contract is unknown, not a host-profile fallback.
 Keep these disposable exports below the ignored build tree.
 The installed compiler schema, selected component documentation, public
 headers, generated headers, and checked widget examples are authoritative.
+
+Each `gspc cards` example is an authoring fragment, not a complete scene.
+Use its `example_path` and `doc_paths` to load the checked full example and
+widget page; do not reconstruct a second manual field table. The simulator's
+`bounds_source: compiled` metadata describes initial layout only and must not
+be treated as a runtime hit-test result.
 
 ## Translate the requirement into ESP-GSP
 
@@ -209,6 +217,13 @@ the project or user:
 gspc diagnose scenes/main.json --format json
 ```
 
+CLI `gspc diagnose` includes profile-sensitive compilation checks. For daemon
+clients, `diagnostics/pull` defaults to a schema-only quick check. If
+`doctor/get` advertises `diagnostic_levels` containing `compile`, request
+`level: "compile"` with the project's profile before final acceptance;
+otherwise use CLI diagnosis or actual compilation. An unsupported level is
+not a clean diagnostic result.
+
 Fix diagnostics at their reported JSON paths. Apply `suggestions` when present.
 Use the properties defined by the installed ESP-GSP Schema, `gspc cards`, and
 widget reference.
@@ -223,11 +238,54 @@ Fix source JSON or compiler inputs and regenerate outputs. Prefer generated
 helpers for named controls; use public generic APIs with generated keys for
 batch updates or data-driven operations.
 
+For runtime movement, `esp_gsp_component_set_position()` requires both x and y
+to have bounded dynamic declarations. A literal axis rejects the whole update;
+use the individual property setter when only one axis is dynamic. Check the
+generated properties before choosing the API.
+
 Keep callbacks non-blocking and follow COPY, BORROW, and TAKE ownership. Treat
 setters as asynchronous submissions on ESP-IDF. Use `esp_gsp_flush()` only for
 an explicit synchronization boundary.
 
+For bindings or callbacks required before the first frame, use the selected
+version's `esp_gsp_esp_lcd_start_prepared()` contract in
+`guide/runtime-api.md`; check setter results and avoid flush or lifecycle calls
+inside prepare. For timer teardown, deletion does not wait for an in-flight
+callback. Follow that guide's timer lifecycle rules before releasing `user_ctx`:
+the external-task delete/flush barrier requires successful calls and a
+continuously attached runtime, and does not cover other users of the context.
+
 ## Preview and verify
+
+### Choose the preview path
+
+Use the standalone simulator when checking scene layout, declarative actions,
+or control behavior without application C logic. It can inspect and operate
+named scene objects, but it does not execute the owning ESP-IDF application's
+tasks or product state.
+
+When the task depends on application callbacks, timers, collections, or live
+state implemented in C, prefer the selected component's native `sim_bridge`
+when the project has a PC adapter:
+
+```sh
+python <selected-esp-gsp-component>/tools/sim_bridge/run.py \
+    --project <application-pc-project>
+```
+
+The runner builds the deployable Bundle and generated headers, builds and starts
+the native Backend, selects version-pinned GSPC and simulator tools, and opens
+the preview. Prefer an existing project adapter or the component's
+`examples/usage/hello_world/pc` and `examples/usage/sim_bridge_media/pc`
+examples. For a project without a PC adapter, inspect
+`tools/sim_bridge/README.md` before deciding whether its hardware dependencies
+can be isolated behind a small PC HAL/mock.
+
+The bridge implements a supported subset of `esp_gsp.h` and runs application
+callbacks on one native Backend thread. Use it to check application behavior;
+it does not reproduce ESP-IDF task scheduling, peripheral behavior, panel
+timing, or device performance. Build the owning ESP-IDF application and use the
+board for those checks.
 
 ### Locate the simulator
 
@@ -256,6 +314,12 @@ Commands below use `gsp_sim_host` for readability. Substitute the resolved
 path or manager prefix when `gsp_sim_host` is not on `PATH`.
 
 ### Interactive preview
+
+When previewing repository examples, check that their media is present before
+invoking GSPC directly. For missing media, follow the selected checkout's
+`examples/README.md` asset-retrieval and source-preview instructions, including
+the pinned archive verification and offline cache path. Preserve edited media
+before restoring assets; direct GSPC and preview scripts do not fetch them.
 
 Compile the same scene set, pixel format and resource options as the
 application. Prefer its existing generated bundle when available. The following
@@ -302,20 +366,36 @@ gsp_sim_host --bundle build/app.gspb --frames 0 \
 Drive the simulator through JSON-RPC 2.0 over TCP with Content-Length
 framing. The typical agent verification sequence:
 
-1. `capabilities` — confirm display size, scene count, and `named_api`.
+1. `capabilities` — confirm display size, scene count, `named_api`, and the
+   advertised component motion/event versions.
 2. `goto_scene` — navigate to the target scene when no application backend is connected.
-3. `list_objects` / `inspect_object` / `hit_test` to confirm compiled names and bounds.
+3. `list_objects` / `inspect_object` / `hit_test` to inspect compiled names and bounds.
 4. `tap_object` / `set_property` with `name` when `named_api` is true; otherwise
    `tap` / `drag` at known coordinates or numeric `bind_id`.
-5. `wait` — let animation settle (e.g. 3–5 frames).
+5. `wait_component` — verify the requested PageFlow/Drawer value and idle state
+   when supported. Fixed-frame `wait` only advances time; it does not prove
+   motion completion. Check operation result codes as well as RPC success.
 6. `screenshot` — capture the result for comparison.
-7. `quit` — shut down the simulator.
+7. `quit` — shut down the simulator and check its exit status.
+
+When component motion support is advertised, prefer `component_get_motion`
+and `wait_component` for PageFlow/Drawer checks. Pass `name`, optional `value`,
+and `max_frames`; success requires an idle state and, when supplied, a matching
+value. A timeout is a JSON-RPC error. Subscribe to `component_event` when
+notifications are useful, but do not infer that compiled bounds are current
+runtime bounds.
 
 Use `--input-mode api-exclusive` when the automation must be the sole input
 source. Subscribe to `callback` and `scene_changed` events to observe UI
 responses.
 
-When testing application logic alongside the UI, add a backend channel:
+Use `gsp_sim_host --record-input <path>` or `--replay-input <path>` to reproduce
+touch sequences. For static layout advice, use `gspc diagnose` with
+`--layout-check` and, for round displays, `--round-safe-area`; these are compiler
+diagnostic flags, not simulator options.
+
+When a project already provides a separate compatible Backend, it can be
+connected directly:
 
 ```sh
 gsp_sim_host --bundle build/app.gspb --frames 0 \
@@ -328,6 +408,8 @@ when `--api-json` is loaded) and drives UI updates through `set_text`,
 `set_value`, `goto_scene`, etc., mirroring the firmware C API behavior.
 When a backend is enabled, it owns state writes and scene navigation; use the
 API channel for named input, inspection, waits and screenshots.
+For application C sources, prefer `sim_bridge` above so the existing business
+logic can run in the Backend instead of implementing a second state model.
 Named `set_*` parameters accept `{ "name": "<object>", ... }` in addition to
 `bind_id`; `set_property` uses the sidecar's property type and range. Numeric
 methods remain valid when no api.json is loaded. Compiled bounds are initial
@@ -365,12 +447,6 @@ public framework capability in private-header coupling or an application-side
 workaround.
 
 ## Keep implementation documentation product-facing
-
-When the user asks for an implementation document, write it as a durable
-product or engineering artifact. Describe the implemented behavior, public
-interfaces and usage, configuration and dependencies, ownership and lifecycle,
-validation evidence, and any genuine product or framework constraints that
-affect integration or acceptance.
 
 Keep implementation documents product-facing. Describe public behavior, actual
 dependencies, verified evidence and genuine product or framework constraints;

@@ -150,6 +150,17 @@ gspc diagnose scenes/*.json --format json -o diagnostics.json
 gspc docs -o authoring-reference.md
 ```
 
+For optional geometry and image-storage advice, add
+`--layout-check --round-safe-area` to `gspc diagnose`. The check covers only
+static root boxes (the round-area check uses the screen's inscribed circle);
+dynamic or child geometry is reported as skipped, not accepted. These are
+advisory records only: they do not modify the scene or resources and do not
+turn warnings into compilation failures. Image advice reports encoded storage
+bytes and uncompressed pixel bytes. Runtime peak memory also depends on the
+decoder and cache configuration. Oversized runtime-fit bitmaps may receive a
+`store_scale` suggestion; review image quality and any later enlargement before
+applying it. Ambiguous resource variants are left for manual inspection.
+
 Start with `gspc cards` for one widget. Add schema, docs, or inventory when the
 task needs field ranges, version details, or the full registry. `compile` /
 `pack` also write `*.api.json` next to generated headers so tools can map

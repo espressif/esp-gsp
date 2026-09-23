@@ -8,14 +8,15 @@
 
 ## 本地交互预览
 
-[安装 `esp-gsp-tools`](../guide/simulator-preview.md) 后，在解压后的组件或公共仓库根目录运行：
+先按[兼容性页的工具命令](../reference/compatibility.md#工具命令)配置 `gspc` 和
+`gsp_sim_host`，再在解压后的组件或公共仓库根目录运行：
 
 ```sh
 mkdir -p gsp-out/widget-preview
-python -m gsp.execute --version 0.5.0 gspc pack \
-  examples/widgets/shape/shape.json \
+gspc pack \
+  examples/usage/widgets/shape/shape.json \
   --deployable -o gsp-out/widget-preview/shape.gspb
-python -m gsp.execute --version 1.4.0 sim \
+gsp_sim_host \
   --bundle gsp-out/widget-preview/shape.gspb
 ```
 
@@ -24,6 +25,21 @@ python -m gsp.execute --version 1.4.0 sim \
 ## 运行方式
 
 模拟器与设备运行时渲染相同的编译几何；由应用驱动的属性变化需要模拟器后端或设备代码。
+
+普通 scene 中，Shape 的 `x`、`y` 可声明为有界动态属性，实现运行时平移：
+
+```json
+{"type":"shape","name":"marker","parent":-1,
+ "x":{"default":20,"min":-40,"max":200},
+ "y":{"default":30,"min":-40,"max":200},
+ "w":32,"h":32,"shape":"circle","bg_color":"#4589FF"}
+```
+
+两轴均声明后，使用生成的 `gsp_<scene>_marker_set_position(gsp, x, y)`。坐标相对于父对象；既有变换机制移动图形及其子树，编译命令保持只读。只声明一轴时仅生成对应轴 setter，不生成双轴位置包装函数。字面量坐标仍为静态。
+
+动态 Shape 的任意祖先或后代不能同时声明有界 `x`/`y`。请只保留一个移动层：移动父对象时，Shape 坐标用字面量；移动 Shape 时，祖先和后代坐标用字面量。多个平行动态 Shape、父对象固定偏移和 viewport 滚动仍支持。不支持的嵌套移动会报告 `GSPC-RS-SHAPE-NESTED-POSITION`，防止脏区覆盖不足留下残影。
+
+模板内 Shape 位置及有界动态尺寸、圆角、透明度、旋转仍不支持，也不新增 Shape 事件或回调绑定能力。需要使用包含此支持的编译器，较早发布的工具可能拒绝上述声明。
 
 为需要在 C 代码中读写的对象设置稳定的 `name`。GSPC 为命名对象生成下方列出的类型化函数。
 
@@ -88,7 +104,7 @@ python -m gsp.execute --version 1.4.0 sim \
 }
 ```
 
-该文件来自 `examples/widgets/shape/shape.json`。复制时请一并复制它引用的相对资源。
+该文件来自 `examples/usage/widgets/shape/shape.json`。复制时请一并复制它引用的相对资源。
 
 ## 此示例生成的 C API
 
@@ -108,8 +124,8 @@ size_t gsp_shape_docs_dynamic_image_slots(void)
 |---|---|---:|---|---:|---|
 | `type` | `string` | 是 | — | — | 控件类型 |
 | `parent` | `int` | 是 | 默认 -1; -1…65534 | — | 父对象索引（-1 表示屏幕根节点） |
-| `x` | `int` | 是 | 默认 0; -32768…32767 | 场景: 不支持; 模板: 不支持 | 相对于父对象的 x 坐标 |
-| `y` | `int` | 是 | 默认 0; -32768…32767 | 场景: 不支持; 模板: 不支持 | 相对于父对象的 y 坐标 |
+| `x` | `int` | 是 | 默认 0; -32768…32767 | 场景: 支持; 模板: 不支持 | 相对于父对象的 x 坐标 |
+| `y` | `int` | 是 | 默认 0; -32768…32767 | 场景: 支持; 模板: 不支持 | 相对于父对象的 y 坐标 |
 | `w` | `int` | 是 | 0…65535 | 场景: 不支持; 模板: 不支持 | 宽度（像素） |
 | `h` | `int` | 是 | 0…65535 | 场景: 不支持; 模板: 不支持 | 高度（像素） |
 | `name` | `identifier` | — | — | — | 稳定组件名称；生成 GSP_OBJ_KEY_&lt;NAME&gt; |
@@ -124,6 +140,10 @@ size_t gsp_shape_docs_dynamic_image_slots(void)
 
 | 字段 | 类型 | 必填 | 默认值 / 范围 | 可运行时更新 | 编译器定义 |
 |---|---|---:|---|---:|---|
+| `min_width` | `int` | — | 0…65535 | — | 编译期最小宽度，单位像素 |
+| `max_width` | `int` | — | 0…65535 | — | 编译期最大宽度，单位像素 |
+| `min_height` | `int` | — | 0…65535 | — | 编译期最小高度，单位像素 |
+| `max_height` | `int` | — | 0…65535 | — | 编译期最大高度，单位像素 |
 | `layout` | `enum` | — | `row`, `column` | — | 子对象自动布局：行/列 |
 | `gap` | `int` | — | 默认 0; 0…4096 | — | 自动布局间距（像素） |
 | `padding` | `int` | — | 默认 0; 0…4096 | — | 自动布局内边距（像素） |
@@ -133,11 +153,30 @@ size_t gsp_shape_docs_dynamic_image_slots(void)
 | `padding_bottom` | `int` | — | 0…4096 | — | 列布局末尾内边距覆盖值 |
 | `grow` | `int` | — | 默认 0; 0…100 | — | 自动布局扩展权重 |
 | `margin` | `int` | — | 默认 0; 0…4096 | — | 子对象两侧的自动布局外边距 |
+| `margin_left` | `int` | — | 0…4096 | — | 自动布局 x 轴起始外边距 |
+| `margin_right` | `int` | — | 0…4096 | — | 自动布局 x 轴末尾外边距 |
+| `margin_top` | `int` | — | 0…4096 | — | 自动布局 y 轴起始外边距 |
+| `margin_bottom` | `int` | — | 0…4096 | — | 自动布局 y 轴末尾外边距 |
+| `align_main` | `enum` | — | `start`, `center`, `end`, `space_between` | — | 自动布局主轴对齐方式 |
+| `align_cross` | `enum` | — | `start`, `center`, `end`, `stretch` | — | 自动布局交叉轴对齐方式 |
 | `hidden` | `bool` | — | 默认 `false` | 是 | 初始隐藏（通过动作或 set_visible 显示） |
 | `fg_color` | `color` | — | — | — | 前景颜色（根据控件类型用于文字、旋钮、线条或标记） |
 | `opacity` | `int` | — | 默认 255; 0…255 | 场景: 不支持; 模板: 不支持 | 0–255 混合透明度 |
 | `bg_gradient` | `color` | — | — | — | 第二个渐变色标（与 bg_color 配合） |
 | `gradient_dir` | `enum` | — | 默认 vertical; `vertical`, `horizontal` | — | 渐变方向 |
+| `shadow_color` | `color` | — | — | — | 静态硬阴影颜色 |
+| `shadow_opacity` | `int` | — | 默认 96; 0…255 | — | 静态硬阴影透明度 |
+| `shadow_offset_x` | `int` | — | -32768…32767 | — | 静态硬阴影 x 偏移 |
+| `shadow_offset_y` | `int` | — | -32768…32767 | — | 静态硬阴影 y 偏移 |
+| `shadow_spread` | `int` | — | 0…4096 | — | 静态硬阴影扩散范围（像素） |
+| `shadow_radius` | `int` | — | 0…65535 | — | 静态硬阴影圆角半径 |
+| `border_opacity` | `int` | — | 默认 255; 0…255 | — | 边框描边透明度 |
+| `outline_color` | `color` | — | — | — | 外部轮廓颜色 |
+| `outline_width` | `int` | — | 默认 0; 0…65535 | — | 外部轮廓宽度 |
+| `outline_opacity` | `int` | — | 默认 255; 0…255 | — | 外部轮廓透明度 |
+| `outline_pad` | `int` | — | 默认 0; 0…4096 | — | 元素与外部轮廓之间的间隔 |
+| `text_line_space` | `int` | — | 默认 0; 0…4096 | — | 静态文字行之间的额外间距，单位像素 |
+| `text_vertical_align` | `enum` | — | 默认 auto; `auto`, `top`, `center`, `bottom` | — | 静态文字块的垂直对齐；auto 保留单行居中、多行顶部对齐 |
 | `text` | `string` | — | — | 是 | 静态文字内容（UTF-8） |
 | `text_align` | `enum` | — | `left`, `center`, `right` | — | 文字对齐方式 |
 | `overflow` | `enum` | — | 默认 clip; `clip`, `ellipsis` | — | 单行文字溢出方式 |
@@ -154,11 +193,13 @@ size_t gsp_shape_docs_dynamic_image_slots(void)
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
 | `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
-| `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `store`, `qoi`, `rle16`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
+| `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
+| `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 1…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -171,7 +212,7 @@ size_t gsp_shape_docs_dynamic_image_slots(void)
 | `disabled_color` | `color` | — | 默认 #808080 | — | 禁用态覆盖颜色 |
 | `disabled_opacity` | `int` | — | 默认 112; 0…255 | — | 禁用态覆盖透明度 |
 | `bind` | `identifier` | — | — | — | 公开状态名称；生成 GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | `enum` | — | `visible`, `value`, `color`, `text`, `resource` | — | 显式绑定状态类型 |
+| `bind_target` | `enum` | — | `visible`, `value`, `color`, `text`, `resource`, `data` | — | 显式绑定状态类型 |
 | `callback` | `identifier` | — | — | — | 应用回调名称；生成按场景区分的事件辅助函数 |
 | `events` | `action_list` | — | — | — | 输入绑定：[{event, action, ...}] |
 | `template` | `identifier` | — | — | — | 将此子树声明为渲染模板 |

@@ -1,0 +1,98 @@
+# External preprocessed assets
+
+This example keeps a fallback UI in firmware and streams compiled
+animation frames from a mounted filesystem. It uses the same image codec/cache
+pipeline as built-in resources, including hardware JPEG on capable targets.
+
+1. Configure the LCD through the shared `hw_init` menu.
+2. In **External asset example**, select an unused SPI bus and the SD card's
+   MOSI/MISO/CLK/CS pins. Pins default to unconfigured because boards differ.
+   Alternatively select **Use a filesystem mounted by the application/BSP**
+   and mount SDMMC/NAND at the configured path before `mount_storage()` returns.
+3. Run `idf.py build`. Copy
+   `build/esp-idf/main/gsp_assets_media/media.gspb` to `/sdcard/media.gspb`
+   (or the configured mount path). The matching generated header enables fast index validation.
+4. Flash and monitor. Built-in pictures remain visible if the card or file is
+   unavailable. The example never formats the card.
+
+After project configuration, `cmake --build build --target gsp_assets_media`
+rebuilds just the external package. Only `media.gspb` belongs on storage; the
+generated header and dependency files stay in the build tree. Flashing firmware
+does not deploy the package to the card. See [getting the binary package](../../../docs/en/guide/external-assets.md#getting-the-binary-package)
+for standalone export and host/device path details.
+
+Resources resolve by stable manifest name. Replacing a package with a valid new
+version does not require rebuilding firmware when names, target pixel format and
+placeholder geometry/alpha contracts remain compatible. A matching generated
+header checks only the index at open; an updated package takes a one-time full
+CRC scan in bounded chunks. Payloads are still read/checked per requested frame.
+For newly added names use `esp_gsp_assets_show_name()`; always close before
+replacing a file, then reopen it. This is integrity checking, not authentication.
+
+The source manifest is `assets/assets.json`. `speed` selects JPEG/JPEG+A8 when
+hardware JPEG is advertised by the target, otherwise lossless QOI animation
+patches. `lossless` explicitly retains lossless frames, and `jpeg` explicitly
+selects JPEG even without a hardware decoder. Defaults preserve alpha.
+Embedded and external animations share encoding policy: lossless preserves QOI
+patches, while JPEG uses full frames. File members add bounded reads and CRCs.
+Use animation_codec for the same explicit animation choice as in scene JSON.
+
+The two Image placeholders match the external assets' dimensions and alpha form.
+Existing GSP bindings require this compatibility. Do not send an alpha asset to
+an opaque/image-fit placeholder. A mismatch is reported and preserves the old
+image; it never silently removes alpha. Author transparent placeholders for
+transparent content. The RGB565/RGB888 export profile must match the scene.
+
+A single reader task handles both targets. It uses an internal stack because it
+performs filesystem IO. Encoded bytes retained by displayed and pending images
+share an automatic read budget (one quarter of free PSRAM, or free internal RAM,
+up to 4 MiB). This service limit is separate from decoded-image caching and
+display buffers, and is not a total-RAM budget; account separately for decoded
+images, display buffers, task stacks and other application memory.
+Override `esp_gsp_assets_config_t.read_budget_bytes` when measurements justify it.
+One pending frame per target bounds work; no full-package payload is loaded.
+
+`esp_gsp_assets_get_status()` reports the last error and pending state. Asset
+setters are asynchronous: success means that the request was queued/admitted,
+not that the new frame is ready. For diagnosis, query the public status APIs;
+see the [API reference](../../../docs/en/reference/api-functions.md)
+and [asset state guide](../../../docs/en/guide/external-assets.md#state-and-memory).
+The example checks startup states for up to five seconds on the application
+task and prints memory usage. It adds no monitoring task or permanent timer.
+The check is diagnostic: a timeout keeps the service running, and a ready
+frame does not guarantee that all later animation frames will succeed.
+Before stopping/pausing the UI, unmounting storage or replacing a package,
+close its asset service from an application task while the UI still processes
+commands:
+
+```c
+if (esp_gsp_assets_close(assets) == ESP_GSP_OK) {
+    assets = NULL;
+    esp_gsp_stop(ui);
+    // Now unmount/update storage as appropriate for the BSP.
+}
+```
+
+Closing does not invalidate the last published pixels or encoded source: their
+buffers are released when the UI replaces them or shuts down. Do not close from
+a render/decode callback or concurrently use a closing handle. Treat files as
+immutable while open. This example demonstrates mounted filesystems; raw NAND
+bad-block/ECC management remains the responsibility of its storage driver.
+The file adapter uses the platform's `fseek`/`ftell` range (2 GiB on 32-bit long).
+
+See the compatible component/compiler versions and tool commands in the
+[compatibility contract](../../../docs/en/reference/compatibility.md). Install
+the stable tool entry point first:
+
+```sh
+python -m pip install -U esp-gsp-tools
+```
+
+
+Close waits at most five seconds. On timeout retain the handle, UI and mount,
+then retry after IO/decoding resumes. Never unmount or stop the UI on timeout.
+The manifest uses target hints to infer dimensions from the scene.
+
+For fonts on the same SD card, use the [font-file workflow](../../../docs/en/guide/external-assets.md#fonts-on-sd):
+load with a size limit, apply to the UI configuration before startup, then close
+after UI shutdown. Dynamic fonts and linked font catalogs use the same API.

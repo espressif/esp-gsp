@@ -36,6 +36,60 @@ typedef struct {
  */
 bool esp_gsp_heap_stats(esp_gsp_heap_stats_t *out_stats);
 
+typedef enum {
+    ESP_GSP_UPDATE_ERROR_VALIDATE = 1, /*!< Rejected before queue admission. */
+    ESP_GSP_UPDATE_ERROR_SUBMIT,       /*!< Could not copy or queue the batch. */
+    ESP_GSP_UPDATE_ERROR_APPLY,        /*!< Accepted batch could not be applied. */
+    ESP_GSP_UPDATE_ERROR_DROP,         /*!< Accepted batch belongs to an old scene. */
+} esp_gsp_update_error_stage_t;
+
+typedef enum {
+    ESP_GSP_UPDATE_ERROR_NONE,
+    ESP_GSP_UPDATE_ERROR_COMPONENT_NOT_FOUND,
+    ESP_GSP_UPDATE_ERROR_PROPERTY_UNAVAILABLE, /*!< No runtime property; declare it dynamic. */
+    ESP_GSP_UPDATE_ERROR_INVALID_VALUE,
+    ESP_GSP_UPDATE_ERROR_NO_MEMORY,
+    ESP_GSP_UPDATE_ERROR_SCENE_CHANGED,
+    ESP_GSP_UPDATE_ERROR_INVALID_STATE,
+    ESP_GSP_UPDATE_ERROR_TRANSPORT,
+} esp_gsp_update_error_reason_t;
+
+typedef struct {
+    uint32_t struct_size;
+    uint32_t failures;          /*!< Failed component batches, modulo 2^32. */
+    uint32_t details_dropped;   /*!< Detail records skipped during concurrent access. */
+    gsp_component_key_t component;
+    gsp_property_key_t property;
+    uint32_t entry_index;       /*!< Zero-based; UINT32_MAX for a batch-wide failure. */
+    esp_gsp_err_t error;        /*!< Public error code; existing setter codes are unchanged. */
+    uint16_t scene_id;
+    uint8_t stage;              /*!< esp_gsp_update_error_stage_t */
+    uint8_t reason;             /*!< esp_gsp_update_error_reason_t */
+} esp_gsp_update_error_stats_t;
+
+/** Snapshot set_many/set_properties failures and wrappers routed through them
+ * (including set_position), including asynchronous apply/drop errors. Legacy
+ * bind setters and other API families are not included.
+ * Available in ordinary builds without profiling. Successful setters do not
+ * clear the last error. A property absent from the compiled runtime directory
+ * cannot be distinguished from an unsupported property: consult the compiler's
+ * schema and declare supported x/y fields dynamic before calling set_position.
+ *
+ * The detail record is coherent and best-effort: concurrent readers/writers
+ * never wait; a contending writer increments details_dropped instead. Counters
+ * are atomic but can include failures newer than the retained detail. This is
+ * diagnostic history, not an acknowledgement for a particular command or task.
+ * esp_gsp_flush() still waits for a render attempt, not successful updates.
+ *
+ * Pass sizeof(*out_stats). On success the known prefix is copied, any extra
+ * bytes are zeroed, and struct_size is the copied size. Returns false without
+ * touching the output for NULL, a size below sizeof(uint32_t), or a busy record
+ * (retry later). Call while the handle is alive, outside ISR context.
+ */
+bool esp_gsp_update_error_stats(esp_gsp_handle_t gsp,
+                                esp_gsp_update_error_stats_t *out_stats,
+                                size_t stats_size);
+
 /** Monotonic count of rendered non-idle frames since startup. */
 uint32_t esp_gsp_frame_count(esp_gsp_handle_t gsp);
 

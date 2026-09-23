@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: LicenseRef-Espressif-Modified-MIT
+set(gsp_component esp-gsp)
+get_filename_component(gsp_source_root "${CMAKE_CURRENT_LIST_DIR}/../../../.." ABSOLUTE)
+if(EXISTS "${gsp_source_root}/tools/gspc/Cargo.toml")
+    get_filename_component(gsp_component "${gsp_source_root}" NAME)
+endif()
+idf_component_register(SRCS "app_main.c" "watch_ui.c" INCLUDE_DIRS "." PRIV_REQUIRES ${gsp_component} esp_lcd hw_init esp_timer)
+if(NOT CONFIG_EXAMPLE_LCD_INTERFACE_QSPI)
+    message(FATAL_ERROR "smartwatch requires the 360x360 QSPI board profile")
+endif()
+gsp_add_bundle(${COMPONENT_LIB} SCENES ../scenes/watch.json PIXEL_FORMAT rgb565)
+
+option(WATCH_DEMO_PROBE "Measure PageFlow capture latency on the watch board" OFF)
+if(WATCH_DEMO_PROBE)
+    target_sources(${COMPONENT_LIB} PRIVATE ../tools/watch_probe.c)
+    target_compile_definitions(${COMPONENT_LIB} PRIVATE WATCH_DEMO_PROBE=1)
+endif()
+
+if(CONFIG_EXAMPLE_DISPLAY_ROTATION_90 OR CONFIG_EXAMPLE_DISPLAY_ROTATION_180 OR CONFIG_EXAMPLE_DISPLAY_ROTATION_270)
+    message(FATAL_ERROR "This scene requires the authored rotation-0 hardware profile")
+endif()

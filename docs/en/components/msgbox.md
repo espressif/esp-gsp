@@ -8,15 +8,15 @@ Use it when a familiar interaction is best delivered as a ready-made group of na
 
 ## Local interactive preview
 
-After [installing `esp-gsp-tools`](../guide/simulator-preview.md), run from an
-unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
+then run from an unpacked component or public repository root:
 
 ```sh
 mkdir -p gsp-out/widget-preview
-python -m gsp.execute --version 0.5.0 gspc pack \
-  examples/widgets/msgbox/msgbox.json \
+gspc pack \
+  examples/usage/widgets/msgbox/msgbox.json \
   --deployable -o gsp-out/widget-preview/msgbox.gspb
-python -m gsp.execute --version 1.4.0 sim \
+gsp_sim_host \
   --bundle gsp-out/widget-preview/msgbox.gspb
 ```
 
@@ -37,7 +37,7 @@ Give every object that application code must read or update a stable `name`. GSP
   "w": 480,
   "h": 320,
   "screen_bg": "#101827",
-  "font": "../../common/fonts/DejaVuSans.ttf",
+  "font": "../../../common/fonts/DejaVuSans.ttf",
   "objects": [
     {
       "type": "container",
@@ -116,7 +116,7 @@ Give every object that application code must read or update a stable `name`. GSP
 }
 ```
 
-This is `examples/widgets/msgbox/msgbox.json`. Copy any relative assets referenced by the scene with it.
+This is `examples/usage/widgets/msgbox/msgbox.json`. Copy any relative assets referenced by the scene with it.
 
 ## Generated C API for this example
 
@@ -151,7 +151,7 @@ These signatures come from the actual compiler output for this JSON.
 | `fg_color` | `color` | — | — | — | dialog text color |
 | `button_color` | `color` | — | — | — | button fill color |
 | `font_size` | `int` | — | 1…255 | — | per-object font pixel size |
-| `hidden` | `bool` | — | default `false` | yes | start hidden |
+| `hidden` | `bool` | — | default `true` | yes | start hidden |
 | `dismissable` | `bool` | — | default `false` | — | scrim tap closes |
 
 <details><summary>Show other fields supported by this Widget</summary>

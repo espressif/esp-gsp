@@ -116,3 +116,28 @@ bind symbols from the scene header rather than copying the example names.
 provides frame, render, transition, region, service and media statistics plus
 test input injection. Production decisions should use application state and
 normal error returns rather than diagnostic counters.
+
+`esp_gsp_update_error_stats()` also works without profiling. It records failures
+from component batches and their typed wrappers, including `set_position()`.
+Check `stage` to distinguish rejection before submission from a queued update
+that failed to apply or was dropped after a scene change. `component`,
+`property` and `entry_index` identify a rejected entry when available; a
+batch-wide failure uses `UINT32_MAX` for the index. Existing setter return
+codes and `flush()` behavior are unchanged: a completed render attempt does
+not imply that every update succeeded.
+
+For `PROPERTY_UNAVAILABLE`, check the authored dynamic declaration first.
+For example, `set_position()` needs both axes declared as bounded values:
+
+```json
+"x": {"default": 20, "min": 0, "max": 200},
+"y": {"default": 30, "min": 0, "max": 160}
+```
+
+If only x is dynamic, use the generated `set_x()` instead. Unknown/unsupported
+properties and literal properties both have no runtime entry; consult the
+component schema or `esp_gsp_component_get_property_info_at()` to inspect the
+available runtime properties. The diagnostic preserves the last failure across
+successful updates, so compare `failures` with the previous snapshot. Concurrent
+access is non-blocking: a busy query returns false without changing its output,
+and `details_dropped` counts failures whose details could not be retained.

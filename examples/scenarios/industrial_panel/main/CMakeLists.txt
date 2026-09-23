@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: LicenseRef-Espressif-Modified-MIT
+set(gsp_component esp-gsp)
+get_filename_component(gsp_source_root "${CMAKE_CURRENT_LIST_DIR}/../../../.." ABSOLUTE)
+if(EXISTS "${gsp_source_root}/tools/gspc/Cargo.toml")
+    get_filename_component(gsp_component "${gsp_source_root}" NAME)
+endif()
+idf_component_register(SRCS "app_main.c" "industrial_ui.c" INCLUDE_DIRS "." PRIV_REQUIRES ${gsp_component} esp_lcd hw_init)
+if(NOT CONFIG_EXAMPLE_LCD_INTERFACE_MIPI_DSI)
+    message(FATAL_ERROR "industrial_panel requires the 1024x600 MIPI-DSI board profile")
+endif()
+gsp_add_bundle(${COMPONENT_LIB} SCENES ../scenes/industrial.json PIXEL_FORMAT rgb565)
+
+if(CONFIG_EXAMPLE_DISPLAY_ROTATION_90 OR CONFIG_EXAMPLE_DISPLAY_ROTATION_180 OR CONFIG_EXAMPLE_DISPLAY_ROTATION_270)
+    message(FATAL_ERROR "This scene requires the authored rotation-0 hardware profile")
+endif()

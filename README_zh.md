@@ -35,15 +35,17 @@ ESP-GSP 适用于界面结构在构建期确定，但文字、数值、图片、
 
 直接从 ESP Component Registry 创建最小完整示例：
 
+<!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.4.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.5.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
+<!-- /gsp-version:registry-example -->
 
 示例包含 ESP32-C3、ESP32-S3、ESP32-P4 和 ESP32-S31 的配置。请选择与实际
 开发板一致的配置，并在烧录前核对面板引脚和时序。预览和构建命令见
-[`hello_world` 说明](examples/hello_world/README.md)。
+[`hello_world` 说明](examples/usage/hello_world/README.md)。
 
 编译器配置使用当前 ESP-IDF Python 环境。PATH 中已有配套 `gspc` 时可离线使用，
 否则 CMake 调用工具管理器；源码仓库默认通过 Cargo 构建当前编译器。
@@ -53,10 +55,12 @@ python -m pip install -U esp-gsp-tools
 
 在 ESP-IDF 工程根目录运行：
 
+<!-- gsp-version:dependency-command -->
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.4.0"
+idf.py add-dependency "espressif/esp-gsp^1.5.0"
 python -m pip install -U esp-gsp-tools
 ```
+<!-- /gsp-version:dependency-command -->
 
 在工程根目录的 `scenes/` 中创建场景 JSON。应用需要更新的元素应设置稳定的
 `name`；需要进入应用逻辑的动作应设置 `callback`：
@@ -101,6 +105,7 @@ gsp_add_bundle(${COMPONENT_LIB})
 |---|---|
 | 安装并运行第一个场景 | [中文快速入门](docs/zh-Hans/getting-started.md) |
 | 理解推荐开发流程 | [工程工作流](docs/zh-Hans/guide/workflow.md) |
+| 使用 Agent 编写和验证界面 | [Agent 辅助 UI 开发](docs/zh-Hans/guide/agent-assisted-ui.md) |
 | 编写 JSON 和选择字段 | [场景指南](docs/zh-Hans/guide/scenes.md)与[字段参考](docs/zh-Hans/reference/authoring.md) |
 | 学习某个控件 | [控件库](docs/zh-Hans/components/index.md) |
 | 连接应用状态 | [运行时与生成 API](docs/zh-Hans/guide/runtime-api.md) |
@@ -111,8 +116,8 @@ gsp_add_bundle(${COMPONENT_LIB})
 | 查询准确 C 声明 | [公共函数参考](docs/zh-Hans/reference/api-functions.md) |
 
 [文档入口](docs/README.md)包含完整的英文和简体中文文档。仓库还提供用于产品展示
-的 [`showcase`](examples/showcase/README.md) 和用于硬件测量的
-[`benchmark`](examples/benchmark/README.md)。
+的[真实场景示例](examples/scenarios/README.md)和用于硬件测量的
+[`benchmark`](examples/performance/benchmark/README.md)。
 
 ## 选择接入方式
 

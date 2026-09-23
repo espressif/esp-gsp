@@ -25,7 +25,9 @@ CMake 会执行 `gspc compatibility` 兼容性检查并验证生成格式、需�
 
 ### 原生模拟器无法启动
 
-从终端执行 `gsp_sim --capabilities` 以保留 Loader 错误。确认资产匹配主机平台，并只
+从终端执行 `python -m gsp.execute --version '<ESP-GSP version>' sim --capabilities`
+以保留 Loader 错误；版本取自组件 `idf_component.yml`。手动安装时用实际可执行文件
+路径调用。确认资产匹配主机平台，并只
 安装发布说明列出的运行库。无法满足原生依赖时可使用浏览器/WASM 资产。显示硬件的配置步骤见[显示集成](display.md)。
 
 ### 构建使用了错误的 ESP-GSP 副本

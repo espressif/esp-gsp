@@ -1,4 +1,4 @@
-version: 1.4.0
+version: 1.5.0
 targets:
 - esp32c3
 - esp32s3
@@ -27,16 +27,20 @@ files:
   include:
   - README_zh.md
   - .gspc_version
-  - examples/hello_world/**/*
-  - examples/external_assets/**/*
-  - examples/effects/**/*
-  - examples/showcase/**/*
+  - cmake/gsp_example_assets.cmake
+  - cmake/gsp_fetch_example_assets.cmake
+  - examples/README.md
+  - examples/usage/hello_world/**/*
+  - examples/usage/external_assets/**/*
+  - examples/usage/effects/**/*
+  - examples/scenarios/**/*
   - examples/common/**/*
-  - examples/benchmark/**/*
-  - examples/widgets/**/*
-  - examples/sim_bridge_media/**/*
+  - examples/performance/benchmark/**/*
+  - examples/usage/widgets/**/*
+  - examples/usage/sim_bridge_media/**/*
   - tools/sim_bridge/build.py
   - tools/sim_bridge/run.py
+  - tools/sim_bridge/rpc_client.py
   - tools/sim_bridge/protocol.h
   - tools/sim_bridge/CMakeLists.txt
   - tools/sim_bridge/README.md
@@ -55,6 +59,11 @@ files:
   - .gitignore
   - .gitmodules
   - examples/**/*
+  - examples/scenarios/*/preview*.png
+  - examples/scenarios/*/preview*.gif
+  - examples/scenarios/*/scenes/assets/*.gif
+  - examples/scenarios/*/scenes/assets/*.png
+  - examples/scenarios/*/scenes/assets/*.svg
   - formats/**/*
   - config/**/*
   - ci/**/*

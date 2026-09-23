@@ -84,5 +84,7 @@ regions. They must not call state-changing or waiting GSP APIs.
   lifetime.
 - Events, pinch data, row/cell tokens and Canvas surfaces are framework-owned
   callback views.
-- Image options and message-source contexts are application-owned and must
-  survive the callbacks they register.
+- Image option members are copied during submission, so the options structure
+  may be local. Its buffer and callback contexts still follow
+  [media ownership](lifecycle.md#image-and-canvas-ownership). A message-source context must
+  remain valid for the lifetime of its binding.

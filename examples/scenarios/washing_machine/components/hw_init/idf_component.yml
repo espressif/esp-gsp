@@ -1,0 +1,39 @@
+version: "0.1.0"
+description: Shared LCD/touch bring-up for the esp-gsp examples.
+dependencies:
+  idf: ">=6.0"
+  espressif/esp_display_present:
+    version: "^1.0.2"
+    public: true
+  espressif/esp_lcd_touch:
+    version: "^1"
+    public: true
+  espressif/esp_lcd_ek79007:
+    version: "^1"
+    rules:
+      - if: "target == esp32p4"
+  espressif/esp_lcd_touch_gt911:
+    version: "^1"
+    public: true
+  espressif/esp_lcd_st77916:
+    version: "*"
+    rules:
+      - if: "target == esp32s3"
+  espressif/esp_lcd_co5300:
+    version: "^2.1.0"
+    rules:
+      - if: "target == esp32s31"
+  waveshare/esp_lcd_touch_cst9217:
+    version: "^2.0.0"
+    rules:
+      - if: "target == esp32s31"
+  espressif/esp_lcd_touch_gt1151:
+    version: "^1"
+    public: true
+  espressif/esp_lcd_touch_cst816s:
+    version: "^1"
+    public: true
+  espressif/esp_lcd_gc9a01:
+    version: "^2"
+  espressif/esp_lcd_ili9341:
+    version: "^2"

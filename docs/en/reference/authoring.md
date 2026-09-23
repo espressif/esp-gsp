@@ -1,6 +1,6 @@
 # ESP-GSP Authoring Reference
 
-GSPC version: 0.5.0.
+GSPC version: 0.6.0.
 
 Declare runtime-update fields using the dynamic forms listed in the tables. See [dynamic property scope](../guide/scenes.md#dynamic-property-scope) for declaration forms and object-versus-subtree behavior.
 
@@ -70,6 +70,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `w` | int | **required** | width in px [0..65535] *(bounded: scene=own_fill, template=own_fill)* |
 | `h` | int | **required** | height in px [0..65535] *(bounded: scene=own_fill, template=own_fill)* |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
 | `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
@@ -79,6 +83,12 @@ Supports events: `click`, `press`, `release`, `long`
 | `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
 | `grow` | int | `0` | auto-layout grow weight [0..100] |
 | `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] *(bounded: scene=own_fill, template=own_fill)* |
@@ -86,8 +96,23 @@ Supports events: `click`, `press`, `release`, `long`
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] *(bounded: scene=own_fill, template=own_fill)* |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
+| `bg_opacity` | int | `255` | background-only opacity; multiplied by opacity and color alpha [0..255] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `border_side` | enum(`all`/`none`/`top`/`bottom`/`left`/`right`/`horizontal`/`vertical`) | `"all"` | inside border selection; partial sides require static rectangular geometry |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -104,11 +129,13 @@ Supports events: `click`, `press`, `release`, `long`
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -121,7 +148,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
@@ -144,6 +171,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `w` | int | **required** | width in px [0..65535] |
 | `h` | int | **required** | height in px [0..65535] |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
 | `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
@@ -153,6 +184,12 @@ Supports events: `click`, `press`, `release`, `long`
 | `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
 | `grow` | int | `0` | auto-layout grow weight [0..100] |
 | `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | `"#FFFFFF"` | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] |
@@ -160,8 +197,23 @@ Supports events: `click`, `press`, `release`, `long`
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
+| `bg_opacity` | int | `255` | background-only opacity; multiplied by opacity and color alpha [0..255] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `border_side` | enum(`all`/`none`/`top`/`bottom`/`left`/`right`/`horizontal`/`vertical`) | `"all"` | inside border selection; partial sides require static rectangular geometry |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -178,11 +230,13 @@ Supports events: `click`, `press`, `release`, `long`
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -195,7 +249,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
@@ -217,6 +271,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `w` | int | **required** | width in px [0..65535] |
 | `h` | int | **required** | height in px [0..65535] |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
 | `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
@@ -226,6 +284,12 @@ Supports events: `click`, `press`, `release`, `long`
 | `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
 | `grow` | int | `0` | auto-layout grow weight [0..100] |
 | `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] |
@@ -233,6 +297,14 @@ Supports events: `click`, `press`, `release`, `long`
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -242,8 +314,15 @@ Supports events: `click`, `press`, `release`, `long`
 | `font_charset_file` | path | — | UTF-8 character corpus relative to the scene; combined with font_charset and static text |
 | `font_link` | enum(`embedded`/`external`/`auto`) | — | font storage policy: embedded/external/auto |
 | `input` | bool | `false` | text field: attaches the caret/keyboard flow |
+| `bg_opacity` | int | `255` | background-only opacity; multiplied by opacity and color alpha [0..255] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `border_side` | enum(`all`/`none`/`top`/`bottom`/`left`/`right`/`horizontal`/`vertical`) | `"all"` | inside border selection; partial sides require static rectangular geometry |
 | `animation_codec` | enum(`lossless`/`jpeg`/`hardware_jpeg`) | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
 | `svg_layout` | enum(`content`/`canvas`) | — | SVG part placement: cropped content or original canvas |
 | `morph_to` | path | — | SVG end shape with matching paths and paints |
@@ -251,11 +330,13 @@ Supports events: `click`, `press`, `release`, `long`
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -269,7 +350,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
@@ -295,6 +376,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `w` | int | **required** | width in px [0..65535] *(bounded: scene=svg, template=unsupported)* |
 | `h` | int | **required** | height in px [0..65535] *(bounded: scene=svg, template=unsupported)* |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
 | `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
@@ -304,6 +389,12 @@ Supports events: `click`, `press`, `release`, `long`
 | `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
 | `grow` | int | `0` | auto-layout grow weight [0..100] |
 | `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] |
@@ -311,8 +402,21 @@ Supports events: `click`, `press`, `release`, `long`
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
+| `bg_opacity` | int | `255` | background-only opacity; multiplied by opacity and color alpha [0..255] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `border_side` | enum(`all`/`none`/`top`/`bottom`/`left`/`right`/`horizontal`/`vertical`) | `"all"` | inside border selection; partial sides require static rectangular geometry |
 | `animation_codec` | enum(`lossless`/`jpeg`/`hardware_jpeg`) | — | animation frame policy: lossless patches, JPEG full frames, or JPEG when the target has hardware decoding |
 | `svg_layout` | enum(`content`/`canvas`) | — | SVG part placement: cropped content or original canvas |
 | `morph_to` | path | — | SVG end shape with matching paths and paints |
@@ -320,11 +424,13 @@ Supports events: `click`, `press`, `release`, `long`
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -333,6 +439,8 @@ Supports events: `click`, `press`, `release`, `long`
 | `scale` | number | `1` | initial runtime image scale |
 | `min_scale` | number | `0.5` | minimum runtime image scale |
 | `max_scale` | number | `4` | maximum runtime image scale |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -346,13 +454,14 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
 | `max_instances` | int | — | maximum simultaneously live template instances; included in the automatic pool requirement [1..65535] |
 | `dynamic_color` | bool | — | template member exposes a per-instance color slot |
 | `dynamic_image` | bool | — | template image exposes a per-instance resource slot |
+| `image_opacity` | int | `255` | image-only opacity; fixed raster transforms may bake alpha at compile time [0..255] |
 
 ### `rect`
 
@@ -368,6 +477,25 @@ Supports events: `click`, `press`, `release`, `long`
 | `w` | int | **required** | width in px [0..65535] *(bounded: scene=own_fill, template=own_fill)* |
 | `h` | int | **required** | height in px [0..65535] *(bounded: scene=own_fill, template=own_fill)* |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
+| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `gap` | int | `0` | auto-layout gap in px [0..4096] |
+| `padding` | int | `0` | auto-layout padding in px [0..4096] |
+| `padding_left` | int | — | row layout: leading padding override [0..4096] |
+| `padding_right` | int | — | row layout: trailing padding override [0..4096] |
+| `padding_top` | int | — | column layout: leading padding override [0..4096] |
+| `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
+| `grow` | int | `0` | auto-layout grow weight [0..100] |
+| `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] *(bounded: scene=own_fill, template=own_fill)* |
@@ -375,8 +503,23 @@ Supports events: `click`, `press`, `release`, `long`
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] *(bounded: scene=own_fill, template=own_fill)* |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
+| `bg_opacity` | int | `255` | background-only opacity; multiplied by opacity and color alpha [0..255] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `border_side` | enum(`all`/`none`/`top`/`bottom`/`left`/`right`/`horizontal`/`vertical`) | `"all"` | inside border selection; partial sides require static rectangular geometry |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -393,11 +536,13 @@ Supports events: `click`, `press`, `release`, `long`
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -410,7 +555,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
@@ -427,11 +572,15 @@ Supports events: `click`, `press`, `release`, `long`
 | `type` | string | **required** | widget type |
 | `parent` | int | `-1` | parent object index (-1 = screen root) [-1..65534] |
 | `parent_name` | string | — | parent by name instead of index |
-| `x` | int | `0` | x relative to parent [-32768..32767] |
-| `y` | int | `0` | y relative to parent [-32768..32767] |
+| `x` | int | `0` | x relative to parent [-32768..32767] *(bounded: scene=supported, template=unsupported)* |
+| `y` | int | `0` | y relative to parent [-32768..32767] *(bounded: scene=supported, template=unsupported)* |
 | `w` | int | **required** | width in px [0..65535] |
 | `h` | int | **required** | height in px [0..65535] |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
 | `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
@@ -441,6 +590,12 @@ Supports events: `click`, `press`, `release`, `long`
 | `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
 | `grow` | int | `0` | auto-layout grow weight [0..100] |
 | `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] |
@@ -448,8 +603,21 @@ Supports events: `click`, `press`, `release`, `long`
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -466,11 +634,13 @@ Supports events: `click`, `press`, `release`, `long`
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -485,7 +655,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
@@ -507,6 +677,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `w` | int | **required** | width in px [0..65535] |
 | `h` | int | **required** | height in px [0..65535] |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
 | `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
@@ -516,6 +690,12 @@ Supports events: `click`, `press`, `release`, `long`
 | `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
 | `grow` | int | `0` | auto-layout grow weight [0..100] |
 | `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] |
@@ -523,8 +703,21 @@ Supports events: `click`, `press`, `release`, `long`
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -541,11 +734,13 @@ Supports events: `click`, `press`, `release`, `long`
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -562,7 +757,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
@@ -584,6 +779,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `w` | int | **required** | width in px [0..65535] |
 | `h` | int | **required** | height in px [0..65535] |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
 | `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
@@ -593,6 +792,12 @@ Supports events: `click`, `press`, `release`, `long`
 | `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
 | `grow` | int | `0` | auto-layout grow weight [0..100] |
 | `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] |
@@ -600,8 +805,21 @@ Supports events: `click`, `press`, `release`, `long`
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -618,11 +836,13 @@ Supports events: `click`, `press`, `release`, `long`
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -636,7 +856,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
@@ -663,6 +883,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `w` | int | **required** | width in px [0..65535] |
 | `h` | int | **required** | height in px [0..65535] |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
 | `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
@@ -672,6 +896,12 @@ Supports events: `click`, `press`, `release`, `long`
 | `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
 | `grow` | int | `0` | auto-layout grow weight [0..100] |
 | `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] |
@@ -679,8 +909,21 @@ Supports events: `click`, `press`, `release`, `long`
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -697,11 +940,13 @@ Supports events: `click`, `press`, `release`, `long`
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -721,7 +966,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
@@ -743,6 +988,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `w` | int | **required** | width in px [0..65535] |
 | `h` | int | **required** | height in px [0..65535] |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
 | `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
@@ -752,6 +1001,12 @@ Supports events: `click`, `press`, `release`, `long`
 | `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
 | `grow` | int | `0` | auto-layout grow weight [0..100] |
 | `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] |
@@ -759,8 +1014,21 @@ Supports events: `click`, `press`, `release`, `long`
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -777,11 +1045,13 @@ Supports events: `click`, `press`, `release`, `long`
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -800,7 +1070,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
@@ -808,6 +1078,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `dynamic_color` | bool | — | template member exposes a per-instance color slot |
 | `dynamic_image` | bool | — | template image exposes a per-instance resource slot |
 | `thickness` | int | — | stroke thickness; omitted = max(min(w,h)/8, 2); 0 clamps to 1 [0..65535] |
+| `interactive` | bool | `true` | allow pointer interaction |
 
 ### `needle`
 
@@ -823,6 +1094,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `w` | int | **required** | width in px [0..65535] |
 | `h` | int | **required** | height in px [0..65535] |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
 | `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
@@ -832,6 +1107,12 @@ Supports events: `click`, `press`, `release`, `long`
 | `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
 | `grow` | int | `0` | auto-layout grow weight [0..100] |
 | `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] |
@@ -839,8 +1120,21 @@ Supports events: `click`, `press`, `release`, `long`
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -857,11 +1151,13 @@ Supports events: `click`, `press`, `release`, `long`
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -877,7 +1173,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
@@ -899,6 +1195,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `w` | int | **required** | width in px [0..65535] |
 | `h` | int | **required** | height in px [0..65535] |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
 | `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
@@ -908,6 +1208,12 @@ Supports events: `click`, `press`, `release`, `long`
 | `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
 | `grow` | int | `0` | auto-layout grow weight [0..100] |
 | `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] |
@@ -915,8 +1221,21 @@ Supports events: `click`, `press`, `release`, `long`
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -933,11 +1252,13 @@ Supports events: `click`, `press`, `release`, `long`
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -952,7 +1273,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
@@ -979,7 +1300,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `runtime_style` | bool | `false` | generate runtime appearance setters |
@@ -1015,7 +1336,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `runtime_style` | bool | `false` | generate runtime appearance setters |
@@ -1052,7 +1373,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `runtime_style` | bool | `false` | generate runtime appearance setters |
@@ -1085,7 +1406,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `runtime_style` | bool | `false` | generate runtime appearance setters |
@@ -1132,6 +1453,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `w` | int | **required** | width in px [0..65535] |
 | `h` | int | **required** | height in px [0..65535] |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
 | `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
@@ -1141,6 +1466,12 @@ Supports events: `click`, `press`, `release`, `long`
 | `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
 | `grow` | int | `0` | auto-layout grow weight [0..100] |
 | `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | `"#22c55e"` | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] |
@@ -1148,8 +1479,21 @@ Supports events: `click`, `press`, `release`, `long`
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -1166,11 +1510,13 @@ Supports events: `click`, `press`, `release`, `long`
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -1187,7 +1533,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
@@ -1209,6 +1555,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `w` | int | **required** | width in px [0..65535] |
 | `h` | int | **required** | height in px [0..65535] |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
 | `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
@@ -1218,6 +1568,12 @@ Supports events: `click`, `press`, `release`, `long`
 | `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
 | `grow` | int | `0` | auto-layout grow weight [0..100] |
 | `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | `"#50B878"` | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] |
@@ -1225,8 +1581,21 @@ Supports events: `click`, `press`, `release`, `long`
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -1243,11 +1612,13 @@ Supports events: `click`, `press`, `release`, `long`
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -1261,7 +1632,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
@@ -1283,6 +1654,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `w` | int | **required** | width in px [0..65535] |
 | `h` | int | **required** | height in px [0..65535] |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
 | `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
@@ -1292,6 +1667,12 @@ Supports events: `click`, `press`, `release`, `long`
 | `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
 | `grow` | int | `0` | auto-layout grow weight [0..100] |
 | `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | `"#55A0E8"` | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] |
@@ -1299,8 +1680,21 @@ Supports events: `click`, `press`, `release`, `long`
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -1317,11 +1711,13 @@ Supports events: `click`, `press`, `release`, `long`
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -1335,7 +1731,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
@@ -1359,6 +1755,10 @@ A named clock generates `gsp_<scene>_<name>_set_time()`; the helper validates a 
 | `w` | int | **required** | width in px [0..65535] |
 | `h` | int | **required** | height in px [0..65535] |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
 | `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
@@ -1368,6 +1768,12 @@ A named clock generates `gsp_<scene>_<name>_set_time()`; the helper validates a 
 | `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
 | `grow` | int | `0` | auto-layout grow weight [0..100] |
 | `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] |
@@ -1375,8 +1781,21 @@ A named clock generates `gsp_<scene>_<name>_set_time()`; the helper validates a 
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -1393,11 +1812,13 @@ A named clock generates `gsp_<scene>_<name>_set_time()`; the helper validates a 
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -1410,7 +1831,7 @@ A named clock generates `gsp_<scene>_<name>_set_time()`; the helper validates a 
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
@@ -1440,6 +1861,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `w` | int | **required** | width in px [0..65535] *(bounded: scene=own_fill, template=own_fill)* |
 | `h` | int | **required** | height in px [0..65535] *(bounded: scene=own_fill, template=own_fill)* |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
 | `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
@@ -1449,6 +1874,12 @@ Supports events: `click`, `press`, `release`, `long`
 | `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
 | `grow` | int | `0` | auto-layout grow weight [0..100] |
 | `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] *(bounded: scene=own_fill, template=own_fill)* |
@@ -1456,8 +1887,23 @@ Supports events: `click`, `press`, `release`, `long`
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] *(bounded: scene=own_fill, template=own_fill)* |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
+| `bg_opacity` | int | `255` | background-only opacity; multiplied by opacity and color alpha [0..255] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `border_side` | enum(`all`/`none`/`top`/`bottom`/`left`/`right`/`horizontal`/`vertical`) | `"all"` | inside border selection; partial sides require static rectangular geometry |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -1474,11 +1920,13 @@ Supports events: `click`, `press`, `release`, `long`
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -1498,7 +1946,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
@@ -1526,6 +1974,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `w` | int | **required** | width in px [0..65535] *(bounded: scene=own_fill, template=own_fill)* |
 | `h` | int | **required** | height in px [0..65535] *(bounded: scene=own_fill, template=own_fill)* |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
 | `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
@@ -1535,6 +1987,12 @@ Supports events: `click`, `press`, `release`, `long`
 | `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
 | `grow` | int | `0` | auto-layout grow weight [0..100] |
 | `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] *(bounded: scene=own_fill, template=own_fill)* |
@@ -1542,8 +2000,23 @@ Supports events: `click`, `press`, `release`, `long`
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] *(bounded: scene=own_fill, template=own_fill)* |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
+| `bg_opacity` | int | `255` | background-only opacity; multiplied by opacity and color alpha [0..255] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `border_side` | enum(`all`/`none`/`top`/`bottom`/`left`/`right`/`horizontal`/`vertical`) | `"all"` | inside border selection; partial sides require static rectangular geometry |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -1560,11 +2033,13 @@ Supports events: `click`, `press`, `release`, `long`
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -1577,7 +2052,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
@@ -1605,6 +2080,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `w` | int | **required** | width in px [0..65535] *(bounded: scene=own_fill, template=own_fill)* |
 | `h` | int | **required** | height in px [0..65535] *(bounded: scene=own_fill, template=own_fill)* |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
 | `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
@@ -1614,6 +2093,12 @@ Supports events: `click`, `press`, `release`, `long`
 | `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
 | `grow` | int | `0` | auto-layout grow weight [0..100] |
 | `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] *(bounded: scene=own_fill, template=own_fill)* |
@@ -1621,8 +2106,23 @@ Supports events: `click`, `press`, `release`, `long`
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] *(bounded: scene=own_fill, template=own_fill)* |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
+| `bg_opacity` | int | `255` | background-only opacity; multiplied by opacity and color alpha [0..255] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `border_side` | enum(`all`/`none`/`top`/`bottom`/`left`/`right`/`horizontal`/`vertical`) | `"all"` | inside border selection; partial sides require static rectangular geometry |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -1639,11 +2139,13 @@ Supports events: `click`, `press`, `release`, `long`
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -1656,7 +2158,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
@@ -1680,6 +2182,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `w` | int | **required** | width in px [0..65535] *(bounded: scene=own_fill, template=own_fill)* |
 | `h` | int | **required** | height in px [0..65535] *(bounded: scene=own_fill, template=own_fill)* |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
 | `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
@@ -1689,6 +2195,12 @@ Supports events: `click`, `press`, `release`, `long`
 | `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
 | `grow` | int | `0` | auto-layout grow weight [0..100] |
 | `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] *(bounded: scene=own_fill, template=own_fill)* |
@@ -1696,8 +2208,23 @@ Supports events: `click`, `press`, `release`, `long`
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] *(bounded: scene=own_fill, template=own_fill)* |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
+| `bg_opacity` | int | `255` | background-only opacity; multiplied by opacity and color alpha [0..255] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `border_side` | enum(`all`/`none`/`top`/`bottom`/`left`/`right`/`horizontal`/`vertical`) | `"all"` | inside border selection; partial sides require static rectangular geometry |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -1714,11 +2241,13 @@ Supports events: `click`, `press`, `release`, `long`
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -1731,7 +2260,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
@@ -1755,6 +2284,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `w` | int | **required** | width in px [0..65535] |
 | `h` | int | **required** | height in px [0..65535] |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
 | `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
@@ -1764,6 +2297,12 @@ Supports events: `click`, `press`, `release`, `long`
 | `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
 | `grow` | int | `0` | auto-layout grow weight [0..100] |
 | `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] |
@@ -1771,8 +2310,21 @@ Supports events: `click`, `press`, `release`, `long`
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -1789,11 +2341,13 @@ Supports events: `click`, `press`, `release`, `long`
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -1816,7 +2370,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
@@ -1838,6 +2392,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `w` | int | **required** | width in px [0..65535] |
 | `h` | int | **required** | height in px [0..65535] |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
 | `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
@@ -1847,6 +2405,12 @@ Supports events: `click`, `press`, `release`, `long`
 | `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
 | `grow` | int | `0` | auto-layout grow weight [0..100] |
 | `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] |
@@ -1854,8 +2418,21 @@ Supports events: `click`, `press`, `release`, `long`
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -1872,11 +2449,13 @@ Supports events: `click`, `press`, `release`, `long`
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -1899,7 +2478,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
@@ -1921,6 +2500,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `w` | int | **required** | width in px [0..65535] |
 | `h` | int | **required** | height in px [0..65535] |
 | `name` | identifier | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
+| `min_width` | int | — | compile-time minimum width in px [0..65535] |
+| `max_width` | int | — | compile-time maximum width in px [0..65535] |
+| `min_height` | int | — | compile-time minimum height in px [0..65535] |
+| `max_height` | int | — | compile-time maximum height in px [0..65535] |
 | `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
@@ -1930,6 +2513,12 @@ Supports events: `click`, `press`, `release`, `long`
 | `padding_bottom` | int | — | column layout: trailing padding override [0..4096] |
 | `grow` | int | `0` | auto-layout grow weight [0..100] |
 | `margin` | int | `0` | auto-layout space on both child sides [0..4096] |
+| `margin_left` | int | — | auto-layout leading margin on the x axis [0..4096] |
+| `margin_right` | int | — | auto-layout trailing margin on the x axis [0..4096] |
+| `margin_top` | int | — | auto-layout leading margin on the y axis [0..4096] |
+| `margin_bottom` | int | — | auto-layout trailing margin on the y axis [0..4096] |
+| `align_main` | enum(`start`/`center`/`end`/`space_between`) | — | auto-layout main-axis placement |
+| `align_cross` | enum(`start`/`center`/`end`/`stretch`) | — | auto-layout cross-axis placement |
 | `hidden` | bool | `false` | start hidden (show via actions or set_visible) *(dynamic)* |
 | `fg_color` | color | — | foreground color (text/knob/line/mark per type) |
 | `opacity` | int | `255` | 0-255 blend opacity [0..255] |
@@ -1937,8 +2526,21 @@ Supports events: `click`, `press`, `release`, `long`
 | `bg_gradient` | color | — | second gradient stop (with bg_color) |
 | `gradient_dir` | enum(`vertical`/`horizontal`) | `"vertical"` | gradient direction |
 | `radius` | int | `0` | corner radius in px [0..65535] |
+| `shadow_color` | color | — | static hard-shadow color |
+| `shadow_opacity` | int | `96` | static hard-shadow opacity [0..255] |
+| `shadow_offset_x` | int | — | static hard-shadow x offset [-32768..32767] |
+| `shadow_offset_y` | int | — | static hard-shadow y offset [-32768..32767] |
+| `shadow_spread` | int | — | static hard-shadow spread in px [0..4096] |
+| `shadow_radius` | int | — | static hard-shadow corner radius [0..65535] |
 | `border_color` | color | — | border stroke color |
 | `border_width` | int | — | border stroke width (needs border_color) [0..65535] |
+| `border_opacity` | int | `255` | border stroke opacity [0..255] |
+| `outline_color` | color | — | outside outline color |
+| `outline_width` | int | `0` | outside outline width [0..65535] |
+| `outline_opacity` | int | `255` | outside outline opacity [0..255] |
+| `outline_pad` | int | `0` | gap between the element and its outline [0..4096] |
+| `text_line_space` | int | `0` | extra spacing between static text rows in px [0..4096] |
+| `text_vertical_align` | enum(`auto`/`top`/`center`/`bottom`) | `"auto"` | static text block placement; auto preserves single-line center and multiline top |
 | `text` | string | — | static text content (UTF-8) *(dynamic)* |
 | `text_align` | enum(`left`/`center`/`right`) | — | text alignment |
 | `overflow` | enum(`clip`/`ellipsis`) | `"clip"` | single-line overflow |
@@ -1955,11 +2557,13 @@ Supports events: `click`, `press`, `release`, `long`
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
 | `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
-| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`store`/`qoi`/`rle16`/`default`/`hardware_jpeg`) | — | image codec |
+| `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
+| `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [1..120] |
+| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -1977,7 +2581,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |
 | `bind` | identifier | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`) | — | explicit bind state family |
+| `bind_target` | enum(`visible`/`value`/`color`/`text`/`resource`/`data`) | — | explicit bind state family |
 | `callback` | identifier | — | app callback name; generates scene-qualified event helpers |
 | `events` | action_list | — | input bindings: [{event, action, ...}] |
 | `template` | identifier | — | declare this subtree as a render template |
@@ -2071,7 +2675,7 @@ These objects expand into base widget types before scene validation.
 | `radius` | int | `0` | corner radius [0..65535] |
 | `font` | path | — | per-object TTF/OTF override |
 | `font_size` | int | — | per-object font pixel size [1..255] |
-| `hidden` | bool | `false` | start hidden |
+| `hidden` | bool | `true` | start hidden |
 | `dismissable` | bool | `false` | scrim tap closes |
 | `enabled` | bool | — | initial interaction state; when present, exposes a runtime enabled property inherited by descendant controls |
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
@@ -2161,19 +2765,19 @@ These objects expand into base widget types before scene validation.
 | `outgoing_color` | color | `"#246BFD"` | outgoing bubble color |
 | `message_text_color` | color | `"#111827"` | message text color |
 | `outgoing_text_color` | color | `"#FFFFFF"` | outgoing text color |
-| `bubble_radius` | int | — | message bubble radius [0..1024] |
-| `bubble_padding_x` | int | — | bubble horizontal padding [0..1024] |
-| `bubble_padding_y` | int | — | bubble vertical padding [0..1024] |
-| `message_gap` | int | — | message gap [0..1024] |
-| `side_margin` | int | — | message side margin [0..4096] |
-| `max_bubble_width` | int | — | maximum bubble width [0..32767] |
-| `max_message_height` | int | — | maximum message height [16..32767] |
+| `bubble_radius` | int | `14` | message bubble radius [0..1024] |
+| `bubble_padding_x` | int | `14` | bubble horizontal padding [0..1024] |
+| `bubble_padding_y` | int | `10` | bubble vertical padding [0..1024] |
+| `message_gap` | int | `8` | message gap [0..1024] |
+| `side_margin` | int | `12` | message side margin [0..4096] |
+| `max_bubble_width` | int | `0` | maximum bubble width; 0 or omitted uses 76% of viewport width [0..32767] |
+| `max_message_height` | int | `320` | maximum message height [16..32767] |
 | `callback` | identifier | — | app callback name |
 | `font` | path | — | per-object TTF/OTF override |
 | `font_size` | int | — | per-object font pixel size [1..255] |
 | `font_charset` | string | — | glyphs available to runtime-bound message text |
 | `scroll_snapshot` | bool | `true` | cache two viewport frames while scrolling; falls back to live rendering when memory is unavailable |
-| `item_height` | int | `0` | row height [0..65535] |
+| `item_height` | int | `0` | minimum message row height; 0 or omitted uses 2 * bubble_padding_y + message_gap + 1 [0..65535] |
 | `enabled` | bool | — | initial interaction state; when present, exposes a runtime enabled property inherited by descendant controls |
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
 | `disabled_opacity` | int | `112` | disabled-state overlay opacity [0..255] |

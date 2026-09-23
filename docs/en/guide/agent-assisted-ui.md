@@ -44,6 +44,16 @@ Useful details include page states, dynamic data, navigation, available assets,
 and the interactions you want checked. You do not need to know generated API
 names or resource slot rules.
 
+For assets that should stay outside the firmware, follow the
+[external-assets workflow](external-assets.md) and point the agent at
+`examples/usage/external_assets`. Keep the manifest, target Image placeholders,
+and the UI profile compatible, and request a fallback and status check for
+missing or replaced files. For an SD/NAND font, use the
+[font-file workflow](external-assets.md#fonts-on-sd): apply the loaded font
+before UI startup with an explicit size limit, then close it after the UI has
+stopped. This keeps storage ownership and font lifetime in the application
+while the generated UI API remains unchanged.
+
 A concise creation request can be:
 
 ```text
@@ -86,6 +96,8 @@ The Skill follows the same ownership model as the
    application, and panel behavior in the BSP;
 4. uses `gspc cards` for the target widget, then runs `gspc compatibility` and
    `gspc diagnose` against the real scene (diagnostics include `suggestions`);
+   CLI diagnosis includes compilation checks. Daemon `diagnostics/pull` defaults
+   to schema checks; use `level: "compile"` when advertised by `doctor/get`;
 5. generates bundle headers and `*.api.json`, integrates their APIs, and builds
    application changes;
 6. when preview is requested, resolves or builds the simulator, loads the
@@ -102,6 +114,41 @@ than being replaced with a host assumption.
 Use [Scene JSON](scenes.md) to understand authored structure,
 [Runtime and generated API](runtime-api.md) for application integration, and
 the [Widget library](../components/index.md) for every supported control.
+Each card's `example` is a fragment: use its `example_path` and documentation
+paths for the complete example and field reference. For PageFlow/Drawer
+automation, check `capabilities` for component-motion support before using
+`component_get_motion`, `wait_component(name, optional value, max_frames)`, or
+`component_event`; a successful wait requires idle and, if supplied, the requested value,
+and timeout is a JSON-RPC error. Compiled bounds are initial metadata, not
+runtime hit-test proof.
+
+## Choose the preview path
+
+Use the standalone simulator from [Simulator preview and testing](simulator-preview.md)
+for scene layout, declarative actions, and control behavior. This checks the
+scene without running the owning application's C tasks or product state logic.
+
+When acceptance depends on application C callbacks, timers, dynamic collections,
+or live state, prefer the component's `sim_bridge`. It runs portable application
+C code on the PC and sends UI rendering to the simulator. After the ESP-GSP
+component is installed in the project (for example, after `idf.py reconfigure`),
+run this from the application root:
+
+```sh
+python -m pip install -U esp-gsp-tools
+python managed_components/espressif__esp-gsp/tools/sim_bridge/run.py --project pc
+```
+
+The component also includes `examples/usage/hello_world/pc` and
+`examples/usage/sim_bridge_media/pc`; pass either path as `--project` to try the
+flow. From a source checkout, invoke that checkout's
+`tools/sim_bridge/run.py`. See the [sim_bridge guide](../../../tools/sim_bridge/README.md)
+for requirements, tool selection, PC HAL/mocks, and the supported API subset.
+
+Use sim_bridge to check application behavior. Its supported API subset and
+single-thread Backend contract differ from ESP-IDF task scheduling; it does not
+verify peripherals, panel timing, or device performance. Build the owning
+ESP-IDF application and use the board for those checks.
 
 ## Review the result
 

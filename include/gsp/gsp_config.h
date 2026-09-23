@@ -458,6 +458,11 @@ static inline bool esp_gsp_config_overrides_valid(
     return true;
 }
 
+/* Constant field IDs must fold to field loads even in size-optimized builds;
+ * otherwise each caller can retain its own copy of the full switch. */
+#if defined(__GNUC__) || defined(__clang__)
+__attribute__((always_inline))
+#endif
 static inline uint64_t esp_gsp_config_value(
         const esp_gsp_effective_config_t *config,
         esp_gsp_config_field_id_t field)

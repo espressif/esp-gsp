@@ -264,7 +264,7 @@ static const esp_gsp_project_config_t s_project_config = {
 #ifdef CONFIG_ESP_GSP_DRAG_START_PX
         .drag_start_px = CONFIG_ESP_GSP_DRAG_START_PX,
 #else
-        .drag_start_px = 24,
+        .drag_start_px = 12,
 #endif
 #ifdef CONFIG_ESP_GSP_SWIPE_FLICK_PX
         .swipe_flick_px = CONFIG_ESP_GSP_SWIPE_FLICK_PX,
@@ -274,7 +274,7 @@ static const esp_gsp_project_config_t s_project_config = {
 #ifdef CONFIG_ESP_GSP_SCENE_SWIPE_MIN_FLING_PX
         .scene_swipe_min_fling_px = CONFIG_ESP_GSP_SCENE_SWIPE_MIN_FLING_PX,
 #else
-        .scene_swipe_min_fling_px = 32,
+        .scene_swipe_min_fling_px = 24,
 #endif
 #ifdef CONFIG_ESP_GSP_COMPONENT_SWIPE_COMMIT_DIVISOR
         .component_swipe_commit_divisor = CONFIG_ESP_GSP_COMPONENT_SWIPE_COMMIT_DIVISOR,

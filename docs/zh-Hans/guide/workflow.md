@@ -82,6 +82,13 @@ gspc diagnose scenes/*.json --format json -o diagnostics.json
 gspc docs -o authoring-reference.md
 ```
 
+需要可选的布局和图片存储提示时，在 `gspc diagnose` 后添加
+`--layout-check --round-safe-area`。检查只覆盖静态根对象矩形（圆形安全区使用屏幕
+内接圆）；动态或子对象几何会标为跳过，不代表通过。这些只是提示：不会修改场景或
+资源，也不会把提示升级为编译失败。图片提示分别报告编码存储字节数和未压缩像素
+字节数；运行时峰值还取决于解码器与缓存配置。明显过大的 runtime-fit 位图会获得
+`store_scale` 建议，应用前应检查画质和后续放大需求；无法确定资源版本时留待人工检查。
+
 这些机器可读产物让编辑器、脚本和 AI 助手都跟随同一编译器注册表。
 优先用 `gspc cards` 查看单个控件；需要字段范围、版本或完整注册表时再导出 Schema、docs 或 inventory。
 编译或打包还会在头文件旁写出 `*.api.json`，用于按对象名对照生成 API 与模拟器映射。

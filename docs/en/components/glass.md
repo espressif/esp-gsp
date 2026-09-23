@@ -8,15 +8,15 @@ Use it to communicate status, measurement, motion, or visual hierarchy.
 
 ## Local interactive preview
 
-After [installing `esp-gsp-tools`](../guide/simulator-preview.md), run from an
-unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
+then run from an unpacked component or public repository root:
 
 ```sh
 mkdir -p gsp-out/widget-preview
-python -m gsp.execute --version 0.5.0 gspc pack \
-  examples/widgets/glass/glass.json \
+gspc pack \
+  examples/usage/widgets/glass/glass.json \
   --deployable -o gsp-out/widget-preview/glass.gspb
-python -m gsp.execute --version 1.4.0 sim \
+gsp_sim_host \
   --bundle gsp-out/widget-preview/glass.gspb
 ```
 
@@ -36,7 +36,7 @@ Give every object that application code must read or update a stable `name`. GSP
   "screen": "glass_demo",
   "w": 320,
   "h": 240,
-  "font": "../../common/fonts/DejaVuSans.ttf",
+  "font": "../../../common/fonts/DejaVuSans.ttf",
   "objects": [
     {
       "type": "image",
@@ -103,7 +103,7 @@ Give every object that application code must read or update a stable `name`. GSP
 }
 ```
 
-This is `examples/widgets/glass/glass.json`. Copy any relative assets referenced by the scene with it.
+This is `examples/usage/widgets/glass/glass.json`. Copy any relative assets referenced by the scene with it.
 
 ## Generated C API for this example
 

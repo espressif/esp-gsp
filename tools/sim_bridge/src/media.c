@@ -36,7 +36,8 @@ struct bridge_canvas {
     void *pixels;
     esp_gsp_canvas_draw_cb_t draw;
     void *ctx;
-    bool pending;
+    bool pending, has_dirty, patch_synced;
+    gsp_rect_t dirty;
 };
 struct bridge_media {
     struct bridge_binding *bindings;
@@ -79,7 +80,7 @@ void bridge_media_scene_changed(esp_gsp_handle_t ui)
 {
     struct bridge_media *m = media(ui, false);
     for (struct bridge_canvas *c = m ? m->canvases : NULL; c; c = c->next) {
-        c->draw = NULL; c->pending = false;
+        c->draw = NULL; c->pending = false; c->has_dirty = false; c->patch_synced = false;
         /* A read-only RPC inside draw may receive this notification.
          * Keep the in-use buffer alive until replacement or close. */
     }
@@ -309,6 +310,19 @@ static struct bridge_canvas *canvas_find(esp_gsp_handle_t ui, uint16_t bind)
         }
     return NULL;
 }
+static struct bridge_canvas *canvas_track(esp_gsp_handle_t ui, uint16_t bind, uint16_t scene)
+{
+    struct bridge_canvas *c = canvas_find(ui, bind);
+    if (c) {
+        return c;
+    }
+    struct bridge_media *m = media(ui, true);
+    c = m ? calloc(1, sizeof(*c)) : NULL;
+    if (c) {
+        c->bind = bind; c->scene = scene; c->next = m->canvases; m->canvases = c;
+    }
+    return c;
+}
 static esp_gsp_err_t canvas_info(esp_gsp_handle_t ui, uint16_t bind, uint32_t out[8])
 {
     if (!ui) {
@@ -327,18 +341,69 @@ static bool valid_dirty(gsp_rect_t r, uint32_t width, uint32_t height)
 static esp_gsp_err_t canvas_upload(esp_gsp_handle_t ui, uint16_t bind, const void *pixels,
                                    size_t stride, const uint32_t info[8], const gsp_rect_t *dirty)
 {
-    if (!pixels || !info[1] || stride < (size_t)info[0] * (info[2] == 0 ? 2 : 3) ||
+    const size_t pixel_bytes = info[2] == 0 ? 2U : 3U;
+    if (!pixels || !info[1] || stride < (size_t)info[0] * pixel_bytes ||
             stride > MAX_BINARY_BYTES / info[1] || (dirty && !valid_dirty(*dirty, info[0], info[1]))) {
         return ESP_GSP_ERR_INVALID_ARG;
+    }
+    const size_t full_size = stride * info[1];
+    struct bridge_canvas *canvas = NULL;
+    if (bridge_canvas_patch_enabled(ui)) {
+        canvas = canvas_track(ui, bind, (uint16_t)info[3]);
+        if (!canvas) {
+            return ESP_GSP_ERR_NO_MEM;
+        }
     }
     char headers[384];
     int count = snprintf(headers, sizeof(headers),
                          "X-GSP-Kind: canvas\r\nX-GSP-Bind: %u\r\nX-GSP-Stride: %zu\r\nX-GSP-Height: %" PRIu32 "\r\nX-GSP-Scene: %" PRIu32 "\r\n",
                          bind, stride, info[1], info[3]);
-    if (dirty) snprintf(headers + count, sizeof(headers) - (size_t)count,
-                            "X-GSP-Dirty: rect\r\nX-GSP-X1: %d\r\nX-GSP-Y1: %d\r\nX-GSP-X2: %d\r\nX-GSP-Y2: %d\r\n",
-                            (int)dirty->x1, (int)dirty->y1, (int)dirty->x2, (int)dirty->y2);
-    return bridge_binary(ui, headers, pixels, stride * info[1]);
+    if (dirty) {
+        count += snprintf(headers + count, sizeof(headers) - (size_t)count,
+                          "X-GSP-Dirty: rect\r\nX-GSP-X1: %d\r\nX-GSP-Y1: %d\r\nX-GSP-X2: %d\r\nX-GSP-Y2: %d\r\n",
+                          (int)dirty->x1, (int)dirty->y1, (int)dirty->x2, (int)dirty->y2);
+    }
+    if (dirty && canvas && canvas->patch_synced) {
+        const size_t patch_stride = (size_t)(dirty->x2 - dirty->x1) * pixel_bytes;
+        const size_t patch_rows = (size_t)(dirty->y2 - dirty->y1);
+        const size_t patch_size = patch_stride * patch_rows;
+        /* Packing is worthwhile for a meaningfully smaller region. Large
+         * dirty rectangles stay zero-copy and refresh the host keyframe. */
+        if (patch_size <= full_size - full_size / 4U) {
+            uint8_t *patch = malloc(patch_size);
+            if (!patch) {
+                return ESP_GSP_ERR_NO_MEM;
+            }
+            const uint8_t *source = pixels;
+            const size_t x_offset = (size_t)dirty->x1 * pixel_bytes;
+            for (size_t row = 0; row < patch_rows; ++row) {
+                memcpy(patch + row * patch_stride,
+                       source + ((size_t)dirty->y1 + row) * stride + x_offset,
+                       patch_stride);
+            }
+            snprintf(headers + count, sizeof(headers) - (size_t)count,
+                     "X-GSP-Canvas-Payload: patch\r\nX-GSP-Patch-Stride: %zu\r\nX-GSP-Pixel-Bytes: %zu\r\n",
+                     patch_stride, pixel_bytes);
+            esp_gsp_err_t rc = bridge_binary(ui, headers, patch, patch_size);
+            free(patch);
+            if (rc == ESP_GSP_OK) {
+                return rc;
+            }
+            canvas->patch_synced = false;
+            if (!bridge_canvas_queue_allowed(ui)) {
+                return rc;
+            }
+        }
+    }
+    if (canvas) {
+        snprintf(headers + count, sizeof(headers) - (size_t)count,
+                 "X-GSP-Canvas-Payload: keyframe\r\nX-GSP-Pixel-Bytes: %zu\r\n", pixel_bytes);
+    }
+    esp_gsp_err_t rc = bridge_binary(ui, headers, pixels, full_size);
+    if (canvas) {
+        canvas->patch_synced = rc == ESP_GSP_OK;
+    }
+    return rc;
 }
 static esp_gsp_err_t canvas_push(esp_gsp_handle_t ui, uint16_t bind, const void *pixels,
                                  size_t stride, const gsp_rect_t *dirty, esp_gsp_canvas_release_cb_t release, void *ctx)
@@ -499,6 +564,7 @@ esp_gsp_err_t esp_gsp_canvas_set_draw_cb(esp_gsp_handle_t ui, uint16_t bind, esp
     free(c->pixels); c->pixels = pixels; c->stride = stride;
     c->bind = bind; c->scene = info[3]; c->width = info[0]; c->height = info[1]; c->format = info[2];
     c->draw = draw; c->ctx = ctx; c->pending = true;
+    c->has_dirty = false;
     if (created) {
         c->next = m->canvases;
         m->canvases = c;
@@ -514,7 +580,7 @@ esp_gsp_err_t esp_gsp_canvas_invalidate(esp_gsp_handle_t ui, uint16_t bind)
     if (!c || !c->draw) {
         return ESP_GSP_ERR_INVALID_STATE;
     }
-    c->pending = true; return ESP_GSP_OK;
+    c->pending = true; c->has_dirty = false; return ESP_GSP_OK;
 }
 esp_gsp_err_t esp_gsp_canvas_invalidate_dirty(esp_gsp_handle_t ui, uint16_t bind, gsp_rect_t dirty)
 {
@@ -528,7 +594,17 @@ esp_gsp_err_t esp_gsp_canvas_invalidate_dirty(esp_gsp_handle_t ui, uint16_t bind
     if (!valid_dirty(dirty, c->width, c->height)) {
         return ESP_GSP_ERR_INVALID_ARG;
     }
-    c->pending = true; return ESP_GSP_OK; /* Offscreen mode repaints a full frame. */
+    if (!c->pending || c->has_dirty) {
+        if (c->has_dirty) {
+            c->dirty.x1 = c->dirty.x1 < dirty.x1 ? c->dirty.x1 : dirty.x1;
+            c->dirty.y1 = c->dirty.y1 < dirty.y1 ? c->dirty.y1 : dirty.y1;
+            c->dirty.x2 = c->dirty.x2 > dirty.x2 ? c->dirty.x2 : dirty.x2;
+            c->dirty.y2 = c->dirty.y2 > dirty.y2 ? c->dirty.y2 : dirty.y2;
+        } else {
+            c->dirty = dirty; c->has_dirty = true;
+        }
+    }
+    c->pending = true; return ESP_GSP_OK;
 }
 esp_gsp_err_t esp_gsp_canvas_stop(esp_gsp_handle_t ui, uint16_t bind)
 {
@@ -540,6 +616,8 @@ esp_gsp_err_t esp_gsp_canvas_stop(esp_gsp_handle_t ui, uint16_t bind)
             c->draw = NULL;
             c->ctx = NULL;
             c->pending = false;
+            c->has_dirty = false;
+            c->patch_synced = false;
             free(c->pixels);
             c->pixels = NULL;
         }
@@ -582,7 +660,9 @@ esp_gsp_err_t bridge_media_poll(esp_gsp_handle_t ui)
             c->pending = false;
             continue;
         }
-        c->pending = false;
+        gsp_rect_t dirty = c->dirty;
+        bool has_dirty = c->has_dirty;
+        c->pending = false; c->has_dirty = false;
         const esp_gsp_canvas_surface_t surface = {
             .pixels = c->pixels, .stride_bytes = c->stride, .x = 0, .y = 0,
             .width = c->width, .height = c->height, .pixel_format = c->format,
@@ -592,7 +672,8 @@ esp_gsp_err_t bridge_media_poll(esp_gsp_handle_t ui)
             continue;
         }
         uint32_t info[8] = {c->width, c->height, c->format, c->scene};
-        esp_gsp_err_t rc = canvas_upload(ui, c->bind, c->pixels, c->stride, info, NULL);
+        esp_gsp_err_t rc = canvas_upload(ui, c->bind, c->pixels, c->stride, info,
+                                         has_dirty ? &dirty : NULL);
         if (rc != ESP_GSP_OK) {
             return rc;
         }

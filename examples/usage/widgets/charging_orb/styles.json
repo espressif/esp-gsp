@@ -1,0 +1,93 @@
+{
+  "screen": "orb_styles",
+  "w": 480,
+  "h": 240,
+  "screen_bg": "#08131F",
+  "font": "../../../common/fonts/DejaVuSans.ttf",
+  "objects": [
+    {
+      "type": "charging_orb",
+      "name": "liquid",
+      "parent": -1,
+      "x": 10,
+      "y": 24,
+      "w": 140,
+      "h": 140,
+      "style": "liquid",
+      "value": 62,
+      "fg_color": "#69CEF6",
+      "strength": 80,
+      "period_ms": 3200,
+      "ripple": 55,
+      "softness": 90
+    },
+    {
+      "type": "label",
+      "parent": -1,
+      "x": 0,
+      "y": 190,
+      "w": 160,
+      "h": 24,
+      "text": "LIQUID",
+      "text_align": "center",
+      "fg_color": "#A6C7CC",
+      "font_size": 16
+    },
+    {
+      "type": "charging_orb",
+      "name": "halo",
+      "parent": -1,
+      "x": 170,
+      "y": 24,
+      "w": 140,
+      "h": 140,
+      "style": "halo",
+      "value": 62,
+      "fg_color": "#69CEF6",
+      "strength": 80,
+      "period_ms": 3200,
+      "ripple": 55,
+      "softness": 90
+    },
+    {
+      "type": "label",
+      "parent": -1,
+      "x": 160,
+      "y": 190,
+      "w": 160,
+      "h": 24,
+      "text": "HALO",
+      "text_align": "center",
+      "fg_color": "#A6C7CC",
+      "font_size": 16
+    },
+    {
+      "type": "charging_orb",
+      "name": "plasma",
+      "parent": -1,
+      "x": 330,
+      "y": 24,
+      "w": 140,
+      "h": 140,
+      "style": "plasma",
+      "value": 62,
+      "fg_color": "#EDB1C3",
+      "strength": 80,
+      "period_ms": 3200,
+      "ripple": 55,
+      "softness": 90
+    },
+    {
+      "type": "label",
+      "parent": -1,
+      "x": 320,
+      "y": 190,
+      "w": 160,
+      "h": 24,
+      "text": "PLASMA",
+      "text_align": "center",
+      "fg_color": "#A6C7CC",
+      "font_size": 16
+    }
+  ]
+}

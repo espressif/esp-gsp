@@ -89,3 +89,14 @@ ESP_ERROR_CHECK(esp_gsp_keyboard_attach(
 
 `esp_gsp_debug.h` 提供帧、渲染、转场、区域、服务和媒体统计，以及测试输入注入。
 使用这些接口定位问题、测量性能；产品状态由应用代码维护。
+
+`esp_gsp_update_error_stats()` 无需开启 profiling，可查询组件批量更新及其类型化包装（包括 `set_position()`）的失败。`stage` 区分提交前拒绝、异步应用失败，以及场景变化后丢弃；能定位具体条目时，`component`、`property` 和 `entry_index` 给出对象、属性和数组下标，整批失败的下标为 `UINT32_MAX`。原 setter 返回码和 `flush()` 语义不变：渲染尝试完成不代表每项更新都成功。
+
+遇到 `PROPERTY_UNAVAILABLE` 时，先检查动态声明。例如 `set_position()` 需要两轴都声明为有界动态属性：
+
+```json
+"x": {"default": 20, "min": 0, "max": 200},
+"y": {"default": 30, "min": 0, "max": 160}
+```
+
+只有 x 动态时，使用生成的 `set_x()`。未知、不支持的属性和字面量静态属性都没有运行时入口；可参考控件 schema，或通过 `esp_gsp_component_get_property_info_at()` 枚举现有运行时属性。成功更新不会清除最近失败，判断新错误时应比较前后 `failures`。并发访问不等待：查询遇忙返回 false 且不修改输出，`details_dropped` 统计未能保留详情的失败次数。

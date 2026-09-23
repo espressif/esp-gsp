@@ -26,6 +26,10 @@ value in authored `min/max` units; unchanged values do not notify again. A bare
 `callback` fires on release. Add a value `bind` to enable Arc dragging; see the
 [workflow guide](workflow.md) for examples.
 
+Carousel callbacks run after the selected index is committed. Read that index
+with the generated `get_selected()` or `get_value()` getter. Their CALL
+`event->arg` remains the authored argument, not the selected index.
+
 ## Events and task context
 
 Event, list-binding, image-release, timer and Canvas callbacks run on framework tasks. Do not block, access slow storage or perform networking inside them. Send a queue item or task notification to product logic and return.
@@ -39,6 +43,78 @@ UI event → short callback → application task → product state change
                                            → generated setter → render commit
 ```
 
+### Timer lifecycle
+
+`esp_gsp_timer_cb_t` runs on the render task. With the ESP-IDF runtime attached,
+an application task may create or delete a timer (never from an ISR); keep the
+application and runtime alive while doing so. Deletion stops future scheduling,
+but does not wait for a callback that has already been selected, so keep
+`user_ctx` alive until the callback has returned. An external task using the same
+continuously attached runtime may wait for that callback only after a successful
+delete, followed by a successful `esp_gsp_flush()`; release `user_ctx` only then.
+A failed delete or failed/timed-out flush does not establish callback completion.
+Do not flush from a timer callback or hold a lock needed by the callback while
+waiting. If other timers or asynchronous work share `user_ctx`, wait for those
+users too before freeing it. Without
+the ESP-IDF adapter, serialize timer operations with app stepping. A deleted
+timer handle must not be reused; timer slots may be reused internally.
+
+## Component state without polling
+
+Register `esp_gsp_on_component_event()` to observe named PageFlow and Drawer
+components. The separate callback leaves `esp_gsp_on_event()` and its event
+layout unchanged. Match `event->key` with the generated `GSP_OBJ_KEY_*` constant.
+`VALUE_CHANGED` identifies a committed page/open value; `MOTION_FINISHED` also
+reports a return to the original value. `MOTION_CHANGED` reports changes of
+target, dragging or settling, not every pixel of motion. Flags may be combined.
+
+Read `event->state.value` for the committed value and `target` for the requested
+destination. For a Drawer, these are 0 (closed) and 1 (open). A false `is_open()`
+alone does not mean that an opening animation has finished. Use
+`esp_gsp_component_get_motion()` when an initial snapshot is needed. Existing
+getters retain their meaning; stop-anywhere PageFlow selection can change during
+coasting, before motion finishes.
+
+Notifications are coalesced once per component per UI step, after driver and
+transform updates. They are not a history of every intermediate command and do
+not certify LCD presentation. Registration emits no initial event, and scene
+teardown drops pending notifications. Callbacks may issue setters, but must not
+flush, block or destroy the app. Keep callback context alive through external
+unsubscription and successful synchronization, as with other queued callbacks.
+
+## First-frame initialization
+
+Use `esp_gsp_esp_lcd_start_prepared()` to install bindings, event callbacks and
+timers on the render task before the first frame. It uses the same prepare
+callback type as session startup; passing NULL preserves ordinary start behavior.
+The callback's clock is initialized before creating timers. Preparation has no
+error return: check setter results in your callback and communicate application
+errors through your context. Do not call flush, stop or session lifecycle APIs
+from prepare.
+
+## Visibility, input and Drawer edges
+
+Visibility controls display. An authored `enabled` property controls acceptance
+of new input; it does not prohibit programmatic navigation. Author `enabled:true`
+on a PageFlow/Drawer that the app needs to enable or disable dynamically. Their
+structural gesture candidates now honor that property, including closed-Drawer
+edge pulls. A visible open/closing Drawer retains its modal tap barrier while
+disabled; a hidden Drawer does not steal edge scrolls or block underlying taps.
+
+Closing an enabled Drawer intentionally leaves edge reopening available. To
+disable that entrance, disable the Drawer; hiding it is no longer needed merely
+to suppress edge pulls. This does not cancel an already owned gesture.
+Ordinary hit actions retain nearest-authored enabled inheritance (an explicitly
+enabled child can override its parent). Structural gestures use the component's
+own enabled property; do not rely on a parent's setting to gate them.
+
+`block_scene_swipe` still means scene navigation only. A drawn rectangle is not
+a universal gesture barrier. While displaying an application modal overlay,
+disable the underlying PageFlow explicitly and restore it from the completion
+event. For an application-owned top-level input surface, the existing
+`esp_gsp_set_input_interceptor()` runs before scene hit testing and gesture
+routing; consume the entire pointer sequence, not just its down sample.
+
 ## Dynamic content
 
 | Content | API path |
@@ -49,7 +125,10 @@ UI event → short callback → application task → product state change
 | Camera/video/continuous pixels | Canvas frame or direct-draw callback |
 | Page or stack navigation | Generated navigation/component helper |
 
-Buffer ownership must use the documented COPY, BORROW or TAKE mode. Stop producers, detach callbacks and release borrowed resources before `esp_gsp_stop()` completes.
+Follow the COPY/BORROW/TAKE buffer, callback-context and `esp_gsp_stop()` rules in
+[Lifecycle and threading](lifecycle.md#image-and-canvas-ownership). Reuse or free a BORROW
+buffer only after its release callback; stopping a producer does not return
+buffers it has already submitted.
 
 ## Shut down cleanly
 

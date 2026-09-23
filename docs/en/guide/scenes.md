@@ -7,18 +7,18 @@ application/BSP code. Use this guide for common decisions and the generated
 
 ## From a description or reference image
 
-Lock the logical resolution, available fonts/assets, dynamic content and user
-actions first. For a screenshot or design image:
+Lock the logical resolution, pixel format, display orientation, available
+fonts/assets, dynamic content and user actions first. Use a screenshot or design
+image as a visual reference:
 
-1. Treat it as a reference unless it is an actual product asset.
-2. Split it into containers, labels, controls, shapes and reusable images;
-   do not flatten the complete UI into one screenshot image.
-3. Scale geometry when the reference and display resolutions
+1. Model visible elements as containers, labels, controls, shapes and reusable
+   images. A screenshot asset cannot provide their states or interactions.
+2. Scale geometry when the reference and display resolutions
    differ.
-4. Record assumptions for missing fonts, exact colors and interaction states.
+3. Record assumptions for missing fonts, exact colors and interaction states.
 
-A static image does not define pressed/disabled state, scrolling, navigation,
-loading or error behavior; derive those from the product requirement.
+A screenshot asset does not define pressed/disabled state, scrolling, navigation,
+loading or error behavior; declare those behaviors in the scene and application.
 
 ## Minimal scene
 
@@ -59,11 +59,126 @@ loading or error behavior; derive those from the product requirement.
 
 Required top-level fields are `screen`, `w`, `h` and a non-empty `objects`
 array. Scene size is in logical pixels and must match the bundle/BSP display
-path.
+path. `w` and `h` must be greater than zero. `default_font_size`, when present,
+must be 1–255. Build uses the same field type, enum, range and semantic checks
+as `gspc diagnose`, so unsupported combinations fail before lowering. The
+documented rectangle aliases retain their legacy color fields; unknown fields
+on registered widgets are errors.
 
 Ordinary parent references may point forward or backward in the object array.
 Inherited hidden state and template membership do not depend on that ordering;
 the compiler preserves authored draw order.
+
+## Appearance
+
+This card combines a rounded background, an outside outline, a hard shadow and
+column layout. The two bars are ordinary child rectangles:
+
+```json
+{
+  "screen": "styled_card", "w": 240, "h": 160, "screen_bg": "#101827",
+  "objects": [
+    {"type":"container","name":"card","x":20,"y":20,"w":200,"h":104,
+     "bg_color":"#24334A","radius":12,"outline_color":"#5AA9E6","outline_width":2,
+     "shadow_color":"#000000","shadow_offset_y":6,"shadow_opacity":96,
+     "layout":"column","padding":16,"gap":12,"align_cross":"stretch"},
+    {"type":"rect","parent_name":"card","w":168,"h":16,"bg_color":"#5AA9E6"},
+    {"type":"rect","parent_name":"card","w":168,"h":16,"bg_color":"#5AA9E6","bg_opacity":96}
+  ]
+}
+```
+
+Save it as `styled_card.json` and run `gspc pack styled_card.json --deployable -o styled_card.gspb`.
+The fields below describe how to adapt the appearance and layout.
+
+For content and structural widgets, `bg_opacity` (0–255, default 255) affects
+only the background. Its effective alpha is
+`round(round(opacity * bg_opacity / 255) * color_alpha / 255)`.
+`border_opacity` independently scales an authored border. A non-255 `bg_opacity`
+requires literal `opacity`.
+
+Widgets with the outline fields use `outline_color`, `outline_width`,
+`outline_pad` and `outline_opacity` for an outside rounded outline. The outline
+requires a color and a positive width. `border_side` is available on content and
+structural widgets with the values `all` (default), `none`, `top`, `bottom`,
+`left`, `right`, `horizontal` and `vertical`. Partial borders are inside the
+original box and require static `w`, `h` and `radius: 0`; width, color and
+opacity are shared. Opposite thick sides are split so a pixel is not blended
+twice. `all` keeps the rounded-border behavior, while `none` suppresses only
+the border.
+
+`shadow_offset_x/y`, `shadow_spread`, `shadow_radius`, `shadow_color` and
+`shadow_opacity` enable a hard, filled rounded shadow. Defaults are black,
+opacity 96, zero offset/spread and the element radius; spread increases the
+paint bounds and shadow radius. Decorations use the element box, not the image
+alpha silhouette or the union of child bounds. They expand painted and dirty
+regions without changing layout size or hit targets, and ancestor clipping
+still applies. Each enabled outline or shadow adds at most one primitive before
+optimization; zero effective opacity emits none. A partial border adds one strip
+per selected side, up to two. Translucent pixels and larger dirty regions add
+rendering cost.
+
+Scene position groups and whole template instances can move decorations with
+their element. Outlines and shadows require static `w/h/radius`.
+Template members with partial borders require literal `x/y` and
+a literal or static-theme border color. Template members with outlines or
+shadows require literal `x/y` and literal or static-theme decoration colors.
+
+## Layout
+
+In row/column layout, `margin_left`, `margin_right`, `margin_top` and
+`margin_bottom` override the corresponding sides of `margin`.
+`align_main` accepts `start`, `center`, `end` and `space_between`; `align_cross`
+accepts `start`, `center`, `end` and `stretch`. Omitting `align_cross` preserves
+the authored cross-axis position. Layout is resolved at build time.
+
+`min_width`, `max_width`, `min_height` and `max_height` (0–65535 pixels)
+constrain static dimensions, including row/column grow and cross-axis stretch.
+The minimum must not exceed the maximum, and a bound cannot share its dimension
+with a bounded dynamic declaration. Grow allocation reserves minima, distributes
+remaining space by grow weight, and returns space from children that reach their
+maxima. `align_main` places any space left after all grow children reach their
+maxima. If minima do not fit, they are preserved and content overflows. These
+constraints do not add runtime reflow. Layouts with explicit alignment or size
+constraints reject bounded dynamic child positions or grow sizes that they would
+overwrite; when these fields are omitted, the legacy path remains permissive.
+Move the enclosing group when the compiled arrangement should move together.
+
+## Text
+
+Static scene text supports `text_line_space` (0–4096 extra pixels between rows)
+and `text_vertical_align` (`auto`, `top`, `center`, `bottom`). Alignment applies
+to the complete visible text block, including empty rows. `auto` keeps
+single-line text centered and multiline text top-aligned. The values are applied
+at compile time and add no runtime text-layout work.
+
+Non-default spacing or vertical alignment requires unbound scene text, `input`
+disabled and literal `w/h`. Text bindings, input fields, template text and
+bounded dynamic `w/h` reject these non-default values. Color and visibility
+bindings remain available.
+
+## Images
+
+The `image` widget's `image_opacity` (0–255, default 255) affects image pixels
+without changing the widget background or border. It also applies to ordinary
+template image blits. A fixed, non-animated raster can combine image opacity
+with runtime fit, scaling and rotation when `opacity` is static 255 (the default), the
+effective codec is unset (`codec` omitted, `auto` or `default`) or `store`, and
+`store_scale` is 1. With `codec` omitted, the legacy `compress: true` setting
+selects a lossless container and cannot use this conversion. Dynamic image sources,
+template `dynamic_image`, animated assets and SVG do not use opacity baking;
+combinations that require baking produce a compiler error.
+
+When baking is used, the compiler multiplies source alpha by `image_opacity / 255`
+and emits a lossless `store` resource variant, without the profile's automatic
+compression policy. The alpha plane and multiple opacity variants can increase
+resource size; identical encoded payloads are deduplicated. Runtime transforms
+then use the baked alpha without an extra opacity operation.
+
+For a translucent raster image, literal `rotation: 0` is normalized to no
+runtime rotation property and emits a warning. Opaque images retain their
+rotation property at zero. A bounded dynamic rotation remains a runtime
+property even when its default is zero.
 
 ## Field decisions
 
@@ -149,8 +264,7 @@ The declaration determines which properties are generated:
 - Raster images use dynamic `x`/`y`, `rotation` and `scalable` for position, rotation and scale; use literals for `w`/`h`/`opacity`/`radius`. Scene SVG images also support bounded `w`/`h`; template images use literals for all four fields.
 - Dynamic `x`/`y` translate the object and its subtree. Dynamic `w`/`h`/`radius`/`opacity` affect the object's own drawing; they do not relayout children or apply opacity to an entire subtree as a unit.
 - A layer's dynamic `w`/`h`/`radius`/`opacity` controls its background fill; declare a background color when using these properties.
-- Widget values, text, colors, visibility and template-instance properties have their own declarations and APIs. Use the relevant widget example and generated headers instead of extrapolating from a runtime-update marker.
-
+- Widget values, text, colors, visibility and template-instance properties each have their own declarations and APIs.
 
 The field tables distinguish scene objects from template members. “Own fill”
 means the property controls the object's background; text, images and children

@@ -37,16 +37,18 @@ products that need predictable memory use and reviewable UI sources.
 
 Create the smallest complete example directly from the ESP Component Registry:
 
+<!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.4.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.5.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
+<!-- /gsp-version:registry-example -->
 
 The example includes checked profiles for ESP32-C3, ESP32-S3, ESP32-P4 and
 ESP32-S31. Select the profile that matches the real board and verify its panel
 pins and timings before flashing. See the
-[`hello_world` instructions](examples/hello_world/README.md) for preview and
+[`hello_world` instructions](examples/usage/hello_world/README.md) for preview and
 build commands.
 
 Compiler setup uses the active ESP-IDF Python environment. A matching `gspc`
@@ -59,10 +61,12 @@ pinning, offline use and recovery from installation errors.
 
 From the ESP-IDF project root:
 
+<!-- gsp-version:dependency-command -->
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.4.0"
+idf.py add-dependency "espressif/esp-gsp^1.5.0"
 python -m pip install -U esp-gsp-tools
 ```
+<!-- /gsp-version:dependency-command -->
 
 Create scene JSON files under the project-level `scenes/` directory. Give an
 element a stable `name` when the application must update it, and add a
@@ -111,6 +115,7 @@ integration and display startup code.
 |---|---|
 | Install and run the first scene | [Getting Started](docs/en/getting-started.md) |
 | Understand the recommended workflow | [Development workflow](docs/en/guide/workflow.md) |
+| Build and verify UI with a coding agent | [Agent-assisted UI development](docs/en/guide/agent-assisted-ui.md) |
 | Author JSON and choose fields | [Scene guide](docs/en/guide/scenes.md) and [field reference](docs/en/reference/authoring.md) |
 | Learn a control | [Widget library](docs/en/components/index.md) |
 | Connect application state | [Runtime and generated API](docs/en/guide/runtime-api.md) |
@@ -122,8 +127,8 @@ integration and display startup code.
 
 The [documentation index](docs/README.md) links the complete English and
 Simplified Chinese documentation sets. The repository also contains the
-[`showcase`](examples/showcase/README.md) product demo and the
-[`benchmark`](examples/benchmark/README.md) hardware workload.
+[product scenarios](examples/scenarios/README.md) and the
+[`benchmark`](examples/performance/benchmark/README.md) hardware workload.
 
 ## Choose the integration path
 

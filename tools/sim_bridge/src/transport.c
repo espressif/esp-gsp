@@ -63,8 +63,11 @@ struct gsp_ui_core {
     bridge_socket socket;
     uint32_t request_id;
     bool failed, polling;
-    bool media_enabled, image_enabled, widget_enabled, fence_enabled, pointer_enabled, api_extensions_v2, drawing, closing;
+    bool media_enabled, image_enabled, widget_enabled, fence_enabled, pointer_enabled;
+    bool canvas_patch_enabled, drawing, closing;
+    uint8_t api_version;
     bool read_timeout;
+    bool component_motion_enabled, component_events_enabled;
     bool draining_canvas, canvas_queue_closed;
     char read_header[4096];
     size_t header_used, body_size, body_used;
@@ -78,6 +81,10 @@ struct gsp_ui_core {
     void *callback_ctx;
     esp_gsp_event_t events[EVENT_LIMIT];
     unsigned head, count;
+    esp_gsp_component_event_cb_t component_callback;
+    void *component_callback_ctx;
+    esp_gsp_component_event_t component_events[EVENT_LIMIT];
+    unsigned component_head, component_count;
     esp_gsp_pointer_observer_cb_t pointer_observer;
     void *pointer_observer_ctx;
     struct bridge_pointer_sample pointers[POINTER_LIMIT];
@@ -101,17 +108,25 @@ bool bridge_media_enabled(esp_gsp_handle_t ui)
 {
     return ui && ui->media_enabled;
 }
+bool bridge_canvas_patch_enabled(esp_gsp_handle_t ui)
+{
+    return ui && ui->canvas_patch_enabled;
+}
 bool bridge_pointer_enabled(esp_gsp_handle_t ui)
 {
     return ui && ui->pointer_enabled;
 }
 bool bridge_api_extensions_v2(esp_gsp_handle_t ui)
 {
-    return ui && ui->api_extensions_v2;
+    return ui && ui->api_version >= 2;
 }
 bool bridge_widget_enabled(esp_gsp_handle_t ui)
 {
     return ui && ui->widget_enabled;
+}
+bool bridge_component_motion_enabled(esp_gsp_handle_t ui)
+{
+    return ui && ui->component_motion_enabled;
 }
 void bridge_set_pointer_observer(esp_gsp_handle_t ui,
                                  esp_gsp_pointer_observer_cb_t cb, void *user_ctx)
@@ -314,6 +329,27 @@ int64_t bridge_json_number(const char *json, const char *key, int64_t fallback)
     char *end;
     int64_t value = strtoll(p, &end, 10);
     return end == p || (*end && !strchr(",}] \r\n\t", *end)) ? fallback : value;
+}
+
+bool bridge_json_motion(const char *json, esp_gsp_component_motion_t *out)
+{
+    const char *state = field(json, "state");
+    if (state == NULL || *state != '{') {
+        return false;
+    }
+    int64_t value = bridge_json_number(state, "value", -1);
+    int64_t target = bridge_json_number(state, "target", -1);
+    int64_t dragging = bridge_json_number(state, "dragging", -1);
+    int64_t settling = bridge_json_number(state, "settling", -1);
+    if (value < 0 || value > UINT16_MAX || target < 0 || target > UINT16_MAX ||
+            (dragging != 0 && dragging != 1) || (settling != 0 && settling != 1)) {
+        return false;
+    }
+    *out = (esp_gsp_component_motion_t) {
+        .value = (uint16_t)value, .target = (uint16_t)target,
+        .dragging = dragging != 0, .settling = settling != 0,
+    };
+    return true;
 }
 
 char *bridge_json_quote(const char *text)
@@ -554,7 +590,34 @@ static bool notification(esp_gsp_handle_t ui, const char *body)
         return false;
     }
     esp_gsp_event_t event = {0};
-    if (!strncmp(method, "\"callback\"", 10)) {
+    if (!strncmp(method, "\"component_event\"", 17)) {
+        if (ui->component_callback == NULL) {
+            return true;
+        }
+        int64_t scene = bridge_json_number(params, "scene_id", -1);
+        if (scene < 0 || scene > UINT16_MAX) {
+            return false;
+        }
+        if (scene != ui->scene) {
+            return true; /* Never deliver a previous scene's completion. */
+        }
+        int64_t key = bridge_json_number(params, "component_key", -1);
+        int64_t kind = bridge_json_number(params, "kind", -1);
+        int64_t flags = bridge_json_number(params, "flags", -1);
+        esp_gsp_component_event_t component = {0};
+        if (key < 0 || key > UINT32_MAX || kind < 0 || kind > UINT8_MAX ||
+                flags < 0 || flags > UINT16_MAX ||
+                !bridge_json_motion(params, &component.state) ||
+                ui->component_count == EVENT_LIMIT) {
+            return false;
+        }
+        component.key = (uint32_t)key;
+        component.scene_id = (uint16_t)scene;
+        component.kind = (gsp_component_kind_t)kind;
+        component.flags = (uint16_t)flags;
+        ui->component_events[(ui->component_head + ui->component_count++) % EVENT_LIMIT] = component;
+        return true;
+    } else if (!strncmp(method, "\"callback\"", 10)) {
         event.type = ESP_GSP_EVENT_CALL;
         event.action_id = (uint16_t)bridge_json_number(params, "action_id", 0);
         event.arg = (uint32_t)bridge_json_number(params, "arg", 0);
@@ -565,6 +628,7 @@ static bool notification(esp_gsp_handle_t ui, const char *body)
         event.type = ESP_GSP_EVENT_SCENE_CHANGED;
         event.scene_id = (uint16_t)bridge_json_number(params, "to", ui->scene);
         ui->scene = event.scene_id;
+        ui->component_head = ui->component_count = 0;
         bridge_media_scene_changed(ui);
     } else if (!strncmp(method, "\"pointer\"", 9)) {
         int64_t x = bridge_json_number(params, "x", INT32_MIN);
@@ -698,7 +762,9 @@ esp_gsp_err_t bridge_binary(esp_gsp_handle_t ui, const char *headers, const void
             if (!bridge_json_number(params, "ok", 0) && rc == ESP_GSP_OK) {
                 rc = ESP_GSP_FAIL;
             }
-            if (rc != ESP_GSP_OK) {
+            bool patch_cache_miss = rc == ESP_GSP_ERR_NOT_FOUND &&
+                                    strstr(headers, "X-GSP-Canvas-Payload: patch") != NULL;
+            if (rc != ESP_GSP_OK && !patch_cache_miss) {
                 fprintf(stderr, "sim_bridge: binary upload rejected: %s\n", body);
             }
             free(body); return rc;
@@ -726,6 +792,9 @@ esp_gsp_err_t bridge_scalar(esp_gsp_handle_t ui, unsigned op, const uint32_t arg
     }
     if (op >= GSP_BRIDGE_COMPONENT_SET_COLOR_RGB888 &&
             !bridge_api_extensions_v2(ui)) {
+        return ESP_GSP_ERR_NOT_SUPPORTED;
+    }
+    if (op >= GSP_BRIDGE_COMPONENT_SET_POSITION && ui->api_version < 3) {
         return ESP_GSP_ERR_NOT_SUPPORTED;
     }
     char params[320];
@@ -834,7 +903,11 @@ esp_gsp_err_t gsp_sim_bridge_open(const char *endpoint, esp_gsp_handle_t *out)
     ui->widget_enabled = bridge_json_number(caps, "bridge_widget_version", 0) == 1;
     ui->fence_enabled = bridge_json_number(caps, "bridge_fence_version", 0) == 1;
     ui->pointer_enabled = bridge_json_number(caps, "bridge_pointer_version", 0) == 1;
-    ui->api_extensions_v2 = bridge_json_number(caps, "bridge_api_version", 1) >= 2;
+    ui->canvas_patch_enabled = bridge_json_number(caps, "bridge_canvas_patch_version", 0) == 1;
+    int64_t api_version = bridge_json_number(caps, "bridge_api_version", 1);
+    ui->api_version = api_version >= 3 ? 3 : api_version >= 2 ? 2 : 1;
+    ui->component_motion_enabled = bridge_json_number(caps, "component_motion_version", 0) == 1;
+    ui->component_events_enabled = bridge_json_number(caps, "component_events_version", 0) == 1;
     free(caps);
     *out = ui;
     return ESP_GSP_OK;
@@ -854,6 +927,49 @@ esp_gsp_err_t esp_gsp_on_event(esp_gsp_handle_t ui, esp_gsp_event_cb_t cb, void 
         return ESP_GSP_ERR_INVALID_ARG;
     }
     ui->callback = cb; ui->callback_ctx = ctx;
+    return ESP_GSP_OK;
+}
+
+esp_gsp_err_t esp_gsp_on_component_event(esp_gsp_handle_t ui,
+        esp_gsp_component_event_cb_t cb, void *ctx)
+{
+    if (ui == NULL) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    if (ui->drawing || ui->closing || ui->failed) {
+        return ESP_GSP_ERR_INVALID_STATE;
+    }
+    if (!ui->component_events_enabled || !ui->fence_enabled) {
+        return ESP_GSP_ERR_NOT_SUPPORTED;
+    }
+    /* Backend defaults intentionally omit this optional notification so old
+     * bridge clients never receive an unknown event kind. */
+    char *reply = bridge_rpc(ui, cb != NULL ? "subscribe" : "unsubscribe",
+                             "{\"events\":[\"component_event\"]}");
+    if (reply == NULL) {
+        return ESP_GSP_FAIL;
+    }
+    const char *events = field(reply, cb != NULL ? "subscribed" : "unsubscribed");
+    bool accepted = false;
+    if (events != NULL && *events == '[') {
+        events = space(events + 1);
+        accepted = !strncmp(events, "\"component_event\"", 17) &&
+                   *space(events + 17) == ']';
+    }
+    free(reply);
+    if (!accepted) {
+        return ESP_GSP_FAIL;
+    }
+    /* The host broadcasts component events before retiring render fences.
+     * Drain the old stream without business callbacks before changing its
+     * local subscriber, including when called from within poll's callback. */
+    esp_gsp_err_t result = esp_gsp_flush(ui, RPC_TIMEOUT_MS);
+    if (result != ESP_GSP_OK) {
+        return result;
+    }
+    ui->component_head = ui->component_count = 0;
+    ui->component_callback = cb;
+    ui->component_callback_ctx = ctx;
     return ESP_GSP_OK;
 }
 
@@ -903,7 +1019,7 @@ esp_gsp_err_t gsp_sim_bridge_poll(esp_gsp_handle_t ui, uint32_t timeout_ms)
             wait = t->due > now ? (uint32_t)(t->due - now) : 0;
         }
     }
-    if (ui->count || ui->pointer_count || bridge_media_pending(ui) || bridge_images_pending(ui)) {
+    if (ui->count || ui->component_count || ui->pointer_count || bridge_media_pending(ui) || bridge_images_pending(ui)) {
         wait = 0;
     }
     if (!fence_writes(ui, gsp_sim_bridge_time_ms() + RPC_TIMEOUT_MS)) {
@@ -925,6 +1041,15 @@ esp_gsp_err_t gsp_sim_bridge_poll(esp_gsp_handle_t ui, uint32_t timeout_ms)
         ui->head = (ui->head + 1) % EVENT_LIMIT; --ui->count;
         if (ui->callback) {
             ui->callback(ui, &event, ui->callback_ctx);
+        }
+    }
+    budget = EVENT_LIMIT;
+    while (ui->component_count && budget-- && !ui->failed) {
+        esp_gsp_component_event_t event = ui->component_events[ui->component_head];
+        ui->component_head = (ui->component_head + 1) % EVENT_LIMIT;
+        --ui->component_count;
+        if (ui->component_callback && event.scene_id == ui->scene) {
+            ui->component_callback(ui, &event, ui->component_callback_ctx);
         }
     }
     budget = POINTER_LIMIT;

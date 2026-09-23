@@ -35,11 +35,11 @@ To try a bundled example without creating an adapter, run from the same root:
 
 ```sh
 python managed_components/espressif__esp-gsp/tools/sim_bridge/run.py \
-  --project managed_components/espressif__esp-gsp/examples/hello_world/pc
+  --project managed_components/espressif__esp-gsp/examples/usage/hello_world/pc
 ```
 
-Replace `hello_world` with `benchmark` or `sim_bridge_media` for the other
-examples. For an unpacked component, use its `tools/sim_bridge/run.py` path
+Use `examples/performance/benchmark/pc` or `examples/usage/sim_bridge_media/pc`
+for the other backends. For an unpacked component, use its `tools/sim_bridge/run.py` path
 instead. Run from a writable application/work directory: default output is
 `./build/sim_bridge/<project-parent>/<project-name>`, not inside the component.
 The native build itself does not require an active ESP-IDF environment.
@@ -230,6 +230,7 @@ advance frames as soon as the Backend connects.
 | Bind value/color/visibility/toggle reads | Host scalar extension |
 | Component info; value/color/visible/checked/enabled reads and writes | Supported; integer writes reuse `set_component_i32` |
 | Component text; scalar property get/set; RGB888 color helpers | Supported; original tagged scalar types retained |
+| Atomic component position setter | Supported with `bridge_api_version: 3` |
 | Bind/component value/color animations; scalar property animations and `*_to`; bounded property play/stop | Executed by GSP inside sim_host |
 | Press-feedback policy and generated effective-visibility queries | Supported with `bridge_api_version: 2`; visibility descriptors are copied over the Backend boundary |
 | Events and timer create/delete | Native callback/context storage and event loop |
@@ -243,13 +244,17 @@ advance frames as soon as the Backend connects.
 | Canvas push/push-dirty, draw callback, invalidate/invalidate-dirty, stop | Full-frame upload; draw callbacks use the PC offscreen adaptation below; requires media version 1 |
 | Canvas try-push/try-push-dirty | Eight-frame local queue, deferred upload and release; requires media version 1 |
 | Flush | Host render-attempt fence after local Canvas work has been polled; requires fence version 1 |
-| Generic enum-based component get/set, batch/position APIs, input/render observers, device startup | Not implemented by this library |
+| Generic enum-based component get/set, arbitrary batches, position reads/relative moves, input/render observers, device startup | Not implemented by this library |
 
 `bridge_api_version: 2` is required for the RGB888 helpers,
 `esp_gsp_component_play_animation()` / `stop_animation()`, press-feedback
 policy, and `esp_gsp_query_visibility()`. Older version-1 hosts continue to
 run the prior subset; these newer calls return `ESP_GSP_ERR_NOT_SUPPORTED`
 without sending an unknown RPC.
+
+`esp_gsp_component_set_position()` requires `bridge_api_version: 3`. Both
+coordinates are validated and submitted as one core operation. Older hosts
+return `ESP_GSP_ERR_NOT_SUPPORTED` without sending an unknown operation.
 
 Only exported implementations are linkable. Unsupported public C functions
 produce a link error, not a success stub. The shared headers describe the
@@ -395,7 +400,7 @@ are not reproduced. This is a UI logic preview, not a Canvas performance test.
 > or performance.
 
 The target is an image resource with an authored bind, not a new JSON widget
-type. In the [media scene](../../examples/sim_bridge_media/scenes/media.json),
+type. In the [media scene](../../examples/usage/sim_bridge_media/scenes/media.json),
 the `surface` image uses `"codec": "lossless"` and `"bind": "surface"` with an
 opaque source. The build profile chooses RGB565/RGB888; the generated header
 provides `GSP_BIND_SURFACE` for registration. The callback's dimensions are
@@ -412,8 +417,12 @@ again when entering a scene. A successful explicit push also disables the
 draw callback for that target. Successful `canvas_stop` unregisters the local
 callback immediately; restoring the authored image on the host is queued.
 
-`canvas_push` / `canvas_push_dirty` synchronously upload a full frame, even
-when a dirty rectangle is supplied. Height must match the target, stride
+`canvas_push` / `canvas_push_dirty` synchronously consume a full native source
+frame. With `bridge_canvas_patch_version: 1`, the first update and large dirty
+regions upload a full keyframe; later dirty regions covering at most roughly
+75% of the frame are packed and transferred row-by-row. The host reconstructs
+the complete backing frame, and the bridge automatically falls back to a
+keyframe after reset, scene changes, stop, or cache mismatch. Height must match the target, stride
 must cover a full row, and dirty bounds must stay inside the canvas. A scene
 tag rejects uploads prepared for another scene, and the queued host command
 checks scene and buffer size again before use. Total payload is at most
@@ -433,7 +442,8 @@ and immutable through bridge close, or supply a callback for reusable buffers.
 Queue-full returns
 `ESP_GSP_ERR_TIMEOUT` without taking ownership or calling release. Basic
 argument errors are rejected immediately; target dimensions, stride and dirty
-bounds are checked during upload. Even dirty pushes need the entire frame.
+bounds are checked during upload. Dirty pushes still require the entire native
+source frame to remain valid, although their wire payload can be much smaller.
 An accepted push disables the target's local draw callback immediately.
 
 Poll uploads queued frames; synchronous RPC-backed GSP calls first drain
@@ -507,8 +517,8 @@ flush(0). Closing discards outstanding fences without claiming completion.
   **not** the full board benchmark, Canvas/media producers, page cycling,
   dynamic list fixtures or timing measurements.
 - `sim_bridge_media` provides portable C List/Grid binders, QOI images and
-  an offscreen Canvas draw callback; see its [README](../../examples/sim_bridge_media/README.md).
-- `showcase` and widget examples provide scene JSON previews rather than native
+  an offscreen Canvas draw callback; see its [README](../../examples/usage/sim_bridge_media/README.md).
+- Widget examples provide scene JSON previews rather than native
   business backends. Use `hello_world`, `benchmark` or `sim_bridge_media` as a
   starting point when adapting C application logic to the bridge.
 
@@ -516,7 +526,7 @@ Run a bounded smoke test of the published media example from your application ro
 
 ```sh
 python managed_components/espressif__esp-gsp/tools/sim_bridge/run.py \
-  --project managed_components/espressif__esp-gsp/examples/sim_bridge_media/pc \
+  --project managed_components/espressif__esp-gsp/examples/usage/sim_bridge_media/pc \
   --headless --duration 3
 ```
 
@@ -526,3 +536,28 @@ also test navigation, buffer lifetimes and clean shutdown. Use the published
 [simulator API](../../docs/en/reference/simulator.md) for input injection and
 screenshot assertions. Validate on each deployment host platform; native
 preview is not a substitute for device timing and hardware validation.
+
+## Python protocol client and regression checks
+
+[rpc_client.py](rpc_client.py) is a small sequential client shared by the
+documentation and live integration tests. It handles Content-Length framing,
+partial reads, EOF and interleaved notifications. Run scripts from the repository
+root with `PYTHONPATH=tools/sim_bridge python3 your_script.py`; for an installed
+component, use that component's `tools/sim_bridge` directory instead.
+`connect()` owns the socket and receiver lifetime. `Peer.call()` returns the full
+JSON-RPC response, including errors; check `error` and any `result_code`.
+Use one calling thread per connection. `notification()` returns the next queued
+notification; passing a method returns its params. The default wait is 8 seconds;
+`timeout=None` supports an idle backend event loop.
+
+From the repository root:
+
+```sh
+python3 -m unittest discover -s tools/sim_bridge/tests -p test_rpc_client.py -v
+python3 tools/sim_bridge/tests/visibility_integration.py \
+  --host /absolute/path/to/gsp_sim_host --gspc /absolute/path/to/gspc
+```
+
+The visibility check compiles a temporary hello scene and tests real WASI
+visible/offscreen/wrong-scene/error results, plus API and Browser rejection both
+with and without Backend enabled. It leaves the public protocol unchanged.

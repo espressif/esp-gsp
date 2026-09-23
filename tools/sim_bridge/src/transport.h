@@ -18,9 +18,12 @@ esp_gsp_err_t bridge_scalar(esp_gsp_handle_t ui, unsigned op, const uint32_t arg
 struct bridge_media;
 struct bridge_media **bridge_media_slot(esp_gsp_handle_t ui);
 bool bridge_media_enabled(esp_gsp_handle_t ui);
+bool bridge_canvas_patch_enabled(esp_gsp_handle_t ui);
 bool bridge_pointer_enabled(esp_gsp_handle_t ui);
 bool bridge_api_extensions_v2(esp_gsp_handle_t ui);
 bool bridge_widget_enabled(esp_gsp_handle_t ui);
+bool bridge_component_motion_enabled(esp_gsp_handle_t ui);
+bool bridge_json_motion(const char *json, esp_gsp_component_motion_t *out);
 void bridge_set_pointer_observer(esp_gsp_handle_t ui,
                                  esp_gsp_pointer_observer_cb_t cb, void *user_ctx);
 bool bridge_media_pending(esp_gsp_handle_t ui);

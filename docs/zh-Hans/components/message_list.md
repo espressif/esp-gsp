@@ -8,14 +8,15 @@
 
 ## 本地交互预览
 
-[安装 `esp-gsp-tools`](../guide/simulator-preview.md) 后，在解压后的组件或公共仓库根目录运行：
+先按[兼容性页的工具命令](../reference/compatibility.md#工具命令)配置 `gspc` 和
+`gsp_sim_host`，再在解压后的组件或公共仓库根目录运行：
 
 ```sh
 mkdir -p gsp-out/widget-preview
-python -m gsp.execute --version 0.5.0 gspc pack \
-  examples/widgets/message_list/message_list.json \
+gspc pack \
+  examples/usage/widgets/message_list/message_list.json \
   --deployable -o gsp-out/widget-preview/message_list.gspb
-python -m gsp.execute --version 1.4.0 sim \
+gsp_sim_host \
   --bundle gsp-out/widget-preview/message_list.gspb
 ```
 
@@ -37,7 +38,7 @@ GSPC 将组合组件编译为原生基础图元，并为命名元素生成连接
   "w": 480,
   "h": 320,
   "screen_bg": "#101827",
-  "font": "../../common/fonts/DejaVuSans.ttf",
+  "font": "../../../common/fonts/DejaVuSans.ttf",
   "font_charset": " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,?—'",
   "objects": [
     {
@@ -101,7 +102,7 @@ GSPC 将组合组件编译为原生基础图元，并为命名元素生成连接
 }
 ```
 
-该文件来自 `examples/widgets/message_list/message_list.json`。复制时请一并复制它引用的相对资源。
+该文件来自 `examples/usage/widgets/message_list/message_list.json`。复制时请一并复制它引用的相对资源。
 
 ## 此示例生成的 C API
 
@@ -156,13 +157,13 @@ size_t gsp_message_list_docs_dynamic_image_slots(void)
 | `outgoing_color` | `color` | — | 默认 #246BFD | — | 发送消息气泡颜色 |
 | `message_text_color` | `color` | — | 默认 #111827 | — | 消息文字颜色 |
 | `outgoing_text_color` | `color` | — | 默认 #FFFFFF | — | 发送消息文字颜色 |
-| `bubble_radius` | `int` | — | 0…1024 | — | 消息气泡圆角半径 |
-| `bubble_padding_x` | `int` | — | 0…1024 | — | 气泡水平内边距 |
-| `bubble_padding_y` | `int` | — | 0…1024 | — | 气泡垂直内边距 |
-| `message_gap` | `int` | — | 0…1024 | — | 消息间距 |
-| `side_margin` | `int` | — | 0…4096 | — | 消息两侧外边距 |
-| `max_bubble_width` | `int` | — | 0…32767 | — | 气泡最大宽度 |
-| `max_message_height` | `int` | — | 16…32767 | — | 消息最大高度 |
+| `bubble_radius` | `int` | — | 默认 14; 0…1024 | — | 消息气泡圆角半径 |
+| `bubble_padding_x` | `int` | — | 默认 14; 0…1024 | — | 气泡水平内边距 |
+| `bubble_padding_y` | `int` | — | 默认 10; 0…1024 | — | 气泡垂直内边距 |
+| `message_gap` | `int` | — | 默认 8; 0…1024 | — | 消息间距 |
+| `side_margin` | `int` | — | 默认 12; 0…4096 | — | 消息两侧外边距 |
+| `max_bubble_width` | `int` | — | 默认 0; 0…32767 | — | 气泡最大宽度；0 或省略时取视口宽度的 76% |
+| `max_message_height` | `int` | — | 默认 320; 16…32767 | — | 消息最大高度 |
 | `font_size` | `int` | — | 1…255 | — | 单个对象的字体像素尺寸 |
 
 <details><summary>查看此控件支持的其他字段</summary>
@@ -175,7 +176,7 @@ size_t gsp_message_list_docs_dynamic_image_slots(void)
 | `font` | `path` | — | — | — | 单个对象的 TTF/OTF 字体覆盖路径 |
 | `font_charset` | `string` | — | — | — | 运行时绑定消息文字可使用的字形 |
 | `scroll_snapshot` | `bool` | — | 默认 `true` | — | 滚动时缓存两个视口帧；内存不足时回退到实时渲染 |
-| `item_height` | `int` | — | 默认 0; 0…65535 | — | 行高 |
+| `item_height` | `int` | — | 默认 0; 0…65535 | — | 消息最小行高；0 或省略时为 2 × bubble_padding_y + message_gap + 1 |
 | `enabled` | `bool` | — | — | — | 初始交互状态；设置后会公开可由后代控件继承的运行时 enabled 属性 |
 | `disabled_color` | `color` | — | 默认 #808080 | — | 禁用态覆盖颜色 |
 | `disabled_opacity` | `int` | — | 默认 112; 0…255 | — | 禁用态覆盖透明度 |

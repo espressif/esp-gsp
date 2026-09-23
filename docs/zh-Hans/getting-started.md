@@ -12,11 +12,13 @@ GSP 创建和资源校验同步运行在调用者任务中。新工程可先采�
 
 如果希望先体验 ESP-GSP，再集成到现有工程，可以直接创建维护示例：
 
+<!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.4.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.5.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
+<!-- /gsp-version:registry-example -->
 
 随后根据示例 `README.md` 选择模拟器预览或匹配的开发板配置。本文其余部分介绍
 如何把 ESP-GSP 集成到现有应用。
@@ -37,26 +39,32 @@ python -m pip install -U esp-gsp-tools
 
 ### Component Registry 命令
 
+<!-- gsp-version:dependency-command -->
 ```sh
 cd /path/to/your/esp-idf-project
-idf.py add-dependency "espressif/esp-gsp^1.4.0"
+idf.py add-dependency "espressif/esp-gsp^1.5.0"
 ```
+<!-- /gsp-version:dependency-command -->
 
 ### `idf_component.yml`
 
+<!-- gsp-version:dependency-manifest -->
 ```yaml
 dependencies:
-  espressif/esp-gsp: "^1.4.0"
+  espressif/esp-gsp: "^1.5.0"
 ```
+<!-- /gsp-version:dependency-manifest -->
 
 ### 本地覆盖
 
+<!-- gsp-version:local-override -->
 ```yaml
 dependencies:
   espressif/esp-gsp:
-    version: "^1.4.0"
+    version: "^1.5.0"
     override_path: /absolute/path/to/esp-gsp
 ```
+<!-- /gsp-version:local-override -->
 
 `override_path` 用于框架开发。正式产品通常应锁定 Registry 版本，使依赖可复现。
 
@@ -73,18 +81,20 @@ python -m pip install -U esp-gsp-tools
 ESP-IDF 工程指定其他版本，可在工程根目录创建 `.gspc_version`；工程标记优先于
 组件标记：
 
+<!-- gsp-version:compiler-pin -->
 ```sh
-echo '0.5.0' > .gspc_version # 指定使用 0.5.0 版本的 GSPC
+echo '0.6.0' > .gspc_version
 idf.py build
 ```
+<!-- /gsp-version:compiler-pin -->
 
 > [!TIP]
 >
-> 如果无法安装管理器或不希望自动下载，可参考 [兼容性](./reference/compatibility.md)
+> 如果无法安装管理器或不希望自动下载，可参考 [兼容性](reference/compatibility.md)
 > ，解压到稳定工具目录，再通过环境变量或 CMake 参数指定覆盖：
 >
 > ```shell
-> GSPC_EXECUTABLE=/absolute/path/to/gspc
+> export GSPC_EXECUTABLE=/absolute/path/to/gspc
 > # CMake 中也可以通过以下方式覆盖
 > idf.py -D GSPC_EXECUTABLE=/absolute/path/to/gspc build
 > ```
@@ -159,17 +169,6 @@ gsp_add_bundle(${COMPONENT_LIB}
   "screen_bg": "#101820",
   "objects": [
     {
-      "type": "label",
-      "parent": -1,
-      "x": 24,
-      "y": 28,
-      "w": 272,
-      "h": 32,
-      "text": "ESP-GSP",
-      "font_size": 26,
-      "fg_color": "#F8FAFC"
-    },
-    {
       "type": "progress",
       "parent": -1,
       "name": "load",
@@ -195,7 +194,10 @@ gsp_add_bundle(${COMPONENT_LIB}
 }
 ```
 
-只有应用需要访问的对象才设置 `name`；只有必须进入产品逻辑的动作才设置 `callback`。装饰对象无需命名，也不会生成多余 API。
+这个场景使用 Progress 和 Toggle，不依赖字体或图片；添加文字时按
+[字体说明](guide/media-and-data.md#静态图片与字体)配置字体。
+为应用需要访问的对象设置 `name`，需要产品逻辑响应的动作设置 `callback`。
+装饰对象无需命名，也不会生成多余 API。
 
 ## 随工程编译场景
 
@@ -360,6 +362,6 @@ python -m gsp.execute --version '<ESP-GSP version>' sim --bundle product.gspb \
 - 从[控件库](components/index.md)复制并预览完整例子。
 
 > [!TIP]
-> **从维护例程开始：**`examples/hello_world` 是最小完整板级集成；
-> `examples/showcase` 覆盖控件、媒体、保留态导航、数据集合和转场。
+> **从维护例程开始：**`examples/usage/hello_world` 是最小完整板级集成；
+> `examples/scenarios` 提供贴合目标硬件分辨率的产品界面；`examples/usage` 展示控件、媒体、导航和数据绑定。
 > 例程引脚与时序只是示例，烧录前必须与实际硬件一致。

@@ -14,11 +14,13 @@ application updates the UI through the generated C API.
 If you want to evaluate ESP-GSP before integrating it, start with the maintained
 example:
 
+<!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.4.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.5.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
+<!-- /gsp-version:registry-example -->
 
 Then follow the example's `README.md` for a simulator preview or a matching
 board profile. The rest of this guide explains how to integrate ESP-GSP into an
@@ -41,16 +43,20 @@ orientation.
 
 From the ESP-IDF project root:
 
+<!-- gsp-version:dependency-command -->
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.4.0"
+idf.py add-dependency "espressif/esp-gsp^1.5.0"
 ```
+<!-- /gsp-version:dependency-command -->
 
 The equivalent component manifest entry is:
 
+<!-- gsp-version:dependency-manifest -->
 ```yaml
 dependencies:
-  espressif/esp-gsp: "^1.4.0"
+  espressif/esp-gsp: "^1.5.0"
 ```
+<!-- /gsp-version:dependency-manifest -->
 
 For a local ESP-GSP component directory, use Component Manager `override_path`
 or add it to `EXTRA_COMPONENT_DIRS`. Keep only one selected component copy in a
@@ -72,20 +78,22 @@ compatible with the current GSP release at publish time. To override the GSPC
 version for an IDF project, create `.gspc_version` in the project root; the
 project marker takes precedence over the component marker:
 
+<!-- gsp-version:compiler-pin -->
 ```sh
-echo '0.5.0' > .gspc_version # Pin GSPC 0.5.0
+echo '0.6.0' > .gspc_version
 idf.py build
 ```
+<!-- /gsp-version:compiler-pin -->
 
 > [!TIP]
 >
 > If the manager cannot be installed or automatic downloads are unsuitable, see
-> the [Compatibility contract](./reference/compatibility.md), unpack the
+> the [Compatibility contract](reference/compatibility.md), unpack the
 > archive into a stable tool directory, and override via an environment variable
 > or CMake argument:
 >
 > ```shell
-> GSPC_EXECUTABLE=/absolute/path/to/gspc
+> export GSPC_EXECUTABLE=/absolute/path/to/gspc
 > # You can also override via CMake:
 > idf.py -D GSPC_EXECUTABLE=/absolute/path/to/gspc build
 > ```
@@ -292,11 +300,11 @@ runtime precedence, memory trade-offs, and a clean-profile validation command.
 
 ## 8. Run the maintained example
 
-`examples/hello_world` is the smallest complete repository integration. For
+`examples/usage/hello_world` is the smallest complete repository integration. For
 the included ESP32-P4 profile:
 
 ```sh
-cd examples/hello_world
+cd examples/usage/hello_world
 idf.py -D SDKCONFIG_DEFAULTS=sdkconfig.defaults \
   set-target esp32p4 build
 idf.py flash monitor

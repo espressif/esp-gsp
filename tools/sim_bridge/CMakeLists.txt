@@ -33,6 +33,8 @@ if(GSP_SIM_BRIDGE_BUILD_TESTS)
     add_test(NAME bridge_transport
         COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_transport.py"
             "$<TARGET_FILE:bridge_test_client>")
+    add_test(NAME bridge_rpc_client
+        COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_rpc_client.py")
 endif()
 
 # Compile scenes and generated headers together using the component's tool
@@ -43,6 +45,8 @@ function(gsp_add_backend target)
         message(FATAL_ERROR "gsp_add_backend requires SOURCES and SCENES")
     endif()
     get_filename_component(component_root "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../.." ABSOLUTE)
+    include("${component_root}/cmake/gsp_example_assets.cmake")
+    gsp_example_assets_prepare("${component_root}" gsp_example_assets_target)
     # gsp_add_backend is called from the consumer's directory scope, not this
     # add_subdirectory scope. Load the values here for every backend target.
     include("${component_root}/cmake/gsp_compatibility_contract.cmake")
@@ -67,6 +71,7 @@ function(gsp_add_backend target)
             --profile "${profile}" --gen-dir "${generated}"
             --api-header "${generated}/bundle_gsp.h" --symbol bridge_bundle
             -o "${generated}/app.gspb"
+        DEPENDS ${gsp_example_assets_target}
         BYPRODUCTS "${generated}/bundle_gsp.h" "${generated}/app.gspb"
         VERBATIM)
     add_executable(${target} ${ARG_SOURCES}

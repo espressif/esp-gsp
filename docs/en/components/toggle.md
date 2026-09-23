@@ -8,15 +8,15 @@ Use it for a clear on/off or selected/unselected decision.
 
 ## Local interactive preview
 
-After [installing `esp-gsp-tools`](../guide/simulator-preview.md), run from an
-unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
+then run from an unpacked component or public repository root:
 
 ```sh
 mkdir -p gsp-out/widget-preview
-python -m gsp.execute --version 0.5.0 gspc pack \
-  examples/widgets/toggle/toggle.json \
+gspc pack \
+  examples/usage/widgets/toggle/toggle.json \
   --deployable -o gsp-out/widget-preview/toggle.gspb
-python -m gsp.execute --version 1.4.0 sim \
+gsp_sim_host \
   --bundle gsp-out/widget-preview/toggle.gspb
 ```
 
@@ -37,7 +37,7 @@ Give every object that application code must read or update a stable `name`. GSP
   "w": 480,
   "h": 320,
   "screen_bg": "#101827",
-  "font": "../../common/fonts/DejaVuSans.ttf",
+  "font": "../../../common/fonts/DejaVuSans.ttf",
   "objects": [
     {
       "type": "toggle",
@@ -111,7 +111,7 @@ Give every object that application code must read or update a stable `name`. GSP
 }
 ```
 
-This is `examples/widgets/toggle/toggle.json`. Copy any relative assets referenced by the scene with it.
+This is `examples/usage/widgets/toggle/toggle.json`. Copy any relative assets referenced by the scene with it.
 
 ## Generated C API for this example
 
@@ -160,6 +160,10 @@ These signatures come from the actual compiler output for this JSON.
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
+| `min_width` | `int` | — | 0…65535 | — | compile-time minimum width in px |
+| `max_width` | `int` | — | 0…65535 | — | compile-time maximum width in px |
+| `min_height` | `int` | — | 0…65535 | — | compile-time minimum height in px |
+| `max_height` | `int` | — | 0…65535 | — | compile-time maximum height in px |
 | `layout` | `enum` | — | `row`, `column` | — | child auto-layout: row/column |
 | `gap` | `int` | — | default 0; 0…4096 | — | auto-layout gap in px |
 | `padding` | `int` | — | default 0; 0…4096 | — | auto-layout padding in px |
@@ -169,13 +173,32 @@ These signatures come from the actual compiler output for this JSON.
 | `padding_bottom` | `int` | — | 0…4096 | — | column layout: trailing padding override |
 | `grow` | `int` | — | default 0; 0…100 | — | auto-layout grow weight |
 | `margin` | `int` | — | default 0; 0…4096 | — | auto-layout space on both child sides |
+| `margin_left` | `int` | — | 0…4096 | — | auto-layout leading margin on the x axis |
+| `margin_right` | `int` | — | 0…4096 | — | auto-layout trailing margin on the x axis |
+| `margin_top` | `int` | — | 0…4096 | — | auto-layout leading margin on the y axis |
+| `margin_bottom` | `int` | — | 0…4096 | — | auto-layout trailing margin on the y axis |
+| `align_main` | `enum` | — | `start`, `center`, `end`, `space_between` | — | auto-layout main-axis placement |
+| `align_cross` | `enum` | — | `start`, `center`, `end`, `stretch` | — | auto-layout cross-axis placement |
 | `hidden` | `bool` | — | default `false` | yes | start hidden (show via actions or set_visible) |
 | `opacity` | `int` | — | default 255; 0…255 | scene: —; template: — | 0-255 blend opacity |
 | `bg_gradient` | `color` | — | — | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | — | default vertical; `vertical`, `horizontal` | — | gradient direction |
 | `radius` | `int` | — | default 0; 0…65535 | scene: —; template: — | corner radius in px |
+| `shadow_color` | `color` | — | — | — | static hard-shadow color |
+| `shadow_opacity` | `int` | — | default 96; 0…255 | — | static hard-shadow opacity |
+| `shadow_offset_x` | `int` | — | -32768…32767 | — | static hard-shadow x offset |
+| `shadow_offset_y` | `int` | — | -32768…32767 | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | — | 0…4096 | — | static hard-shadow spread in px |
+| `shadow_radius` | `int` | — | 0…65535 | — | static hard-shadow corner radius |
 | `border_color` | `color` | — | — | — | border stroke color |
 | `border_width` | `int` | — | 0…65535 | — | border stroke width (needs border_color) |
+| `border_opacity` | `int` | — | default 255; 0…255 | — | border stroke opacity |
+| `outline_color` | `color` | — | — | — | outside outline color |
+| `outline_width` | `int` | — | default 0; 0…65535 | — | outside outline width |
+| `outline_opacity` | `int` | — | default 255; 0…255 | — | outside outline opacity |
+| `outline_pad` | `int` | — | default 0; 0…4096 | — | gap between the element and its outline |
+| `text_line_space` | `int` | — | default 0; 0…4096 | — | extra spacing between static text rows in px |
+| `text_vertical_align` | `enum` | — | default auto; `auto`, `top`, `center`, `bottom` | — | static text block placement; auto preserves single-line center and multiline top |
 | `text` | `string` | — | — | yes | static text content (UTF-8) |
 | `text_align` | `enum` | — | `left`, `center`, `right` | — | text alignment |
 | `overflow` | `enum` | — | default clip; `clip`, `ellipsis` | — | single-line overflow |
@@ -192,11 +215,13 @@ These signatures come from the actual compiler output for this JSON.
 | `svg_element` | `string` | — | — | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | `color` | — | — | — | SVG silhouette color; generates a runtime color setter |
 | `image` | `path` | — | — | yes | image file path (raster or compiled SVG) |
-| `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `store`, `qoi`, `rle16`, `default`, `hardware_jpeg` | — | image codec |
+| `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | image codec |
 | `quality` | `int` | — | 1…100 | — | JPEG quality 1-100 (omitted = profile default) |
+| `jpeg_quality` | `int` | — | 1…100 | — | legacy JPEG quality alias |
 | `compress` | `bool` | — | — | — | image compression toggle (legacy; prefer codec) |
+| `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | pre-scale factor applied when encoding |
-| `max_fps` | `int` | — | 1…120 | — | GIF/animation frame-rate cap (0 = uncapped) |
+| `max_fps` | `int` | — | 0…120 | — | GIF/animation frame-rate cap (0 = uncapped) |
 | `fit` | `enum` | — | default stretch; `stretch`, `fill`, `contain`, `cover` | — | image fit mode |
 | `position_x` | `number` | — | default 0.5; 0.0…1.0 | — | image fit horizontal alignment |
 | `position_y` | `number` | — | default 0.5; 0.0…1.0 | — | image fit vertical alignment |
@@ -210,7 +235,7 @@ These signatures come from the actual compiler output for this JSON.
 | `disabled_color` | `color` | — | default #808080 | — | disabled-state overlay color |
 | `disabled_opacity` | `int` | — | default 112; 0…255 | — | disabled-state overlay opacity |
 | `bind` | `identifier` | — | — | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
-| `bind_target` | `enum` | — | `visible`, `value`, `color`, `text`, `resource` | — | explicit bind state family |
+| `bind_target` | `enum` | — | `visible`, `value`, `color`, `text`, `resource`, `data` | — | explicit bind state family |
 | `callback` | `identifier` | — | — | — | app callback name; generates scene-qualified event helpers |
 | `events` | `action_list` | — | — | — | input bindings: [{event, action, ...}] |
 | `template` | `identifier` | — | — | — | declare this subtree as a render template |

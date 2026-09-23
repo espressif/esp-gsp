@@ -29,9 +29,11 @@ configuration. Bundle API headers apply the selected mode in their config helper
 
 `gsp_add_bundle(... IMAGE_CACHE_BYTES 262144)` sets an explicit runtime cache
 budget and the compiler's matching budget, including with an explicit `PROFILE`.
-The CLI equivalent is `--image-cache-bytes 262144`. Profile budgets are compile-time
-constraints; automatic runtime sizing also depends on available heap and its largest
-free block. Check the final firmware size separately from decoded-image memory.
+The CLI equivalent is `--image-cache-bytes 262144`. Setting only the Profile's
+`image_cache_budget_bytes` constrains compilation; the runtime still derives
+its budget automatically. Pass `IMAGE_CACHE_BYTES` when both budgets must match.
+Automatic sizing also depends on available heap and its largest free block.
+Check firmware size separately from decoded-image memory.
 
 With image caching enabled, the runtime synchronously prepares the scene's
 currently visible compiled compressed images before its first frame, then uses remaining cache space to prefetch hidden images. An
@@ -61,9 +63,37 @@ images and animation/vector buffers separately. Use `esp_gsp_media_stats()` to i
 runtime cache usage and peaks. `runtime_peak_bytes`
 is reserved for runtime measurements and is null in compiler-only reports.
 
-Prefer the portable codec names `raw`, `lossless`, `jpeg`, and `auto`.
+Prefer the portable codec names `auto`, `speed`, `size`, `raw`, `lossless`, and `jpeg`.
+With a separately installed GSPC, check that `gspc compatibility` lists the
+requested modes in `compiler_features.image_policy_modes`. The source-tree
+compiler supports these modes.
+`auto` selects STORE, QOI/RLE, or hardware JPEG using target capability, cache
+budget and compression gain. `speed` weighs runtime work: STORE for small
+images, QOI/RLE when compression is strong, and hardware JPEG/JPEG+A8 when
+eligible. `size` compares actual encoded bytes and can use software JPEG.
+JPEG quality defaults to 85; set `quality` (1–100) to change it. For exact
+pixels, use `lossless` or set `image_auto_allow_lossy: false` in the Profile.
+
+Hardware JPEG needs both dimensions to be at least 64 pixels. For RGB888
+alpha, `auto` and `speed` also require 16-pixel alignment before choosing
+JPEG+A8. `size` and explicit `jpeg` accept unaligned dimensions but may need
+MCU scratch storage at decode time. `size` includes that scratch estimate with
+the decoded image when checking its candidate budget; other allocations still
+affect the actual memory peak. JPEG+A8 has lossy colour and lossless alpha.
+Compiled `size` resources do not use PNG: the decoder needs a
+full-image inflate buffer and cannot decode a region. Comparing only encoded
+bytes would understate device peak RAM. PNG remains available for runtime input.
 The compiler and diagnostics also accept the existing names `store` (`raw`),
-`qoi` (`lossless`), `default` (`auto`), and explicit `rle16`.
+`qoi` (`lossless`), `default` (`auto`), and explicit `rle16` (opaque RGB565),
+`rle16_a8` (alpha RGB565), and `rle32` (RGB888). An incompatible explicit RLE
+request is a compile error.
+The ARGB8888 overlay profile stores native pixels only; other explicit codecs
+and `store_scale` are diagnosed at compile time.
+`cache_policy` also applies to `auto`, `speed`, and `size`. `mmap_direct` is
+valid only for STORE; requesting it for a compressed result is a compile error.
+Existing scenes may specify `preload` or `decode_lru` for STORE, but STORE still
+uses direct mapping and does not enter the decoded-image cache. New scenes can
+omit those settings for STORE.
 `hardware_jpeg` retains its compatibility behavior: JPEG with a hardware
 decoder, lossless encoding otherwise. It is not an alias for explicit `jpeg`.
 
@@ -96,10 +126,10 @@ provenance is unavailable; the profile's encoding policy is reported separately.
 
 ### Compiled SVG Images
 
-Start with the [vector image example](../../../examples/widgets/image/vector.json).
+Start with the [vector image example](../../../examples/usage/widgets/image/vector.json).
 
-Use `.svg` in an Image's `image` field with GSPC 0.5.0 and ESP-GSP/simulator
-1.4.0. GSPC stores these images as compiled curves for runtime rendering.
+Use `.svg` in an Image's `image` field. GSPC stores these images as compiled
+curves for runtime rendering.
 The compiler records the required binary format versions in the output;
 use the [compatibility contract](../reference/compatibility.md) when pairing tools.
 
@@ -108,7 +138,14 @@ Their resulting bitmap assets follow bitmap sizing and cache rules. Choose a nam
 Image for runtime curve scaling, tinting or morphing.
 
 SVG paths retain their curves and are rasterized at the requested size. Use a
-named image with `fit`, `rotation`, and `scalable` as for raster images. For
+decoded-image cache budget large enough for the visible working set when
+reusing large vectors: an untinted cached surface uses four bytes per pixel,
+and a tinted mask uses one. Vector surfaces share the scene's image-cache
+budget with decoded images and in-flight decodes; bitmap decodes reclaim
+vector surfaces first. If the budget or allocator cannot accommodate a
+surface, rendering continues with bounded scratch tiles.
+
+Use a named image with `fit`, `rotation`, and `scalable` as for raster images. For
 runtime box resizing, author `w` and `h` as bounded dynamic fields with semantic
 properties such as `width` and `height`; GSPC generates typed setters. Box
 resizing changes the drawing area; `scale` zooms inside that area and is clipped
@@ -174,7 +211,7 @@ rendering unrelated decoration groups that need unsupported effects.
 `morph_to` supplies an end-state SVG; `morph` is the initial 0..100 percent
 progress, defaulting to zero. Generated `set_morph()`, `animate_morph()` and
 `animate_morph_to()` use the existing property/animation APIs. See the
-[vector motion example](../../../examples/widgets/image/vector_motion.json).
+[vector motion example](../../../examples/usage/widgets/image/vector_motion.json).
 The runtime interpolates curve points without XML parsing or full-frame
 bitmap sequences. Both states must have identical viewport dimensions,
 paint order/colors, contour structure and segment types. Preserve path start
@@ -439,7 +476,7 @@ GIF/APNG images accept these `animation_codec` policies:
 
 | Value | Compilation behavior |
 |---|---|
-| `lossless` | QOI delta patches; the default when no codec is specified |
+| `lossless` | Force QOI delta patches; also the default for uncalibrated `auto` targets |
 | `jpeg` | Full JPEG frames, even when larger than QOI |
 | `hardware_jpeg` | JPEG when the target profile declares `hardware_jpeg: true`, otherwise QOI |
 
@@ -450,7 +487,21 @@ GIF/APNG images accept these `animation_codec` policies:
 
 Opaque animations use JPEG. If any frame has transparency, the entire animation uses JPEG+A8: lossy color and lossless alpha, with no silent transparency removal. GIF/APNG frames are composited onto complete canvases before encoding; frame durations and loop counts are preserved. `max_fps` still caps the imported frame rate. Explicit `codec: "jpeg"` also works for animations; `animation_codec` takes precedence when both are present. With `animation_codec`, omitted `quality` uses the profile's `jpeg_quality`.
 
-JPEG mode decodes and damages complete frames. It trades resource space for access to hardware decoding; sparse UI animations may still benefit more from QOI patches. `animation_frame_budget_bytes` limits decoded-frame storage, not encoded Flash size; inspect resource reports for encoded size. Reports distinguish `anim_qoi`, `anim_jpeg`, and `anim_jpeg_a8`.
+JPEG mode decodes and redraws complete frames. It trades resource space for access to hardware decoding; sparse UI animations may still benefit more from QOI patches. `animation_frame_budget_bytes` limits decoded-frame storage, not encoded Flash size; inspect resource reports for encoded size. Reports distinguish `anim_qoi`, `anim_jpeg`, and `anim_jpeg_a8`.
+
+Without `animation_codec`, `size` compares the complete QOI delta and
+JPEG/JPEG+A8 payloads. `auto` and `speed` consider hardware JPEG only when the
+Profile sets `animation_speed_hardware_jpeg: true`, changes cover most of each
+frame, frames are opaque, and dimensions are MCU-aligned. `auto` also requires
+at least 20% encoded-size savings; `speed` permits up to 10% growth. The board
+setting defaults to false and should follow a measurement of its display path.
+Set `hardware_jpeg: true` and `animation_speed_hardware_jpeg: true` in a
+measured board Profile to enable this choice.
+Transparent animations keep QOI automatically; use explicit
+`animation_codec: hardware_jpeg` to request JPEG+A8. An explicit
+`animation_codec` always takes precedence.
+Animations use a separate frame buffer; `cache_policy` and `store_scale` are
+static-image options and are rejected on animations.
 
 JPEG color conversion can differ between hardware and software decoders. Use
 `lossless` for icons, brand colors and other UI assets that need consistent color;
@@ -488,7 +539,8 @@ and the target RGB565/RGB888 format. Use at least two producer buffers and reuse
 only after the release callback. Use Image setters for occasional replacements; see
 [external assets](external-assets.md) for filesystem resources.
 
-Prefer `codec: auto` across chips. Explicit `jpeg` is a strict requirement; incompatible
+Prefer `codec: auto` across chips; use `speed` or `size` for a specific resource goal.
+Explicit `jpeg` is a strict requirement; incompatible
 targets diagnose the alternative. Without JPEG, use QOI/RLE lossless encoding and
 explicit `store_scale` where reduced detail is acceptable. Smaller stored images need
 a scaling-capable container codec and enough decoded cache. Budget the decoded
@@ -498,8 +550,9 @@ list all missing codepoints and identify authored text-use paths. Custom fonts w
 a question mark receive a visible replacement box instead of aliasing the first icon.
 
 `store_scale < 1` automatically selects fitting into the authored image box; it does
-not require the additional `scalable` flag. With reduced storage, `codec: auto` uses
-QOI. Explicit `raw` is unsupported for this option and diagnoses the object path and
+not require the additional `scalable` flag. With reduced storage, `auto` and
+`speed` use QOI, while `size` compares scaled QOI with eligible JPEG. Explicit
+`raw` is unsupported for this option and diagnoses the object path and
 alternative encoding at compile time. Ordinary and template images share option
 parsing. Compressed thumbnails still require a decoded-image cache.
 

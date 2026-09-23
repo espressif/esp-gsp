@@ -26,6 +26,10 @@ Slider 和启用拖动的 Arc 可在 `events` 中声明 `value → call` 和 `re
 重复值不重复通知。只声明 `callback` 时默认在释放时通知。Arc 通过数值
 `bind` 启用拖动；配置示例见[工程工作流](workflow.md)。
 
+Carousel 回调在选中索引提交后触发。请通过生成的 `get_selected()` 或
+`get_value()` 读取索引；其 CALL 事件的 `event->arg` 仍是声明的参数，
+不是选中索引。
+
 ## 事件与任务上下文
 
 事件、列表绑定、图片释放、定时器和 Canvas 回调运行在框架任务中。不要在其中阻塞、访问慢速存储或执行网络操作；只发送队列/任务通知并尽快返回。
@@ -38,6 +42,61 @@ UI 事件 → 短回调 → 应用任务 → 产品状态改变
                                   → 生成 setter → 渲染提交
 ```
 
+### 定时器生命周期
+
+`esp_gsp_timer_cb_t` 在渲染任务中执行。接入 ESP-IDF runtime 后，应用任务
+可以创建或删除定时器（ISR 中不可以）；调用期间必须保持应用和 runtime 存活。
+删除只会停止后续调度，不等待已经选中执行的回调，因此 `user_ctx` 必须保持有效，
+直到回调返回。使用同一个持续接入的 runtime 时，外部任务只能在删除成功后，再成功
+调用 `esp_gsp_flush()` 来等待正在执行的回调；只有此时才能释放 `user_ctx`。删除失败或
+flush 失败/超时都不能确认回调已经退出。不要在定时器回调中调用 flush，等待时也不要
+持有回调所依赖的锁。如果其他定时器或异步任务共享该 `user_ctx`，释放前还需等待这些
+使用者结束。未接入 ESP-IDF adapter
+时，定时器操作必须与 app stepping 串行化。定时器删除后不得复用其句柄；内部定时器槽位
+可能会复用。
+
+## 不再轮询组件状态
+
+通过 `esp_gsp_on_component_event()` 订阅命名 PageFlow、Drawer 的变化，使用生成的
+`GSP_OBJ_KEY_*` 匹配 `event->key`。这是独立回调，不改变原有 `esp_gsp_on_event()`
+及其事件结构。`VALUE_CHANGED` 表示已提交页码或打开状态变化；`MOTION_FINISHED`
+也覆盖回弹原位；`MOTION_CHANGED` 表示目标、拖动或缓动状态变化，不逐像素通知。
+这些标志可以同时出现。
+
+`event->state.value` 是已提交值，`target` 是目标值；Drawer 使用 0/1 表示关闭/打开。
+单独读到 `is_open()==false` 不能判断打开动画是否结束。需要初始状态时使用
+`esp_gsp_component_get_motion()`。旧 getter 语义不变；stop-anywhere PageFlow
+的选中页可能在惯性滑行期间改变，不等于运动已完成。
+
+通知在组件和变换更新后的安全阶段派发，同一组件同一 UI step 内合并，不是每条命令
+的历史记录，也不代表 LCD 已显示。注册不发送初始事件，场景销毁会丢弃待发通知。
+回调可以调用 setter，但不能 flush、阻塞或销毁应用。外部任务解绑回调并成功同步后，
+才能释放仍可能被回调使用的上下文。
+
+## 首帧前初始化
+
+使用 `esp_gsp_esp_lcd_start_prepared()`，在渲染任务首帧前完成绑定、注册事件和创建
+定时器；它复用 session 的 prepare 回调类型，传 NULL 保持普通 start 行为。
+回调前已同步时钟。prepare 没有错误返回通道，应在
+回调中检查 setter 结果，并通过上下文记录业务初始化错误；不能在其中调用 flush、
+stop 或 session 生命周期接口。
+
+## 可见性、输入与抽屉边缘入口
+
+可见性控制显示，声明的 `enabled` 控制是否接受新输入，不禁止程序化切页或开关抽屉。
+需要动态禁止交互的 PageFlow/Drawer 应显式声明 `enabled:true`，结构手势候选会检查
+该属性，包括关闭 Drawer 的边缘拉出。可见的打开/关闭动画中的 Drawer 即使 disabled，
+仍保留模态点击阻挡；hidden Drawer 不再抢边缘滚动或吞底层点击。
+
+关闭但启用的 Drawer 仍可从边缘拉开，这是保留行为。禁止该入口只需禁用 Drawer，
+不必为此同时隐藏；这不会取消已经获得所有权的手势。普通 hit 仍按最近显式 enabled
+声明继承，子组件显式启用可覆盖父组件；结构手势检查自身 enabled，不应依赖父属性禁用。
+
+`block_scene_swipe` 仍只控制场景导航，绘制遮罩也不自动拦截全部手势。业务模态层显示
+期间应显式禁用底层 PageFlow，并通过完成事件恢复。应用接管顶层输入时，可复用现有
+`esp_gsp_set_input_interceptor()` 在命中和手势识别前拦截；应处理完整触摸序列，
+而不是只吞下按下样本。
+
 ## 动态内容
 
 | 内容 | 推荐 API 路径 |
@@ -48,8 +107,8 @@ UI 事件 → 短回调 → 应用任务 → 产品状态改变
 | 相机、视频、连续像素 | Canvas 帧或 Direct Draw 回调 |
 | 页面与堆栈导航 | 生成导航/组件辅助函数 |
 
-缓冲区必须遵循 COPY、BORROW 或 TAKE 所有权约定。`esp_gsp_stop()` 完成前，先停止外部生产者、解绑回调并释放借用资源。详细规则见[生命周期](lifecycle.md)和
-[API 参考](../reference/api.md)。
+COPY/BORROW/TAKE 缓冲区释放、回调上下文和停止顺序遵循[生命周期](lifecycle.md#媒体所有权)中的约定。
+BORROW 缓冲区收到释放回调后才能释放或复用；停止生产者本身不会归还已经提交的缓冲区。
 
 ## 正确停止
 

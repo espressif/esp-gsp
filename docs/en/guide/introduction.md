@@ -1,6 +1,9 @@
 # Introduction
 
-ESP-GSP is an ahead-of-time UI toolchain and graphics runtime for ESP-IDF. It is designed for products that need reviewable interface source, deterministic resources, a stable application contract and a display path owned by the BSP.
+ESP-GSP builds ESP-IDF interfaces from JSON scenes and image/font assets.
+GSPC compiles them into a bundle before the firmware runs; the device runtime
+renders that bundle and handles input. Application code updates named controls
+through generated C functions, while the BSP configures the display and touch hardware.
 
 ## What it provides
 

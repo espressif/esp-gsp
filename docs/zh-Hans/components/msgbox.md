@@ -8,14 +8,15 @@
 
 ## 本地交互预览
 
-[安装 `esp-gsp-tools`](../guide/simulator-preview.md) 后，在解压后的组件或公共仓库根目录运行：
+先按[兼容性页的工具命令](../reference/compatibility.md#工具命令)配置 `gspc` 和
+`gsp_sim_host`，再在解压后的组件或公共仓库根目录运行：
 
 ```sh
 mkdir -p gsp-out/widget-preview
-python -m gsp.execute --version 0.5.0 gspc pack \
-  examples/widgets/msgbox/msgbox.json \
+gspc pack \
+  examples/usage/widgets/msgbox/msgbox.json \
   --deployable -o gsp-out/widget-preview/msgbox.gspb
-python -m gsp.execute --version 1.4.0 sim \
+gsp_sim_host \
   --bundle gsp-out/widget-preview/msgbox.gspb
 ```
 
@@ -35,7 +36,7 @@ GSPC 将组合组件编译为原生基础图元，并为命名元素生成连接
   "w": 480,
   "h": 320,
   "screen_bg": "#101827",
-  "font": "../../common/fonts/DejaVuSans.ttf",
+  "font": "../../../common/fonts/DejaVuSans.ttf",
   "objects": [
     {
       "type": "container",
@@ -114,7 +115,7 @@ GSPC 将组合组件编译为原生基础图元，并为命名元素生成连接
 }
 ```
 
-该文件来自 `examples/widgets/msgbox/msgbox.json`。复制时请一并复制它引用的相对资源。
+该文件来自 `examples/usage/widgets/msgbox/msgbox.json`。复制时请一并复制它引用的相对资源。
 
 ## 此示例生成的 C API
 
@@ -149,7 +150,7 @@ size_t gsp_msgbox_docs_dynamic_image_slots(void)
 | `fg_color` | `color` | — | — | — | 对话框文字颜色 |
 | `button_color` | `color` | — | — | — | 按钮填充颜色 |
 | `font_size` | `int` | — | 1…255 | — | 单个对象的字体像素尺寸 |
-| `hidden` | `bool` | — | 默认 `false` | 是 | 初始隐藏 |
+| `hidden` | `bool` | — | 默认 `true` | 是 | 初始隐藏 |
 | `dismissable` | `bool` | — | 默认 `false` | — | 点击遮罩时关闭 |
 
 <details><summary>查看此控件支持的其他字段</summary>

@@ -33,7 +33,9 @@ in the [Compatibility contract](../reference/compatibility.md).
 
 ### The native simulator does not start
 
-Run `gsp_sim --capabilities` from a terminal so loader errors remain visible.
+Run `python -m gsp.execute --version '<ESP-GSP version>' sim --capabilities`
+from a terminal so loader errors remain visible. Use the component version from
+`idf_component.yml`; for a manually installed binary, invoke its actual path.
 Use the archive for the exact host platform and install only the runtime
 dependencies listed for that release. If native dependencies are unavailable,
 use the browser/WASM simulator package. Simulator startup validates the host

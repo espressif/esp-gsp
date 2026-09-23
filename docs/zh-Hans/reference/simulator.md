@@ -64,6 +64,9 @@ gsp_sim_host: browser preview listening at http://127.0.0.1:3222/
 
 支持多个浏览器同时连接；每个连接独立维护关键帧状态和订阅列表。
 
+宿主只打印 URL，不自动打开浏览器。手动打开该地址；关闭浏览器不会停止宿主，
+请用 Ctrl-C 或控制 API 的 `quit` 退出。
+
 ## 命令行参数参考
 
 运行 `gsp_sim_host --help` 可获取最新内置帮助。
@@ -75,7 +78,7 @@ gsp_sim_host: browser preview listening at http://127.0.0.1:3222/
 | `--bundle <PATH>` | 场景包文件（`.gspb`），必需 |
 | `--dynamic-font <PATH>` | 可选 TrueType 字体文件 |
 | `--fps <N>` | 模拟帧率，默认 `60` |
-| `--frames <N>` | 运行帧数上限；`0` 表示无限运行直到 `quit`；默认 `300` |
+| `--frames <N>` | 运行帧数上限；默认 `0`（无帧数上限）；收到 `quit`、脚本/回放结束或进程终止时退出 |
 
 ### 预览与输入
 
@@ -220,6 +223,8 @@ schema、字节数或 CRC 不匹配时宿主会拒绝启动。按名包围盒表
 | `hit_test` | `{ "x": N, "y": N, "scene": N }` | 返回该点最小的命名编译包围盒 |
 | `frame_info` | — | 获取最近一帧的提交信息 |
 | `wait` | `{ "frames": N }` | 延迟 N 帧后响应 |
+| `component_get_motion` | `{ "name": "...", "scene": N }` | 查询 PageFlow/Drawer 状态；也可用 `component_key`；`scene` 可选 |
+| `wait_component` | `{ "name": "...", "value": N, "max_frames": N }` | 等待静止及可选目标值；见下方条件说明 |
 | `invalidate` | — | 强制下一帧全屏重绘 |
 | `screenshot` | `{ "path": "...", "format": "png" }` | 保存当前画面到文件 |
 | `subscribe` | `{ "events": [...] }` | 订阅服务端通知 |
@@ -229,6 +234,28 @@ schema、字节数或 CRC 不匹配时宿主会拒绝启动。按名包围盒表
 API 通道保持仅 JSON-RPC。应用 Backend 还提供下文说明的异步动态数据与二进制媒体扩展；
 Browser 不会获得这些数据源请求或二进制上传权限。
 
+### 组件运动状态与条件等待
+
+先检查 `capabilities.component_motion_version`、`component_events_version`、
+`wait_component_version`：1 表示支持，0 表示当前 WASM 不支持。
+`component_get_motion` 接受 `{"name":"pages"}` 或数值 `component_key`，
+以及可选的当前 `scene`。结果包含 `result_code` 和 `state`：
+`value` 是已提交页码/打开状态，`target` 是目标，`dragging`、`settling`
+表示仍在运动。查询失败可能返回 `state: null`，必须检查结果码。
+
+`wait_component` 接受相同目标，以及可选的 `value`、`max_frames`
+（默认 300，范围 1–36000）。组件静止且目标值匹配后，返回
+`status: "settled"`、最终 `state`、`frames_waited`。省略 `value` 仅等待静止。
+上限按成功推进的模拟帧计数，不是墙钟超时。超时返回 `-32020`，
+`data.reason: "timeout"` 并包含最后状态；场景变化/reset 会取消等待。
+不支持或状态查询失败也返回错误。这些观察方法不受 Backend 状态写入独占限制。
+
+订阅 `component_event` 可收到 `component_key`、`scene_id`、`kind`、`flags`、
+`state`。flags 为组合位：值变化 1、运动完成 2、运动变化 4。
+通知按 UI step 合并，不保留每个中间请求的历史。自动化断言使用控制 API；
+Browser 通知与画面共用可丢弃队列。`wait` 仅数帧，`render_fence` 仅表示渲染
+同步边界，都不保证动画或业务完成。
+
 ### 通知事件
 
 事件以 JSON-RPC 通知的形式推送（无 `id` 字段）。需先通过 `subscribe` 注册；
@@ -237,6 +264,7 @@ API 通道默认不订阅任何事件。
 | 事件 | 参数 | 说明 |
 |---|---|---|
 | `scene_changed` | `{ "from": N, "to": N }` | 场景切换 |
+| `component_event` | `{ "component_key": N, "scene_id": N, "kind": N, "flags": N, "state": {...} }` | 合并后的 PageFlow/Drawer 状态通知；需显式订阅 |
 | `callback` | `{ "action_id": N, "arg": N, "scene_id": N, "list": N, "item": N, "callback"?: "name" }` | 组件回调；加载 `--api-json` 后附带编译得到的回调名 |
 | `frame` | `{ "index": N }` | 每帧推送 |
 | `list_bind` | `{ "list": N, "slot": N, "instance": N, "item": N, "resource_slot": N, "text_slot": N }` | Backend 动态 List/Grid 行请求；Grid 成员槽位，65535 表示缺失（List 两者均缺失） |
@@ -257,55 +285,30 @@ API 通道默认不订阅任何事件。
 | `-32602` | Invalid Params | 参数缺失或类型错误 |
 | `-32603` | Internal Error | 宿主内部错误 |
 | `-32010` | Input Busy | `--input-mode` 阻止了当前通道发送输入 |
+| `-32020` | Component wait failed | 检查 `data.reason`：超时、取消、不支持或查询失败 |
+
+`not_allowed` 与 `backend_exclusive` 是文档中的分类名，二者错误码均为 `-32601`；
+消息分别为 `method not allowed for this channel: ...` 和
+`method reserved for backend while backend is enabled: ...`。
+`widget_*`、`bridge_call`、`query_visibility`、`render_fence` 及远程数据/媒体扩展
+始终只允许 Backend，API/Browser 调用返回 `not_allowed`，不取决于 Backend 是否启用。
 
 ### Python 客户端示例
 
+示例复用 [rpc_client.py](../../../tools/sim_bridge/rpc_client.py)，不另行实现分帧。从仓库根目录以
+`PYTHONPATH=tools/sim_bridge python3 your_script.py` 运行（安装包使用对应组件路径）。
+客户端保留连续帧及交错通知，EOF 会报错；每个连接仅支持单调用者，`call()` 返回完整
+响应（包括 `error`），业务层须检查错误和 `result_code`。
+
 ```python
-import json, socket
+from rpc_client import connect
 
-def connect(host="127.0.0.1", port=8266):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((host, port))
-    return sock
-
-def send_request(sock, method, params=None, request_id=1):
-    body = json.dumps({
-        "jsonrpc": "2.0",
-        "id": request_id,
-        "method": method,
-        "params": params or {},
-    }).encode("utf-8")
-    header = f"Content-Length: {len(body)}\r\n\r\n".encode("ascii")
-    sock.sendall(header + body)
-
-def read_response(sock):
-    buf = b""
-    while b"\r\n\r\n" not in buf:
-        chunk = sock.recv(4096)
-        if not chunk:
-            raise ConnectionError("connection closed")
-        buf += chunk
-    header, _, rest = buf.partition(b"\r\n\r\n")
-    length = int(header.split(b":")[1].strip())
-    body = rest
-    while len(body) < length:
-        body += sock.recv(length - len(body))
-    return json.loads(body[:length])
-
-sock = connect(port=8266)
-send_request(sock, "capabilities", request_id=1)
-caps = read_response(sock)
-print(f"画面尺寸: {caps['result']['width']}x{caps['result']['height']}")
-
-send_request(sock, "tap", {"x": 160, "y": 120}, request_id=2)
-print(read_response(sock))
-
-send_request(sock, "wait", {"frames": 5}, request_id=3)
-print(read_response(sock))
-
-send_request(sock, "screenshot", {"path": "/tmp/shot.png", "format": "png"}, request_id=4)
-print(read_response(sock))
-sock.close()
+with connect(port=8266) as api:
+    caps = api.call("capabilities")
+    print(caps)
+    print(api.call("tap", {"x": 160, "y": 120}))
+    print(api.call("wait", {"frames": 5}))
+    print(api.call("screenshot", {"path": "/tmp/shot.png", "format": "png"}))
 ```
 
 ## 应用后端
@@ -316,7 +319,8 @@ sock.close()
 启用 Backend 后：
 
 - 应用状态写操作以及 `goto_scene`、`reset` 变为 Backend 专属方法；API 调用收到
-  `backend_exclusive`，Browser 调用始终收到 `method not allowed`。
+  `backend_exclusive`。Browser 普通状态写入收到 `not_allowed`，但 `goto_scene`、
+  `reset` 在 Backend 启用时收到 `backend_exclusive`。
 - 后端自动订阅 `callback`、`scene_changed`、`list_bind`、`list_bind_overflow`、`binary_result`、`image_complete` 和 `image_release`。
 - 同一时间只允许一个后端连接。
 
@@ -326,7 +330,8 @@ sock.close()
 Backend 可调用上方列出的状态和应用逻辑方法，包括光标/滑动策略、Drawer、PageFlow
 和固定条目 List/Wheel。还可用 `list_bind_remote` / `grid_bind_remote` 绑定动态集合、
 用 `list_set_total` 设置总数，并对 `list_bind` 通知调用带令牌校验的 `row_publish`。
-业务处理期间行可能被回收；行更新返回非零结果码表示令牌已失效，必须丢弃。
+业务处理期间行可能被回收；非零结果码也可能表示字段 slot 错误，不能全部视为令牌
+过期。检查具体结果码，不得重试已确认失效的令牌。
 
 Backend TCP/Unix 连接还支持 COPY 型 Content-Length 二进制上传：`X-GSP-Kind: image`
 和 `row-image` 接受 PNG、JPEG、QOI；`canvas` 接受携带 stride、height（可选脏区）的完整
@@ -339,60 +344,17 @@ Backend TCP/Unix 连接还支持 COPY 型 Content-Length 二进制上传：`X-GS
 ### 后端 Python 示例
 
 ```python
-import json, socket
+from rpc_client import connect
 
-class SimBackend:
-    def __init__(self, host="127.0.0.1", port=8684):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((host, port))
-        self.next_id = 1
-
-    def call(self, method, params=None):
-        rid = self.next_id
-        self.next_id += 1
-        body = json.dumps({
-            "jsonrpc": "2.0", "id": rid,
-            "method": method, "params": params or {},
-        }).encode("utf-8")
-        header = f"Content-Length: {len(body)}\r\n\r\n".encode("ascii")
-        self.sock.sendall(header + body)
-        while True:
-            msg = self._read()
-            if msg.get("id") == rid:
-                return msg.get("result")
-            self._on_notification(msg)
-
-    def _read(self):
-        buf = b""
-        while b"\r\n\r\n" not in buf:
-            chunk = self.sock.recv(4096)
-            if not chunk:
-                raise ConnectionError("closed")
-            buf += chunk
-        header, _, rest = buf.partition(b"\r\n\r\n")
-        length = int(header.split(b":")[1].strip())
-        body = rest
-        while len(body) < length:
-            body += self.sock.recv(length - len(body))
-        return json.loads(body[:length])
-
-    def _on_notification(self, msg):
-        method = msg.get("method", "")
-        params = msg.get("params", {})
-        if method == "callback":
-            print(f"回调: action_id={params.get('action_id')}")
-
-backend = SimBackend(port=8684)
-caps = backend.call("capabilities")
-print(f"场景数: {caps['scene_count']}")
-
-backend.call("set_text", {"bind_id": 1, "text": "Ready"})
-backend.call("set_value", {"bind_id": 2, "value": 75})
-
-while True:
-    msg = backend._read()
-    if msg.get("method"):
-        backend._on_notification(msg)
+with connect(port=8684) as backend:
+    print(backend.call("capabilities"))
+    # Use bind IDs from your generated scene.
+    print(backend.call("set_text", {"bind_id": 1, "text": "Ready"}))
+    print(backend.call("set_value", {"bind_id": 2, "value": 75}))
+    while True:
+        event = backend.notification(timeout=None)
+        print(event["method"], event["params"])
+        # Handle callback/scene_changed here; backend.call() retains notifications.
 ```
 
 ## 原生 C Backend 工程
@@ -409,11 +371,13 @@ profile。PC 适配文件实现 `gsp_bridge_app_init(ui)` 与
 
 `capabilities.bridge_media_version: 1` 还支持原生动态 List/Grid binder、行字段、
 PNG/JPEG/QOI COPY 图片和 Canvas push/draw/invalidate/stop。
-`examples/sim_bridge_media` 提供可运行示例。List 需要编译出的 runtime row
+`examples/usage/sim_bridge_media` 提供可运行示例。List 需要编译出的 runtime row
 template；Grid 模板图片需 `dynamic_image: true`，回调会收到实际资源/文本槽位。
 行令牌在回收失效前可重复使用；行请求溢出会使原生桥接会话失败，需重启而非自动重放。
 
-Canvas draw 在 poll 时绘制完整本地离屏缓冲，再上传全帧；脏区失效也如此，不复现
+Canvas draw 在 poll 时仍绘制完整本地离屏缓冲。宿主报告
+`bridge_canvas_patch_version: 1` 时，首帧之后的小脏区以紧凑逐行 patch 传输；大脏区
+或基准失配时回退全帧。不复现
 设备端渲染任务/分块时序。draw 内仅允许只读 GSP 查询；场景切换后需重新注册回调。
 同步 push 会停用该目标的 draw callback，成功时在返回前调用一次 release，失败时
 所有权仍归调用方。上传成功不代表渲染完成。
@@ -451,8 +415,8 @@ UINT32_MAX 无限等待。零超时只本地排队并返回 TIMEOUT。超时保�
 - `component_set_text`：通过组件键写文本。
 
 原有 `set_value`、`set_text`、`set_component_i32` 等仍直接复用。
-`capabilities` 返回 `bridge_version: 1`、`bridge_media_version: 1`、`bridge_image_version: 1` 和 `current_scene`
-用于初始协商。
+`capabilities` 返回 `bridge_version: 1`、`bridge_media_version: 1`、`bridge_image_version: 1`、
+`bridge_canvas_patch_version: 1` 和 `current_scene` 用于初始协商。
 另有 `bridge_fence_version: 1` 表示渲染栅栏支持。应用通常直接使用 C 包装接口，
 无需自行编码这些操作。标量操作编号随组件的 `tools/sim_bridge/protocol.h` 提供。
 

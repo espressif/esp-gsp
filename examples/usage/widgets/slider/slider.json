@@ -1,0 +1,15 @@
+{
+  "screen": "widget_slider",
+  "w": 480,
+  "h": 320,
+  "screen_bg": "#101827",
+  "font": "../../../common/fonts/DejaVuSans.ttf",
+  "default_font_size": 18,
+  "objects": [
+    {"type":"label","parent":-1,"x":32,"y":28,"w":416,"h":30,"text":"Slider","font_size":26,"fg_color":"#F8FAFC"},
+    {"type":"label","parent":-1,"x":32,"y":68,"w":416,"h":24,"text":"Drag the handle to change the value.","fg_color":"#A9B8CC"},
+    {"type":"slider","parent":-1,"name":"volume","x":32,"y":118,"w":320,"h":32,"min":0,"max":100,"value":68,"track_size":10,"radius":16,"bg_color":"#334155","fg_color":"#38BDF8","knob_color":"#F8FAFC"},
+    {"type":"slider","parent":-1,"name":"temperature","x":32,"y":190,"w":320,"h":32,"min":16,"max":30,"value":23,"track_size":8,"radius":16,"bg_color":"#334155","fg_color":"#F59E0B","knob_color":"#FEF3C7"},
+    {"type":"slider","parent":-1,"name":"vertical_level","x":398,"y":106,"w":28,"h":152,"vertical":true,"value":44,"track_size":9,"radius":14,"bg_color":"#334155","fg_color":"#A78BFA","knob_color":"#F5F3FF"}
+  ]
+}

@@ -8,15 +8,15 @@ Use it when a familiar interaction is best delivered as a ready-made group of na
 
 ## Local interactive preview
 
-After [installing `esp-gsp-tools`](../guide/simulator-preview.md), run from an
-unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
+then run from an unpacked component or public repository root:
 
 ```sh
 mkdir -p gsp-out/widget-preview
-python -m gsp.execute --version 0.5.0 gspc pack \
-  examples/widgets/tabview/tabview.json \
+gspc pack \
+  examples/usage/widgets/tabview/tabview.json \
   --deployable -o gsp-out/widget-preview/tabview.gspb
-python -m gsp.execute --version 1.4.0 sim \
+gsp_sim_host \
   --bundle gsp-out/widget-preview/tabview.gspb
 ```
 
@@ -37,7 +37,7 @@ Give every object that application code must read or update a stable `name`. GSP
   "w": 480,
   "h": 320,
   "screen_bg": "#101827",
-  "font": "../../common/fonts/DejaVuSans.ttf",
+  "font": "../../../common/fonts/DejaVuSans.ttf",
   "swipe": false,
   "objects": [
     {
@@ -119,7 +119,7 @@ Give every object that application code must read or update a stable `name`. GSP
 }
 ```
 
-This is `examples/widgets/tabview/tabview.json`. Copy any relative assets referenced by the scene with it.
+This is `examples/usage/widgets/tabview/tabview.json`. Copy any relative assets referenced by the scene with it.
 
 ## Generated C API for this example
 

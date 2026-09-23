@@ -232,6 +232,17 @@ esp_gsp_err_t esp_gsp_set_cursor(esp_gsp_handle_t gsp, uint16_t bind);
 
 Component APIs address generated stable object and property keys. Typed generated wrappers remain the preferred application surface.
 
+### `esp_gsp_component_get_motion()`
+
+Query committed and target motion state for PageFlow or Drawer. Like other component getters, use from the UI task or a caller-serialized portable app.
+
+- **Header:** `include/esp_gsp.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_component_get_motion(esp_gsp_handle_t gsp, gsp_component_key_t key, esp_gsp_component_motion_t *out_state);
+```
+
 ### `esp_gsp_component_get()`
 
 Get component.
@@ -322,7 +333,7 @@ esp_gsp_err_t esp_gsp_component_set_properties(esp_gsp_handle_t gsp, const gsp_c
 
 ### `esp_gsp_component_set_position()`
 
-Atomically moves a compiled static component subtree. X/Y are authored scene pixels stored in runtime SRAM; compiled commands remain read-only.
+Atomically moves a compiled component subtree. Both x and y must have bounded dynamic declarations; a literal axis has no writable runtime property and returns NOT_FOUND without changing either axis. Use the individual property setter when only one axis is dynamic. X/Y are authored scene pixels stored in runtime SRAM; compiled commands remain read-only. esp_gsp_update_error_stats() in esp_gsp_debug.h can identify the rejected property and asynchronous application failures.
 
 - **Header:** `include/esp_gsp.h`
 - **Return type:** `esp_gsp_err_t`
@@ -656,7 +667,7 @@ esp_gsp_err_t esp_gsp_stack_view_is_animating(esp_gsp_handle_t gsp, gsp_componen
 
 ### `esp_gsp_drawer_open()`
 
-Overlay Drawer state. Gesture and Close-button actions use this same settle state machine.
+Overlay Drawer state. Gesture and Close-button actions use this same settle state machine. Animated requests can reverse an active settle from its current position; repeating its target does not restart the animation.
 
 - **Header:** `include/esp_gsp.h`
 - **Return type:** `esp_gsp_err_t`
@@ -1559,6 +1570,17 @@ esp_gsp_err_t esp_gsp_canvas_stop(esp_gsp_handle_t gsp, uint16_t bind);
 
 Runtime objects consume bounded pools and are applied on the render task. Template quotas come from authored requirements and project overrides.
 
+### `esp_gsp_on_component_event()`
+
+Subscribe to PageFlow/Drawer changes without polling. Registration is serialized like setters; NULL unsubscribes. No initial event is emitted. Notifications are coalesced per component per UI step and dispatched after driver updates, outside driver iteration. The event contains final committed state; intermediate requests within a step are not an event history. MOTION_FINISHED also covers a return to the original value and an effective non-animated change. An idle same-value request emits nothing. Scene teardown discards pending notifications. Existing esp_gsp_on_event is unaffected. Callbacks may use setters but must not block, flush or destroy the app. With a continuously attached ESP-IDF runtime, an external task can unsubscribe and successfully flush before freeing user_ctx. Do not concurrently tear down or replace the runtime. Portable apps require caller serialization instead.
+
+- **Header:** `include/esp_gsp.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_on_component_event(esp_gsp_handle_t gsp, esp_gsp_component_event_cb_t cb, void *user_ctx);
+```
+
 ### `esp_gsp_scale_q16_from_percent()`
 
 Converts an integer percentage to unsigned Q16.16 scale.
@@ -1638,7 +1660,7 @@ esp_gsp_err_t esp_gsp_query_visibility(esp_gsp_handle_t gsp, const esp_gsp_visib
 
 ### `esp_gsp_timer_create()`
 
-Periodic callback in render-task context (lv_timer equivalent). Returns a handle usable with esp_gsp_timer_delete; NULL on error.
+Periodic callback in render-task context (lv_timer equivalent). Returns a handle usable with esp_gsp_timer_delete; NULL on error. With the ESP-IDF runtime attached, creation and deletion may be called from application tasks or timer callbacks, but not from an ISR. Keep the app and runtime alive throughout these calls. Unattached portable apps require caller serialization with app stepping and other timer operations. The caller owns user_ctx and must keep it alive until callbacks have exited.
 
 - **Header:** `include/esp_gsp.h`
 - **Return type:** `void *`
@@ -1649,7 +1671,7 @@ void *esp_gsp_timer_create(esp_gsp_handle_t gsp, uint32_t period_ms, esp_gsp_tim
 
 ### `esp_gsp_timer_delete()`
 
-Delete timer.
+Stops future scheduling; a callback already selected for execution may still run. This call does not wait for that callback to return. The handle must belong to this app and must not be used after deletion (timer slots may be reused). Callbacks may delete their own timer.
 
 - **Header:** `include/esp_gsp.h`
 - **Return type:** `esp_gsp_err_t`
@@ -1657,6 +1679,17 @@ Delete timer.
 ```c
 esp_gsp_err_t esp_gsp_timer_delete(esp_gsp_handle_t gsp, void *timer);
 ```
+
+**Contract details**
+
+An external task using a continuously attached ESP-IDF runtime can wait
+for an in-flight callback by successfully deleting the timer and then
+successfully calling esp_gsp_flush(). Keep user_ctx alive if flush fails
+or times out. Do not use this wait from a timer callback, concurrently with
+app/runtime teardown or replacement, or while holding a lock needed by the
+callback. This does not cover asynchronous work launched by the callback or
+other timers sharing/re-registering user_ctx. Unattached portable apps do
+not provide this cross-task flush barrier.
 
 ### `esp_gsp_widget_create()`
 
@@ -2053,6 +2086,17 @@ Creation and resource validation use the caller's stack before the render task s
 esp_err_t esp_gsp_esp_lcd_start(const esp_gsp_config_t *app_config, const esp_gsp_esp_lcd_config_t *esp_config, esp_gsp_handle_t *out_gsp);
 ```
 
+### `esp_gsp_esp_lcd_start_prepared()`
+
+Like start(), with an optional callback on the render task before its first frame. Use it to install contributors, event handlers and timers without racing the initial render. A NULL callback is equivalent to start(). If invoked, the callback completes before this function returns, including first-frame failure. Its void return cannot report preparation failures; the returned error covers framework startup and the first render attempt. A context retained by a registered callback must outlive that registration.
+
+- **Header:** `include/esp_gsp_esp_lcd.h`
+- **Return type:** `esp_err_t`
+
+```c
+esp_err_t esp_gsp_esp_lcd_start_prepared(const esp_gsp_config_t *app_config, const esp_gsp_esp_lcd_config_t *esp_config, esp_gsp_esp_lcd_prepare_cb_t prepare, void *prepare_ctx, esp_gsp_handle_t *out_gsp);
+```
+
 ## Deployable bundles
 
 Deployable metadata is parsed from borrowed GSPB bytes. The bytes must remain valid until the metadata handle is closed.
@@ -2136,6 +2180,30 @@ Read device-wide internal/PSRAM heaps on demand, including non-GSP users. Does n
 ```c
 bool esp_gsp_heap_stats(esp_gsp_heap_stats_t *out_stats);
 ```
+
+### `esp_gsp_update_error_stats()`
+
+Snapshot set_many/set_properties failures and wrappers routed through them (including set_position), including asynchronous apply/drop errors. Legacy bind setters and other API families are not included. Available in ordinary builds without profiling. Successful setters do not clear the last error. A property absent from the compiled runtime directory cannot be distinguished from an unsupported property: consult the compiler's schema and declare supported x/y fields dynamic before calling set_position.
+
+- **Header:** `include/esp_gsp_debug.h`
+- **Return type:** `bool`
+
+```c
+bool esp_gsp_update_error_stats(esp_gsp_handle_t gsp, esp_gsp_update_error_stats_t *out_stats, size_t stats_size);
+```
+
+**Contract details**
+
+The detail record is coherent and best-effort: concurrent readers/writers
+never wait; a contending writer increments details_dropped instead. Counters
+are atomic but can include failures newer than the retained detail. This is
+diagnostic history, not an acknowledgement for a particular command or task.
+esp_gsp_flush() still waits for a render attempt, not successful updates.
+
+Pass sizeof(*out_stats). On success the known prefix is copied, any extra
+bytes are zeroed, and struct_size is the copied size. Returns false without
+touching the output for NULL, a size below sizeof(uint32_t), or a busy record
+(retry later). Call while the handle is alive, outside ISR context.
 
 ### `esp_gsp_frame_count()`
 

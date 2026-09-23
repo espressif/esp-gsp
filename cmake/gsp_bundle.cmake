@@ -153,6 +153,8 @@ function(gsp_add_bundle target)
 
     get_filename_component(gsp_root
         "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/.." ABSOLUTE)
+    include("${gsp_root}/cmake/gsp_example_assets.cmake")
+    gsp_example_assets_prepare("${gsp_root}" gsp_example_assets_target)
     include("${gsp_root}/cmake/gsp_build_caps.cmake")
     include("${gsp_root}/cmake/gsp_compatibility.cmake")
     include("${gsp_root}/cmake/gsp_toolchain.cmake")
@@ -401,6 +403,7 @@ function(gsp_add_bundle target)
                 ${dynamic_font_api_args} ${bundle_config_args}
                 ${slot_limit_args}
         DEPENDS ${scene_paths} ${profile_deps} ${dynamic_font_deps}
+                ${gsp_example_assets_target}
                 ${gspc_dependencies} ${gspc_source_deps}
         DEPFILE "${bundle_depfile}"
         COMMENT "gspc: compiling ${ARG_SYMBOL}.gspb"
@@ -460,6 +463,8 @@ function(gsp_add_assets target)
         message(FATAL_ERROR "gsp_add_assets: SYMBOL must be a C identifier")
     endif()
     get_filename_component(gsp_root "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/.." ABSOLUTE)
+    include("${gsp_root}/cmake/gsp_example_assets.cmake")
+    gsp_example_assets_prepare("${gsp_root}" gsp_example_assets_target)
     include("${gsp_root}/cmake/gsp_toolchain.cmake")
     include("${gsp_root}/cmake/gsp_compatibility.cmake")
     get_property(gspc_command GLOBAL PROPERTY ESP_GSPC_COMMAND)
@@ -530,7 +535,8 @@ function(gsp_add_assets target)
     add_custom_command(OUTPUT "${package}" "${header}"
         COMMAND ${gspc_command} assets "${manifest}" ${profile_args}
                 --symbol "${ARG_SYMBOL}" -o "${package}" --depfile "${gen_dir}/${ARG_SYMBOL}.d"
-        DEPENDS ${dependencies} ${gspc_dependencies}
+        DEPENDS ${dependencies} ${gsp_example_assets_target}
+                ${gspc_dependencies}
         BYPRODUCTS "${gen_dir}/${ARG_SYMBOL}.deps.json"
         DEPFILE "${gen_dir}/${ARG_SYMBOL}.d"
         COMMENT "gspc: exporting external assets ${ARG_SYMBOL}"

@@ -50,6 +50,30 @@ callbacks. Standalone export:
 gspc assets assets/assets.json --platform-soc esp32s31 --psram --hardware-jpeg --symbol media -o output/media.gspb
 ```
 
+## Getting the binary package
+
+With `gsp_add_assets()`, `idf.py build` generates the package automatically.
+After configuring the project, rebuild only the assets without linking firmware:
+
+```sh
+cmake --build build --target gsp_assets_media
+```
+
+The target suffix follows `SYMBOL`; use your actual build directory when it is
+not `build`. For the `main` component and `SYMBOL media`, the output is
+`build/esp-idf/main/gsp_assets_media/media.gspb`. CMake and the exporter print
+the package path. For a separate output directory or a media-only workflow,
+use the standalone command above with the same UI profile and target capabilities.
+
+- Copy `media.gspb` to the mounted storage path used by the application.
+- `media.h` is the generated firmware API; it does not need to be copied to storage.
+- `.deps.json` and `.d` describe build dependencies, not runtime assets.
+
+This `.gspb` is a resource package, not a flashable firmware `.bin` or a filesystem
+image. `idf.py flash` does not copy it to an SD card. On a computer, copy it to
+the card's mount directory; `/sdcard` in the example is the device-side VFS path.
+Before replacing a package in use, follow the [closing workflow](#closing-updates-and-storage).
+
 ## Codecs and targets
 
 Raster input uses compiler PNG/APNG, JPEG, GIF, BMP and WebP support. Optional
@@ -57,9 +81,12 @@ quality is 1–100 (profile default); max_fps limits imported animation rate.
 
 | Preference | Behavior |
 |---|---|
-| auto (default) | Target policy for still images; lossless QOI animation patches |
+| auto (default) | Target policy for still images; QOI animation patches unless a calibrated dense-frame hardware JPEG path wins |
 | lossless | Lossless QOI retaining alpha |
-| speed / hardware_jpeg | JPEG/JPEG+A8 with target hardware capability, otherwise QOI |
+| qoi / rle16 / rle16_a8 / rle32 | Explicit existing lossless codecs; RLE requires matching pixels and alpha |
+| speed | Static STORE, QOI/RLE or hardware JPEG as eligible; dense animations use hardware JPEG only with a measured board-profile hint, otherwise QOI patches |
+| size | Smallest eligible static payload; animations compare complete QOI delta and JPEG/JPEG+A8 payloads |
+| hardware_jpeg | JPEG/JPEG+A8 with target hardware capability, otherwise QOI |
 | jpeg | Explicit JPEG/JPEG+A8, including software decoding; lossy color, lossless alpha |
 | raw | Native pixels for still images; lossless animation unless animation_codec overrides it |
 
@@ -97,8 +124,10 @@ and loop information.
 
 The manifest accepts the Image field `animation_codec`: `lossless`, `jpeg` or
 `hardware_jpeg`, overriding the animation policy implied by `codec`. The default
-is lossless patches; hardware_jpeg follows target capability. `speed` remains a
-legacy convenience alias. Static pictures still use codec; codec raw on an
+for `auto` or an unspecified codec on an uncalibrated target is lossless patches;
+`auto` and `speed` use the measured board-profile hint, while `size` compares
+encoded bytes. `hardware_jpeg` follows target capability. Static pictures
+still use codec; codec raw on an
 animation follows the same lossless path as scene imports. The frame must fit the
 Profile animation-frame budget.
 
@@ -114,7 +143,10 @@ readable and can be re-exported to benefit from encoding improvements.
 
 ## State and memory
 
-get_status returns a request ID, error details and pending state:
+`esp_gsp_assets_show()` and generated asset setters return after admission, not
+after the file has loaded or the image has decoded. Query
+`esp_gsp_assets_get_status()` from an application task to obtain the request ID,
+error details and pending state:
 
 | State | Meaning |
 |---|---|
@@ -132,6 +164,14 @@ unsubmitted buffers, preserving displayed sources. failed_stage distinguishes fi
 is the encoded allocation requirement, not the decoded budget. Other failures stop that
 request; resubmit after recovery. Stop retains the picture; show restarts it.
 The earlier simple status API remains available.
+
+The [external-assets example](../../../examples/usage/external_assets/main/app_main.c)
+checks startup status for up to five seconds without blocking the UI task. A
+diagnostic timeout leaves playback active; it is not a load failure or a reason
+to unmount storage. `READY` is a snapshot, not an animation-completion event:
+later frames may still fail. Query status when handling an application error or
+retry, and use `FAILED` with `failed_stage`, `system_errno` and `required_bytes`
+to distinguish file access from decoding or memory pressure.
 
 Each package owns one reader with a default 4 KiB internal stack. Encoded budget
 defaults to one quarter of free PSRAM (or internal RAM without PSRAM), capped at
@@ -192,9 +232,9 @@ This service uses mounted ESP-IDF filesystems. SD/NAND share the API; raw NAND E
 bad-block and wear management belong to the driver. fseek/ftell limits apply
 (below 2 GiB with 32-bit long); larger libraries can be split. Use this file service through the ESP-IDF API; the PC bridge has no corresponding endpoint.
 
-examples/external_assets includes SDSPI mounting, board pins, a BSP-managed
+examples/usage/external_assets includes SDSPI mounting, board pins, a BSP-managed
 SDMMC/NAND alternative and built-in fallbacks. It never formats on mount failure.
-Use GSPC 0.5.0 with ESP-GSP 1.4.0.
+Select matching tools using the [compatibility contract](../reference/compatibility.md).
 
 ## Fonts on SD
 

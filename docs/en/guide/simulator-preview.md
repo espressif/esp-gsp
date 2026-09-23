@@ -33,7 +33,7 @@ Start the simulator with no frame limit to keep the preview running:
 gsp_sim_host --bundle app.gspb --frames 0
 ```
 
-The host prints the preview URL to stderr and opens a browser page with:
+The host prints the preview URL to stderr. Open it manually in a browser to see:
 
 - a live canvas rendering the simulated display;
 - mouse click and drag mapped to pointer input;
@@ -42,8 +42,8 @@ The host prints the preview URL to stderr and opens a browser page with:
 - a tabbed log panel showing callback events and runtime output.
 
 Use this mode during authoring to see layout changes, animation, and
-navigation in real time without a target build. Close the browser or press
-Ctrl-C to stop the simulator.
+navigation in real time without a target build. Closing the browser does not
+stop the host; press Ctrl-C or send the control API `quit` method.
 
 ## Headless testing and screenshots
 
@@ -81,7 +81,7 @@ After your IDF project has resolved its ESP-GSP dependency (for example with
 ```sh
 python -m pip install -U esp-gsp-tools
 python managed_components/espressif__esp-gsp/tools/sim_bridge/run.py \
-  --project managed_components/espressif__esp-gsp/examples/hello_world/pc
+  --project managed_components/espressif__esp-gsp/examples/usage/hello_world/pc
 ```
 
 On Windows, use a compiler developer terminal and `C:/path/to/tool.exe`
@@ -130,7 +130,8 @@ animations, events, timers and selected navigation APIs. Hosts advertising
 `capabilities.bridge_media_version: 1` also support native dynamic List/Grid
 binders, COPY PNG/JPEG/QOI images and Canvas push/draw APIs. Binders can make
 synchronous row updates. Canvas callbacks instead draw a full local offscreen
-surface before upload; timing and tile partitioning differ from the device,
+surface; small dirty regions use packed wire patches when supported, while
+large changes use full frames. Timing and tile partitioning differ from the device,
 and GSP mutations inside draw callbacks are rejected. Re-register draw
 callbacks on scene entry. `capabilities.bridge_image_version: 1` additionally
 supports image BORROW/TAKE helpers, completion/release callbacks and cache
@@ -164,7 +165,8 @@ flow:
 1. `capabilities` — confirm display size, scene count and `named_api`.
 2. `list_objects` / `inspect_object` — discover the target in the current scene.
 3. `tap_object` / `set_property` — drive named input or state.
-4. `wait` — let the animation settle.
+4. `wait_component` — wait for PageFlow/Drawer to settle at the expected value;
+   check `capabilities.wait_component_version` first. `wait` only counts frames.
 5. `screenshot` — capture the result.
 6. `quit` — shut down.
 

@@ -1,0 +1,17 @@
+menu "Thermostat encoder"
+config THERMOSTAT_ENCODER_A
+    int "Encoder A GPIO"
+    default 10
+    range 0 21
+config THERMOSTAT_ENCODER_B
+    int "Encoder B GPIO"
+    default 6
+    range 0 21
+config THERMOSTAT_ENCODER_PRESS
+    int "Active-low push button GPIO"
+    default 9
+    range 0 21
+config THERMOSTAT_ENCODER_REVERSE
+    bool "Reverse rotation direction"
+    default n
+endmenu

@@ -1,0 +1,19 @@
+{
+  "screen": "media", "w": 640, "h": 360, "screen_bg": "#101827",
+  "font": "../../../common/fonts/DejaVuSans.ttf",
+  "font_charset": " !#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+  "objects": [
+    {"type":"layer","parent":-1,"x":0,"y":0,"w":640,"h":360},
+    {"type":"list","parent":0,"name":"feed","x":12,"y":20,"w":180,"h":320,
+     "items":["A","B","C","D","E","F","G","H","I","J"],"item_height":44,"font_size":16,"fg_color":"#FFFFFF","bg_color":"#203048"},
+    {"type":"container","parent":0,"x":0,"y":0,"w":96,"h":80,"template":"media_cell","bg_color":"#203048"},
+    {"type":"image","parent":2,"x":4,"y":4,"w":88,"h":48,"image":"../../../performance/benchmark/scenes/bench_industrial.png","dynamic_image":true},
+    {"type":"label","parent":2,"x":4,"y":55,"w":88,"h":20,"text":"Cell","bind":"cell_text","bind_target":"text","font_size":14,"fg_color":"#FFFFFF"},
+    {"type":"grid","parent":0,"name":"gallery","x":210,"y":20,"w":202,"h":320,
+     "column_count":2,"column_gap":10,"row_gap":10,"cell_template":"media_cell","item_count":24},
+    {"type":"image","parent":0,"name":"surface","x":438,"y":20,"w":180,"h":160,
+     "image":"../../../performance/benchmark/scenes/bench_industrial.png","codec":"lossless","bind":"surface"},
+    {"type":"image","parent":0,"name":"encoded","x":438,"y":210,"w":180,"h":120,
+     "image":"../../../performance/benchmark/scenes/bench_industrial.png","bind":"encoded"}
+  ]
+}
