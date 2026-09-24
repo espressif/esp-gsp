@@ -25,7 +25,7 @@ browser preview.
 
 ## Runtime behavior
 
-Input updates retained values; controls provide checked or selected behavior and pressed or disabled feedback.
+Each radio stores an independent `checked` value. Tapping one does not clear other radios. For a single-choice group, give every option a name and have the application set the chosen option to `true` and the others to `false` with the generated `set_checked` helpers.
 
 Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
 

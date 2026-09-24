@@ -190,7 +190,6 @@ size_t gsp_list_docs_dynamic_image_slots(void)
 | `selected` | `int` | — | 默认 0; 0…65535 | 是 | 初始选中条目索引 |
 | `items_per_page` | `int` | — | 默认 0; 0…65535 | — | TabView 每页条目数 |
 | `visible_rows` | `int` | — | 默认 0; 0…65535 | — | 可见行数（item_height 的替代配置） |
-| `cyclic` | `bool` | — | 默认 `false` | — | 滚轮首尾连续循环 |
 | `row_template` | `identifier` | — | — | — | 复用的行模板 |
 | `item_count` | `int` | — | 0…4294967295 | — | 动态条目初始数量 |
 | `scroll_snapshot` | `bool` | — | 默认 `false` | — | 滚动时缓存两个视口帧；内存不足时回退到实时渲染 |

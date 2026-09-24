@@ -195,11 +195,11 @@ size_t gsp_page_flow_docs_dynamic_image_slots(void)
 | `h` | `int` | 是 | 0…65535 | 场景: 自身填充; 模板: 自身填充 | 高度（像素） |
 | `name` | `identifier` | — | — | — | 稳定组件名称；生成 GSP_OBJ_KEY_&lt;NAME&gt; |
 | `selected` | `int` | — | 默认 0; 0…65535 | 是 | 初始选中条目索引 |
-| `cyclic` | `bool` | — | 默认 `false` | — | 滚轮首尾连续循环 |
 | `pages` | `string_list` | — | — | — | 按页面索引排列的直接子对象名称；优先于旧版 &lt;name&gt;_tabN 命名规则 |
 | `page_count` | `int` | — | 1…65535 | — | 编译后的页面数量 |
 | `axis` | `enum` | — | 默认 horizontal; `horizontal`, `vertical` | — | 页面运动轴向 |
 | `bar_height` | `int` | — | 默认 56; 0…4096 | — | 选项卡栏高度 |
+| `cyclic` | `bool` | — | 默认 `false` | — | 页面循环切换 |
 
 <details><summary>查看此控件支持的其他字段</summary>
 

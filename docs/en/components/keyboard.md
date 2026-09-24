@@ -25,7 +25,18 @@ browser preview.
 
 ## Runtime behavior
 
-GSPC compiles the group into native primitives and generates adapters for application behavior exposed by named elements.
+`input: true` marks the target text field, but key taps write to it only after the application attaches the keyboard action to that field's text bind. For C integration, use the bundle header from `gspc compile --api-header app.h` or the ESP-GSP CMake build. After entering this scene, expose its IDs before including that header and attach them:
+
+```c
+#define GSP_BUNDLE_ENABLE_RAW_IDS
+#include "app.h"  /* Replace with your generated bundle API header. */
+
+esp_gsp_err_t err = esp_gsp_keyboard_attach(
+    ui, GSP_WIDGET_KEYBOARD_ACT_ID_ONSCREEN_KEYBOARD_KEY,
+    GSP_WIDGET_KEYBOARD_BIND_INPUT_VALUE);
+```
+
+Check `err` for `ESP_GSP_OK`. The attachment starts with an empty edit buffer; character keys update the field, DEL removes a character, and OK reaches the application callback.
 
 Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
 

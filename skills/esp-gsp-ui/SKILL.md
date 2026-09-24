@@ -257,6 +257,23 @@ continuously attached runtime, and does not cover other users of the context.
 
 ## Preview and verify
 
+### Keep agent and user simulator sessions separate
+
+For routine agent-driven testing, prefer a headless simulator. If the user
+wants to open the simulator and interact with it, start a separate simulator
+for that purpose and give the browser control with `--input-mode
+browser-exclusive`. Do not expose the WebUI of the agent's automation/debug
+instance unless the user explicitly asks to watch that workflow; otherwise the
+automation-owned preview can look interactive while rejecting the user's
+input.
+
+When running more than one simulator on the same machine, assign explicit,
+distinct visual, API, and backend ports instead of relying on automatic port
+allocation. Record which bundle/project owns each endpoint. If a captured
+simulator image differs greatly from the expected scene, check for another
+running simulator, including one from a different project, before treating the
+image as evidence of a UI regression.
+
 ### Choose the preview path
 
 Use the standalone simulator when checking scene layout, declarative actions,

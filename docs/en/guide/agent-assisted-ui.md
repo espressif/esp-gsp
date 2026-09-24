@@ -128,6 +128,13 @@ Use the standalone simulator from [Simulator preview and testing](simulator-prev
 for scene layout, declarative actions, and control behavior. This checks the
 scene without running the owning application's C tasks or product state logic.
 
+> **For coding agents:** Prefer headless mode for routine automated testing. If
+> the user wants to open the simulator and interact with it, start a separate
+> simulator and assign browser control with `--input-mode browser-exclusive`.
+> Do not expose the WebUI of the agent's automation/debug instance unless the
+> user explicitly asks to watch that workflow; an automation-owned preview may
+> look interactive while rejecting user input.
+
 When acceptance depends on application C callbacks, timers, dynamic collections,
 or live state, prefer the component's `sim_bridge`. It runs portable application
 C code on the PC and sends UI rendering to the simulator. After the ESP-GSP

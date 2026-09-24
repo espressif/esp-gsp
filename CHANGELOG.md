@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.5.1
+
+- Reduce Bundle loading overhead by reusing validated startup views, using
+  indexed bind lookup, and accelerating CRC checks on P4/S31.
+- Keep CRC enabled by default and make explicit opt-out cover GSPB and all
+  nested GSB/GRB/GFB checks while retaining structural validation.
+- Protect PIE rendering from rounding modes set by other tasks and reduce
+  solid-fill and rounded-border work.
+- Repaint raw bind effect updates across both old and new image bounds, and
+  accept non-negative signed values for unsigned component properties.
+- Decode runtime PNGs into the placeholder's alpha layout; reject transparent
+  pixels on opaque targets before writing the destination.
+
+### Upgrading from 1.5.0
+
+Use GSPC 0.6.1 with ESP-GSP and simulator 1.5.1. Public ABI and binary format
+versions are unchanged. Regenerate headers to obtain the corrected Image setters.
+Remove `cyclic` from List objects, including `cyclic: false`; Wheel and PageFlow
+continue to support it.
+
+Deployable `make_config()` now inherits the CRC policy passed to `open()`.
+After opening with `verify_crc=false`, set `config.disable_bundle_crc=false`
+if runtime creation should verify the package again.
+
 ## 1.5.0
 
 - Improve gestures, page transitions and component motion events.

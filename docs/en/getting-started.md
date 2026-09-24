@@ -16,7 +16,7 @@ example:
 
 <!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.5.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.5.1:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -45,7 +45,7 @@ From the ESP-IDF project root:
 
 <!-- gsp-version:dependency-command -->
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.5.0"
+idf.py add-dependency "espressif/esp-gsp^1.5.1"
 ```
 <!-- /gsp-version:dependency-command -->
 
@@ -54,7 +54,7 @@ The equivalent component manifest entry is:
 <!-- gsp-version:dependency-manifest -->
 ```yaml
 dependencies:
-  espressif/esp-gsp: "^1.5.0"
+  espressif/esp-gsp: "^1.5.1"
 ```
 <!-- /gsp-version:dependency-manifest -->
 
@@ -80,7 +80,7 @@ project marker takes precedence over the component marker:
 
 <!-- gsp-version:compiler-pin -->
 ```sh
-echo '0.6.0' > .gspc_version
+echo '0.6.1' > .gspc_version
 idf.py build
 ```
 <!-- /gsp-version:compiler-pin -->

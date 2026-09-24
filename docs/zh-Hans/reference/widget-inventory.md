@@ -45,7 +45,7 @@
 | [消息框](../components/msgbox.md) | `composite` | `composite_core` | 21 | 是 |
 | [表格](../components/table.md) | `composite` | `core` | 19 | 是 |
 | [键盘](../components/keyboard.md) | `composite` | `core` | 36 | 是 |
-| [列表](../components/list.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `list_data`, `scroll_snapshot`, `interaction`, `template` | 101 | 是 |
+| [列表](../components/list.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `list_data`, `scroll_snapshot`, `interaction`, `template` | 100 | 是 |
 | [滚轮选择器](../components/wheel.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `wheel_behavior`, `data`, `list_data`, `interaction`, `template` | 101 | 是 |
 | [网格](../components/grid.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `grid_data`, `scroll_snapshot`, `interaction`, `template` | 97 | 是 |
 | [消息列表](../components/message_list.md) | `composite` | `core`, `visibility`, `row_template`, `message_list` | 31 | 是 |
@@ -1892,7 +1892,6 @@
 | `item_height` | `int` | — | 默认 0; 0…65535 | — | 列表/滚轮行高 |
 | `items_per_page` | `int` | — | 默认 0; 0…65535 | — | TabView 每页条目数 |
 | `visible_rows` | `int` | — | 默认 0; 0…65535 | — | 可见行数（item_height 的替代配置） |
-| `cyclic` | `bool` | — | 默认 `false` | — | 滚轮首尾连续循环 |
 | `snap_to_item` | `bool` | — | 默认 `false` | — | 滚动结束时吸附到行边界 |
 | `enabled` | `bool` | — | — | — | 初始交互状态；设置后会公开可由后代控件继承的运行时 enabled 属性 |
 | `disabled_color` | `color` | — | 默认 #808080 | — | 禁用态覆盖颜色 |
@@ -1909,6 +1908,7 @@
 | `page_count` | `int` | — | 1…65535 | — | 编译后的页面数量 |
 | `axis` | `enum` | — | 默认 horizontal; `horizontal`, `vertical` | — | 页面运动轴向 |
 | `bar_height` | `int` | — | 默认 56; 0…4096 | — | 选项卡栏高度 |
+| `cyclic` | `bool` | — | 默认 `false` | — | 页面循环切换 |
 | `stop_anywhere` | `bool` | — | 默认 `false` | — | 允许 PageFlow 在页面之间回弹定位 |
 | `page_extent` | `int` | — | 默认 0; 0…65535 | — | PageFlow 拖动范围 |
 
@@ -2457,7 +2457,6 @@
 | `item_height` | `int` | — | 默认 0; 0…65535 | — | 列表/滚轮行高 |
 | `items_per_page` | `int` | — | 默认 0; 0…65535 | — | TabView 每页条目数 |
 | `visible_rows` | `int` | — | 默认 0; 0…65535 | — | 可见行数（item_height 的替代配置） |
-| `cyclic` | `bool` | — | 默认 `false` | — | 滚轮首尾连续循环 |
 | `snap_to_item` | `bool` | — | 默认 `false` | — | 滚动结束时吸附到行边界 |
 | `row_template` | `identifier` | — | — | — | 复用的行模板 |
 | `item_count` | `int` | — | 0…4294967295 | — | 动态条目初始数量 |

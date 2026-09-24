@@ -2114,8 +2114,10 @@ esp_gsp_err_t esp_gsp_deployable_bundle_open(const void *data, size_t size, bool
 
 **Contract details**
 
-The input bytes must be 64-byte aligned and remain valid until the handle
-is closed. When `verify_crc` is false, structural validation still runs.
+The input bytes must be 64-byte aligned and remain immutable and valid
+until the handle is closed. Pass true to verify CRC (the recommended default). When false,
+structural validation still runs, and make_config preserves this CRC opt-out
+for subsequent runtime creation.
 
 ### `esp_gsp_deployable_bundle_get_info()`
 
@@ -2130,7 +2132,7 @@ esp_gsp_err_t esp_gsp_deployable_bundle_get_info(const esp_gsp_deployable_bundle
 
 ### `esp_gsp_deployable_bundle_make_config()`
 
-Builds an application configuration backed by the opened bundle.
+Builds an application configuration backed by the opened bundle. disable_bundle_crc reflects the verify_crc argument used when opening; callers may override it before creating the UI.
 
 - **Header:** `include/esp_gsp_deployable.h`
 - **Return type:** `esp_gsp_err_t`

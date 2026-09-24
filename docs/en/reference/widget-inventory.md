@@ -8,7 +8,7 @@ Current GSPC registry coverage.
 |---|---:|
 | Registered widgets | 28 |
 | Compile-time composites | 6 |
-| Total field definitions | 2496 |
+| Total field definitions | 2495 |
 | Dynamic capability fields | 236 |
 
 ## Components
@@ -45,7 +45,7 @@ Current GSPC registry coverage.
 | `msgbox` | `Composite` | `composite_core` | 21 | yes |
 | `table` | `Composite` | `core` | 19 | yes |
 | `keyboard` | `Composite` | `core` | 36 | yes |
-| `list` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `list_data`, `scroll_snapshot`, `interaction`, `template` | 101 | yes |
+| `list` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `list_data`, `scroll_snapshot`, `interaction`, `template` | 100 | yes |
 | `wheel` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `wheel_behavior`, `data`, `list_data`, `interaction`, `template` | 101 | yes |
 | `grid` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `grid_data`, `scroll_snapshot`, `interaction`, `template` | 97 | yes |
 | `message_list` | `Composite` | `core`, `visibility`, `row_template`, `message_list` | 31 | yes |
@@ -1892,7 +1892,6 @@ Current GSPC registry coverage.
 | `item_height` | `int` | no | no | `0` | row height for list/wheel |
 | `items_per_page` | `int` | no | no | `0` | tabview items per page |
 | `visible_rows` | `int` | no | no | `0` | visible row count (alt to item_height) |
-| `cyclic` | `bool` | no | no | `false` | wheel wraps around |
 | `snap_to_item` | `bool` | no | no | `false` | scrolling snaps to row boundaries |
 | `enabled` | `bool` | no | no | — | initial interaction state; when present, exposes a runtime enabled property inherited by descendant controls |
 | `disabled_color` | `color` | no | no | `"#808080"` | disabled-state overlay color |
@@ -1909,6 +1908,7 @@ Current GSPC registry coverage.
 | `page_count` | `int` | no | no | — | compiled page count |
 | `axis` | `enum` | no | no | `"horizontal"` | page motion axis |
 | `bar_height` | `int` | no | no | `56` | tab bar height |
+| `cyclic` | `bool` | no | no | `false` | cyclic page wrap |
 | `stop_anywhere` | `bool` | no | no | `false` | allow PageFlow to settle between pages |
 | `page_extent` | `int` | no | no | `0` | PageFlow drag extent |
 
@@ -2457,7 +2457,6 @@ Current GSPC registry coverage.
 | `item_height` | `int` | no | no | `0` | row height for list/wheel |
 | `items_per_page` | `int` | no | no | `0` | tabview items per page |
 | `visible_rows` | `int` | no | no | `0` | visible row count (alt to item_height) |
-| `cyclic` | `bool` | no | no | `false` | wheel wraps around |
 | `snap_to_item` | `bool` | no | no | `false` | scrolling snaps to row boundaries |
 | `row_template` | `identifier` | no | no | — | recycled row template |
 | `item_count` | `int` | no | no | — | initial dynamic item count |

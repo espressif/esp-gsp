@@ -1,6 +1,6 @@
 # ESP-GSP Authoring Reference
 
-GSPC version: 0.6.0.
+GSPC version: 0.6.1.
 
 Declare runtime-update fields using the dynamic forms listed in the tables. See [dynamic property scope](../guide/scenes.md#dynamic-property-scope) for declaration forms and object-versus-subtree behavior.
 
@@ -1940,7 +1940,6 @@ Supports events: `click`, `press`, `release`, `long`
 | `item_height` | int | `0` | row height for list/wheel [0..65535] |
 | `items_per_page` | int | `0` | tabview items per page [0..65535] |
 | `visible_rows` | int | `0` | visible row count (alt to item_height) [0..65535] |
-| `cyclic` | bool | `false` | wheel wraps around |
 | `snap_to_item` | bool | `false` | scrolling snaps to row boundaries |
 | `enabled` | bool | — | initial interaction state; when present, exposes a runtime enabled property inherited by descendant controls |
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
@@ -1957,6 +1956,7 @@ Supports events: `click`, `press`, `release`, `long`
 | `page_count` | int | — | compiled page count [1..65535] |
 | `axis` | enum(`horizontal`/`vertical`) | `"horizontal"` | page motion axis |
 | `bar_height` | int | `56` | tab bar height [0..4096] |
+| `cyclic` | bool | `false` | cyclic page wrap |
 | `stop_anywhere` | bool | `false` | allow PageFlow to settle between pages |
 | `page_extent` | int | `0` | PageFlow drag extent [0..65535] |
 
@@ -2361,7 +2361,6 @@ Supports events: `click`, `press`, `release`, `long`
 | `item_height` | int | `0` | row height for list/wheel [0..65535] |
 | `items_per_page` | int | `0` | tabview items per page [0..65535] |
 | `visible_rows` | int | `0` | visible row count (alt to item_height) [0..65535] |
-| `cyclic` | bool | `false` | wheel wraps around |
 | `snap_to_item` | bool | `false` | scrolling snaps to row boundaries |
 | `row_template` | identifier | — | recycled row template |
 | `item_count` | int | — | initial dynamic item count [0..4294967295] |

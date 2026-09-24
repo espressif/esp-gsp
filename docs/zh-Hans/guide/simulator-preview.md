@@ -60,6 +60,15 @@ gsp_sim_host --bundle app.gspb --headless \
 脚本化的 `--tap`、`--drag` 和 `--wait` 操作按出现顺序执行。更复杂的序列建议使用
 API 通道。
 
+## 多模拟器实例
+
+同一台机器上运行多个模拟器时，建议手动指定互不相同的端口，不要依赖自动分配。
+按需明确设置 `--visual-listen`、TCP `--api-listen` 和 `--backend-listen`，并记录每个
+端点对应的 Bundle 和工程。
+
+如果抓取的模拟器图片与预期场景差异很大，应先核对连接端点与 Bundle，再排查 UI。
+此时可能仍有其他模拟器在运行，包括由非当前工程启动的实例。
+
 ## 复用 C UI 业务代码
 
 已安装的 ESP-GSP 组件包含 `tools/sim_bridge`，可把 UI 业务 `.c` 与原生兼容库一起编译为

@@ -28,8 +28,35 @@
 | `directories`、`directory_count` | 由生成配置提供 | 仅高级配置自行注册控件目录时设置 |
 | `ttf`、`ttf_size` | 不启用运行时轮廓字体回退 | 使用 `DYNAMIC_FONT` 或调用者持有字体 Blob 时设置 |
 | `disable_swipe` | 多场景默认允许横向滑动 | 整个 UI 必须禁止场景滑动时设置 |
-| `disable_bundle_crc` | 校验 Bundle、资源和字体 CRC | 仅可信构建资产已由外层分区完整性保护时设置 |
+| `disable_bundle_crc` | 校验 GSPB 及内部 GSB/GRB/GFB 的 CRC | 仅可信构建资产已由外层分区完整性保护时设置 |
 | `image_cache_bytes` | 根据目标可达 Heap 推导 | 根据同时显示的图片和可用内存设置 |
+
+Bundle 加载会检查完整性与结构。在一次初始化期间，借用的包数据保持不可变时，
+可复用已经验证的解析结果；重新加载时会重新校验。存储或更新层没有提供完整性
+保障的包应保持 CRC 校验开启。
+
+CRC 默认开启。应用已验证包完整性时，可在创建 UI 前手动关闭：
+
+```c
+esp_gsp_config_t config = gsp_product_config();
+config.disable_bundle_crc = true;
+```
+
+这会跳过 GSPB 以及内部场景、资源、字体的 CRC，仍保留头部、对齐、范围、引用和
+版本检查。将字段设回 `false`，下次创建 UI 时即恢复 CRC 校验。
+
+使用 Deployable API 时，生成配置会继承打开包时的校验策略：
+
+```c
+esp_gsp_deployable_bundle_t *bundle = NULL;
+esp_gsp_config_t config;
+ESP_ERROR_CHECK(esp_gsp_deployable_bundle_open(data, size, false, &bundle));
+ESP_ERROR_CHECK(esp_gsp_deployable_bundle_make_config(bundle, &config));
+// config.disable_bundle_crc is true; override it before UI creation if needed.
+```
+
+正常加载时向 `esp_gsp_deployable_bundle_open()` 传入 `true`。之后修改配置不会撤销
+`open()` 已经执行的校验。
 
 ### 单实例覆盖
 
@@ -162,6 +189,15 @@ gsp_add_bundle(<component-target>
 
 没有 `SCENES` 时，工程必须至少包含一个 `scenes/*.json`。不同 Bundle 必须使用
 不同 `SYMBOL`。`DEPLOYABLE` 不负责分区、传输、升级、回滚或签名策略。
+
+无 PSRAM 且未设置 `IMAGE_CACHE_BYTES` 时，默认关闭解码图片缓存。此时普通编码图片
+入口接受与占位图尺寸一致的 QOI；已准备的资源入口还支持 STORE/RLE。PNG/JPEG
+替换需要解码图片缓存。存在运行时图片目标且缓存关闭时，构建会给出
+`GSPC-RS-RUNTIME-IMAGE-CACHE` 警告。
+需要运行时 PNG/JPEG 时，启用 `CONFIG_ESP_GSP_ENABLE_IMAGE_CACHE`；使用显式
+Profile 时还需设置 `image_cache_enabled: true`。移除
+`--default-disable-image-cache` 覆盖，然后设置足够容纳解码图片的
+`IMAGE_CACHE_BYTES`。`65536` 字节只是预算示例，应根据实际图片尺寸选择。
 
 ## 图片缓存与场景切换
 

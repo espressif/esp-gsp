@@ -10,9 +10,9 @@ CMake 会立即停止并给出不匹配项，不会把问题推迟到设备运�
 
 | 项目 | 当前值 | 链接 |
 |---|---:|---|
-| ESP-GSP 组件 | `1.5.0` | [Component Registry](https://components.espressif.com/components/espressif/esp-gsp/versions/1.5.0/readme) |
-| ESP-GSP 模拟器 | `1.5.0` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/sim/v1.5.0/manifest.json) |
-| 推荐 GSPC | `0.6.0` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/gspc/v0.6.0/manifest.json) |
+| ESP-GSP 组件 | `1.5.1` | [Component Registry](https://components.espressif.com/components/espressif/esp-gsp/versions/1.5.1/readme) |
+| ESP-GSP 模拟器 | `1.5.1` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/sim/v1.5.1/manifest.json) |
+| 推荐 GSPC | `0.6.1` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/gspc/v0.6.1/manifest.json) |
 | GSB | `2.7` |  |
 | GRB | `1.4` |  |
 | GFB | `1.2` |  |
@@ -43,8 +43,8 @@ Registry 组件中的每个预编译库都带有 `prebuilt/<variant>/build-info.
 
 ```sh
 python -m pip install -U esp-gsp-tools
-gspc() { python -m gsp.execute --version 0.6.0 gspc "$@"; }
-gsp_sim_host() { python -m gsp.execute --version 1.5.0 sim "$@"; }
+gspc() { python -m gsp.execute --version 0.6.1 gspc "$@"; }
+gsp_sim_host() { python -m gsp.execute --version 1.5.1 sim "$@"; }
 ```
 
 其他 shell 可使用 `python -m gsp.execute --version VERSION gspc` 或

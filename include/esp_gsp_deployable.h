@@ -32,8 +32,10 @@ typedef struct {
 /**
  * Opens a borrowed GSPB containing one GMD member for every GSB scene.
  *
- * The input bytes must be 64-byte aligned and remain valid until the handle
- * is closed. When @p verify_crc is false, structural validation still runs.
+ * The input bytes must be 64-byte aligned and remain immutable and valid
+ * until the handle is closed. Pass true to verify CRC (the recommended default). When false,
+ * structural validation still runs, and make_config preserves this CRC opt-out
+ * for subsequent runtime creation.
  */
 esp_gsp_err_t esp_gsp_deployable_bundle_open(
     const void *data, size_t size, bool verify_crc,
@@ -46,6 +48,8 @@ esp_gsp_err_t esp_gsp_deployable_bundle_get_info(
 
 /**
  * Builds an application configuration backed by the opened bundle.
+ * disable_bundle_crc reflects the verify_crc argument used when opening;
+ * callers may override it before creating the UI.
  *
  * The deployable handle and its borrowed bytes must outlive the UI instance.
  * Stop the UI before calling esp_gsp_deployable_bundle_close().

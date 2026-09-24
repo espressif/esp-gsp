@@ -37,7 +37,7 @@ ESP-GSP 适用于界面结构在构建期确定，但文字、数值、图片、
 
 <!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.5.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.5.1:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -57,7 +57,7 @@ python -m pip install -U esp-gsp-tools
 
 <!-- gsp-version:dependency-command -->
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.5.0"
+idf.py add-dependency "espressif/esp-gsp^1.5.1"
 python -m pip install -U esp-gsp-tools
 ```
 <!-- /gsp-version:dependency-command -->

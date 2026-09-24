@@ -14,7 +14,7 @@ GSP 创建和资源校验同步运行在调用者任务中。新工程可先采�
 
 <!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.5.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.5.1:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -42,7 +42,7 @@ python -m pip install -U esp-gsp-tools
 <!-- gsp-version:dependency-command -->
 ```sh
 cd /path/to/your/esp-idf-project
-idf.py add-dependency "espressif/esp-gsp^1.5.0"
+idf.py add-dependency "espressif/esp-gsp^1.5.1"
 ```
 <!-- /gsp-version:dependency-command -->
 
@@ -51,7 +51,7 @@ idf.py add-dependency "espressif/esp-gsp^1.5.0"
 <!-- gsp-version:dependency-manifest -->
 ```yaml
 dependencies:
-  espressif/esp-gsp: "^1.5.0"
+  espressif/esp-gsp: "^1.5.1"
 ```
 <!-- /gsp-version:dependency-manifest -->
 
@@ -61,7 +61,7 @@ dependencies:
 ```yaml
 dependencies:
   espressif/esp-gsp:
-    version: "^1.5.0"
+    version: "^1.5.1"
     override_path: /absolute/path/to/esp-gsp
 ```
 <!-- /gsp-version:local-override -->
@@ -83,7 +83,7 @@ ESP-IDF 工程指定其他版本，可在工程根目录创建 `.gspc_version`�
 
 <!-- gsp-version:compiler-pin -->
 ```sh
-echo '0.6.0' > .gspc_version
+echo '0.6.1' > .gspc_version
 idf.py build
 ```
 <!-- /gsp-version:compiler-pin -->

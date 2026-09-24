@@ -117,13 +117,10 @@ typedef struct {
                                          navigation is on by default for
                                          multi-scene bundles; set to
                                          opt out */
-    /** Skip CRC verification during runtime creation: the one-time
-     *  whole-bundle scan and the nested GRB (resource) and GFB (font)
-     *  container CRCs. Each scene's GSB container is still CRC-verified
-     *  once while its config is extracted, and structural header,
-     *  alignment, member bounds and version validation always remain
-     *  enabled. Use only for trusted, build-time assets whose containing
-     *  partition is verified separately. */
+    /** CRC verification is enabled by default (false). Set true to skip
+     *  the whole GSPB and nested GSB/GRB/GFB CRC checks during creation.
+     *  Structural, alignment, bounds, reference and version validation
+     *  remain enabled. Use for assets whose integrity is verified separately. */
     bool disable_bundle_crc;
     /** ADVANCED: decoded runtime-image cache budget in bytes. Zero derives a
      *  target default from available heap: half of free PSRAM when present

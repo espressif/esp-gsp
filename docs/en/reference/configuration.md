@@ -25,8 +25,38 @@ members: all of them use `esp_gsp_config_set()` and stable field IDs.
 | `directories`, `directory_count` | supplied by the generated configuration | constructing an advanced configuration that uses component-key APIs |
 | `ttf`, `ttf_size` | no runtime outline-font fallback | using `gsp_add_bundle(DYNAMIC_FONT ...)` or an advanced caller-owned font blob |
 | `disable_swipe` | multi-scene horizontal swipe remains enabled unless the scene disables it | the whole UI must reject scene swipes |
-| `disable_bundle_crc` | bundle and nested resource/font CRCs are verified | trusted build-time assets live in a container or partition that is verified separately; structural and per-scene checks still run |
+| `disable_bundle_crc` | GSPB and nested GSB/GRB/GFB CRCs are verified | trusted build-time assets live in a container or partition that is verified separately; structural validation still runs |
 | `image_cache_bytes` | target-derived decoded-image budget | simultaneously visible decoded images require a measured larger or smaller budget |
+
+Bundle loading verifies integrity and structure before use. During a single
+initialization, validated views can be reused while the borrowed bytes remain
+immutable. A new load validates the package again. Keep CRC enabled for packages
+whose integrity is not already guaranteed by the storage or update layer.
+
+CRC is enabled by default. For a package verified by the application, set the
+flag before creating the UI:
+
+```c
+esp_gsp_config_t config = gsp_product_config();
+config.disable_bundle_crc = true;
+```
+
+This skips the GSPB and nested scene, resource and font CRC checks. It preserves
+header, alignment, bounds, reference and version validation. Set the flag back
+to `false` to enable CRC for the next creation.
+
+With the Deployable API, the opening policy is inherited by the generated config:
+
+```c
+esp_gsp_deployable_bundle_t *bundle = NULL;
+esp_gsp_config_t config;
+ESP_ERROR_CHECK(esp_gsp_deployable_bundle_open(data, size, false, &bundle));
+ESP_ERROR_CHECK(esp_gsp_deployable_bundle_make_config(bundle, &config));
+// config.disable_bundle_crc is true; override it before UI creation if needed.
+```
+
+Pass `true` to `esp_gsp_deployable_bundle_open()` for normal CRC-verified loading.
+Changing the config later does not undo checks already performed by `open()`.
 
 ### One per-instance configuration API
 
@@ -274,6 +304,15 @@ On builds without PSRAM, the generated default disables the image cache and
 therefore does not advertise hardware JPEG to `codec: auto`. Supplying an
 explicit `IMAGE_CACHE_BYTES` internal-RAM budget opts back in; an expert
 `PROFILE` remains fully caller-controlled.
+Without the cache, encoded image submissions accept QOI matching the placeholder
+dimensions; prepared resources also support STORE/RLE. PNG/JPEG replacements
+require the decoded-image cache. The build reports `GSPC-RS-RUNTIME-IMAGE-CACHE`
+when runtime image targets are present while caching is disabled.
+To use PNG/JPEG, enable `CONFIG_ESP_GSP_ENABLE_IMAGE_CACHE` and, when using an
+explicit profile, set `image_cache_enabled: true`. Remove any
+`--default-disable-image-cache` override, then set `IMAGE_CACHE_BYTES` to a budget
+large enough for the decoded images. `65536` bytes is an example budget, not a
+minimum that fits every image.
 
 ## Kconfig (ESP-IDF) capacity and policy tunables
 

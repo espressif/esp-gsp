@@ -196,11 +196,11 @@ These signatures come from the actual compiler output for this JSON.
 | `h` | `int` | yes | 0…65535 | scene: own fill; template: own fill | height in px |
 | `name` | `identifier` | — | — | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
 | `selected` | `int` | — | default 0; 0…65535 | yes | initially selected item index |
-| `cyclic` | `bool` | — | default `false` | — | wheel wraps around |
 | `pages` | `string_list` | — | — | — | ordered names of direct page children; overrides legacy &lt;name&gt;_tabN discovery |
 | `page_count` | `int` | — | 1…65535 | — | compiled page count |
 | `axis` | `enum` | — | default horizontal; `horizontal`, `vertical` | — | page motion axis |
 | `bar_height` | `int` | — | default 56; 0…4096 | — | tab bar height |
+| `cyclic` | `bool` | — | default `false` | — | cyclic page wrap |
 
 <details><summary>Show other fields supported by this Widget</summary>
 

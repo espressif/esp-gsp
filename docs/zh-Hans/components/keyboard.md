@@ -24,7 +24,18 @@ gsp_sim_host \
 
 ## 运行方式
 
-GSPC 将组合组件编译为原生基础图元，并为命名元素生成连接应用行为的适配 API。
+`input: true` 标记目标文字输入字段，但按键只有在应用将键盘 action 接到该字段的 text bind 后才会写入。C 集成使用 `gspc compile --api-header app.h` 或 ESP-GSP CMake 构建生成的 bundle 头文件。进入本场景后，在包含该头文件前启用场景限定 ID，并接入键盘：
+
+```c
+#define GSP_BUNDLE_ENABLE_RAW_IDS
+#include "app.h"  /* Replace with your generated bundle API header. */
+
+esp_gsp_err_t err = esp_gsp_keyboard_attach(
+    ui, GSP_WIDGET_KEYBOARD_ACT_ID_ONSCREEN_KEYBOARD_KEY,
+    GSP_WIDGET_KEYBOARD_BIND_INPUT_VALUE);
+```
+
+检查 `err` 是否为 `ESP_GSP_OK`。接入后编辑缓冲区从空文本开始；字符键更新字段，DEL 删除字符，OK 事件交给应用回调。
 
 为需要在 C 代码中读写的对象设置稳定的 `name`。GSPC 为命名对象生成下方列出的类型化函数。
 

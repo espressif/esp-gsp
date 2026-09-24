@@ -66,6 +66,17 @@ gsp_sim_host --bundle app.gspb --headless \
 Scripted `--tap`, `--drag`, and `--wait` actions execute in order. For
 complex sequences, prefer the API channel.
 
+## Multiple simulator instances
+
+When running multiple simulators on one machine, assign explicit, distinct
+ports instead of relying on automatic allocation. In particular, set
+`--visual-listen`, TCP `--api-listen`, and `--backend-listen` ports as needed,
+and keep each endpoint associated with its bundle and project.
+
+If a captured simulator image differs greatly from the expected scene, verify
+the endpoint and bundle before diagnosing the UI. Another simulator, including
+one started by a different project, may still be running and serving the image.
+
 ## Reuse C UI business logic
 
 The installed ESP-GSP component includes `tools/sim_bridge`, a native C compatibility

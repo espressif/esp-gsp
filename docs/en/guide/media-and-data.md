@@ -313,7 +313,8 @@ instead of depending on the order of separate asynchronous setters.
 
 ## Runtime encoded images
 
-Use a named image and its generated `set_image()` helper for occasional PNG,
+Give the image a `name`, a `bind`, and `bind_target: "resource"`, then use its
+generated `set_image()` helper for occasional PNG,
 JPEG, QOI, or other supported encoded input. The generic public API offers
 three ownership models:
 
@@ -324,6 +325,10 @@ three ownership models:
 | `esp_gsp_set_image_owned()` | Takes malloc-compatible storage after successful submission |
 | `esp_gsp_set_image_ex()` | Selects COPY, BORROW, or TAKE explicitly |
 
+The explicit `bind_target` keeps the binding on the image resource when the
+object also has a background color. An image without a background color or text
+can omit it.
+
 A successful borrowed or TAKE submission can retain the encoded payload while
 that image remains current, because decoded pixels may be evicted and decoded
 again. If submission returns an error immediately, ownership remains with the
@@ -331,6 +336,12 @@ caller and no later release callback runs.
 
 The currently displayed image remains visible while its replacement decodes.
 If replacement decoding fails, the previous image stays visible.
+
+The authored placeholder, not the replacement, fixes the decoded pixel format.
+An opaque PNG may replace a transparent placeholder (alpha becomes 255). An RGBA
+PNG replaces an opaque placeholder only when every pixel is opaque; a PNG with
+transparent pixels is rejected there. Author a transparent placeholder when the
+replacement needs transparency.
 
 ## Canvas producers
 

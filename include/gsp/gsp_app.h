@@ -87,6 +87,7 @@ typedef struct {
     bool disable_image_cache;
     size_t dirty_capacity;
     bool disable_swipe;
+    /** False by default; true skips GSPB and nested GSB/GRB/GFB CRCs only. */
     bool disable_bundle_crc;
     /** Select POINTER_POLL_MS as the idle service interval. Platform touch
      * runners set this so polling input can discover the first press. */

@@ -191,7 +191,6 @@ These signatures come from the actual compiler output for this JSON.
 | `selected` | `int` | — | default 0; 0…65535 | yes | initially selected item index |
 | `items_per_page` | `int` | — | default 0; 0…65535 | — | tabview items per page |
 | `visible_rows` | `int` | — | default 0; 0…65535 | — | visible row count (alt to item_height) |
-| `cyclic` | `bool` | — | default `false` | — | wheel wraps around |
 | `row_template` | `identifier` | — | — | — | recycled row template |
 | `item_count` | `int` | — | 0…4294967295 | — | initial dynamic item count |
 | `scroll_snapshot` | `bool` | — | default `false` | — | cache two viewport frames while scrolling; falls back to live rendering when memory is unavailable |

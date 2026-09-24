@@ -12,9 +12,9 @@ runtime APIs; parsing, editing, or constructing bundle internals is unsupported.
 
 | Item | Current value | Link |
 |---|---:|---|
-| ESP-GSP component | `1.5.0` | [Component Registry](https://components.espressif.com/components/espressif/esp-gsp/versions/1.5.0/readme) |
-| ESP-GSP simulator | `1.5.0` | [Binary (manifest)](https://dl.espressif.com/AE/gsp/sim/v1.5.0/manifest.json) |
-| Recommended GSPC | `0.6.0` | [Binary (manifest)](https://dl.espressif.com/AE/gsp/gspc/v0.6.0/manifest.json) |
+| ESP-GSP component | `1.5.1` | [Component Registry](https://components.espressif.com/components/espressif/esp-gsp/versions/1.5.1/readme) |
+| ESP-GSP simulator | `1.5.1` | [Binary (manifest)](https://dl.espressif.com/AE/gsp/sim/v1.5.1/manifest.json) |
+| Recommended GSPC | `0.6.1` | [Binary (manifest)](https://dl.espressif.com/AE/gsp/gspc/v0.6.1/manifest.json) |
 | GSB | `2.7` |  |
 | GRB | `1.4` |  |
 | GFB | `1.2` |  |
@@ -50,8 +50,8 @@ shell; these functions select the versions in the table above for this session:
 
 ```sh
 python -m pip install -U esp-gsp-tools
-gspc() { python -m gsp.execute --version 0.6.0 gspc "$@"; }
-gsp_sim_host() { python -m gsp.execute --version 1.5.0 sim "$@"; }
+gspc() { python -m gsp.execute --version 0.6.1 gspc "$@"; }
+gsp_sim_host() { python -m gsp.execute --version 1.5.1 sim "$@"; }
 ```
 
 In other shells, use `python -m gsp.execute --version VERSION gspc` or

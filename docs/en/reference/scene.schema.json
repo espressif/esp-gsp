@@ -132,9 +132,9 @@
     "widget_registry",
     "authoring"
   ],
-  "compiler_version": "0.6.0",
+  "compiler_version": "0.6.1",
   "protocol_version": 1,
-  "registry_hash": "crc32:eff622c5",
+  "registry_hash": "crc32:cdf1ee28",
   "schema_version": 2,
   "widgets": {
     "arc": {
@@ -9300,11 +9300,6 @@
           "doc": "image compression toggle (legacy; prefer codec)",
           "type": "bool"
         },
-        "cyclic": {
-          "default": false,
-          "doc": "wheel wraps around",
-          "type": "bool"
-        },
         "disabled_color": {
           "default": "#808080",
           "doc": "disabled-state overlay color",
@@ -11091,7 +11086,7 @@
         },
         "cyclic": {
           "default": false,
-          "doc": "wheel wraps around",
+          "doc": "cyclic page wrap",
           "type": "bool"
         },
         "disabled_color": {
