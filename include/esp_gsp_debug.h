@@ -36,6 +36,39 @@ typedef struct {
  */
 bool esp_gsp_heap_stats(esp_gsp_heap_stats_t *out_stats);
 
+/** Framework-managed image buffer payload bytes (allocator overhead excluded). */
+typedef struct {
+    size_t current_bytes;
+    size_t peak_bytes;
+    size_t internal_bytes;
+    size_t internal_peak_bytes;
+    size_t psram_bytes;
+    size_t psram_peak_bytes;
+    size_t other_bytes;       /*!< Host memory or memory outside the two heaps. */
+    size_t other_peak_bytes;
+} esp_gsp_image_memory_usage_t;
+
+typedef struct {
+    esp_gsp_image_memory_usage_t total;
+    esp_gsp_image_memory_usage_t decoded; /*!< Default image/vector cache surfaces. */
+    esp_gsp_image_memory_usage_t input;   /*!< COPY/TAKE submissions; excludes BORROW. */
+    esp_gsp_image_memory_usage_t staging; /*!< Resize surfaces and JPEG row buffers. */
+    esp_gsp_image_memory_usage_t scratch; /*!< PNG and hardware JPEG scratch. */
+} esp_gsp_image_memory_stats_t;
+
+/** Coherent process-wide snapshot across all GSP instances, including detached
+ * decode jobs. Peaks are simultaneous tracked payload high-water marks since
+ * process start, not sums of per-scene peaks. Excludes borrowed inputs, custom
+ * cache allocators, codec-library private allocations, animation frame buffers,
+ * region-decoder buffers, display buffers, stacks and allocator overhead.
+ * Input counts each owned submission once; callers must not TAKE one allocation
+ * twice. No allocation or heap traversal. Task context only.
+ * Pass sizeof(*out_stats). Returns false without modifying output for NULL or
+ * a size mismatch; otherwise returns true, including on portable hosts.
+ */
+bool esp_gsp_image_memory_stats(esp_gsp_image_memory_stats_t *out_stats,
+                                size_t stats_size);
+
 typedef enum {
     ESP_GSP_UPDATE_ERROR_VALIDATE = 1, /*!< Rejected before queue admission. */
     ESP_GSP_UPDATE_ERROR_SUBMIT,       /*!< Could not copy or queue the batch. */

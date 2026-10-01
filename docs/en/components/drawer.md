@@ -4,12 +4,11 @@ Edge-attached overlay that opens and closes with pointer gestures.
 
 ## When to use
 
-Use it to organize content, visibility, or navigation while preserving hierarchy.
+Use it to group content, control visibility, or move between pages.
 
 ## Local interactive preview
 
-First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
-then run from an unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands), then run from an unpacked component or public repository root with `gspc` and `gsp_sim_host`:
 
 ```sh
 mkdir -p gsp-out/widget-preview
@@ -17,181 +16,26 @@ gspc pack \
   examples/usage/widgets/drawer/drawer.json \
   --deployable -o gsp-out/widget-preview/drawer.gspb
 gsp_sim_host \
-  --bundle gsp-out/widget-preview/drawer.gspb
+  --bundle gsp-out/widget-preview/drawer.gspb --frames 0
 ```
 
-These commands compile the JSON below and open it in the ESP-GSP simulator's
-browser preview.
+These commands compile the example and open it in the ESP-GSP simulator browser preview.
 
 ## Runtime behavior
 
-Children retain their hierarchy. Set clip_children on a Container or Layer to clip child drawing and input to its rectangular bounds. Nested clips intersect and move with their parent. Use fixed w/h for the viewport; radius styles the background and border.
+Children keep their hierarchy. `clip_children` limits drawing and input to the parent rectangle. Use fixed `w` and `h` for a viewport; `radius` styles its background and border.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
+If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
-## Complete example JSON
+## Example scene
 
 ```json
-{
-  "screen": "widget_drawer",
-  "w": 480,
-  "h": 320,
-  "screen_bg": "#0E1726",
-  "font": "../../../common/fonts/DejaVuSans.ttf",
-  "objects": [
-    {
-      "type": "label",
-      "parent": -1,
-      "x": 42,
-      "y": 62,
-      "w": 396,
-      "h": 42,
-      "text": "Device dashboard",
-      "text_align": "center",
-      "font_size": 28,
-      "fg_color": "#F8FAFC"
-    },
-    {
-      "type": "label",
-      "parent": -1,
-      "x": 62,
-      "y": 112,
-      "w": 356,
-      "h": 44,
-      "text": "Open the edge panel, adjust its controls, then close it by button or drag.",
-      "text_align": "center",
-      "font_size": 14,
-      "fg_color": "#94A3B8"
-    },
-    {
-      "type": "button",
-      "parent": -1,
-      "x": 150,
-      "y": 190,
-      "w": 180,
-      "h": 48,
-      "text": "Open settings",
-      "font_size": 16,
-      "bg_color": "#2563EB",
-      "fg_color": "#FFFFFF",
-      "radius": 12,
-      "events": [
-        {
-          "event": "click",
-          "action": "drawer_open",
-          "target_name": "settings_drawer",
-          "animated": true
-        }
-      ]
-    },
-    {
-      "type": "drawer",
-      "parent": -1,
-      "name": "settings_drawer",
-      "x": 0,
-      "y": 0,
-      "w": 480,
-      "h": 208,
-      "edge": "top",
-      "open": false,
-      "bg_color": "#172235F8"
-    },
-    {
-      "type": "label",
-      "parent": 3,
-      "x": 28,
-      "y": 22,
-      "w": 260,
-      "h": 30,
-      "text": "Quick settings",
-      "font_size": 22,
-      "fg_color": "#F8FAFC"
-    },
-    {
-      "type": "button",
-      "parent": 3,
-      "x": 390,
-      "y": 18,
-      "w": 58,
-      "h": 36,
-      "text": "Close",
-      "font_size": 12,
-      "bg_color": "#293A52",
-      "fg_color": "#DCE8F7",
-      "radius": 9,
-      "events": [
-        {
-          "event": "click",
-          "action": "drawer_close",
-          "target_name": "settings_drawer",
-          "animated": true
-        }
-      ]
-    },
-    {
-      "type": "label",
-      "parent": 3,
-      "x": 28,
-      "y": 78,
-      "w": 120,
-      "h": 24,
-      "text": "Brightness",
-      "font_size": 14,
-      "fg_color": "#A8B8CB"
-    },
-    {
-      "type": "slider",
-      "parent": 3,
-      "x": 138,
-      "y": 75,
-      "w": 190,
-      "h": 28,
-      "value": 68,
-      "track_size": 9,
-      "bg_color": "#334155",
-      "fg_color": "#38BDF8",
-      "knob_color": "#F8FAFC"
-    },
-    {
-      "type": "label",
-      "parent": 3,
-      "x": 28,
-      "y": 127,
-      "w": 190,
-      "h": 24,
-      "text": "High quality mode",
-      "font_size": 14,
-      "fg_color": "#A8B8CB"
-    },
-    {
-      "type": "toggle",
-      "parent": 3,
-      "x": 360,
-      "y": 119,
-      "w": 72,
-      "h": 36,
-      "checked": true,
-      "bg_color": "#334155",
-      "fg_color": "#22C55E"
-    },
-    {
-      "type": "shape",
-      "parent": 3,
-      "x": 205,
-      "y": 187,
-      "w": 70,
-      "h": 5,
-      "shape": "rect",
-      "bg_color": "#64748B",
-      "radius": 3
-    }
-  ]
-}
+{"screen":"widget_drawer","w":480,"h":320,"screen_bg":"#0E1726","font":"../../../common/fonts/DejaVuSans.ttf","objects":[{"type":"label","parent":-1,"x":42,"y":62,"w":396,"h":42,"text":"Device dashboard","text_align":"center","font_size":28,"fg_color":"#F8FAFC"},{"type":"label","parent":-1,"x":62,"y":112,"w":356,"h":44,"text":"Open the edge panel, adjust its controls, then close it by button or drag.","text_align":"center","font_size":14,"fg_color":"#94A3B8"},{"type":"button","parent":-1,"x":150,"y":190,"w":180,"h":48,"text":"Open settings","font_size":16,"bg_color":"#2563EB","fg_color":"#FFFFFF","radius":12,"events":[{"event":"click","action":"drawer_open","target_name":"settings_drawer","animated":true}]},{"type":"drawer","parent":-1,"name":"settings_drawer","x":0,"y":0,"w":480,"h":208,"edge":"top","open":false,"bg_color":"#172235F8"},{"type":"label","parent":3,"x":28,"y":22,"w":260,"h":30,"text":"Quick settings","font_size":22,"fg_color":"#F8FAFC"},{"type":"button","parent":3,"x":390,"y":18,"w":58,"h":36,"text":"Close","font_size":12,"bg_color":"#293A52","fg_color":"#DCE8F7","radius":9,"events":[{"event":"click","action":"drawer_close","target_name":"settings_drawer","animated":true}]},{"type":"label","parent":3,"x":28,"y":78,"w":120,"h":24,"text":"Brightness","font_size":14,"fg_color":"#A8B8CB"},{"type":"slider","parent":3,"x":138,"y":75,"w":190,"h":28,"value":68,"track_size":9,"bg_color":"#334155","fg_color":"#38BDF8","knob_color":"#F8FAFC"},{"type":"label","parent":3,"x":28,"y":127,"w":190,"h":24,"text":"High quality mode","font_size":14,"fg_color":"#A8B8CB"},{"type":"toggle","parent":3,"x":360,"y":119,"w":72,"h":36,"checked":true,"bg_color":"#334155","fg_color":"#22C55E"},{"type":"shape","parent":3,"x":205,"y":187,"w":70,"h":5,"shape":"rect","bg_color":"#64748B","radius":3}]}
 ```
 
-This is `examples/usage/widgets/drawer/drawer.json`. Copy any relative assets referenced by the scene with it.
+The canonical example is [`drawer.json`](../../../examples/usage/widgets/drawer/drawer.json). Copy any relative assets referenced by the scene with it.
 
-## Generated C API for this example
+## Generated C API
 
 ```c
 const gsp_component_directory_t *const * gsp_drawer_docs_component_directories(uint16_t *out_count)
@@ -203,7 +47,7 @@ size_t gsp_drawer_docs_dynamic_image_slots(void)
 
 These signatures come from the actual compiler output for this JSON.
 
-## Fields used by this example
+## Fields in this example
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -218,7 +62,8 @@ These signatures come from the actual compiler output for this JSON.
 | `edge` | `enum` | — | default top; `top`, `bottom`, `left`, `right` | — | drawer attachment edge |
 | `open` | `bool` | — | default `false` | — | initial drawer state |
 
-<details><summary>Show other fields supported by this Widget</summary>
+<details>
+<summary>Show other fields supported by this Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -226,7 +71,10 @@ These signatures come from the actual compiler output for this JSON.
 | `max_width` | `int` | — | 0…65535 | — | compile-time maximum width in px |
 | `min_height` | `int` | — | 0…65535 | — | compile-time minimum height in px |
 | `max_height` | `int` | — | 0…65535 | — | compile-time maximum height in px |
-| `layout` | `enum` | — | `row`, `column` | — | child auto-layout: row/column |
+| `layout` | `enum` | — | `row`, `column`, `grid` | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | — | default `false` | — | wrap row/column children into additional lines |
+| `grid_columns` | `int` | — | 1…65535 | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | — | default 1; 1…65535 | — | column span in the parent grid layout |
 | `gap` | `int` | — | default 0; 0…4096 | — | auto-layout gap in px |
 | `padding` | `int` | — | default 0; 0…4096 | — | auto-layout padding in px |
 | `padding_left` | `int` | — | 0…4096 | — | row layout: leading padding override |
@@ -309,7 +157,8 @@ These signatures come from the actual compiler output for this JSON.
 
 </details>
 
-<details><summary>Show fields shared by every Widget</summary>
+<details>
+<summary>Show fields shared by every Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|

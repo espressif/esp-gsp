@@ -4,12 +4,11 @@ Rectangle, rounded geometry, circle or line rendered without an image asset.
 
 ## When to use
 
-Use it to communicate status, measurement, motion, or visual hierarchy.
+Use it to show status, a measurement, or motion.
 
 ## Local interactive preview
 
-First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
-then run from an unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands), then run from an unpacked component or public repository root with `gspc` and `gsp_sim_host`:
 
 ```sh
 mkdir -p gsp-out/widget-preview
@@ -17,15 +16,14 @@ gspc pack \
   examples/usage/widgets/shape/shape.json \
   --deployable -o gsp-out/widget-preview/shape.gspb
 gsp_sim_host \
-  --bundle gsp-out/widget-preview/shape.gspb
+  --bundle gsp-out/widget-preview/shape.gspb --frames 0
 ```
 
-These commands compile the JSON below and open it in the ESP-GSP simulator's
-browser preview.
+These commands compile the example and open it in the ESP-GSP simulator browser preview.
 
 ## Runtime behavior
 
-The simulator and device runtime render the same compiled geometry. Application-driven property changes require a simulator backend or device code.
+The simulator and device runtime use the same compiled geometry. The preview starts with the JSON values; application-driven updates need the simulator backend/API or device code.
 
 In a regular scene, Shape supports bounded `x` and `y` for runtime translation:
 
@@ -42,72 +40,17 @@ A moving Shape must not have another bounded `x`/`y` object anywhere above or be
 
 Template Shape positions and bounded size, radius, opacity or rotation are not supported. This does not add Shape event/callback bindings. Use a compiler containing this support; older released tools may reject these declarations.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
+If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
-## Complete example JSON
+## Example scene
 
 ```json
-{
-  "screen": "widget_shape",
-  "w": 480,
-  "h": 320,
-  "screen_bg": "#101827",
-  "objects": [
-    {
-      "type": "shape",
-      "parent": -1,
-      "name": "rectangle",
-      "x": 55,
-      "y": 55,
-      "w": 150,
-      "h": 90,
-      "shape": "rect",
-      "bg_color": "#2563EB",
-      "radius": 16
-    },
-    {
-      "type": "shape",
-      "parent": -1,
-      "x": 275,
-      "y": 45,
-      "w": 110,
-      "h": 110,
-      "shape": "circle",
-      "bg_color": "#A78BFA",
-      "border_color": "#DDD6FE",
-      "border_width": 3
-    },
-    {
-      "type": "shape",
-      "parent": -1,
-      "x": 55,
-      "y": 205,
-      "w": 330,
-      "h": 8,
-      "shape": "line",
-      "line_direction": "tl_br",
-      "border_color": "#38BDF8",
-      "border_width": 4
-    },
-    {
-      "type": "shape",
-      "parent": -1,
-      "x": 55,
-      "y": 245,
-      "w": 330,
-      "h": 8,
-      "shape": "line",
-      "line_direction": "bl_tr",
-      "border_color": "#34D399",
-      "border_width": 4
-    }
-  ]
-}
+{"screen":"widget_shape","w":480,"h":320,"screen_bg":"#101827","objects":[{"type":"shape","parent":-1,"name":"rectangle","x":55,"y":55,"w":150,"h":90,"shape":"rect","bg_color":"#2563EB","radius":16},{"type":"shape","parent":-1,"x":275,"y":45,"w":110,"h":110,"shape":"circle","bg_color":"#A78BFA","border_color":"#DDD6FE","border_width":3},{"type":"shape","parent":-1,"x":55,"y":205,"w":330,"h":8,"shape":"line","line_direction":"tl_br","border_color":"#38BDF8","border_width":4},{"type":"shape","parent":-1,"x":55,"y":245,"w":330,"h":8,"shape":"line","line_direction":"bl_tr","border_color":"#34D399","border_width":4}]}
 ```
 
-This is `examples/usage/widgets/shape/shape.json`. Copy any relative assets referenced by the scene with it.
+The canonical example is [`shape.json`](../../../examples/usage/widgets/shape/shape.json). Copy any relative assets referenced by the scene with it.
 
-## Generated C API for this example
+## Generated C API
 
 ```c
 const gsp_component_directory_t *const * gsp_shape_docs_component_directories(uint16_t *out_count)
@@ -119,7 +62,7 @@ size_t gsp_shape_docs_dynamic_image_slots(void)
 
 These signatures come from the actual compiler output for this JSON.
 
-## Fields used by this example
+## Fields in this example
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -137,7 +80,8 @@ These signatures come from the actual compiler output for this JSON.
 | `shape` | `enum` | — | default rect; `rect`, `round_rect`, `circle`, `ellipse`, `line` | — | shape geometry |
 | `line_direction` | `enum` | — | default tl_br; `horizontal`, `vertical`, `tl_br`, `bl_tr` | — | line direction |
 
-<details><summary>Show other fields supported by this Widget</summary>
+<details>
+<summary>Show other fields supported by this Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -145,7 +89,10 @@ These signatures come from the actual compiler output for this JSON.
 | `max_width` | `int` | — | 0…65535 | — | compile-time maximum width in px |
 | `min_height` | `int` | — | 0…65535 | — | compile-time minimum height in px |
 | `max_height` | `int` | — | 0…65535 | — | compile-time maximum height in px |
-| `layout` | `enum` | — | `row`, `column` | — | child auto-layout: row/column |
+| `layout` | `enum` | — | `row`, `column`, `grid` | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | — | default `false` | — | wrap row/column children into additional lines |
+| `grid_columns` | `int` | — | 1…65535 | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | — | default 1; 1…65535 | — | column span in the parent grid layout |
 | `gap` | `int` | — | default 0; 0…4096 | — | auto-layout gap in px |
 | `padding` | `int` | — | default 0; 0…4096 | — | auto-layout padding in px |
 | `padding_left` | `int` | — | 0…4096 | — | row layout: leading padding override |
@@ -223,7 +170,8 @@ These signatures come from the actual compiler output for this JSON.
 
 </details>
 
-<details><summary>Show fields shared by every Widget</summary>
+<details>
+<summary>Show fields shared by every Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|

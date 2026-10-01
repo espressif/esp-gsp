@@ -18,6 +18,44 @@ SPEC.loader.exec_module(compare_logs)
 
 
 class ParseLogTest(unittest.TestCase):
+    def test_page_flow_requires_completed_cycle(self):
+        content = '''
+I (1) app_init: App version: pageflow-regression
+bench: run mode=soak case=P_FLOW name="page flow" category=navigation dwell_ms=5000
+bench: config protocol=26 pressure=full pressure_ms=1 touch=disabled queue_metric=drained hud=results-only bundle_crc=1234abcd logical=320x240
+bench: warm-up lap done, measuring
+bench: pressure[page flow] mode=full period_ms=1 ticks=125 requests=125 accepted=125 rejected=0 errors=0
+bench: components commands=6 errors=0
+bench: page_flow completed=6 pages_mask=7 errors=0
+bench: detail[page flow] frames=125 elapsed_us=5000000 busy_us=2500000 render_us=1000000 submit_us=1500000 service_steps=125 service_us=10000 commands=6 busy=20.000ms internal_peak=0 psram_peak=0
+bench: ---- summary ----
+bench: page flow 25.0 50.0 8.0 12.0 80.0 1.2 5
+bench: aggregate wall throughput 25.0 fps
+bench: aggregate active throughput 50.0 fps
+bench: aggregate raw frames=125 wall_us=5000000 busy_us=2500000
+bench: codecs png=0 jpeg_hw=0 jpeg_sw=0 qoi=0 rle=0 failed=0 decoded=0B decode=0us scale_hw=0 scale_sw=0 scale=0us
+bench: dynamic image accepted=0 published=0 cancelled=0 failed=0
+bench: measurement end
+'''
+        evidence = "bench: page_flow completed=6 pages_mask=7 errors=0\n"
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "flow.log"
+            path.write_text(content)
+            self.assertIn("page flow", compare_logs.parse_log(path).pages)
+            for broken in (content.replace(evidence, ""),
+                           content.replace("completed=6", "completed=0"),
+                           content.replace("completed=6", "completed=2"),
+                           content.replace("pages_mask=7", "pages_mask=3"),
+                           content.replace(evidence, evidence.replace("errors=0", "errors=1")),
+                           content.replace(evidence, "").replace(
+                               "bench: warm-up lap done", evidence + "bench: warm-up lap done")):
+                path.write_text(broken)
+                with self.assertRaisesRegex(ValueError, "page flow"):
+                    compare_logs.parse_log(path)
+            # Historical logs remain readable, without claiming new coverage.
+            path.write_text(content.replace("protocol=26", "protocol=25").replace(evidence, ""))
+            self.assertIn("page flow", compare_logs.parse_log(path).pages)
+
     def test_vector_protocols_require_actual_updates(self):
         content = '''
 I (1) app_init: App version: vector-benchmark

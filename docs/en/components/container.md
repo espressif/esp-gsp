@@ -4,12 +4,11 @@ Styled parent with optional rectangular child clipping and automatic layout.
 
 ## When to use
 
-Use it to organize content, visibility, or navigation while preserving hierarchy.
+Use it to group content, control visibility, or move between pages.
 
 ## Local interactive preview
 
-First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
-then run from an unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands), then run from an unpacked component or public repository root with `gspc` and `gsp_sim_host`:
 
 ```sh
 mkdir -p gsp-out/widget-preview
@@ -17,19 +16,18 @@ gspc pack \
   examples/usage/widgets/container/container.json \
   --deployable -o gsp-out/widget-preview/container.gspb
 gsp_sim_host \
-  --bundle gsp-out/widget-preview/container.gspb
+  --bundle gsp-out/widget-preview/container.gspb --frames 0
 ```
 
-These commands compile the JSON below and open it in the ESP-GSP simulator's
-browser preview.
+These commands compile the example and open it in the ESP-GSP simulator browser preview.
 
 ## Runtime behavior
 
-Children retain their hierarchy. Set clip_children on a Container or Layer to clip child drawing and input to its rectangular bounds. Nested clips intersect and move with their parent. Use fixed w/h for the viewport; radius styles the background and border.
+Children keep their hierarchy. `clip_children` limits drawing and input to the parent rectangle. Use fixed `w` and `h` for a viewport; `radius` styles its background and border.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
+If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
-## Complete example JSON
+## Example scene
 
 ```json
 {
@@ -104,9 +102,9 @@ Give every object that application code must read or update a stable `name`. GSP
 }
 ```
 
-This is `examples/usage/widgets/container/container.json`. Copy any relative assets referenced by the scene with it.
+The canonical example is [`container.json`](../../../examples/usage/widgets/container/container.json). Copy any relative assets referenced by the scene with it.
 
-## Generated C API for this example
+## Generated C API
 
 ```c
 const gsp_component_directory_t *const * gsp_container_docs_component_directories(uint16_t *out_count)
@@ -120,7 +118,7 @@ size_t gsp_container_docs_dynamic_image_slots(void)
 
 These signatures come from the actual compiler output for this JSON.
 
-## Fields used by this example
+## Fields in this example
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -132,7 +130,7 @@ These signatures come from the actual compiler output for this JSON.
 | `w` | `int` | yes | 0…65535 | scene: own fill; template: own fill | width in px |
 | `h` | `int` | yes | 0…65535 | scene: own fill; template: own fill | height in px |
 | `name` | `identifier` | — | — | — | stable component name; generates GSP_OBJ_KEY_&lt;NAME&gt; |
-| `layout` | `enum` | — | `row`, `column` | — | child auto-layout: row/column |
+| `layout` | `enum` | — | `row`, `column`, `grid` | — | child auto-layout: row/column/grid |
 | `gap` | `int` | — | default 0; 0…4096 | — | auto-layout gap in px |
 | `padding` | `int` | — | default 0; 0…4096 | — | auto-layout padding in px |
 | `bg_color` | `color` | — | — | yes | background/fill color (#RRGGBB or #RRGGBBAA) |
@@ -141,7 +139,8 @@ These signatures come from the actual compiler output for this JSON.
 | `border_width` | `int` | — | 0…65535 | — | border stroke width (needs border_color) |
 | `clip_children` | `bool` | — | default `false` | — | clip descendants and their hit areas to the container bounds |
 
-<details><summary>Show other fields supported by this Widget</summary>
+<details>
+<summary>Show other fields supported by this Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -149,6 +148,9 @@ These signatures come from the actual compiler output for this JSON.
 | `max_width` | `int` | — | 0…65535 | — | compile-time maximum width in px |
 | `min_height` | `int` | — | 0…65535 | — | compile-time minimum height in px |
 | `max_height` | `int` | — | 0…65535 | — | compile-time maximum height in px |
+| `layout_wrap` | `bool` | — | default `false` | — | wrap row/column children into additional lines |
+| `grid_columns` | `int` | — | 1…65535 | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | — | default 1; 1…65535 | — | column span in the parent grid layout |
 | `padding_left` | `int` | — | 0…4096 | — | row layout: leading padding override |
 | `padding_right` | `int` | — | 0…4096 | — | row layout: trailing padding override |
 | `padding_top` | `int` | — | 0…4096 | — | column layout: leading padding override |
@@ -226,7 +228,8 @@ These signatures come from the actual compiler output for this JSON.
 
 </details>
 
-<details><summary>Show fields shared by every Widget</summary>
+<details>
+<summary>Show fields shared by every Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|

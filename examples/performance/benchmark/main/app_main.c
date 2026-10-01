@@ -39,7 +39,7 @@
 #define GSP_BENCH_RGB888 0
 #endif
 
-#define BENCH_PROTOCOL_VERSION 25U
+#define BENCH_PROTOCOL_VERSION 26U
 #define BENCH_RESULT_ROWS ((BENCH_W >= 600 || BENCH_H >= 600) ? 6U : 3U)
 #define BENCH_RESULT_PAGE_MS 3000U
 #define BENCH_PRESSURE_PERIOD_MS 1U
@@ -49,6 +49,7 @@
 #define BENCH_FRAME_PERIOD_MS 16U
 #define BENCH_FRAME_TARGET_HZ 62.5
 #define BENCH_STRESS_PERIOD_MS 4U
+#define BENCH_FLOW_PERIOD_MS 750U
 #define BENCH_STRESS_TARGET_HZ 250.0
 #define BENCH_TRANSITION_SAMPLE_CAPACITY 16U
 #define BENCH_KEYBOARD_TEXT_CAPACITY 256U
@@ -238,6 +239,12 @@ static uint32_t s_modal_phase;
 static esp_gsp_region_stats_t s_measured_region_start;
 static esp_gsp_media_stats_t s_measured_media_start;
 static uint32_t s_frame_tick;
+static uint16_t s_flow_target;
+static bool s_flow_pending;
+static bool s_flow_ready;
+static uint32_t s_flow_completed;
+static uint32_t s_flow_seen;
+static int64_t s_flow_next_us;
 static uint32_t s_text_frame;
 static uint32_t s_scroll_offset;
 static int32_t s_rect_load;
@@ -805,6 +812,18 @@ static void activate_page(esp_gsp_handle_t ui, uint8_t page)
     s_transition_alt = false;
     s_component_commands = 0;
     s_component_errors = 0;
+    if (s_pages[page].bind == GSP_BIND_P_FLOW) {
+        s_flow_target = 0;
+        s_flow_pending = true;
+        s_flow_ready = false;
+        s_flow_completed = 0;
+        s_flow_seen = 0;
+        s_flow_next_us = 0;
+        /* A new measurement must not inherit the warm-up's selected page. */
+        if (esp_gsp_page_flow_set_page(ui, GSP_OBJ_KEY_BENCH_FLOW, 0, false) != ESP_GSP_OK) {
+            ++s_component_errors;
+        }
+    }
     if (s_pages[page].bind == GSP_BIND_P_CLOCK) {
         s_clock_updates = 0;
         s_clock_commands = 0;
@@ -1722,6 +1741,11 @@ static void page_scheduler(esp_gsp_handle_t ui, void *user_ctx)
                    (unsigned long)s_bench_workload.eyes_closed, (unsigned long)stats->errors);
         }
     }
+    if (s_pages[s_page].bind == GSP_BIND_P_FLOW) {
+        printf("bench: page_flow completed=%lu pages_mask=%lu errors=%lu\n",
+               (unsigned long)s_flow_completed, (unsigned long)s_flow_seen,
+               (unsigned long)s_component_errors);
+    }
     if (s_pages[s_page].bind == GSP_BIND_P_FLOW ||
             s_pages[s_page].bind == GSP_BIND_P_STACK ||
             s_pages[s_page].bind == GSP_BIND_P_COMPOSITES) {
@@ -2123,13 +2147,40 @@ static void drive_fx(esp_gsp_handle_t ui, void *user_ctx)
             }
         }
     } else if (page == GSP_BIND_P_FLOW) {
-        if ((tick % 100U) == 0U) {
+        int64_t now_us = esp_timer_get_time();
+        if (s_flow_pending) {
+            uint16_t selected = 0;
+            int32_t offset = 0;
+            if (esp_gsp_page_flow_get_page(ui, GSP_OBJ_KEY_BENCH_FLOW, &selected) != ESP_GSP_OK ||
+                    esp_gsp_page_flow_get_offset(ui, GSP_OBJ_KEY_BENCH_FLOW, &offset) != ESP_GSP_OK) {
+                ++s_component_errors;
+                return;
+            }
+            if (selected != s_flow_target || offset != -(int32_t)s_flow_target * BENCH_W) {
+                return;
+            }
+            s_flow_pending = false;
+            s_flow_seen |= 1U << selected;
+            if (s_flow_ready) {
+                ++s_flow_completed;
+            } else {
+                s_flow_ready = true;
+                s_flow_next_us = now_us + (int64_t)BENCH_FLOW_PERIOD_MS * 1000;
+            }
+        }
+        /* Do not tie motion to delivered timer callbacks or enqueue several
+         * targets while the previous transition is still settling. */
+        if (s_flow_ready && now_us >= s_flow_next_us) {
+            uint16_t next = (uint16_t)((s_flow_target + 1U) % 3U);
             esp_gsp_err_t ret = esp_gsp_page_flow_set_page(
-                                    ui, GSP_OBJ_KEY_BENCH_FLOW,
-                                    (uint16_t)((tick / 100U) % 3U), true);
+                                    ui, GSP_OBJ_KEY_BENCH_FLOW, next, true);
             ++s_component_commands;
+            s_flow_next_us = now_us + (int64_t)BENCH_FLOW_PERIOD_MS * 1000;
             if (ret != ESP_GSP_OK) {
                 ++s_component_errors;
+            } else {
+                s_flow_target = next;
+                s_flow_pending = true;
             }
         }
     } else if (page == GSP_BIND_P_STACK) {

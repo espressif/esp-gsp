@@ -3649,7 +3649,8 @@
       "page_count": 3,
       "selected": 0,
       "axis": "horizontal",
-      "cyclic": true
+      "cyclic": true,
+      "bar_height": 0
     },
     {
       "type": "layer",

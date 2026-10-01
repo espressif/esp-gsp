@@ -1,5 +1,8 @@
 # Runtime and generated API
 
+For custom pixels, input routing and callback lifetime rules, see
+[application customization](customization.md).
+
 ## Start from generated configuration
 
 `gsp_<symbol>_config()` supplies bundle bytes, component directories and JSON-derived requirements. Pair it with `ESP_GSP_ESP_LCD_CONFIG_INIT()` and a BSP-created display target, then call `esp_gsp_esp_lcd_start()`.
@@ -42,6 +45,22 @@ current public runtimes.
 UI event → short callback → application task → product state change
                                            → generated setter → render commit
 ```
+
+### Pointer cancellation
+
+Ordinary click targets, including Buttons and clickable Images, cancel the
+current contact when a held pointer leaves their rectangular hit bounds. This
+also applies without Button press styles and to movement smaller than the tap
+slop. Press feedback and a pending long event stop immediately; returning inside
+does not restore long, release or click for that contact. A new press starts a
+new contact. Parent scroll/swipe arbitration remains available after exit.
+
+This changes the older behavior that could still dispatch release or click
+after a small exit and return. An authored `press` is not guaranteed a matching
+`release`; do not use that pair as an unconditional resource cleanup mechanism.
+Slider and draggable Arc controls that capture the pointer retain their drag
+and release behavior outside the control bounds. Their capture is separate from
+ordinary click targeting.
 
 ### Timer lifecycle
 

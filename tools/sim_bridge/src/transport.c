@@ -61,6 +61,9 @@ struct bridge_pointer_sample {
 };
 struct gsp_ui_core {
     bridge_socket socket;
+    const gsp_sim_host_api_v1_t *inproc;
+    char *inproc_buffer;
+    bool inproc_closed;
     uint32_t request_id;
     bool failed, polling;
     bool media_enabled, image_enabled, widget_enabled, fence_enabled, pointer_enabled;
@@ -451,6 +454,23 @@ static bool write_all(esp_gsp_handle_t ui, const char *data, size_t size)
     return write_until(ui, data, size, &sent, gsp_sim_bridge_time_ms() + RPC_TIMEOUT_MS);
 }
 
+static bool send_json(esp_gsp_handle_t ui, const char *body, size_t size)
+{
+    if (ui->inproc) {
+        int32_t rc = ui->inproc->send_json(ui->inproc->ctx,
+                                           (const uint8_t *)body, size);
+        if (rc == GSP_SIM_BACKEND_IO_CLOSED) {
+            ui->inproc_closed = true;
+        }
+        return rc == GSP_SIM_BACKEND_IO_OK;
+    }
+    char header[64];
+    int count = snprintf(header, sizeof(header),
+                         "Content-Length: %zu\r\n\r\n", size);
+    return count > 0 && (size_t)count < sizeof(header) &&
+           write_all(ui, header, (size_t)count) && write_all(ui, body, size);
+}
+
 static bool fence_writes(esp_gsp_handle_t ui, uint64_t deadline)
 {
     for (;;) {
@@ -463,6 +483,15 @@ static bool fence_writes(esp_gsp_handle_t ui, uint64_t deadline)
         }
         if (!first) {
             return true;
+        }
+        if (ui->inproc) {
+            char *body = strstr(first->wire, "\r\n\r\n");
+            if (!body || !send_json(ui, body + 4,
+                                    first->size - (size_t)(body + 4 - first->wire))) {
+                return false;
+            }
+            first->sent = first->size;
+            continue;
         }
         if (!write_until(ui, first->wire, first->size, &first->sent, deadline)) {
             return false;
@@ -502,9 +531,50 @@ static int read_part(esp_gsp_handle_t ui, char *out, size_t size, uint64_t deadl
     }
 }
 
+static char *read_inproc_frame(esp_gsp_handle_t ui, uint64_t deadline)
+{
+    uint64_t now = gsp_sim_bridge_time_ms();
+    uint32_t wait = deadline == UINT64_MAX ? UINT32_MAX :
+                    deadline <= now ? 0 :
+                    deadline - now > UINT32_MAX ? UINT32_MAX :
+                    (uint32_t)(deadline - now);
+    size_t size = 0;
+    int32_t rc = ui->inproc->recv_json(ui->inproc->ctx,
+                                       (uint8_t *)ui->inproc_buffer,
+                                       FRAME_LIMIT, &size, wait);
+    if (rc == GSP_SIM_BACKEND_IO_TIMEOUT) {
+        ui->read_timeout = true;
+        return NULL;
+    }
+    if (rc == GSP_SIM_BACKEND_IO_CLOSED) {
+        ui->inproc_closed = true;
+        return NULL;
+    }
+    if (rc != GSP_SIM_BACKEND_IO_OK || size == 0 || size > FRAME_LIMIT) {
+        ui->failed = true;
+        return NULL;
+    }
+    ui->inproc_buffer[size] = 0;
+    const char *end = skip(ui->inproc_buffer, 0);
+    if (!end || *space(end)) {
+        ui->failed = true;
+        return NULL;
+    }
+    char *body = malloc(size + 1);
+    if (!body) {
+        ui->failed = true;
+        return NULL;
+    }
+    memcpy(body, ui->inproc_buffer, size + 1);
+    return body;
+}
+
 static char *read_frame(esp_gsp_handle_t ui, uint64_t deadline)
 {
     ui->read_timeout = false;
+    if (ui->inproc) {
+        return read_inproc_frame(ui, deadline);
+    }
     if (!ui->read_body) {
         while (ui->header_used < sizeof(ui->read_header) - 1) {
             if (!read_part(ui, ui->read_header + ui->header_used, 1, deadline)) {
@@ -659,7 +729,7 @@ char *bridge_rpc(esp_gsp_handle_t ui, const char *method, const char *params)
     if (ui) {
         drain_canvas(ui);
     }
-    if (!ui || ui->failed) {
+    if (!ui || ui->failed || ui->inproc_closed) {
         return NULL;
     }
     size_t size = strlen(params) + strlen(method) + 128;
@@ -672,10 +742,8 @@ char *bridge_rpc(esp_gsp_handle_t ui, const char *method, const char *params)
     }
     uint32_t id = ++ui->request_id;
     int n = snprintf(body, size, "{\"jsonrpc\":\"2.0\",\"id\":%" PRIu32 ",\"method\":\"%s\",\"params\":%s}", id, method, params);
-    char header[64];
-    snprintf(header, sizeof(header), "Content-Length: %d\r\n\r\n", n);
     bool sent = fence_writes(ui, gsp_sim_bridge_time_ms() + RPC_TIMEOUT_MS) &&
-                write_all(ui, header, strlen(header)) && write_all(ui, body, (size_t)n);
+                send_json(ui, body, (size_t)n);
     free(body);
     uint64_t deadline = gsp_sim_bridge_time_ms() + RPC_TIMEOUT_MS;
     while (sent) {
@@ -704,6 +772,9 @@ char *bridge_rpc(esp_gsp_handle_t ui, const char *method, const char *params)
             break;
         }
     }
+    if (ui->inproc_closed) {
+        return NULL;
+    }
     ui->failed = true;
     fprintf(stderr, "sim_bridge: disconnected, timed out, or invalid/overflowing reply\n");
     return NULL;
@@ -731,7 +802,7 @@ esp_gsp_err_t bridge_binary(esp_gsp_handle_t ui, const char *headers, const void
     if (!ui || !data || !size || size > 16U * 1024U * 1024U) {
         return ESP_GSP_ERR_INVALID_ARG;
     }
-    if (ui->drawing || ui->failed) {
+    if (ui->drawing || ui->failed || ui->inproc_closed) {
         return ESP_GSP_ERR_INVALID_STATE;
     }
     if (!ui->media_enabled) {
@@ -746,8 +817,16 @@ esp_gsp_err_t bridge_binary(esp_gsp_handle_t ui, const char *headers, const void
     if (count < 0 || (size_t)count >= sizeof(header)) {
         return ESP_GSP_ERR_INVALID_ARG;
     }
+    int32_t inproc_rc = GSP_SIM_BACKEND_IO_OK;
     bool sent = fence_writes(ui, gsp_sim_bridge_time_ms() + RPC_TIMEOUT_MS) &&
-                write_all(ui, header, (size_t)count) && write_all(ui, data, size);
+                (ui->inproc ?
+                 (inproc_rc = ui->inproc->send_binary(ui->inproc->ctx,
+                              (const uint8_t *)header, (size_t)count,
+                              data, size)) == GSP_SIM_BACKEND_IO_OK :
+                 write_all(ui, header, (size_t)count) && write_all(ui, data, size));
+    if (inproc_rc == GSP_SIM_BACKEND_IO_CLOSED) {
+        ui->inproc_closed = true;
+    }
     uint64_t deadline = gsp_sim_bridge_time_ms() + RPC_TIMEOUT_MS;
     while (sent) {
         char *body = read_frame(ui, deadline);
@@ -775,6 +854,9 @@ esp_gsp_err_t bridge_binary(esp_gsp_handle_t ui, const char *headers, const void
             break;
         }
     }
+    if (ui->inproc_closed) {
+        return ESP_GSP_ERR_INVALID_STATE;
+    }
     ui->failed = true;
     return ESP_GSP_FAIL;
 }
@@ -787,7 +869,8 @@ esp_gsp_err_t bridge_scalar(esp_gsp_handle_t ui, unsigned op, const uint32_t arg
                                 op == GSP_BRIDGE_PAGE_FLOW_GET_PAGE ||
                                 op == GSP_BRIDGE_PAGE_FLOW_GET_OFFSET ||
                                 op == GSP_BRIDGE_PAGE_FLOW_IS_DRAGGING ||
-                                op == GSP_BRIDGE_COMPONENT_GET_COLOR_RGB888)) {
+                                op == GSP_BRIDGE_COMPONENT_GET_COLOR_RGB888 ||
+                                op == GSP_BRIDGE_PROPERTY_INFO || op == GSP_BRIDGE_PROPERTY_INFO_AT)) {
         return ESP_GSP_ERR_INVALID_STATE;
     }
     if (op >= GSP_BRIDGE_COMPONENT_SET_COLOR_RGB888 &&
@@ -795,6 +878,9 @@ esp_gsp_err_t bridge_scalar(esp_gsp_handle_t ui, unsigned op, const uint32_t arg
         return ESP_GSP_ERR_NOT_SUPPORTED;
     }
     if (op >= GSP_BRIDGE_COMPONENT_SET_POSITION && ui->api_version < 3) {
+        return ESP_GSP_ERR_NOT_SUPPORTED;
+    }
+    if (op >= GSP_BRIDGE_PROPERTY_INFO && ui->api_version < 4) {
         return ESP_GSP_ERR_NOT_SUPPORTED;
     }
     char params[320];
@@ -905,12 +991,61 @@ esp_gsp_err_t gsp_sim_bridge_open(const char *endpoint, esp_gsp_handle_t *out)
     ui->pointer_enabled = bridge_json_number(caps, "bridge_pointer_version", 0) == 1;
     ui->canvas_patch_enabled = bridge_json_number(caps, "bridge_canvas_patch_version", 0) == 1;
     int64_t api_version = bridge_json_number(caps, "bridge_api_version", 1);
+    ui->api_version = api_version >= GSP_SIM_BRIDGE_API_VERSION ?
+                      GSP_SIM_BRIDGE_API_VERSION : api_version > 0 ? (uint8_t)api_version : 1;
+    ui->component_motion_enabled = bridge_json_number(caps, "component_motion_version", 0) == 1;
+    ui->component_events_enabled = bridge_json_number(caps, "component_events_version", 0) == 1;
+    free(caps);
+    *out = ui;
+    return ESP_GSP_OK;
+}
+
+esp_gsp_err_t bridge_open_inproc(const gsp_sim_host_api_v1_t *host,
+                                 esp_gsp_handle_t *out)
+{
+    if (!host || !out || host->abi_version != GSP_SIM_BACKEND_ABI_VERSION ||
+            host->struct_size < sizeof(*host) || !host->send_json ||
+            !host->send_binary || !host->recv_json) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    *out = NULL;
+    esp_gsp_handle_t ui = calloc(1, sizeof(*ui));
+    if (!ui) {
+        return ESP_GSP_ERR_NO_MEM;
+    }
+    ui->socket = INVALID_SOCKET_VALUE;
+    ui->inproc = host;
+    ui->inproc_buffer = malloc(FRAME_LIMIT + 1U);
+    if (!ui->inproc_buffer) {
+        free(ui);
+        return ESP_GSP_ERR_NO_MEM;
+    }
+    char *caps = bridge_rpc(ui, "capabilities", "{}");
+    if (!caps || bridge_json_number(caps, "bridge_version", 0) != GSP_SIM_BRIDGE_VERSION ||
+            bridge_json_number(caps, "abi_version", 0) != 1) {
+        free(caps);
+        gsp_sim_bridge_close(ui);
+        return ESP_GSP_ERR_NOT_SUPPORTED;
+    }
+    ui->scene = (uint16_t)bridge_json_number(caps, "current_scene", 0);
+    ui->media_enabled = bridge_json_number(caps, "bridge_media_version", 0) == 1;
+    ui->image_enabled = bridge_json_number(caps, "bridge_image_version", 0) == 1;
+    ui->widget_enabled = bridge_json_number(caps, "bridge_widget_version", 0) == 1;
+    ui->fence_enabled = bridge_json_number(caps, "bridge_fence_version", 0) == 1;
+    ui->pointer_enabled = bridge_json_number(caps, "bridge_pointer_version", 0) == 1;
+    ui->canvas_patch_enabled = bridge_json_number(caps, "bridge_canvas_patch_version", 0) == 1;
+    int64_t api_version = bridge_json_number(caps, "bridge_api_version", 1);
     ui->api_version = api_version >= 3 ? 3 : api_version >= 2 ? 2 : 1;
     ui->component_motion_enabled = bridge_json_number(caps, "component_motion_version", 0) == 1;
     ui->component_events_enabled = bridge_json_number(caps, "component_events_version", 0) == 1;
     free(caps);
     *out = ui;
     return ESP_GSP_OK;
+}
+
+bool bridge_inproc_closed(esp_gsp_handle_t ui)
+{
+    return ui && ui->inproc_closed;
 }
 
 uint16_t gsp_sim_bridge_current_scene(esp_gsp_handle_t ui)
@@ -1025,15 +1160,25 @@ esp_gsp_err_t gsp_sim_bridge_poll(esp_gsp_handle_t ui, uint32_t timeout_ms)
     if (!fence_writes(ui, gsp_sim_bridge_time_ms() + RPC_TIMEOUT_MS)) {
         ui->failed = true;
     }
-    int ready = ui->failed ? -1 : readable(ui, wait);
+    int ready = ui->failed ? -1 : ui->inproc ? 1 : readable(ui, wait);
     if (ready > 0) {
-        char *body = read_frame(ui, gsp_sim_bridge_time_ms() + RPC_TIMEOUT_MS);
-        if (!body || !notification(ui, body)) {
+        char *body = read_frame(ui, gsp_sim_bridge_time_ms() +
+                                (ui->inproc ? wait : RPC_TIMEOUT_MS));
+        if (body && !notification(ui, body)) {
+            ui->failed = true;
+        } else if (!body && !ui->read_timeout && !ui->inproc_closed) {
             ui->failed = true;
         }
         free(body);
     } else if (ready < 0) {
         ui->failed = true;
+    }
+    /* Host shutdown is a clean transport boundary. Do not dispatch queued
+     * application work after observing it: a due timer could otherwise start
+     * an RPC against the channel that was just closed. */
+    if (ui->inproc_closed) {
+        ui->polling = false;
+        return ESP_GSP_OK;
     }
     unsigned budget = EVENT_LIMIT;
     while (ui->count && budget-- && !ui->failed) {
@@ -1159,6 +1304,9 @@ void gsp_sim_bridge_close(esp_gsp_handle_t ui)
         fprintf(stderr, "sim_bridge: defer close until after callbacks/poll\n");
         return;
     }
+#ifdef _WIN32
+    bool inproc = ui->inproc != NULL;
+#endif
     gsp_err_t status = ui->failed ? GSP_ERR_IO : GSP_ERR_CANCELLED;
     ui->closing = true; ui->failed = true; ui->drawing = true;
     if (ui->socket != INVALID_SOCKET_VALUE) {
@@ -1167,6 +1315,7 @@ void gsp_sim_bridge_close(esp_gsp_handle_t ui)
     bridge_media_close(ui);
     bridge_images_close(ui, status);
     free(ui->read_body);
+    free(ui->inproc_buffer);
     while (ui->timers) {
         struct bridge_timer *t = ui->timers;
         ui->timers = t->next;
@@ -1174,6 +1323,8 @@ void gsp_sim_bridge_close(esp_gsp_handle_t ui)
     }
     free(ui);
 #ifdef _WIN32
-    WSACleanup();
+    if (!inproc) {
+        WSACleanup();
+    }
 #endif
 }

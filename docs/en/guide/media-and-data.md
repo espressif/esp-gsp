@@ -311,6 +311,131 @@ generated header after every scene-interface change. When several scalar
 properties must become visible atomically, use the public component batch API
 instead of depending on the order of separate asynchronous setters.
 
+## Image buffer memory
+
+For repeatedly drawn transparent assets, compare direct STORE reads with a
+lossless codec such as `"codec": "qoi"` and `"cache_policy": "decode_lru"`.
+The decoded surface can reside in PSRAM and be reused, but the first decode,
+decoded pixel budget and eviction/redecode costs must be included. STORE is
+drawn directly from its source; setting `preload` on STORE does not copy it into
+the decoded cache. Changing only the cache budget will not move STORE assets.
+Use `preload` only for a measured hot working set that fits alongside other
+images: these entries are excluded from normal LRU eviction. For example, a
+320 × 240 ARGB8888 surface needs 307,200 bytes of pixel storage regardless of
+its compressed size. This tradeoff needs measurement on the target; it is not
+a reason to preload all assets or change the default codec globally.
+
+On devices with PSRAM, default decoded image surfaces, resize staging, PNG
+scratch and copied encoded inputs use PSRAM without spilling into internal RAM
+on allocation failure. Devices without PSRAM continue to use internal RAM.
+TAKE/BORROW placement remains the caller's choice. Hardware JPEG scratch is
+released before growth, on allocation pressure, when image caches are released
+on pause, and on application destruction. After one idle second it is reclaimed
+only when the next hardware decode does not need it. A sufficiently sized
+surface still needed by the next job is reused. There is no background expiry
+timer. Scratch is recreated lazily when needed.
+
+Eligible P4/S31 hardware JPEG resizes decode directly into PSRAM staging, avoiding a
+second full-frame scratch buffer and copy. Staging includes MCU height and cache
+alignment padding while preserving logical dimensions and packed source rows.
+Images needing MCU width padding keep the existing path, including its scaler.
+Reservation can reclaim idle hardware scratch without waiting for an active
+JPEG job. It does not clear the full staging buffer under the cache lock or fall
+back to SRAM. Cancellation and decode completion release the staging allocation;
+no new setting or persistent frame buffer is required. Other JPEG paths can
+still require scratch, and hardware failures retain the software fallback.
+The hardware JPEG wait now includes tick rounding and phase allowance for its
+40 ms budget: the driver receives 50 ms at a 100 Hz FreeRTOS tick rate, or 41 ms
+at 1,000 Hz. This prevents an early timeout caused by tick quantization; it does
+not guarantee completion under arbitrary contention. A stalled job can wait
+longer by the tick allowance before falling back to software.
+
+Region rendering of QOI/RLE images can retain eight decoder checkpoints per
+scene after first use, avoiding repeated stream-prefix scans across stripes.
+Text scenes may also allocate a 1 KiB metrics cache, reused across stripes and
+cleared at frame start. These optional metadata allocations use PSRAM exclusively
+when present; without PSRAM they use internal RAM. Allocation failure keeps the
+uncached path. They are retained until scene-context destruction and excluded
+from image payload statistics and `image_cache_bytes`.
+
+Demanded images take priority over queued prefetch. Prefetch is best effort:
+insufficient destination or workspace memory drops it without evicting resident
+images or poisoning a later demand request. JPEG cache layouts may include MCU
+padding so hardware can write directly; logical image dimensions stay unchanged
+and software fallback preserves the wider stride.
+
+`esp_gsp_image_memory_stats()` in `esp_gsp_debug.h` reports current and peak
+tracked payload bytes for default decoded surfaces, COPY/TAKE inputs, staging,
+and PNG/JPEG scratch, split by internal RAM, PSRAM and other memory. This is a
+coherent process-wide snapshot across all instances. `total.peak_bytes` is a
+simultaneous high-water mark, not a sum of category peaks. Borrowed inputs,
+custom cache allocators, decoder-library private memory, animation frames,
+region decode buffers, display buffers, stacks and allocator overhead are
+excluded. It is not a whole-application memory measurement. The existing
+`cache_peak_bytes` semantics are unchanged.
+
+```c
+esp_gsp_image_memory_stats_t memory;
+if (esp_gsp_image_memory_stats(&memory, sizeof(memory))) {
+    printf("image payload current=%zu peak=%zu psram=%zu internal=%zu\n",
+           memory.total.current_bytes, memory.total.peak_bytes,
+           memory.total.psram_bytes, memory.total.internal_bytes);
+}
+```
+
+Hardware-capable JPEG targets retain full-decode priority. On workspace shortage,
+the cache reclaims eligible unpinned, non-preload entries before attempting the
+software low-memory resize path. Software-only targets can select that path
+directly. Rows reduce temporary storage; the
+complete destination still belongs to the image cache. Disabling the cache does
+not enable JPEG region rendering.
+
+On PSRAM targets, the ESP software path uses the JPEG library's public block decoder, then applies
+the same GSP bilinear filter as full native surfaces. GSP reserves at most 16
+source rows plus one boundary row. These pixel buffers use PSRAM exclusively
+when present, or internal RAM on no-PSRAM targets. Vendor scale is disabled, so
+its extra internal resize workspace is avoided.
+The library still needs its base decoder state, and this is not a hard internal
+RAM reserve for other tasks.
+
+No-PSRAM targets retain vendor scaling first, avoiding the extra internal row
+storage and decode time for small images. If workspace reservation or native
+scaling fails with NO_MEM, GSP releases the old resize workspace and tries the
+supported row path at most once. Bad data and unsupported formats do not trigger
+this retry. Failure keeps the previous image; strategies never alternate in a
+loop. Row pixels also occupy internal RAM on these targets, so PSRAM-board
+decoder overhead measurements are not a no-PSRAM total-memory budget.
+
+Block decoding requires source dimensions divisible by eight. Sources no taller
+than 16 rows retain the full path to avoid reserving more rows than the image.
+The target must have at most half as many pixels; output dimensions need no
+eight-pixel alignment and are not limited to vendor scale's 1/8 reduction.
+Other source layouts, alpha JPEG and ineligible resizes automatically keep full
+decoding. Host libjpeg retains its IDCT scaling path; its timings and pixels do
+not substitute for ESP block-decoder validation.
+
+The entire JPEG is still processed, so block decoding can be slower than vendor
+scaling. This path bounds pixel workspace and avoids the additional SRAM peak;
+it is not a universal speed optimization. Both full and block software decoding
+map JPEG memory shortage to LIMIT_EXCEEDED, insufficient input to TRUNCATED,
+unsupported format/standard to UNSUPPORTED, and corrupt data to a format error.
+
+Before decoding, the default cache reserves resize staging / JPEG rows, PNG inflate
+pixels, multi-IDAT concatenation storage when needed, and ESP PNG inflate state.
+Reservation failure can reclaim eligible cached pixels and retry, protecting
+pinned old images and preload resources. The allocated destination is retained
+across these retries. Persistent shortage ends the request before decoding.
+Reservations are released on cancellation, failure and success; ordinary decode
+completion releases temporary buffers before publishing the new image.
+PNG/QOI resize jobs reserve a full-source-size intermediate surface.
+
+`image_cache_bytes` still limits cached pixels, not total temporary memory.
+Reservations exclude decoder-library private allocations and shared hardware
+JPEG scratch; other heap users can still allocate, so this is not a guarantee
+that every later allocation succeeds. Reservation shortages increment
+`cache_allocation_failures`; format validation and decoder failures increment
+`cache_decode_failures`. Failed replacements keep the previous image visible.
+
 ## Runtime encoded images
 
 Give the image a `name`, a `bind`, and `bind_target: "resource"`, then use its
@@ -479,7 +604,6 @@ the existing `esp_gsp_message_list_changed()` behavior.
 
 For exact callback and shutdown behavior, see
 [Application lifecycle](lifecycle.md).
-
 
 ## JPEG animation frames
 

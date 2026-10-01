@@ -69,6 +69,44 @@ Ordinary parent references may point forward or backward in the object array.
 Inherited hidden state and template membership do not depend on that ordering;
 the compiler preserves authored draw order.
 
+## Reusable project components
+
+Grid/wrap and component expansion require GSPC 0.7.0, paired with ESP-GSP
+1.6.0. See the [1.6.0 release notes](../../../CHANGELOG.md#160).
+
+A scene's `components` map, or JSON files loaded with `--components-dir`, defines
+parameterized subtrees. Each definition has an `objects` array and an optional
+`params` array of required argument names. A whole string such as `"$title"` is
+replaced by the corresponding argument, preserving its JSON type. Strings that
+do not start with `$` also support textual substitution, for example
+`"Reading: $value"`; non-string arguments become JSON text in this form. A string
+starting with `$` is treated as one complete parameter reference, not as a
+prefix followed by a template suffix. Substitution does not evaluate arithmetic
+expressions.
+
+Instantiate a definition with `use`. The use site can override `name`, `x`, `y`
+and either `parent` or `parent_name` on the root. Named parents can be declared
+later in the scene. Other use-site fields must be declared parameters and used
+explicitly by the definition. A child's numeric `parent` inside the definition
+is a local object index; omitted parents attach to the definition's root.
+`parent_name` references scene-wide names. Give each repeated instance distinct
+names for any exposed children, for example through required name parameters.
+
+Definitions can contain ordinary widgets and built-in composites such as
+TabView, Dropdown, Keyboard and MsgBox. Their generated controls participate in
+the same event and overlay paths as directly authored controls. Nested `use`
+inside a definition is diagnosed; combine definitions at scene level or flatten
+shared subtrees. Scene-level `styles` and root font defaults remain available.
+Asset paths resolve relative to the scene, not to the component definition file.
+
+The [component patterns example](../../../examples/usage/component_patterns/README.md)
+provides settings rows, icon buttons and badges. These are editable project
+components, not new runtime widget types. Expanded objects still consume command,
+state and resource capacity; compare against an equivalent hand-authored scene.
+Use `gspc diagnose --components-dir <directory> <scene.json>` for expansion and
+build-semantic diagnostics. A daemon request with `level: "schema"` checks source
+structure only; use `level: "compile"` for the complete validation path.
+
 ## Appearance
 
 This card combines a rounded background, an outside outline, a hard shadow and
@@ -126,14 +164,39 @@ shadows require literal `x/y` and literal or static-theme decoration colors.
 
 ## Layout
 
-In row/column layout, `margin_left`, `margin_right`, `margin_top` and
-`margin_bottom` override the corresponding sides of `margin`.
-`align_main` accepts `start`, `center`, `end` and `space_between`; `align_cross`
-accepts `start`, `center`, `end` and `stretch`. Omitting `align_cross` preserves
-the authored cross-axis position. Layout is resolved at build time.
+`layout` resolves direct children at build time. `row` and `column` keep their
+existing behavior when `layout_wrap` is omitted or false. In row/column layout,
+`margin_left`, `margin_right`, `margin_top` and `margin_bottom` override the
+corresponding sides of `margin`.
+
+For row/column, `align_main` accepts `start`, `center`, `end` and
+`space_between`; `align_cross` accepts `start`, `center`, `end` and `stretch`.
+In non-wrapped row/column, omitting `align_cross` preserves the authored
+cross-axis position. Set `layout_wrap: true` to partition children into lines
+using each child's bounded authored main size, including margins. `gap` separates
+adjacent children and lines. An oversized child remains a single item. Alignment
+is applied independently to each line, and wrapped row/column defaults to
+cross-axis `start`. A wrapped line distributes extra main-axis space to `grow`
+children from their authored bounded size, subject to their maximum bounds.
+
+`layout: "grid"` arranges authored children; it is distinct from the virtualized
+[data Grid widget](../components/grid.md), `type: "grid"`, which recycles cells.
+
+`layout: "grid"` requires `grid_columns` from 1 to 65535. It creates equal-width
+column tracks; when the inner width is not divisible evenly, the remainder goes
+to the leading columns. Children are placed in authored order, filling rows from
+left to right; a `grid_column_span` (default 1) may occupy 1 through
+`grid_columns` columns and moves to the next row when it does not fit. A grid row
+height is the maximum authored bounded child height, including its vertical
+margins. Grid child width comes from the spanned track width minus horizontal
+margins, clamped by the child's width bounds. `align_main` (`start`, `center` or
+`end`) positions a max-width-capped child within its cell; `space_between` is
+invalid for grid. `align_cross` (`start`, `center`, `end` or `stretch`) positions
+or stretches a child within its row. Grid children cannot use `grow`.
 
 `min_width`, `max_width`, `min_height` and `max_height` (0–65535 pixels)
-constrain static dimensions, including row/column grow and cross-axis stretch.
+constrain static dimensions, including row/column grow, cross-axis stretch and
+grid cell sizing.
 The minimum must not exceed the maximum, and a bound cannot share its dimension
 with a bounded dynamic declaration. Grow allocation reserves minima, distributes
 remaining space by grow weight, and returns space from children that reach their
@@ -142,7 +205,113 @@ maxima. If minima do not fit, they are preserved and content overflows. These
 constraints do not add runtime reflow. Layouts with explicit alignment or size
 constraints reject bounded dynamic child positions or grow sizes that they would
 overwrite; when these fields are omitted, the legacy path remains permissive.
-Move the enclosing group when the compiled arrangement should move together.
+Grid and wrapped row/column reject bounded dynamic `x`, `y`, `w` or `h` on direct
+children because the solver owns or uses that geometry. Nested layout parents
+resolve before their child layouts, including when a parent is declared later in
+the object array. Runtime setters do not reflow siblings. Existing non-wrapped
+row/column scenes remain unchanged when these new fields are not used. Move the
+enclosing group when the compiled arrangement should move together.
+
+An expanded composite used as a direct Grid/Wrap child may move when its root
+keeps its authored size. If layout would change the expanded root's actual
+`w`/`h`, compilation reports a diagnostic because the composite's internal
+geometry was fixed during expansion. Keep the composite at its authored fixed
+size inside a container and make that container the direct Grid/Wrap child; the
+container can take the layout-assigned geometry while the composite retains its
+internal geometry.
+Generated composite overlays and placeholders are excluded from Grid/Wrap
+placement and never consume cells.
+
+This complete scene shows a three-column grid with a spanning child and a wrapped
+row. The child `x`/`y` positions are omitted because the selected layout supplies
+them:
+
+```json
+{
+  "screen": "grid_wrap",
+  "w": 320,
+  "h": 240,
+  "screen_bg": "#101820",
+  "objects": [
+    {
+      "type": "container",
+      "name": "grid",
+      "x": 16,
+      "y": 16,
+      "w": 288,
+      "h": 104,
+      "layout": "grid",
+      "grid_columns": 3,
+      "padding": 8,
+      "gap": 8,
+      "align_main": "center",
+      "align_cross": "center",
+      "bg_color": "#1B263B"
+    },
+    {
+      "type": "rect",
+      "parent_name": "grid",
+      "w": 64,
+      "h": 24,
+      "max_width": 72,
+      "bg_color": "#4CC9F0"
+    },
+    {
+      "type": "rect",
+      "parent_name": "grid",
+      "w": 64,
+      "h": 24,
+      "max_width": 72,
+      "bg_color": "#90BE6D"
+    },
+    {
+      "type": "rect",
+      "parent_name": "grid",
+      "w": 128,
+      "h": 24,
+      "grid_column_span": 2,
+      "max_width": 152,
+      "bg_color": "#F9C74F"
+    },
+    {
+      "type": "container",
+      "name": "wrapped",
+      "x": 16,
+      "y": 136,
+      "w": 288,
+      "h": 88,
+      "layout": "row",
+      "layout_wrap": true,
+      "padding": 8,
+      "gap": 8,
+      "align_main": "center",
+      "bg_color": "#1B263B"
+    },
+    {
+      "type": "rect",
+      "parent_name": "wrapped",
+      "w": 100,
+      "h": 20,
+      "bg_color": "#F94144"
+    },
+    {
+      "type": "rect",
+      "parent_name": "wrapped",
+      "w": 90,
+      "h": 24,
+      "margin_right": 4,
+      "bg_color": "#F3722C"
+    },
+    {
+      "type": "rect",
+      "parent_name": "wrapped",
+      "w": 120,
+      "h": 18,
+      "bg_color": "#577590"
+    }
+  ]
+}
+```
 
 ## Text
 
@@ -192,7 +361,7 @@ property even when its default is zero.
 | Advanced raw state | `bind`, `bind_target` | Declare when the desired runtime property requires a bind; see the declaration rules below. |
 | Appearance | `bg_color`, `fg_color`, `border_*`, `radius`, `opacity` | The selected widget must accept the field. Colors use `#RRGGBB` or `#RRGGBBAA`. |
 | Text and assets | `text`, `font*`, `image`, `fit` | Paths are relative to the scene. Declare `font_charset` for runtime text beyond static/ASCII characters. |
-| Layout | `layout`, `padding`, `gap`, child `margin`/`grow` | Row/column layout controls its main axis; child coordinates control the cross axis. |
+| Layout | `layout`, `layout_wrap`, `grid_columns`, child `grid_column_span`, `padding`, `gap`, child `margin`/`grow` | Row/column controls its main axis; grid assigns equal tracks; direct child geometry is compiler-owned. |
 | Reuse | `styles`, `themes`, `components`, `template` | Styles/themes/components are compile-time reuse; templates create/recycle runtime instances. |
 
 Later objects paint and hit-test above earlier objects. Keep Drawer descendants
@@ -298,16 +467,23 @@ than hard-coded FNV values. Legacy unqualified names remain opt-in to avoid coll
 ## Press actions and default feedback
 
 Ordinary clickable controls already have a default pressed overlay; a pointer observer
-is not required. JSON `press`, `release`, `long` and `click` actions using `call` arrive
+is not required. JSON `press`, `release`, `cancel`, `long` and `click` actions using `call` arrive
 as `ESP_GSP_EVENT_CALL` with their respective callback IDs.
 
-An ordinary control held for 500 ms without dragging fires `long` once and suppresses
-`click` on release. Cancellation or scroll takeover does not fire a long press. Use
-distinct callback names for the phases and keep callbacks nonblocking. Cancellation
-does not dispatch `release`; use the built-in feedback for automatic pressed-state cleanup.
-Hiding or disabling a pressed control cancels its interaction. Restoring the control
-while the finger remains down does not start another press; lift and press again. Slider/Arc
-value changes and commits follow the range-control contract in the workflow guide.
+Click eligibility covers the entire contact. Reaching the configured tap tolerance,
+leaving the target beyond its edge margin, or parent gesture takeover cancels the
+contact even if the finger returns. Small edge jitter may return within the margin
+(one quarter of tap tolerance, capped at 4 scene pixels); release must still hit the
+original control. Pointer injection and hardware touch frames use the same rules.
+Use `click` for navigation or submission; `press` fires immediately on DOWN.
+
+Holding an ordinary control for 500 ms without dragging fires `long` once and
+suppresses `click` on release. Leaving its actual hit area restarts the long-press
+timer. Cancellation restores pressed feedback and emits `cancel` once instead of
+`release/click`; bind `cancel` to stop application actions started by `press`.
+Hiding, disabling or leaving the scene also cancels the contact. Restoring a control
+while held does not start another press. Slider/Arc changes and commits follow the
+range-control contract in the workflow guide. Keep callbacks nonblocking.
 
 ## Container bounds and clipping
 

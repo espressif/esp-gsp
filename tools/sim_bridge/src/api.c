@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: LicenseRef-Espressif-Modified-MIT
  */
 #include "transport.h"
+#include "esp_gsp_extension.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -350,6 +351,73 @@ esp_gsp_err_t esp_gsp_component_set_property(esp_gsp_handle_t ui, gsp_component_
     return bridge_scalar(ui, GSP_BRIDGE_SET_PROPERTY, args, NULL);
 }
 
+static esp_gsp_err_t property_info(esp_gsp_handle_t ui, uint32_t op,
+                                   gsp_component_key_t key, uint32_t selector,
+                                   gsp_property_info_t *out)
+{
+    if (ui == NULL || out == NULL) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    uint32_t args[8] = {key, selector}, values[8];
+    esp_gsp_err_t rc = bridge_scalar(ui, op, args, values);
+    if (rc == ESP_GSP_OK) {
+        uint64_t min_bits = (uint64_t)values[4] | ((uint64_t)values[5] << 32);
+        uint64_t max_bits = (uint64_t)values[6] | ((uint64_t)values[7] << 32);
+        out->key = values[0];
+        out->value_type = (gsp_value_type_t)values[1];
+        out->storage = (gsp_property_storage_t)values[2];
+        out->codec = (gsp_property_codec_t)values[3];
+        memcpy(&out->min_value, &min_bits, sizeof(min_bits));
+        memcpy(&out->max_value, &max_bits, sizeof(max_bits));
+    }
+    return rc;
+}
+
+esp_gsp_err_t esp_gsp_component_get_property_info(esp_gsp_handle_t ui,
+        gsp_component_key_t key, gsp_property_key_t prop, gsp_property_info_t *out)
+{
+    return property_info(ui, GSP_BRIDGE_PROPERTY_INFO, key, prop, out);
+}
+
+esp_gsp_err_t esp_gsp_component_get_property_info_at(esp_gsp_handle_t ui,
+        gsp_component_key_t key, size_t index, gsp_property_info_t *out)
+{
+    if (ui == NULL || out == NULL) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    if (index > UINT32_MAX) {
+        return ESP_GSP_ERR_NOT_FOUND;
+    }
+    return property_info(ui, GSP_BRIDGE_PROPERTY_INFO_AT, key, (uint32_t)index, out);
+}
+
+esp_gsp_err_t esp_gsp_image_get_scale(esp_gsp_handle_t ui,
+                                      gsp_component_key_t image, uint32_t *out)
+{
+    if (ui == NULL || out == NULL) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    gsp_value_t value;
+    esp_gsp_err_t rc = esp_gsp_component_get_property(ui, image, GSP_PROPERTY_KEY_SCALE, &value);
+    if (rc == ESP_GSP_OK) {
+        if (value.type != GSP_VALUE_U32) {
+            return ESP_GSP_ERR_INVALID_STATE;
+        }
+        *out = value.data.u32;
+    }
+    return rc;
+}
+
+esp_gsp_err_t esp_gsp_image_set_scale(esp_gsp_handle_t ui,
+                                      gsp_component_key_t image, uint32_t scale_q16)
+{
+    if (ui == NULL) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    const gsp_value_t value = {.type = GSP_VALUE_U32, .data.u32 = scale_q16};
+    return esp_gsp_component_set_property(ui, image, GSP_PROPERTY_KEY_SCALE, &value);
+}
+
 #define ANIMATE(name, key_type, value_type, op) \
 esp_gsp_err_t name(esp_gsp_handle_t ui, key_type key, value_type from, value_type to, uint32_t ms, esp_gsp_ease_t ease) { \
     uint32_t args[8] = {key, (uint32_t)from, (uint32_t)to, ms, (uint32_t)ease}; \
@@ -601,6 +669,47 @@ esp_gsp_err_t esp_gsp_page_flow_is_dragging(esp_gsp_handle_t ui, gsp_component_k
         *out_dragging = values[0] != 0;
     }
     return rc;
+}
+
+/* Core hooks execute in the WASI runtime. The native bridge cannot
+ * substitute its client callbacks for those symbols or certify core-side
+ * registration, so reject these APIs rather than report false success. */
+esp_gsp_err_t esp_gsp_on_extension_event(esp_gsp_handle_t ui,
+        esp_gsp_extension_cb_t callback, void *user_ctx)
+{
+    (void)callback;
+    (void)user_ctx;
+    return ui != NULL ? ESP_GSP_ERR_NOT_SUPPORTED : ESP_GSP_ERR_INVALID_ARG;
+}
+
+esp_gsp_err_t esp_gsp_on_extension_event_ex(esp_gsp_handle_t ui,
+        esp_gsp_extension_cb_t callback, void *user_ctx,
+        uint32_t event_mask, uint32_t canvas_operation_mask)
+{
+    (void)callback;
+    (void)user_ctx;
+    if (ui == NULL || (event_mask & ~ESP_GSP_EXTENSION_MASK_ALL) != 0 ||
+            (canvas_operation_mask & ~ESP_GSP_CANVAS_MASK_ALL) != 0) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    return ESP_GSP_ERR_NOT_SUPPORTED;
+}
+
+esp_gsp_err_t esp_gsp_canvas_check(esp_gsp_handle_t ui, uint16_t bind,
+                                   uint32_t request_id)
+{
+    (void)bind;
+    (void)request_id;
+    return ui != NULL ? ESP_GSP_ERR_NOT_SUPPORTED : ESP_GSP_ERR_INVALID_ARG;
+}
+
+esp_gsp_err_t esp_gsp_canvas_set_draw_cb_ex(esp_gsp_handle_t ui, uint16_t bind,
+        esp_gsp_canvas_draw_cb_t draw_cb, void *user_ctx, uint32_t request_id)
+{
+    (void)bind;
+    (void)user_ctx;
+    (void)request_id;
+    return ui != NULL && draw_cb != NULL ? ESP_GSP_ERR_NOT_SUPPORTED : ESP_GSP_ERR_INVALID_ARG;
 }
 
 esp_gsp_err_t esp_gsp_set_pointer_observer(esp_gsp_handle_t ui,

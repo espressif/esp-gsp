@@ -4,12 +4,11 @@ Compact single-choice control that opens an option panel.
 
 ## When to use
 
-Use it when a familiar interaction is best delivered as a ready-made group of native controls.
+Use it when a common interaction is easier to express as one ready-made control.
 
 ## Local interactive preview
 
-First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
-then run from an unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands), then run from an unpacked component or public repository root with `gspc` and `gsp_sim_host`:
 
 ```sh
 mkdir -p gsp-out/widget-preview
@@ -17,73 +16,28 @@ gspc pack \
   examples/usage/widgets/dropdown/dropdown.json \
   --deployable -o gsp-out/widget-preview/dropdown.gspb
 gsp_sim_host \
-  --bundle gsp-out/widget-preview/dropdown.gspb
+  --bundle gsp-out/widget-preview/dropdown.gspb --frames 0
 ```
 
-These commands compile the JSON below and open it in the ESP-GSP simulator's
-browser preview.
+These commands compile the example and open it in the ESP-GSP simulator browser preview.
 
 ## Runtime behavior
 
-GSPC compiles the group into native primitives and generates adapters for application behavior exposed by named elements.
+GSPC lowers the group to native primitives. Give an object a stable `name` when application code must control it.
 
 `selected` is the zero-based initial index (default 0). Generated `set_selected` updates the active scene's runtime selection and label, not the JSON. Restore saved selection after entering that scene. Read a clicked choice from `event->arg`; a getter inside the callback can still observe the value before the input transaction commits.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
+If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
-## Complete example JSON
+## Example scene
 
 ```json
-{
-  "screen": "widget_dropdown",
-  "w": 480,
-  "h": 320,
-  "screen_bg": "#101827",
-  "font": "../../../common/fonts/DejaVuSans.ttf",
-  "font_charset": " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
-  "objects": [
-    {
-      "type": "dropdown",
-      "parent": -1,
-      "name": "metric",
-      "x": 70,
-      "y": 55,
-      "w": 340,
-      "h": 48,
-      "options": [
-        "Frame throughput",
-        "Memory budget",
-        "Media decode",
-        "Input latency"
-      ],
-      "selected": 1,
-      "open_direction": "down",
-      "font_size": 16,
-      "bg_color": "#172235",
-      "panel_color": "#1D2D44",
-      "fg_color": "#E2E8F0",
-      "border_color": "#334A68",
-      "border_width": 1,
-      "radius": 10
-    },
-    {
-      "type": "label",
-      "parent": -1,
-      "x": 70,
-      "y": 130,
-      "w": 340,
-      "h": 60,
-      "text": "Tap the field, then choose an option from the panel.",
-      "font_size": 16,
-      "fg_color": "#94A3B8"
-    }
-  ]
-}
+{"screen":"widget_dropdown","w":480,"h":320,"screen_bg":"#101827","font":"../../../common/fonts/DejaVuSans.ttf","font_charset":" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~","objects":[{"type":"dropdown","parent":-1,"name":"metric","x":70,"y":55,"w":340,"h":48,"options":["Frame throughput","Memory budget","Media decode","Input latency"],"selected":1,"open_direction":"down","font_size":16,"bg_color":"#172235","panel_color":"#1D2D44","fg_color":"#E2E8F0","border_color":"#334A68","border_width":1,"radius":10},{"type":"label","parent":-1,"x":70,"y":130,"w":340,"h":60,"text":"Tap the field, then choose an option from the panel.","font_size":16,"fg_color":"#94A3B8"}]}
 ```
 
-This is `examples/usage/widgets/dropdown/dropdown.json`. Copy any relative assets referenced by the scene with it.
+The canonical example is [`dropdown.json`](../../../examples/usage/widgets/dropdown/dropdown.json). Copy any relative assets referenced by the scene with it.
 
-## Generated C API for this example
+## Generated C API
 
 ```c
 const gsp_component_directory_t *const * gsp_dropdown_docs_component_directories(uint16_t *out_count)
@@ -99,7 +53,7 @@ size_t gsp_dropdown_docs_dynamic_image_slots(void)
 
 These signatures come from the actual compiler output for this JSON.
 
-## Fields used by this example
+## Fields in this example
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -121,7 +75,8 @@ These signatures come from the actual compiler output for this JSON.
 | `selected` | `int` | — | default 0; 0…65535 | yes | initially selected index |
 | `panel_color` | `color` | — | — | — | panel fill color |
 
-<details><summary>Show other fields supported by this Widget</summary>
+<details>
+<summary>Show other fields supported by this Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -136,7 +91,8 @@ These signatures come from the actual compiler output for this JSON.
 
 </details>
 
-<details><summary>Show fields shared by every Widget</summary>
+<details>
+<summary>Show fields shared by every Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|

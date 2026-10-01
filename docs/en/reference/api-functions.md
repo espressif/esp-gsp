@@ -1049,7 +1049,7 @@ Callbacks run in the context stated by the public header and must remain short w
 
 ### `esp_gsp_on_event()`
 
-Registers the application event callback (render-task context; keep it short, use esp_gsp_set_* freely inside).
+Registers one application event callback through the render-task command path. NULL clears it; a later registration replaces the previous one. Callbacks run on the render task; keep them short. Setters are allowed, but do not wait for the queue or stop the application from a callback. On ESP-IDF, success from another task confirms queue admission, not that registration has taken effect. After clearing/replacing, keep the old user_ctx alive until esp_gsp_flush() succeeds from an application task on the same active runtime (or esp_gsp_stop() succeeds). A failed clear or flush does not allow freeing it. Serialize registrations with teardown; a bare portable core requires callers to serialize with app stepping.
 
 - **Header:** `include/esp_gsp.h`
 - **Return type:** `esp_gsp_err_t`
@@ -1080,7 +1080,7 @@ render-task context and must not block.
 
 ### `esp_gsp_set_pointer_observer()`
 
-Registers a pointer observer (render-task context). Pass `NULL` to clear.
+Registers one pointer observer through the render-task command path. Pass NULL to clear. Observes platform samples not consumed by the input interceptor; it does not consume input. The execution and user_ctx lifetime rules are the same as esp_gsp_on_event().
 
 - **Header:** `include/esp_gsp.h`
 - **Return type:** `esp_gsp_err_t`
@@ -1480,7 +1480,7 @@ Canvas frames are borrowed. Every accepted frame receives exactly one release ca
 
 ### `esp_gsp_canvas_set_draw_cb()`
 
-Registers a direct draw callback and requests the first full repaint. The authored bind must target an unscaled profile-native opaque image. Existing esp_gsp_canvas_push() users are unaffected; pushing a frame to the same bind replaces the callback. user_ctx must remain valid until the callback is replaced or Canvas stop/destruction has completed; use esp_gsp_flush() before releasing it after esp_gsp_canvas_stop(). A repaint may invoke the callback more than once; render one coherent generation for all regions belonging to that repaint.
+Registers a direct draw callback and requests the first full repaint. The authored bind must target an unscaled profile-native opaque image whose runtime resource view is not shared with another element. With an asynchronous adapter success confirms command admission only; unsupported targets are diagnosed on the render task and remain unchanged. Pushing a frame to the same bind replaces the callback. user_ctx must remain valid until the callback is replaced or Canvas stop/destruction has completed; use esp_gsp_flush() before releasing it after esp_gsp_canvas_stop(). A repaint may invoke the callback more than once; render one coherent generation for all regions belonging to that repaint.
 
 - **Header:** `include/esp_gsp.h`
 - **Return type:** `esp_gsp_err_t`
@@ -1553,6 +1553,39 @@ Non-blocking variant of esp_gsp_canvas_push_dirty().
 
 ```c
 esp_gsp_err_t esp_gsp_canvas_try_push_dirty(esp_gsp_handle_t gsp, uint16_t bind, const void *pixels, size_t stride_bytes, gsp_rect_t dirty, esp_gsp_canvas_release_cb_t on_release, void *release_ctx);
+```
+
+### `esp_gsp_canvas_frame_init()`
+
+Initialize a zeroed, sized Canvas frame descriptor.
+
+- **Header:** `include/esp_gsp.h`
+- **Return type:** `esp_gsp_canvas_frame_t`
+
+```c
+static inline esp_gsp_canvas_frame_t esp_gsp_canvas_frame_init(void);
+```
+
+### `esp_gsp_canvas_submit_frame()`
+
+Submit a length-checked borrowed Canvas frame. The core validates stride_bytes * authored_height <= size_bytes without overflowing before publishing or reading pixels; row padding must also fit, including the final row. Target compatibility and dirty bounds still apply. ESP-IDF success confirms queue admission. A later rejection preserves the previous drawing and invokes on_release once if supplied; an immediate API error transfers no ownership and invokes no callback. Stop/producer rules are identical to esp_gsp_canvas_push(). Native bridge may validate at upload time; it never reads beyond the supplied extent.
+
+- **Header:** `include/esp_gsp.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_canvas_submit_frame(esp_gsp_handle_t gsp, uint16_t bind, const esp_gsp_canvas_frame_t *frame);
+```
+
+### `esp_gsp_canvas_try_submit_frame()`
+
+Non-blocking queue-admission variant of esp_gsp_canvas_submit_frame(). A full queue returns ESP_GSP_ERR_TIMEOUT without ownership transfer.
+
+- **Header:** `include/esp_gsp.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_canvas_try_submit_frame(esp_gsp_handle_t gsp, uint16_t bind, const esp_gsp_canvas_frame_t *frame);
 ```
 
 ### `esp_gsp_canvas_stop()`
@@ -1847,7 +1880,7 @@ esp_gsp_err_t esp_gsp_widget_set_position(esp_gsp_handle_t gsp, esp_gsp_widget_t
 
 ### `esp_gsp_play()`
 
-Plays an EAF frame animation into a profile-native RGB565/RGB888 placeholder image resource. The framework ticks it on the render task — no app-side loop. `eaf` is NOT copied. once = stop on the last frame.
+Plays an EAF frame animation into a profile-native RGB565/RGB888 placeholder image resource. The framework ticks it on the render task — no app-side loop. `eaf` is NOT copied. once = stop on the last frame. Returns ESP_GSP_ERR_NOT_SUPPORTED when the build left the EAF player out of the firmware.
 
 - **Header:** `include/esp_gsp.h`
 - **Return type:** `esp_gsp_err_t`
@@ -2183,6 +2216,17 @@ Read device-wide internal/PSRAM heaps on demand, including non-GSP users. Does n
 bool esp_gsp_heap_stats(esp_gsp_heap_stats_t *out_stats);
 ```
 
+### `esp_gsp_image_memory_stats()`
+
+Coherent process-wide snapshot across all GSP instances, including detached decode jobs. Peaks are simultaneous tracked payload high-water marks since process start, not sums of per-scene peaks. Excludes borrowed inputs, custom cache allocators, codec-library private allocations, animation frame buffers, region-decoder buffers, display buffers, stacks and allocator overhead. Input counts each owned submission once; callers must not TAKE one allocation twice. No allocation or heap traversal. Task context only. Pass sizeof(*out_stats). Returns false without modifying output for NULL or a size mismatch; otherwise returns true, including on portable hosts.
+
+- **Header:** `include/esp_gsp_debug.h`
+- **Return type:** `bool`
+
+```c
+bool esp_gsp_image_memory_stats(esp_gsp_image_memory_stats_t *out_stats, size_t stats_size);
+```
+
 ### `esp_gsp_update_error_stats()`
 
 Snapshot set_many/set_properties failures and wrappers routed through them (including set_position), including asynchronous apply/drop errors. Legacy bind setters and other API families are not included. Available in ordinary builds without profiling. Successful setters do not clear the last error. A property absent from the compiled runtime directory cannot be distinguished from an unsupported property: consult the compiler's schema and declare supported x/y fields dynamic before calling set_position.
@@ -2345,7 +2389,117 @@ esp_gsp_err_t esp_gsp_inject_touch(esp_gsp_handle_t gsp, int16_t x, int16_t y, b
 
 ## Advanced integration
 
-Advanced entry points expose low-level renderer state for custom rendering integration.
+Extension observers and specialized integration APIs support application-owned behavior and custom rendering.
+
+### `esp_gsp_on_extension_event()`
+
+Register one per-instance extension observer through the command path. NULL clears it; replacement follows esp_gsp_on_event() lifetime rules. Success confirms queue admission. Keep old contexts alive until a successful unregister/replacement followed by flush on the same active runtime, or successful stop. No replay: APP_CREATED precedes observer registration. This observer is independent of the ordinary business event callback. It runs after the corresponding global hook. Native sim_bridge returns ESP_GSP_ERR_NOT_SUPPORTED for these core extension APIs.
+
+- **Header:** `include/esp_gsp_extension.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_on_extension_event(esp_gsp_handle_t gsp, esp_gsp_extension_cb_t callback, void *user_ctx);
+```
+
+### `esp_gsp_on_extension_event_ex()`
+
+Filtered variant of esp_gsp_on_extension_event(). event_mask selects ESP_GSP_EXTENSION_MASK_* kinds; canvas_operation_mask further selects ESP_GSP_CANVAS_MASK_* operations within CANVAS_RESULT. Zero masks mute those notifications without freeing the registered context. Unknown bits return ESP_GSP_ERR_INVALID_ARG and leave the old registration intact. Masks and callback/context are copied in one registration command. These filters apply only to this instance observer; global hooks are independent. The ordinary registration function continues to subscribe to all events and Canvas operations known to the runtime. Lifetime/thread rules are identical. Native sim_bridge returns ESP_GSP_ERR_NOT_SUPPORTED.
+
+- **Header:** `include/esp_gsp_extension.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_on_extension_event_ex(esp_gsp_handle_t gsp, esp_gsp_extension_cb_t callback, void *user_ctx, uint32_t event_mask, uint32_t canvas_operation_mask);
+```
+
+### `esp_gsp_canvas_check()`
+
+Queue a non-mutating check of direct-draw target compatibility. The tagged result is delivered to the extension observer/global Canvas hook when the command executes. A successful check is a snapshot, not a reservation. This is an observation stream: commands discarded at shutdown and coalesced frame submissions do not each produce results. Stop producers and flush while the runtime is active when results must be observed.
+
+- **Header:** `include/esp_gsp_extension.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_canvas_check(esp_gsp_handle_t gsp, uint16_t bind, uint32_t request_id);
+```
+
+### `esp_gsp_canvas_set_draw_cb_ex()`
+
+Tagged variant of esp_gsp_canvas_set_draw_cb(). Submission returns an ESP_GSP_ERR_* queue result; the extension Canvas result carries GSP_OK or GSP_ERR_* from application on the UI task. The tag is copied, not allocated. Install an observer first (or supply the global hook). No callback/context ownership transfers on submission. A rejected registration leaves the previous drawing intact; its context must remain alive. Like existing bind setters, it addresses the current scene when executed, not a pinned scene at submission. The result reports that actual scene; serialize navigation and producer changes when scene identity matters.
+
+- **Header:** `include/esp_gsp_extension.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_canvas_set_draw_cb_ex(esp_gsp_handle_t gsp, uint16_t bind, esp_gsp_canvas_draw_cb_t draw_cb, void *user_ctx, uint32_t request_id);
+```
+
+### `esp_gsp_hook_app_created()`
+
+Global lifecycle hook after successful core initialization, before platform attachment. A later platform-start failure still destroys this core. Default no-op; observer-only rules above apply. Do not use this notification to start a worker accessing GSP before the public platform start succeeds. On ELF GCC/Clang, override with an ordinary strong definition including this header. Definitions in a static archive need a separately named strong link anchor in the same object or explicit direct/whole-archive linking; -u on the hook alone is insufficient because the default implementation already defines it. All hooks use C linkage. Other toolchains retain defaults and can use instance observers.
+
+- **Header:** `include/esp_gsp_extension.h`
+- **Return type:** `void`
+
+```c
+void esp_gsp_hook_app_created(esp_gsp_handle_t gsp);
+```
+
+### `esp_gsp_hook_app_destroying()`
+
+Global hook once before a successfully initialized core is destroyed. The handle is borrowed for this call; do not store it for later use. Partial initialization failures that never emitted APP_CREATED emit neither hook. Resource release callbacks may still follow; free shared application state only after the whole stop/destroy operation has completed.
+
+- **Header:** `include/esp_gsp_extension.h`
+- **Return type:** `void`
+
+```c
+void esp_gsp_hook_app_destroying(esp_gsp_handle_t gsp);
+```
+
+### `esp_gsp_hook_scene_changed()`
+
+Global hook after the scene is committed and before its business event. The change cannot be vetoed; it does not certify that pixels were presented.
+
+- **Header:** `include/esp_gsp_extension.h`
+- **Return type:** `void`
+
+```c
+void esp_gsp_hook_scene_changed(esp_gsp_handle_t gsp, uint16_t previous_scene, uint16_t current_scene);
+```
+
+### `esp_gsp_hook_action()`
+
+Global observer of authored CALL actions reaching business dispatch, before the ordinary application handler (also when none is installed). Internally consumed keyboard edits do not reach this hook. It cannot consume or change the borrowed event.
+
+- **Header:** `include/esp_gsp_extension.h`
+- **Return type:** `void`
+
+```c
+void esp_gsp_hook_action(esp_gsp_handle_t gsp, const esp_gsp_event_t *event);
+```
+
+### `esp_gsp_hook_canvas_result()`
+
+Global observer of Canvas commands processed by the UI core. Not an exactly-once completion API for all queued frames; see canvas_check().
+
+- **Header:** `include/esp_gsp_extension.h`
+- **Return type:** `void`
+
+```c
+void esp_gsp_hook_canvas_result(esp_gsp_handle_t gsp, const esp_gsp_canvas_result_t *result);
+```
+
+### `esp_gsp_hook_render_error()`
+
+Global hook for errors reported by the managed ESP-IDF render loop or the managed simulator session render entry. Direct low-level renderer calls are outside this contract. Reporting supplements existing counters and return values.
+
+- **Header:** `include/esp_gsp_extension.h`
+- **Return type:** `void`
+
+```c
+void esp_gsp_hook_render_error(esp_gsp_handle_t gsp, gsp_err_t error);
+```
 
 ### `esp_gsp_context()`
 

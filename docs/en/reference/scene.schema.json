@@ -12,6 +12,7 @@
         "x",
         "y",
         "parent",
+        "parent_name",
         "name"
       ]
     },
@@ -51,7 +52,8 @@
         "press",
         "release",
         "long",
-        "value"
+        "value",
+        "cancel"
       ],
       "needs_arg": [
         "set_value",
@@ -117,6 +119,7 @@
         "border_color",
         "outline_color",
         "shadow_color",
+        "pressed_color",
         "bg_gradient",
         "knob_color"
       ],
@@ -132,9 +135,9 @@
     "widget_registry",
     "authoring"
   ],
-  "compiler_version": "0.6.1",
+  "compiler_version": "0.7.0",
   "protocol_version": 1,
-  "registry_hash": "crc32:cdf1ee28",
+  "registry_hash": "crc32:a14578cc",
   "schema_version": 2,
   "widgets": {
     "arc": {
@@ -143,6 +146,7 @@
         "press",
         "release",
         "long",
+        "cancel",
         "value"
       ],
       "fields": {
@@ -341,6 +345,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grow": {
           "default": 0,
           "doc": "auto-layout grow weight",
@@ -393,10 +410,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "margin": {
           "default": 0,
@@ -852,7 +875,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "align_cross": {
@@ -1087,6 +1111,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grow": {
           "default": 0,
           "doc": "auto-layout grow weight",
@@ -1134,10 +1171,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "margin": {
           "default": 0,
@@ -1340,9 +1383,27 @@
           "minimum": 0.0,
           "type": "number"
         },
+        "press_feedback": {
+          "doc": "enable shape-aware press feedback; false disables automatic shading",
+          "type": "bool"
+        },
+        "pressed_color": {
+          "doc": "pressed background color, overriding automatic background darkening",
+          "type": "color"
+        },
+        "pressed_dim": {
+          "doc": "pressed background/image darkening, 0 unchanged to 255 black",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "int"
+        },
         "pressed_image": {
           "doc": "pressed-state image path",
           "type": "path"
+        },
+        "pressed_shadow": {
+          "doc": "keep the static shadow while pressed (default true)",
+          "type": "bool"
         },
         "quality": {
           "doc": "JPEG quality 1-100 (omitted = profile default)",
@@ -1550,6 +1611,7 @@
         "press",
         "release",
         "long",
+        "cancel",
         "value"
       ],
       "fields": {
@@ -1773,7 +1835,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "bg_color": {
@@ -2024,7 +2087,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "align_cross": {
@@ -2222,6 +2286,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grid_lines": {
           "default": 0,
           "doc": "chart grid line count",
@@ -2276,10 +2353,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "margin": {
           "default": 0,
@@ -2708,7 +2791,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "align_cross": {
@@ -2913,6 +2997,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grow": {
           "default": 0,
           "doc": "auto-layout grow weight",
@@ -2960,10 +3057,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "margin": {
           "default": 0,
@@ -3367,7 +3470,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "align_cross": {
@@ -3565,6 +3669,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grow": {
           "default": 0,
           "doc": "auto-layout grow weight",
@@ -3630,10 +3747,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "margin": {
           "default": 0,
@@ -4063,7 +4186,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "align_cross": {
@@ -4288,6 +4412,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grow": {
           "default": 0,
           "doc": "auto-layout grow weight",
@@ -4335,10 +4472,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "margin": {
           "default": 0,
@@ -4742,7 +4885,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "align_cross": {
@@ -4973,6 +5117,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grow": {
           "default": 0,
           "doc": "auto-layout grow weight",
@@ -5020,10 +5177,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "margin": {
           "default": 0,
@@ -5432,7 +5595,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "bg_color": {
@@ -5633,7 +5797,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "bg_color": {
@@ -5883,6 +6048,7 @@
         "press",
         "release",
         "long",
+        "cancel",
         "value"
       ],
       "fields": {
@@ -6239,7 +6405,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "align_cross": {
@@ -6456,6 +6623,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grow": {
           "default": 0,
           "doc": "auto-layout grow weight",
@@ -6510,10 +6690,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "margin": {
           "default": 0,
@@ -6929,7 +7115,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "align_cross": {
@@ -7149,6 +7336,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grow": {
           "default": 0,
           "doc": "auto-layout grow weight",
@@ -7203,10 +7403,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "margin": {
           "default": 0,
@@ -7610,7 +7816,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "bg_color": {
@@ -7829,7 +8036,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "align_cross": {
@@ -8050,6 +8258,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grow": {
           "default": 0,
           "doc": "auto-layout grow weight",
@@ -8097,10 +8318,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "margin": {
           "default": 0,
@@ -8504,7 +8731,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "align_cross": {
@@ -8734,6 +8962,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grow": {
           "default": 0,
           "doc": "auto-layout grow weight",
@@ -8781,10 +9022,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "margin": {
           "default": 0,
@@ -9188,7 +9435,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "align_cross": {
@@ -9386,6 +9634,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grow": {
           "default": 0,
           "doc": "auto-layout grow weight",
@@ -9457,10 +9718,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "margin": {
           "default": 0,
@@ -9893,7 +10160,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "background_color": {
@@ -10116,7 +10384,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "bg_color": {
@@ -10261,7 +10530,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "align_cross": {
@@ -10466,6 +10736,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grow": {
           "default": 0,
           "doc": "auto-layout grow weight",
@@ -10513,10 +10796,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "margin": {
           "default": 0,
@@ -10934,7 +11223,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "align_cross": {
@@ -11175,6 +11465,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grow": {
           "default": 0,
           "doc": "auto-layout grow weight",
@@ -11240,10 +11543,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "margin": {
           "default": 0,
@@ -11689,7 +11998,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "align_cross": {
@@ -11887,6 +12197,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grow": {
           "default": 0,
           "doc": "auto-layout grow weight",
@@ -11934,10 +12257,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "margin": {
           "default": 0,
@@ -12365,7 +12694,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "align_cross": {
@@ -12570,6 +12900,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grow": {
           "default": 0,
           "doc": "auto-layout grow weight",
@@ -12617,10 +12960,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "margin": {
           "default": 0,
@@ -13024,7 +13373,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "align_cross": {
@@ -13244,6 +13594,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grow": {
           "default": 0,
           "doc": "auto-layout grow weight",
@@ -13291,10 +13654,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "margin": {
           "default": 0,
@@ -13698,7 +14067,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "align_cross": {
@@ -13896,6 +14266,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grow": {
           "default": 0,
           "doc": "auto-layout grow weight",
@@ -13943,10 +14326,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "line_direction": {
           "choices": [
@@ -14374,6 +14763,7 @@
         "press",
         "release",
         "long",
+        "cancel",
         "value"
       ],
       "fields": {
@@ -14572,6 +14962,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grow": {
           "default": 0,
           "doc": "auto-layout grow weight",
@@ -14629,10 +15032,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "margin": {
           "default": 0,
@@ -15067,7 +15476,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "align_cross": {
@@ -15265,6 +15675,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grow": {
           "default": 0,
           "doc": "auto-layout grow weight",
@@ -15312,10 +15735,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "margin": {
           "default": 0,
@@ -15733,7 +16162,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "align_cross": {
@@ -15969,6 +16399,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grow": {
           "default": 0,
           "doc": "auto-layout grow weight",
@@ -16023,10 +16466,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "margin": {
           "default": 0,
@@ -16453,7 +16902,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "bg_color": {
@@ -16610,7 +17060,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "active_color": {
@@ -16810,7 +17261,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "align_cross": {
@@ -17016,6 +17468,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grow": {
           "default": 0,
           "doc": "auto-layout grow weight",
@@ -17073,10 +17538,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "margin": {
           "default": 0,
@@ -17487,7 +17958,8 @@
         "click",
         "press",
         "release",
-        "long"
+        "long",
+        "cancel"
       ],
       "fields": {
         "align_cross": {
@@ -17695,6 +18167,19 @@
           "doc": "gradient direction",
           "type": "enum"
         },
+        "grid_column_span": {
+          "default": 1,
+          "doc": "column span in the parent grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "grid_columns": {
+          "doc": "equal-width column count for grid layout",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
         "grow": {
           "default": 0,
           "doc": "auto-layout grow weight",
@@ -17766,10 +18251,16 @@
         "layout": {
           "choices": [
             "row",
-            "column"
+            "column",
+            "grid"
           ],
-          "doc": "child auto-layout: row/column",
+          "doc": "child auto-layout: row/column/grid",
           "type": "enum"
+        },
+        "layout_wrap": {
+          "default": false,
+          "doc": "wrap row/column children into additional lines",
+          "type": "bool"
         },
         "margin": {
           "default": 0,

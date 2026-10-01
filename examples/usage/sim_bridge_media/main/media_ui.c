@@ -60,10 +60,11 @@ static void image_completed(esp_gsp_handle_t ui, uint16_t bind, gsp_err_t status
 static void draw(const esp_gsp_canvas_surface_t *surface, void *ctx)
 {
     media_ui_t *state = ctx;
+    const uint32_t generation = state->ticks;
     for (uint16_t y = 0; y < surface->height; ++y) {
         uint8_t *line = (uint8_t *)surface->pixels + y * surface->stride_bytes;
         for (uint16_t x = 0; x < surface->width; ++x) {
-            uint8_t r = (uint8_t)((x + surface->x + state->draws * 9) & 255);
+            uint8_t r = (uint8_t)((x + surface->x + generation * 9) & 255);
             uint8_t g = (uint8_t)((y + surface->y) & 255);
             if (surface->pixel_format == ESP_GSP_CANVAS_PIXEL_RGB565) {
                 uint16_t color = (uint16_t)(((r >> 3) << 11) | ((g >> 2) << 5) | 20);
@@ -81,7 +82,7 @@ static void tick(esp_gsp_handle_t ui, void *ctx)
 {
     media_ui_t *state = ctx;
     ++state->ticks;
-    state->last_error = esp_gsp_canvas_invalidate(ui, GSP_BIND_SURFACE);
+    state->last_error = gsp_media_surface_canvas_invalidate(ui);
 }
 esp_gsp_err_t media_ui_init(esp_gsp_handle_t ui, media_ui_t *state)
 {
@@ -105,7 +106,7 @@ esp_gsp_err_t media_ui_init(esp_gsp_handle_t ui, media_ui_t *state)
         rc = esp_gsp_set_image_ex(ui, GSP_BIND_ENCODED, qoi, sizeof(qoi), &options);
     }
     if (rc == ESP_GSP_OK) {
-        rc = esp_gsp_canvas_set_draw_cb(ui, GSP_BIND_SURFACE, draw, state);
+        rc = gsp_media_surface_canvas_set_draw_cb(ui, draw, state);
     }
     if (rc != ESP_GSP_OK) {
         return rc;
@@ -122,5 +123,5 @@ void media_ui_deinit(esp_gsp_handle_t ui, media_ui_t *state)
         (void)esp_gsp_timer_delete(ui, state->timer);
     }
     state->timer = NULL;
-    (void)esp_gsp_canvas_stop(ui, GSP_BIND_SURFACE);
+    (void)gsp_media_surface_canvas_stop(ui);
 }

@@ -4,12 +4,11 @@ Compile-time on-screen keyboard assembled from native controls.
 
 ## When to use
 
-Use it when a familiar interaction is best delivered as a ready-made group of native controls.
+Use it when a common interaction is easier to express as one ready-made control.
 
 ## Local interactive preview
 
-First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
-then run from an unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands), then run from an unpacked component or public repository root with `gspc` and `gsp_sim_host`:
 
 ```sh
 mkdir -p gsp-out/widget-preview
@@ -17,11 +16,10 @@ gspc pack \
   examples/usage/widgets/keyboard/keyboard.json \
   --deployable -o gsp-out/widget-preview/keyboard.gspb
 gsp_sim_host \
-  --bundle gsp-out/widget-preview/keyboard.gspb
+  --bundle gsp-out/widget-preview/keyboard.gspb --frames 0
 ```
 
-These commands compile the JSON below and open it in the ESP-GSP simulator's
-browser preview.
+These commands compile the example and open it in the ESP-GSP simulator browser preview.
 
 ## Runtime behavior
 
@@ -38,71 +36,22 @@ esp_gsp_err_t err = esp_gsp_keyboard_attach(
 
 Check `err` for `ESP_GSP_OK`. The attachment starts with an empty edit buffer; character keys update the field, DEL removes a character, and OK reaches the application callback.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
+If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
-## Complete example JSON
+## Example scene
 
 ```json
-{
-  "screen": "widget_keyboard",
-  "w": 480,
-  "h": 320,
-  "screen_bg": "#101827",
-  "font": "../../../common/fonts/DejaVuSans.ttf",
-  "font_charset": " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
-  "objects": [
-    {
-      "type": "container",
-      "parent": -1,
-      "x": 24,
-      "y": 18,
-      "w": 432,
-      "h": 50,
-      "bg_color": "#172235",
-      "border_color": "#334A68",
-      "border_width": 1,
-      "radius": 9
-    },
-    {
-      "type": "label",
-      "parent": 0,
-      "name": "input_value",
-      "bind": "input_value",
-      "bind_target": "text",
-      "x": 14,
-      "y": 9,
-      "w": 404,
-      "h": 32,
-      "text": "Tap keys to enter text",
-      "input": true,
-      "font_size": 16,
-      "fg_color": "#E2E8F0"
-    },
-    {
-      "type": "keyboard",
-      "parent": -1,
-      "name": "onscreen_keyboard",
-      "x": 0,
-      "y": 82,
-      "w": 480,
-      "h": 238,
-      "font_size": 12,
-      "bg_color": "#0D1522",
-      "fg_color": "#F8FAFC",
-      "key_color": "#26364D",
-      "function_color": "#1D4A66",
-      "ok_color": "#167D66",
-      "key_radius": 6
-    }
-  ]
-}
+{"screen":"widget_keyboard","w":480,"h":320,"screen_bg":"#101827","font":"../../../common/fonts/DejaVuSans.ttf","font_charset":" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~","objects":[{"type":"container","parent":-1,"x":24,"y":18,"w":432,"h":50,"bg_color":"#172235","border_color":"#334A68","border_width":1,"radius":9},{"type":"label","parent":0,"name":"input_value","bind":"input_value","bind_target":"text","x":14,"y":9,"w":404,"h":32,"text":"Tap keys to enter text","input":true,"font_size":16,"fg_color":"#E2E8F0"},{"type":"keyboard","parent":-1,"name":"onscreen_keyboard","x":0,"y":82,"w":480,"h":238,"font_size":12,"bg_color":"#0D1522","fg_color":"#F8FAFC","key_color":"#26364D","function_color":"#1D4A66","ok_color":"#167D66","key_radius":6}]}
 ```
 
-This is `examples/usage/widgets/keyboard/keyboard.json`. Copy any relative assets referenced by the scene with it.
+The canonical example is [`keyboard.json`](../../../examples/usage/widgets/keyboard/keyboard.json). Copy any relative assets referenced by the scene with it.
 
-## Generated C API for this example
+## Generated C API
+
+`dispatch_call` requires `GSP_GENERATE_WEAK_EVENT_HANDLERS` on an ELF GCC/Clang target; see [optional business handlers](../guide/customization.md).
 
 ```c
+bool gsp_widget_keyboard_dispatch_call( esp_gsp_handle_t gsp, const esp_gsp_event_t *event, void *user_ctx)
 bool gsp_widget_keyboard_event_decode_call( const esp_gsp_event_t *event, gsp_widget_keyboard_call_event_t *out_event)
 bool gsp_widget_keyboard_event_is_onscreen_keyboard_key( const esp_gsp_event_t *event)
 const gsp_component_directory_t *const * gsp_keyboard_docs_component_directories(uint16_t *out_count)
@@ -321,7 +270,7 @@ size_t gsp_keyboard_docs_dynamic_image_slots(void)
 
 These signatures come from the actual compiler output for this JSON.
 
-## Fields used by this example
+## Fields in this example
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -340,7 +289,8 @@ These signatures come from the actual compiler output for this JSON.
 | `ok_color` | `color` | — | — | — | keyboard confirmation-key fill color |
 | `key_radius` | `int` | — | 0…65535 | — | keyboard key corner radius in px |
 
-<details><summary>Show other fields supported by this Widget</summary>
+<details>
+<summary>Show other fields supported by this Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -368,7 +318,8 @@ These signatures come from the actual compiler output for this JSON.
 
 </details>
 
-<details><summary>Show fields shared by every Widget</summary>
+<details>
+<summary>Show fields shared by every Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|

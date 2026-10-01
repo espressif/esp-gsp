@@ -4,12 +4,11 @@ Bounded single- or multi-series line chart.
 
 ## When to use
 
-Use it to communicate status, measurement, motion, or visual hierarchy.
+Use it to show status, a measurement, or motion.
 
 ## Local interactive preview
 
-First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
-then run from an unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands), then run from an unpacked component or public repository root with `gspc` and `gsp_sim_host`:
 
 ```sh
 mkdir -p gsp-out/widget-preview
@@ -17,87 +16,26 @@ gspc pack \
   examples/usage/widgets/chart/chart.json \
   --deployable -o gsp-out/widget-preview/chart.gspb
 gsp_sim_host \
-  --bundle gsp-out/widget-preview/chart.gspb
+  --bundle gsp-out/widget-preview/chart.gspb --frames 0
 ```
 
-These commands compile the JSON below and open it in the ESP-GSP simulator's
-browser preview.
+These commands compile the example and open it in the ESP-GSP simulator browser preview.
 
 ## Runtime behavior
 
 Each series declares its name, color and initial points. The point count fixes its capacity. Generated set_series functions replace one complete series atomically; append shifts the window and adds one sample. Pass values in the authored min/max range. Updates copy the supplied values before returning.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
+If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
-## Complete example JSON
+## Example scene
 
 ```json
-{
-  "screen": "widget_chart",
-  "w": 480,
-  "h": 320,
-  "screen_bg": "#101827",
-  "objects": [
-    {
-      "type": "chart",
-      "parent": -1,
-      "name": "telemetry",
-      "x": 42,
-      "y": 45,
-      "w": 396,
-      "h": 220,
-      "grid_lines": 4,
-      "bg_color": "#142033",
-      "fg_color": "#38BDF8",
-      "border_color": "#2D425F",
-      "border_width": 1,
-      "radius": 10,
-      "series": [
-        {
-          "name": "temperature",
-          "points": [
-            12,
-            28,
-            20,
-            54,
-            43,
-            78,
-            62,
-            92,
-            70,
-            86,
-            58,
-            74
-          ],
-          "color": "#38BDF8"
-        },
-        {
-          "name": "humidity",
-          "points": [
-            65,
-            61,
-            68,
-            59,
-            55,
-            49,
-            53,
-            44,
-            50,
-            47,
-            56,
-            51
-          ],
-          "color": "#FBBF24"
-        }
-      ]
-    }
-  ]
-}
+{"screen":"widget_chart","w":480,"h":320,"screen_bg":"#101827","objects":[{"type":"chart","parent":-1,"name":"telemetry","x":42,"y":45,"w":396,"h":220,"grid_lines":4,"bg_color":"#142033","fg_color":"#38BDF8","border_color":"#2D425F","border_width":1,"radius":10,"series":[{"name":"temperature","points":[12,28,20,54,43,78,62,92,70,86,58,74],"color":"#38BDF8"},{"name":"humidity","points":[65,61,68,59,55,49,53,44,50,47,56,51],"color":"#FBBF24"}]}]}
 ```
 
-This is `examples/usage/widgets/chart/chart.json`. Copy any relative assets referenced by the scene with it.
+The canonical example is [`chart.json`](../../../examples/usage/widgets/chart/chart.json). Copy any relative assets referenced by the scene with it.
 
-## Generated C API for this example
+## Generated C API
 
 ```c
 const gsp_component_directory_t *const * gsp_chart_docs_component_directories(uint16_t *out_count)
@@ -113,7 +51,7 @@ size_t gsp_chart_docs_dynamic_image_slots(void)
 
 These signatures come from the actual compiler output for this JSON.
 
-## Fields used by this example
+## Fields in this example
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -132,7 +70,8 @@ These signatures come from the actual compiler output for this JSON.
 | `series` | `chart_series` | — | — | — | fixed-capacity chart series objects |
 | `grid_lines` | `int` | — | default 0; 0…32 | — | chart grid line count |
 
-<details><summary>Show other fields supported by this Widget</summary>
+<details>
+<summary>Show other fields supported by this Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -140,7 +79,10 @@ These signatures come from the actual compiler output for this JSON.
 | `max_width` | `int` | — | 0…65535 | — | compile-time maximum width in px |
 | `min_height` | `int` | — | 0…65535 | — | compile-time minimum height in px |
 | `max_height` | `int` | — | 0…65535 | — | compile-time maximum height in px |
-| `layout` | `enum` | — | `row`, `column` | — | child auto-layout: row/column |
+| `layout` | `enum` | — | `row`, `column`, `grid` | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | — | default `false` | — | wrap row/column children into additional lines |
+| `grid_columns` | `int` | — | 1…65535 | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | — | default 1; 1…65535 | — | column span in the parent grid layout |
 | `gap` | `int` | — | default 0; 0…4096 | — | auto-layout gap in px |
 | `padding` | `int` | — | default 0; 0…4096 | — | auto-layout padding in px |
 | `padding_left` | `int` | — | 0…4096 | — | row layout: leading padding override |
@@ -221,7 +163,8 @@ These signatures come from the actual compiler output for this JSON.
 
 </details>
 
-<details><summary>Show fields shared by every Widget</summary>
+<details>
+<summary>Show fields shared by every Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|

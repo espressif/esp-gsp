@@ -41,9 +41,35 @@ list that fits the viewport may not have one. The Grid template marks its
 image `dynamic_image: true` and binds its text. These details are necessary
 for runtime row updates, not just for the bridge.
 
+## Canvas draw state and lifetime
+
+`tick()` advances `media_ui_t.ticks` and requests a repaint before the draw
+callback runs. Keep visual state updates in that timer or in another serialized
+application event, then call `esp_gsp_canvas_invalidate()` from outside the
+draw callback. `draw()` snapshots `ticks` as the generation for that callback;
+`draws` is only a diagnostic counter and must not drive pixels. This keeps every
+region of one device repaint identical when the renderer partitions it.
+
+The portable draw contract is to fill every pixel in the supplied Canvas-local
+region, using `x`, `y`, `width`, `height` and `stride_bytes`; do not assume a
+full-frame callback, retain `pixels`, block, wait, invalidate, or perform a
+state-changing GSP call from draw. Device render tasks may invoke the callback
+for partitioned regions. The callback context must remain alive until the draw
+callback has stopped: after `esp_gsp_canvas_stop()`, use the device runtime's
+documented flush/lifetime barrier before releasing it.
+
+The native bridge serializes callbacks and timers on the thread that calls
+`gsp_sim_bridge_poll()`. It supplies the complete offscreen Canvas at `(0, 0)`;
+`esp_gsp_canvas_invalidate_dirty()` still redraws and uploads that full buffer,
+so the bridge does not prove device tile behavior. Poll after local Canvas work
+before `esp_gsp_flush()`. That fence waits for a host render attempt, not image
+decoding or browser presentation. The default bridge main settles pending
+callbacks before `gsp_bridge_app_deinit()`; a custom entry point must keep the
+application state alive through `gsp_sim_bridge_close()`.
+
 See [scenes/media.json](scenes/media.json) for the exact syntax. Canvas uses
 an ordinary opaque image with `codec: "lossless"` and `bind: "surface"`;
-the generated `GSP_BIND_SURFACE` identifies it in C. The build's RGB565
+the generated `gsp_media_surface_canvas_*` helpers bind it in C. The build's RGB565
 profile selects the native pixel format. The callback receives resource
 dimensions, not necessarily the image widget's scaled layout dimensions.
 

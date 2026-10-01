@@ -249,6 +249,79 @@ endmenu
 
 endmenu
 
+menu "Linked features"
+
+comment "Link capabilities: disabling one removes its code from the firmware"
+
+config ESP_GSP_ENABLE_PNG
+    bool "Link the PNG decoder"
+    default y
+    help
+        Build-time link capability, not a runtime switch. GSPC never emits
+        PNG resources, so this decoder serves only images an application
+        publishes at run time.
+
+        Disabling keeps the decoder out of the firmware image, for a source
+        checkout and for the prebuilt component alike. A runtime PNG
+        submission is then refused before any image slot or cache surface is
+        reserved and completes with GSP_ERR_UNSUPPORTED. Image probing and
+        every other codec are unaffected.
+
+config ESP_GSP_ENABLE_EAF
+    bool "Link the EAF animation player"
+    default y
+    help
+        Build-time link capability, not a runtime switch. Keep it enabled to
+        play EAF files passed to esp_gsp_play().
+
+        Disabling keeps the EAF player and its decoder out of the firmware
+        image; esp_gsp_play() then returns ESP_GSP_ERR_NOT_SUPPORTED.
+        Animations compiled by GSPC into the bundle do not use this player
+        and are unaffected.
+
+config ESP_GSP_ENABLE_REFERENCE_RENDERER
+    bool "Link the reference rasterizer fallback"
+    default y
+    help
+        Build-time link capability, not a runtime switch. The kernel
+        renderer draws every scene GSPC emits for RGB565 and RGB888. The
+        slower, pixel-identical reference rasterizer only takes over when the
+        kernels report a capability gap, such as image blits on an ARGB8888
+        scene.
+
+        Disabling removes that fallback from the firmware image. A frame,
+        transition or snapshot that would have needed it fails with
+        GSP_ERR_UNSUPPORTED and the gap is logged once. Keep it enabled
+        unless the product's scenes have been verified on the target
+        without it.
+
+config ESP_GSP_ENABLE_VECTOR
+    bool "Link the vector outline renderer"
+    default y
+    help
+        Build-time link capability, not a runtime switch. Keep it enabled to
+        draw SVG images that GSPC compiles into vector outline resources.
+
+        Disabling keeps the vector renderer, and the FreeType outline
+        rasterizer when nothing else uses it, out of the firmware image. A
+        bundle carrying a vector resource is then refused at load with
+        GSP_ERR_UNSUPPORTED, and the render task no longer reserves the
+        vector stack headroom. Raster images and fonts are unaffected.
+
+config ESP_GSP_ENABLE_PROCEDURAL
+    bool "Link procedural effects"
+    default y
+    help
+        Build-time link capability, not a runtime switch. Keep it enabled to
+        draw DRAW_PROCEDURAL commands: spinners, particles, carousels, flip
+        cards, shimmer and the other procedural widgets.
+
+        Disabling keeps those effects out of the firmware image. A scene
+        that uses one is then refused at load with GSP_ERR_UNSUPPORTED.
+        Scenes without procedural commands are unaffected.
+
+endmenu
+
 menu "Project runtime defaults"
 
 menu "Rendering acceleration"

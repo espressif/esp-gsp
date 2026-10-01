@@ -4,12 +4,11 @@ Static or runtime-bound UTF-8 text with alignment and overflow control.
 
 ## When to use
 
-Use it to present or activate a primary piece of interface content.
+Use it for the main text, image, or action on a screen.
 
 ## Local interactive preview
 
-First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
-then run from an unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands), then run from an unpacked component or public repository root with `gspc` and `gsp_sim_host`:
 
 ```sh
 mkdir -p gsp-out/widget-preview
@@ -17,100 +16,28 @@ gspc pack \
   examples/usage/widgets/label/label.json \
   --deployable -o gsp-out/widget-preview/label.gspb
 gsp_sim_host \
-  --bundle gsp-out/widget-preview/label.gspb
+  --bundle gsp-out/widget-preview/label.gspb --frames 0
 ```
 
-These commands compile the JSON below and open it in the ESP-GSP simulator's
-browser preview.
+These commands compile the example and open it in the ESP-GSP simulator browser preview.
 
 ## Runtime behavior
 
-Content is compiled into the scene and can participate in pointer actions, bindings, and generated runtime APIs.
+The content is compiled into the scene. It can receive pointer actions and use bindings or generated runtime setters.
 
 Static text preserves LF, CRLF and blank lines. Font metrics determine the line height. For dynamic multiline text, use `text_align: left`, `overflow: clip`, and a box at least two font line heights tall. Run `gspc diagnose scene.json` before packing: alignment and overflow errors identify the field to change, and height errors report the required pixels.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
+If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
-## Complete example JSON
+## Example scene
 
 ```json
-{
-  "screen": "widget_label",
-  "w": 480,
-  "h": 320,
-  "screen_bg": "#101827",
-  "font": "../../../common/fonts/DejaVuSans.ttf",
-  "objects": [
-    {
-      "type": "label",
-      "parent": -1,
-      "name": "heading",
-      "x": 40,
-      "y": 42,
-      "w": 400,
-      "h": 42,
-      "text": "ESP-GSP Label",
-      "font_size": 30,
-      "fg_color": "#F8FAFC"
-    },
-    {
-      "type": "label",
-      "parent": -1,
-      "x": 40,
-      "y": 105,
-      "w": 400,
-      "h": 44,
-      "text": "Labels support UTF-8 text, alignment, colors and runtime-bound content.",
-      "font_size": 17,
-      "fg_color": "#A9B8CC"
-    },
-    {
-      "type": "label",
-      "parent": -1,
-      "x": 40,
-      "y": 164,
-      "w": 400,
-      "h": 34,
-      "text": "Centered text",
-      "text_align": "center",
-      "font_size": 18,
-      "bg_color": "#172235",
-      "fg_color": "#7DD3FC",
-      "radius": 8
-    },
-    {
-      "type": "label",
-      "parent": -1,
-      "x": 40,
-      "y": 208,
-      "w": 210,
-      "h": 28,
-      "text": "Long text clips at the boundary",
-      "overflow": "ellipsis",
-      "fg_color": "#94A3B8"
-    },
-    {
-      "type": "label",
-      "name": "status",
-      "bind": "status",
-      "x": 40,
-      "y": 244,
-      "w": 400,
-      "h": 60,
-      "font_size": 17,
-      "text_align": "left",
-      "overflow": "clip",
-      "fg_color": "#7DD3FC",
-      "text": "Dynamic text\nTwo aligned lines",
-      "font_charset": " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,!?"
-    }
-  ]
-}
+{"screen":"widget_label","w":480,"h":320,"screen_bg":"#101827","font":"../../../common/fonts/DejaVuSans.ttf","objects":[{"type":"label","parent":-1,"name":"heading","x":40,"y":42,"w":400,"h":42,"text":"ESP-GSP Label","font_size":30,"fg_color":"#F8FAFC"},{"type":"label","parent":-1,"x":40,"y":105,"w":400,"h":44,"text":"Labels support UTF-8 text, alignment, colors and runtime-bound content.","font_size":17,"fg_color":"#A9B8CC"},{"type":"label","parent":-1,"x":40,"y":164,"w":400,"h":34,"text":"Centered text","text_align":"center","font_size":18,"bg_color":"#172235","fg_color":"#7DD3FC","radius":8},{"type":"label","parent":-1,"x":40,"y":208,"w":210,"h":28,"text":"Long text clips at the boundary","overflow":"ellipsis","fg_color":"#94A3B8"},{"type":"label","name":"status","bind":"status","x":40,"y":244,"w":400,"h":60,"font_size":17,"text_align":"left","overflow":"clip","fg_color":"#7DD3FC","text":"Dynamic text\nTwo aligned lines","font_charset":" ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,!?"}]}
 ```
 
-This is `examples/usage/widgets/label/label.json`. Copy any relative assets referenced by the scene with it.
+The canonical example is [`label.json`](../../../examples/usage/widgets/label/label.json). Copy any relative assets referenced by the scene with it.
 
-## Generated C API for this example
+## Generated C API
 
 ```c
 const gsp_component_directory_t *const * gsp_label_docs_component_directories(uint16_t *out_count)
@@ -125,7 +52,7 @@ size_t gsp_label_docs_dynamic_image_slots(void)
 
 These signatures come from the actual compiler output for this JSON.
 
-## Fields used by this example
+## Fields in this example
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -146,7 +73,8 @@ These signatures come from the actual compiler output for this JSON.
 | `font_charset` | `string` | — | — | — | glyphs available to runtime-bound text; static text is added automatically |
 | `bind` | `identifier` | — | — | — | public state name; generates GSP_BIND_&lt;NAME&gt; |
 
-<details><summary>Show other fields supported by this Widget</summary>
+<details>
+<summary>Show other fields supported by this Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -154,7 +82,10 @@ These signatures come from the actual compiler output for this JSON.
 | `max_width` | `int` | — | 0…65535 | — | compile-time maximum width in px |
 | `min_height` | `int` | — | 0…65535 | — | compile-time minimum height in px |
 | `max_height` | `int` | — | 0…65535 | — | compile-time maximum height in px |
-| `layout` | `enum` | — | `row`, `column` | — | child auto-layout: row/column |
+| `layout` | `enum` | — | `row`, `column`, `grid` | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | — | default `false` | — | wrap row/column children into additional lines |
+| `grid_columns` | `int` | — | 1…65535 | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | — | default 1; 1…65535 | — | column span in the parent grid layout |
 | `gap` | `int` | — | default 0; 0…4096 | — | auto-layout gap in px |
 | `padding` | `int` | — | default 0; 0…4096 | — | auto-layout padding in px |
 | `padding_left` | `int` | — | 0…4096 | — | row layout: leading padding override |
@@ -229,7 +160,8 @@ These signatures come from the actual compiler output for this JSON.
 
 </details>
 
-<details><summary>Show fields shared by every Widget</summary>
+<details>
+<summary>Show fields shared by every Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|

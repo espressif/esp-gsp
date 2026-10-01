@@ -4,12 +4,11 @@ Push and pop page stack with animated navigation transitions.
 
 ## When to use
 
-Use it to organize content, visibility, or navigation while preserving hierarchy.
+Use it to group content, control visibility, or move between pages.
 
 ## Local interactive preview
 
-First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
-then run from an unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands), then run from an unpacked component or public repository root with `gspc` and `gsp_sim_host`:
 
 ```sh
 mkdir -p gsp-out/widget-preview
@@ -17,366 +16,55 @@ gspc pack \
   examples/usage/widgets/stackview/stackview.json \
   --deployable -o gsp-out/widget-preview/stackview.gspb
 gsp_sim_host \
-  --bundle gsp-out/widget-preview/stackview.gspb
+  --bundle gsp-out/widget-preview/stackview.gspb --frames 0
 ```
 
-These commands compile the JSON below and open it in the ESP-GSP simulator's
-browser preview.
+These commands compile the example and open it in the ESP-GSP simulator browser preview.
 
 ## Runtime behavior
 
-Children retain their hierarchy. Set clip_children on a Container or Layer to clip child drawing and input to its rectangular bounds. Nested clips intersect and move with their parent. Use fixed w/h for the viewport; radius styles the background and border.
+Children keep their hierarchy. `clip_children` limits drawing and input to the parent rectangle. Use fixed `w` and `h` for a viewport; `radius` styles its background and border.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
+If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
-## Complete example JSON
+## Example scene
 
 ```json
 {
-  "screen": "widget_stackview",
-  "w": 480,
-  "h": 320,
-  "screen_bg": "#101827",
-  "font": "../../../common/fonts/DejaVuSans.ttf",
-  "objects": [
-    {
-      "type": "stackview",
-      "parent": -1,
-      "name": "details_stack",
-      "x": 0,
-      "y": 0,
-      "w": 480,
-      "h": 320,
-      "page_count": 3,
-      "initial_page": 0,
-      "capacity": 3,
-      "axis": "horizontal"
-    },
-    {
-      "type": "layer",
-      "parent": 0,
-      "name": "details_stack_page0",
-      "x": 0,
-      "y": 0,
-      "w": 480,
-      "h": 320,
-      "bg_color": "#142033"
-    },
-    {
-      "type": "label",
-      "parent": 1,
-      "x": 28,
-      "y": 22,
-      "w": 424,
-      "h": 36,
-      "text": "ESP-GSP Runtime",
-      "font_size": 25,
-      "fg_color": "#F8FAFC"
-    },
-    {
-      "type": "label",
-      "parent": 1,
-      "x": 28,
-      "y": 62,
-      "w": 424,
-      "h": 28,
-      "text": "Production display profile · RGB888",
-      "font_size": 16,
-      "fg_color": "#8EA4BC"
-    },
-    {
-      "type": "container",
-      "parent": 1,
-      "x": 28,
-      "y": 106,
-      "w": 202,
-      "h": 90,
-      "bg_color": "#1B2B40",
-      "border_color": "#304762",
-      "border_width": 1,
-      "radius": 12
-    },
-    {
-      "type": "label",
-      "parent": 4,
-      "x": 16,
-      "y": 13,
-      "w": 170,
-      "h": 24,
-      "text": "FRAME RATE",
-      "font_size": 14,
-      "fg_color": "#7DD3FC"
-    },
-    {
-      "type": "label",
-      "parent": 4,
-      "x": 16,
-      "y": 43,
-      "w": 170,
-      "h": 34,
-      "text": "60 FPS",
-      "font_size": 25,
-      "fg_color": "#FFFFFF"
-    },
-    {
-      "type": "container",
-      "parent": 1,
-      "x": 250,
-      "y": 106,
-      "w": 202,
-      "h": 90,
-      "bg_color": "#1B2B40",
-      "border_color": "#304762",
-      "border_width": 1,
-      "radius": 12
-    },
-    {
-      "type": "label",
-      "parent": 7,
-      "x": 16,
-      "y": 13,
-      "w": 170,
-      "h": 24,
-      "text": "RENDER PATH",
-      "font_size": 14,
-      "fg_color": "#86EFAC"
-    },
-    {
-      "type": "label",
-      "parent": 7,
-      "x": 16,
-      "y": 43,
-      "w": 170,
-      "h": 34,
-      "text": "WASM",
-      "font_size": 25,
-      "fg_color": "#FFFFFF"
-    },
-    {
-      "type": "button",
-      "parent": 1,
-      "x": 120,
-      "y": 228,
-      "w": 240,
-      "h": 56,
-      "text": "Open live metrics  →",
-      "font_size": 17,
-      "bg_color": "#2563EB",
-      "fg_color": "#FFFFFF",
-      "radius": 13,
-      "events": [
-        {
-          "event": "click",
-          "action": "stack_push",
-          "target_name": "details_stack",
-          "arg": 1
-        }
-      ]
-    },
-    {
-      "type": "layer",
-      "parent": 0,
-      "name": "details_stack_page1",
-      "x": 480,
-      "y": 0,
-      "w": 480,
-      "h": 320,
-      "bg_color": "#251B38"
-    },
-    {
-      "type": "label",
-      "parent": 11,
-      "x": 28,
-      "y": 20,
-      "w": 424,
-      "h": 36,
-      "text": "Live metrics",
-      "font_size": 25,
-      "fg_color": "#FFFFFF"
-    },
-    {
-      "type": "label",
-      "parent": 11,
-      "x": 28,
-      "y": 58,
-      "w": 424,
-      "h": 26,
-      "text": "Renderer workload over the latest frames",
-      "font_size": 16,
-      "fg_color": "#C4B5D5"
-    },
-    {
-      "type": "chart",
-      "parent": 11,
-      "x": 28,
-      "y": 98,
-      "w": 424,
-      "h": 120,
-      "points": [
-        18,
-        34,
-        27,
-        58,
-        49,
-        76,
-        64,
-        88,
-        71,
-        94
-      ],
-      "grid_lines": 3,
-      "bg_color": "#1C152B",
-      "fg_color": "#A78BFA",
-      "border_color": "#493566",
-      "border_width": 1,
-      "radius": 11
-    },
-    {
-      "type": "label",
-      "parent": 11,
-      "x": 304,
-      "y": 105,
-      "w": 128,
-      "h": 27,
-      "text": "58.7 FPS",
-      "font_size": 17,
-      "text_align": "right",
-      "fg_color": "#F5F3FF"
-    },
-    {
-      "type": "button",
-      "parent": 11,
-      "x": 28,
-      "y": 246,
-      "w": 154,
-      "h": 48,
-      "text": "←  Back",
-      "font_size": 17,
-      "bg_color": "#46345F",
-      "fg_color": "#FFFFFF",
-      "radius": 11,
-      "events": [
-        {
-          "event": "click",
-          "action": "stack_pop",
-          "target_name": "details_stack"
-        }
-      ]
-    },
-    {
-      "type": "button",
-      "parent": 11,
-      "x": 202,
-      "y": 246,
-      "w": 250,
-      "h": 48,
-      "text": "Display settings  →",
-      "font_size": 17,
-      "bg_color": "#7C3AED",
-      "fg_color": "#FFFFFF",
-      "radius": 11,
-      "events": [
-        {
-          "event": "click",
-          "action": "stack_push",
-          "target_name": "details_stack",
-          "arg": 2
-        }
-      ]
-    },
-    {
-      "type": "layer",
-      "parent": 0,
-      "name": "details_stack_page2",
-      "x": 960,
-      "y": 0,
-      "w": 480,
-      "h": 320,
-      "bg_color": "#12362F"
-    },
-    {
-      "type": "label",
-      "parent": 18,
-      "x": 28,
-      "y": 22,
-      "w": 424,
-      "h": 36,
-      "text": "Display settings",
-      "font_size": 25,
-      "fg_color": "#FFFFFF"
-    },
-    {
-      "type": "container",
-      "parent": 18,
-      "x": 28,
-      "y": 82,
-      "w": 424,
-      "h": 92,
-      "bg_color": "#19483E",
-      "border_color": "#2B6658",
-      "border_width": 1,
-      "radius": 12
-    },
-    {
-      "type": "label",
-      "parent": 20,
-      "x": 18,
-      "y": 16,
-      "w": 280,
-      "h": 28,
-      "text": "High quality rendering",
-      "font_size": 18,
-      "fg_color": "#FFFFFF"
-    },
-    {
-      "type": "toggle",
-      "parent": 20,
-      "x": 326,
-      "y": 26,
-      "w": 72,
-      "h": 36,
-      "checked": true,
-      "bg_color": "#285447",
-      "fg_color": "#34D399"
-    },
-    {
-      "type": "label",
-      "parent": 20,
-      "x": 18,
-      "y": 50,
-      "w": 280,
-      "h": 24,
-      "text": "RGB888 · 2× supersampling",
-      "font_size": 14,
-      "fg_color": "#A7F3D0"
-    },
-    {
-      "type": "button",
-      "parent": 18,
-      "x": 28,
-      "y": 232,
-      "w": 180,
-      "h": 50,
-      "text": "←  Back",
-      "font_size": 17,
-      "bg_color": "#285447",
-      "fg_color": "#FFFFFF",
-      "radius": 11,
-      "events": [
-        {
-          "event": "click",
-          "action": "stack_pop",
-          "target_name": "details_stack"
-        }
-      ]
-    }
+  "screen":"widget_stackview","w":480,"h":320,"screen_bg":"#101827","font":"../../../common/fonts/DejaVuSans.ttf",
+  "objects":[
+    {"type":"stackview","parent":-1,"name":"details_stack","x":0,"y":0,"w":480,"h":320,"page_count":3,"initial_page":0,"capacity":3,"axis":"horizontal"},
+    {"type":"layer","parent":0,"name":"details_stack_page0","x":0,"y":0,"w":480,"h":320,"bg_color":"#142033"},
+    {"type":"label","parent":1,"x":28,"y":22,"w":424,"h":36,"text":"ESP-GSP Runtime","font_size":25,"fg_color":"#F8FAFC"},
+    {"type":"label","parent":1,"x":28,"y":62,"w":424,"h":28,"text":"Production display profile · RGB888","font_size":16,"fg_color":"#8EA4BC"},
+    {"type":"container","parent":1,"x":28,"y":106,"w":202,"h":90,"bg_color":"#1B2B40","border_color":"#304762","border_width":1,"radius":12},
+    {"type":"label","parent":4,"x":16,"y":13,"w":170,"h":24,"text":"FRAME RATE","font_size":14,"fg_color":"#7DD3FC"},
+    {"type":"label","parent":4,"x":16,"y":43,"w":170,"h":34,"text":"60 FPS","font_size":25,"fg_color":"#FFFFFF"},
+    {"type":"container","parent":1,"x":250,"y":106,"w":202,"h":90,"bg_color":"#1B2B40","border_color":"#304762","border_width":1,"radius":12},
+    {"type":"label","parent":7,"x":16,"y":13,"w":170,"h":24,"text":"RENDER PATH","font_size":14,"fg_color":"#86EFAC"},
+    {"type":"label","parent":7,"x":16,"y":43,"w":170,"h":34,"text":"WASM","font_size":25,"fg_color":"#FFFFFF"},
+    {"type":"button","parent":1,"x":120,"y":228,"w":240,"h":56,"text":"Open live metrics  →","font_size":17,"bg_color":"#2563EB","fg_color":"#FFFFFF","radius":13,"events":[{"event":"click","action":"stack_push","target_name":"details_stack","arg":1}]},
+    {"type":"layer","parent":0,"name":"details_stack_page1","x":480,"y":0,"w":480,"h":320,"bg_color":"#251B38"},
+    {"type":"label","parent":11,"x":28,"y":20,"w":424,"h":36,"text":"Live metrics","font_size":25,"fg_color":"#FFFFFF"},
+    {"type":"label","parent":11,"x":28,"y":58,"w":424,"h":26,"text":"Renderer workload over the latest frames","font_size":16,"fg_color":"#C4B5D5"},
+    {"type":"chart","parent":11,"x":28,"y":98,"w":424,"h":120,"points":[18,34,27,58,49,76,64,88,71,94],"grid_lines":3,"bg_color":"#1C152B","fg_color":"#A78BFA","border_color":"#493566","border_width":1,"radius":11},
+    {"type":"label","parent":11,"x":304,"y":105,"w":128,"h":27,"text":"58.7 FPS","font_size":17,"text_align":"right","fg_color":"#F5F3FF"},
+    {"type":"button","parent":11,"x":28,"y":246,"w":154,"h":48,"text":"←  Back","font_size":17,"bg_color":"#46345F","fg_color":"#FFFFFF","radius":11,"events":[{"event":"click","action":"stack_pop","target_name":"details_stack"}]},
+    {"type":"button","parent":11,"x":202,"y":246,"w":250,"h":48,"text":"Display settings  →","font_size":17,"bg_color":"#7C3AED","fg_color":"#FFFFFF","radius":11,"events":[{"event":"click","action":"stack_push","target_name":"details_stack","arg":2}]},
+    {"type":"layer","parent":0,"name":"details_stack_page2","x":960,"y":0,"w":480,"h":320,"bg_color":"#12362F"},
+    {"type":"label","parent":18,"x":28,"y":22,"w":424,"h":36,"text":"Display settings","font_size":25,"fg_color":"#FFFFFF"},
+    {"type":"container","parent":18,"x":28,"y":82,"w":424,"h":92,"bg_color":"#19483E","border_color":"#2B6658","border_width":1,"radius":12},
+    {"type":"label","parent":20,"x":18,"y":16,"w":280,"h":28,"text":"High quality rendering","font_size":18,"fg_color":"#FFFFFF"},
+    {"type":"toggle","parent":20,"x":326,"y":26,"w":72,"h":36,"checked":true,"bg_color":"#285447","fg_color":"#34D399"},
+    {"type":"label","parent":20,"x":18,"y":50,"w":280,"h":24,"text":"RGB888 · 2× supersampling","font_size":14,"fg_color":"#A7F3D0"},
+    {"type":"button","parent":18,"x":28,"y":232,"w":180,"h":50,"text":"←  Back","font_size":17,"bg_color":"#285447","fg_color":"#FFFFFF","radius":11,"events":[{"event":"click","action":"stack_pop","target_name":"details_stack"}]}
   ]
 }
 ```
 
-This is `examples/usage/widgets/stackview/stackview.json`. Copy any relative assets referenced by the scene with it.
+The canonical example is [`stackview.json`](../../../examples/usage/widgets/stackview/stackview.json). Copy any relative assets referenced by the scene with it.
 
-## Generated C API for this example
+## Generated C API
 
 ```c
 const gsp_component_directory_t *const * gsp_stackview_docs_component_directories(uint16_t *out_count)
@@ -394,7 +82,7 @@ size_t gsp_stackview_docs_dynamic_image_slots(void)
 
 These signatures come from the actual compiler output for this JSON.
 
-## Fields used by this example
+## Fields in this example
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -410,7 +98,8 @@ These signatures come from the actual compiler output for this JSON.
 | `capacity` | `int` | — | default 8; 1…8 | — | maximum stack depth |
 | `axis` | `enum` | — | default horizontal; `horizontal`, `vertical` | — | motion axis |
 
-<details><summary>Show other fields supported by this Widget</summary>
+<details>
+<summary>Show other fields supported by this Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -418,7 +107,10 @@ These signatures come from the actual compiler output for this JSON.
 | `max_width` | `int` | — | 0…65535 | — | compile-time maximum width in px |
 | `min_height` | `int` | — | 0…65535 | — | compile-time minimum height in px |
 | `max_height` | `int` | — | 0…65535 | — | compile-time maximum height in px |
-| `layout` | `enum` | — | `row`, `column` | — | child auto-layout: row/column |
+| `layout` | `enum` | — | `row`, `column`, `grid` | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | — | default `false` | — | wrap row/column children into additional lines |
+| `grid_columns` | `int` | — | 1…65535 | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | — | default 1; 1…65535 | — | column span in the parent grid layout |
 | `gap` | `int` | — | default 0; 0…4096 | — | auto-layout gap in px |
 | `padding` | `int` | — | default 0; 0…4096 | — | auto-layout padding in px |
 | `padding_left` | `int` | — | 0…4096 | — | row layout: leading padding override |
@@ -504,7 +196,8 @@ These signatures come from the actual compiler output for this JSON.
 
 </details>
 
-<details><summary>Show fields shared by every Widget</summary>
+<details>
+<summary>Show fields shared by every Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|

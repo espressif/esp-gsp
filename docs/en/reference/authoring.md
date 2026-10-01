@@ -1,6 +1,6 @@
 # ESP-GSP Authoring Reference
 
-GSPC version: 0.6.1.
+GSPC version: 0.7.0.
 
 Declare runtime-update fields using the dynamic forms listed in the tables. See [dynamic property scope](../guide/scenes.md#dynamic-property-scope) for declaration forms and object-versus-subtree behavior.
 
@@ -30,7 +30,8 @@ Declare runtime-update fields using the dynamic forms listed in the tables. See 
 | `click` | pointer activation completed on the object |
 | `press` | pointer entered the object's pressed state |
 | `release` | pointer released; slider/arc call receives the final authored value, including releases outside the control |
-| `long` | ordinary control held for 500 ms without dragging; fires once and suppresses click on release |
+| `cancel` | press cancelled; restores its appearance without release/click; use for application cleanup |
+| `long` | ordinary control held on the target for 500 ms without dragging; fires once and suppresses click on release |
 | `value` | slider/arc value changed; call receives the committed value in authored min/max units |
 
 ## Actions
@@ -58,7 +59,7 @@ Declare runtime-update fields using the dynamic forms listed in the tables. See 
 
 ### `container`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -74,7 +75,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |
@@ -159,7 +163,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `label`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -175,7 +179,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |
@@ -259,7 +266,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `button`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -275,7 +282,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |
@@ -361,10 +371,14 @@ Supports events: `click`, `press`, `release`, `long`
 | `selected_image` | path | — | selected-state image path |
 | `disabled_image` | path | — | disabled-state image path |
 | `checkable` | bool | `false` | toggle selected state on click |
+| `press_feedback` | bool | — | enable shape-aware press feedback; false disables automatic shading |
+| `pressed_dim` | int | — | pressed background/image darkening, 0 unchanged to 255 black [0..255] |
+| `pressed_color` | color | — | pressed background color, overriding automatic background darkening |
+| `pressed_shadow` | bool | — | keep the static shadow while pressed (default true) |
 
 ### `image`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -380,7 +394,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |
@@ -465,7 +482,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `rect`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -481,7 +498,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |
@@ -565,7 +585,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `shape`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -581,7 +601,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |
@@ -665,7 +688,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `progress`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -681,7 +704,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |
@@ -767,7 +793,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `chart`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -783,7 +809,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |
@@ -871,7 +900,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `slider`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -887,7 +916,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |
@@ -976,7 +1008,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `arc`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -992,7 +1024,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |
@@ -1082,7 +1117,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `needle`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -1098,7 +1133,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |
@@ -1183,7 +1221,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `spinner`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -1199,7 +1237,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |
@@ -1283,7 +1324,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `effect`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -1319,7 +1360,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `charging_orb`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -1356,7 +1397,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `carousel`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -1389,7 +1430,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `flip_card`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -1441,7 +1482,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `toggle`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -1457,7 +1498,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |
@@ -1543,7 +1587,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `checkbox`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -1559,7 +1603,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |
@@ -1642,7 +1689,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `radio`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -1658,7 +1705,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |
@@ -1741,7 +1791,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `clock`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 A named clock generates `gsp_<scene>_<name>_set_time()`; the helper validates a 24-hour time and updates all three hands atomically.
 
@@ -1759,7 +1809,10 @@ A named clock generates `gsp_<scene>_<name>_set_time()`; the helper validates a 
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |
@@ -1849,7 +1902,7 @@ A named clock generates `gsp_<scene>_<name>_set_time()`; the helper validates a 
 
 ### `page_flow`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -1865,7 +1918,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |
@@ -1962,7 +2018,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `stackview`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -1978,7 +2034,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |
@@ -2068,7 +2127,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `drawer`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -2084,7 +2143,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |
@@ -2170,7 +2232,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `layer`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -2186,7 +2248,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |
@@ -2272,7 +2337,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `list`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -2288,7 +2353,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |
@@ -2379,7 +2447,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `wheel`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -2395,7 +2463,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |
@@ -2487,7 +2558,7 @@ Supports events: `click`, `press`, `release`, `long`
 
 ### `grid`
 
-Supports events: `click`, `press`, `release`, `long`
+Supports events: `click`, `press`, `release`, `long`, `cancel`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -2503,7 +2574,10 @@ Supports events: `click`, `press`, `release`, `long`
 | `max_width` | int | — | compile-time maximum width in px [0..65535] |
 | `min_height` | int | — | compile-time minimum height in px [0..65535] |
 | `max_height` | int | — | compile-time maximum height in px [0..65535] |
-| `layout` | enum(`row`/`column`) | — | child auto-layout: row/column |
+| `layout` | enum(`row`/`column`/`grid`) | — | child auto-layout: row/column/grid |
+| `layout_wrap` | bool | `false` | wrap row/column children into additional lines |
+| `grid_columns` | int | — | equal-width column count for grid layout [1..65535] |
+| `grid_column_span` | int | `1` | column span in the parent grid layout [1..65535] |
 | `gap` | int | `0` | auto-layout gap in px [0..4096] |
 | `padding` | int | `0` | auto-layout padding in px [0..4096] |
 | `padding_left` | int | — | row layout: leading padding override [0..4096] |

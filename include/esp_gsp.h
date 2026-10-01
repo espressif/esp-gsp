@@ -168,7 +168,7 @@ static inline esp_gsp_config_set_result_t esp_gsp_config_set(
     return esp_gsp_config_override_set(&config->overrides, field, value);
 }
 
-/** UI event kinds delivered by esp_gsp_on_event. JSON press/release/long/click
+/** UI event kinds delivered by esp_gsp_on_event. JSON press/release/cancel/long/click
  * actions using call all arrive as CALL with their generated callback ID. */
 typedef enum {
     ESP_GSP_EVENT_CALL = 0,         /*!< a `callback` action fired */
@@ -704,7 +704,9 @@ typedef enum {
  * callback runs exactly once from the render or decode task. GSP_OK means the
  * new image was published; GSP_ERR_CANCELLED means a newer request or shutdown
  * superseded it. Any other status means this request will never publish:
- * GSP_ERR_INVALID_FORMAT for an unreadable container, and GSP_ERR_UNSUPPORTED
+ * GSP_ERR_INVALID_FORMAT for an unreadable container, GSP_ERR_TRUNCATED for
+ * decoder-detected incomplete input, GSP_ERR_LIMIT_EXCEEDED for memory or
+ * capacity shortage, and GSP_ERR_UNSUPPORTED
  * when the container is readable but this firmware cannot decode it — which
  * includes JPEG and JPEG_A8 in a build configured without the JPEG decoder.
  * Container sniffing is independent of the linked decoders, so the submitting
@@ -817,8 +819,16 @@ esp_gsp_err_t esp_gsp_set_swipe_transition(
 esp_gsp_err_t esp_gsp_set_swipe_fade_black_point(
     esp_gsp_handle_t gsp, uint8_t drag_percent);
 
-/** Registers the application event callback (render-task context;
- *  keep it short, use esp_gsp_set_* freely inside). */
+/** Registers one application event callback through the render-task command
+ * path. NULL clears it; a later registration replaces the previous one.
+ * Callbacks run on the render task; keep them short. Setters are allowed,
+ * but do not wait for the queue or stop the application from a callback.
+ * On ESP-IDF, success from another task confirms queue admission, not that
+ * registration has taken effect. After clearing/replacing, keep the old
+ * user_ctx alive until esp_gsp_flush() succeeds from an application task
+ * on the same active runtime (or esp_gsp_stop() succeeds). A failed clear
+ * or flush does not allow freeing it. Serialize registrations with teardown;
+ * a bare portable core requires callers to serialize with app stepping. */
 esp_gsp_err_t esp_gsp_on_event(esp_gsp_handle_t gsp, esp_gsp_event_cb_t cb,
                                void *user_ctx);
 
@@ -834,8 +844,10 @@ esp_gsp_err_t esp_gsp_on_event(esp_gsp_handle_t gsp, esp_gsp_event_cb_t cb,
 esp_gsp_err_t esp_gsp_on_pinch(esp_gsp_handle_t gsp,
                                esp_gsp_pinch_cb_t cb, void *user_ctx);
 
-/** Registers a pointer observer (render-task context). Pass @c NULL to
- *  clear. */
+/** Registers one pointer observer through the render-task command path.
+ * Pass NULL to clear. Observes platform samples not consumed by the input
+ * interceptor; it does not consume input. The execution and user_ctx lifetime
+ * rules are the same as esp_gsp_on_event(). */
 esp_gsp_err_t esp_gsp_set_pointer_observer(
     esp_gsp_handle_t gsp, esp_gsp_pointer_observer_cb_t cb, void *user_ctx);
 
@@ -1143,19 +1155,23 @@ esp_gsp_err_t esp_gsp_on_scroll(esp_gsp_handle_t gsp, gsp_rect_t region,
 /* --- Canvas: external frame sink (video / camera / any user
  *     stream). The scene authors a placeholder image with a bind; the
  *     producer pushes profile-native opaque RGB565/RGB888 frames of the
- *     SAME size and format. stride_bytes must be at least width * 2 for
+ *     SAME size and format. The bind must own an exclusive runtime resource
+ *     view; a view also read by another bind or static element is rejected
+ *     without modifying either element. stride_bytes must be at least width * 2 for
  *     RGB565 or width * 3 for RGB888, and the supplied storage must cover
  *     stride_bytes * authored height bytes. Frames
  *     remain borrowed (submission does not clone them): on_release returns
- *     the frame once the machine stopped referencing it (the frame
- *     that replaced it has rendered, or the canvas stopped). Pushing
+ *     the frame when the runtime no longer references it (a replacement
+ *     is committed, or the canvas stops). Release is not proof of presentation. Pushing
  *     faster than the render loop drops the never-shown frame
  *     immediately. A continuous zero-copy stream therefore needs at
  *     least two producer frames; one remains live while the next is
  *     submitted. Release callbacks run in render-task context and must
  *     not block. Every successfully accepted frame gets exactly one
  *     release callback; after any immediate API error, ownership remains
- *     with the caller and no callback follows. Any-task safe (not ISR
+ *     with the caller and no callback follows. Use one producer per bind;
+ *     stop and synchronize Canvas before switching to ordinary image setters.
+ *     Any-task safe (not ISR
  *     safe). --- */
 typedef esp_gsp_image_release_cb_t esp_gsp_canvas_release_cb_t;
 
@@ -1185,10 +1201,12 @@ typedef void (*esp_gsp_canvas_draw_cb_t)(
     const esp_gsp_canvas_surface_t *surface, void *user_ctx);
 
 /** Registers a direct draw callback and requests the first full repaint.
- *  The authored bind must target an unscaled profile-native opaque image.
- *  Existing esp_gsp_canvas_push() users are unaffected; pushing a frame to
- *  the same bind replaces the callback. user_ctx must remain valid until the
- *  callback is replaced or Canvas stop/destruction has completed; use
+ *  The authored bind must target an unscaled profile-native opaque image
+ *  whose runtime resource view is not shared with another element.
+ *  With an asynchronous adapter success confirms command admission only;
+ *  unsupported targets are diagnosed on the render task and remain unchanged.
+ *  Pushing a frame to the same bind replaces the callback. user_ctx must remain
+ *  valid until the callback is replaced or Canvas stop/destruction has completed; use
  *  esp_gsp_flush() before releasing it after esp_gsp_canvas_stop(). A repaint
  *  may invoke the callback more than once; render one coherent generation for
  *  all regions belonging to that repaint. */
@@ -1234,6 +1252,53 @@ esp_gsp_err_t esp_gsp_canvas_try_push_dirty(
     esp_gsp_handle_t gsp, uint16_t bind, const void *pixels,
     size_t stride_bytes, gsp_rect_t dirty,
     esp_gsp_canvas_release_cb_t on_release, void *release_ctx);
+
+/** Borrowed Canvas frame with an explicit backing-store extent. Initialize
+ * with ESP_GSP_CANVAS_FRAME_INIT(). The descriptor and optional dirty rect are
+ * copied during submission; only pixels and release_ctx remain borrowed.
+ * stride_bytes must fit the runtime's 32-bit stride field. size_bytes must
+ * truthfully describe accessible storage. A length check
+ * cannot detect a dangling pointer or a caller overstating its allocation. */
+typedef struct {
+    size_t struct_size;
+    const void *pixels;
+    size_t size_bytes;
+    size_t stride_bytes;
+    const gsp_rect_t *dirty; /*!< NULL for full repaint, otherwise Canvas-local. */
+    esp_gsp_canvas_release_cb_t on_release;
+    void *release_ctx;
+} esp_gsp_canvas_frame_t;
+
+/** Initialize a zeroed, sized Canvas frame descriptor. */
+static inline esp_gsp_canvas_frame_t esp_gsp_canvas_frame_init(void)
+{
+#ifdef __cplusplus
+    esp_gsp_canvas_frame_t frame = {};
+#else
+    esp_gsp_canvas_frame_t frame = {0};
+#endif
+    frame.struct_size = sizeof(frame);
+    return frame;
+}
+
+#define ESP_GSP_CANVAS_FRAME_INIT() esp_gsp_canvas_frame_init()
+
+/** Submit a length-checked borrowed Canvas frame. The core validates
+ * stride_bytes * authored_height <= size_bytes without overflowing before
+ * publishing or reading pixels; row padding must also fit, including the
+ * final row. Target compatibility and dirty bounds still apply.
+ * ESP-IDF success confirms queue admission. A later rejection preserves the
+ * previous drawing and invokes on_release once if supplied; an immediate API
+ * error transfers no ownership and invokes no callback. Stop/producer rules
+ * are identical to esp_gsp_canvas_push(). Native bridge may validate at upload
+ * time; it never reads beyond the supplied extent. */
+esp_gsp_err_t esp_gsp_canvas_submit_frame(esp_gsp_handle_t gsp, uint16_t bind,
+        const esp_gsp_canvas_frame_t *frame);
+
+/** Non-blocking queue-admission variant of esp_gsp_canvas_submit_frame().
+ * A full queue returns ESP_GSP_ERR_TIMEOUT without ownership transfer. */
+esp_gsp_err_t esp_gsp_canvas_try_submit_frame(esp_gsp_handle_t gsp, uint16_t bind,
+        const esp_gsp_canvas_frame_t *frame);
 
 /** Queues restoration of the placeholder image. The release callback is the
  *  completion signal for each borrowed frame; do not free accepted frames
@@ -1346,6 +1411,8 @@ esp_gsp_err_t esp_gsp_widget_set_position(esp_gsp_handle_t gsp,
  * Plays an EAF frame animation into a profile-native RGB565/RGB888
  * placeholder image resource. The framework ticks it on the render task —
  * no app-side loop. @p eaf is NOT copied. once = stop on the last frame.
+ * Returns ESP_GSP_ERR_NOT_SUPPORTED when the build left the EAF player out
+ * of the firmware.
  */
 esp_gsp_err_t esp_gsp_play(esp_gsp_handle_t gsp, const void *eaf,
                            size_t size, bool once);

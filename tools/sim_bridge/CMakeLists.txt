@@ -8,6 +8,9 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/gsp_compatibility.cmake")
 
 add_library(gsp_sim_bridge STATIC src/transport.c src/api.c src/media.c src/images.c src/assets.c)
 add_library(esp_gsp::sim_bridge ALIAS gsp_sim_bridge)
+set_target_properties(gsp_sim_bridge PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+    C_VISIBILITY_PRESET hidden)
 target_compile_features(gsp_sim_bridge PUBLIC c_std_11)
 target_include_directories(gsp_sim_bridge PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
@@ -30,9 +33,13 @@ if(GSP_SIM_BRIDGE_BUILD_TESTS)
     add_executable(bridge_test_client tests/client.c)
     target_link_libraries(bridge_test_client PRIVATE esp_gsp::sim_bridge)
     target_include_directories(bridge_test_client PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../ci/host")
+    add_executable(bridge_inproc_close_test tests/inproc_close.c)
+    target_link_libraries(bridge_inproc_close_test PRIVATE esp_gsp::sim_bridge)
+    target_include_directories(bridge_inproc_close_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
     add_test(NAME bridge_transport
         COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_transport.py"
             "$<TARGET_FILE:bridge_test_client>")
+    add_test(NAME bridge_inproc_close COMMAND bridge_inproc_close_test)
     add_test(NAME bridge_rpc_client
         COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_rpc_client.py")
 endif()
@@ -72,14 +79,23 @@ function(gsp_add_backend target)
             --api-header "${generated}/bundle_gsp.h" --symbol bridge_bundle
             -o "${generated}/app.gspb"
         DEPENDS ${gsp_example_assets_target}
-        BYPRODUCTS "${generated}/bundle_gsp.h" "${generated}/app.gspb"
+        BYPRODUCTS "${generated}/bundle_gsp.h" "${generated}/bundle_gsp.api.json" "${generated}/app.gspb"
         VERBATIM)
     add_executable(${target} ${ARG_SOURCES}
         "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/src/main.c")
+    add_library(${target}_module SHARED ${ARG_SOURCES}
+        "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/src/library.c")
     add_dependencies(${target} ${target}_bundle)
+    add_dependencies(${target}_module ${target}_bundle)
     target_link_libraries(${target} PRIVATE esp_gsp::sim_bridge)
+    target_link_libraries(${target}_module PRIVATE esp_gsp::sim_bridge)
     target_include_directories(${target} PRIVATE "${generated}" ${ARG_INCLUDE_DIRECTORIES})
+    target_include_directories(${target}_module PRIVATE "${generated}" ${ARG_INCLUDE_DIRECTORIES})
+    set_target_properties(${target}_module PROPERTIES
+        OUTPUT_NAME "${target}_backend"
+        C_VISIBILITY_PRESET hidden
+        VISIBILITY_INLINES_HIDDEN YES)
     # Generator expressions handle Ninja/Makefiles and Visual Studio/Xcode.
     file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/${target}-$<CONFIG>.json"
-        CONTENT "{\"version\":1,\"component_root\":\"${component_root}\",\"executable\":\"$<TARGET_FILE:${target}>\",\"bundle\":\"${generated}/app.gspb\"}\n")
+        CONTENT "{\"version\":2,\"component_root\":\"${component_root}\",\"executable\":\"$<TARGET_FILE:${target}>\",\"backend_library\":\"$<TARGET_FILE:${target}_module>\",\"bundle\":\"${generated}/app.gspb\",\"api_json\":\"${generated}/bundle_gsp.api.json\"}\n")
 endfunction()

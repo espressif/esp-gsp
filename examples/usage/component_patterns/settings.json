@@ -1,0 +1,103 @@
+{
+  "screen": "component_patterns_settings",
+  "w": 480,
+  "h": 320,
+  "screen_bg": "#0F1728",
+  "font": "../../common/fonts/DejaVuSans.ttf",
+  "objects": [
+    {
+      "type": "container",
+      "name": "settings_body",
+      "x": 24,
+      "y": 16,
+      "w": 432,
+      "h": 288,
+      "layout": "column",
+      "padding": 16,
+      "gap": 8,
+      "align_cross": "stretch",
+      "bg_color": "#172337",
+      "border_color": "#2B4566",
+      "border_width": 1,
+      "radius": 16
+    },
+    {
+      "type": "container",
+      "name": "settings_header",
+      "parent_name": "settings_body",
+      "x": 0,
+      "y": 0,
+      "w": 400,
+      "h": 36,
+      "layout": "row",
+      "gap": 8,
+      "align_cross": "center"
+    },
+    {
+      "type": "label",
+      "name": "settings_title",
+      "parent_name": "settings_header",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 30,
+      "grow": 1,
+      "text": "Settings",
+      "font_size": 23,
+      "fg_color": "#F8FAFC"
+    },
+    {
+      "use": "badge",
+      "name": "status_badge",
+      "parent_name": "settings_header",
+      "badge_width": 66,
+      "badge_height": 24,
+      "text": "READY",
+      "bg_color": "#164A45",
+      "fg_color": "#7DE3BE"
+    },
+    {
+      "use": "icon_button",
+      "name": "info_button",
+      "parent_name": "settings_header",
+      "button_width": 90,
+      "button_height": 36,
+      "icon_size": 18,
+      "gap": 6,
+      "icon_path": "../widgets/image/vector_icon.svg",
+      "label": "Info",
+      "callback": "settings_info"
+    },
+    {
+      "use": "setting_row_value",
+      "name": "network_row",
+      "parent_name": "settings_body",
+      "row_width": 400,
+      "title": "Network",
+      "subtitle": "Connected over Wi-Fi",
+      "value": "Home-5G",
+      "callback": "settings_network",
+      "value_name": "network_value"
+    },
+    {
+      "use": "setting_row_arrow",
+      "name": "appearance_row",
+      "parent_name": "settings_body",
+      "row_width": 400,
+      "title": "Appearance",
+      "subtitle": "Choose a theme and accent",
+      "callback": "settings_appearance"
+    },
+    {
+      "use": "setting_row_toggle",
+      "name": "notifications_row",
+      "parent_name": "settings_body",
+      "row_width": 400,
+      "title": "Notifications",
+      "subtitle": "Allow status and update alerts",
+      "checked": true,
+      "callback": "settings_notifications",
+      "toggle_name": "notifications_toggle"
+    }
+  ]
+}

@@ -4,12 +4,11 @@ Static or animated raster asset with contain, cover and stretch fitting.
 
 ## When to use
 
-Use it to present or activate a primary piece of interface content.
+Use it for the main text, image, or action on a screen.
 
 ## Local interactive preview
 
-First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
-then run from an unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands), then run from an unpacked component or public repository root with `gspc` and `gsp_sim_host`:
 
 ```sh
 mkdir -p gsp-out/widget-preview
@@ -17,60 +16,26 @@ gspc pack \
   examples/usage/widgets/image/image.json \
   --deployable -o gsp-out/widget-preview/image.gspb
 gsp_sim_host \
-  --bundle gsp-out/widget-preview/image.gspb
+  --bundle gsp-out/widget-preview/image.gspb --frames 0
 ```
 
-These commands compile the JSON below and open it in the ESP-GSP simulator's
-browser preview.
+These commands compile the example and open it in the ESP-GSP simulator browser preview.
 
 ## Runtime behavior
 
-Content is compiled into the scene and can participate in pointer actions, bindings, and generated runtime APIs.
+The content is compiled into the scene. It can receive pointer actions and use bindings or generated runtime setters.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
+If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
-## Complete example JSON
+## Example scene
 
 ```json
-{
-  "screen": "widget_image",
-  "w": 480,
-  "h": 320,
-  "screen_bg": "#101827",
-  "objects": [
-    {
-      "type": "image",
-      "parent": -1,
-      "name": "sample",
-      "x": 40,
-      "y": 45,
-      "w": 250,
-      "h": 210,
-      "image": "../../../performance/benchmark/scenes/bench_industrial.png",
-      "fit": "cover",
-      "position_x": 0.5,
-      "position_y": 0.5
-    },
-    {
-      "type": "image",
-      "parent": -1,
-      "x": 315,
-      "y": 90,
-      "w": 125,
-      "h": 125,
-      "image": "../../../performance/benchmark/scenes/bench_industrial.png",
-      "fit": "contain",
-      "border_color": "#334A68",
-      "border_width": 1,
-      "radius": 12
-    }
-  ]
-}
+{"screen":"widget_image","w":480,"h":320,"screen_bg":"#101827","objects":[{"type":"image","parent":-1,"name":"sample","x":40,"y":45,"w":250,"h":210,"image":"../../../performance/benchmark/scenes/bench_industrial.png","fit":"cover","position_x":0.5,"position_y":0.5},{"type":"image","parent":-1,"x":315,"y":90,"w":125,"h":125,"image":"../../../performance/benchmark/scenes/bench_industrial.png","fit":"contain","border_color":"#334A68","border_width":1,"radius":12}]}
 ```
 
-This is `examples/usage/widgets/image/image.json`. Copy any relative assets referenced by the scene with it.
+The canonical example is [`image.json`](../../../examples/usage/widgets/image/image.json). Copy any relative assets referenced by the scene with it.
 
-## Generated C API for this example
+## Generated C API
 
 ```c
 const gsp_component_directory_t *const * gsp_image_docs_component_directories(uint16_t *out_count)
@@ -82,7 +47,7 @@ size_t gsp_image_docs_dynamic_image_slots(void)
 
 These signatures come from the actual compiler output for this JSON.
 
-## Fields used by this example
+## Fields in this example
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -101,7 +66,8 @@ These signatures come from the actual compiler output for this JSON.
 | `position_x` | `number` | — | default 0.5; 0.0…1.0 | — | image fit horizontal alignment |
 | `position_y` | `number` | — | default 0.5; 0.0…1.0 | — | image fit vertical alignment |
 
-<details><summary>Show other fields supported by this Widget</summary>
+<details>
+<summary>Show other fields supported by this Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -109,7 +75,10 @@ These signatures come from the actual compiler output for this JSON.
 | `max_width` | `int` | — | 0…65535 | — | compile-time maximum width in px |
 | `min_height` | `int` | — | 0…65535 | — | compile-time minimum height in px |
 | `max_height` | `int` | — | 0…65535 | — | compile-time maximum height in px |
-| `layout` | `enum` | — | `row`, `column` | — | child auto-layout: row/column |
+| `layout` | `enum` | — | `row`, `column`, `grid` | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | — | default `false` | — | wrap row/column children into additional lines |
+| `grid_columns` | `int` | — | 1…65535 | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | — | default 1; 1…65535 | — | column span in the parent grid layout |
 | `gap` | `int` | — | default 0; 0…4096 | — | auto-layout gap in px |
 | `padding` | `int` | — | default 0; 0…4096 | — | auto-layout padding in px |
 | `padding_left` | `int` | — | 0…4096 | — | row layout: leading padding override |
@@ -187,7 +156,8 @@ These signatures come from the actual compiler output for this JSON.
 
 </details>
 
-<details><summary>Show fields shared by every Widget</summary>
+<details>
+<summary>Show fields shared by every Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|

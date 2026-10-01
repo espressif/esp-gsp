@@ -116,6 +116,7 @@ also available through the API channel at runtime.
 | `--api-json <PATH>` | Load a GSPC `*.api.json` for named tap/set, inspect/hit_test, and callback names |
 | `--backend-enable` | Enable application backend on a random local port |
 | `--backend-listen <URL>` | Backend endpoint; implies `--backend-enable` |
+| `--backend-library <PATH>` | Load a native Backend shared library; mutually exclusive with Socket Backend options |
 | `--backend-required` | Pause frame progression until backend connects |
 | `--backend-idle-timeout <SECS>` | Backend connection wait timeout (`0` = no limit) |
 | `--log-level <LEVEL>` | `trace` / `debug` / `info` (default) / `warn` / `error` |
@@ -331,7 +332,8 @@ with connect(port=8266) as api:
 
 The backend channel allows application business logic to drive the UI during
 simulation, mirroring the firmware C API. Enable with
-`--backend-listen <URL>` (TCP or Unix socket; stdio is not supported).
+`--backend-listen <URL>` (TCP or Unix socket; stdio is not supported), or load
+a matching native C Backend with `--backend-library <PATH>`.
 
 When the backend endpoint is enabled:
 
@@ -385,18 +387,26 @@ with connect(port=8684) as backend:
 ## Native C Backend projects
 
 `tools/sim_bridge` provides `gsp_add_backend(target SOURCES ... SCENES ...)`
-to link business C sources with the native compatibility library and
-generate a matching deployable bundle/header pair. Use
+to link business C sources with the native compatibility library and generate
+a matching deployable bundle/header pair. The build produces both a shared
+library (the default runner mode) and an isolated Socket executable. Use
 `INCLUDE_DIRECTORIES` for business headers and `PROFILE` to override the
 default RGB565 profile. A PC adapter implements `gsp_bridge_app_init(ui)`
 and `gsp_bridge_app_deinit(ui)`; it does not start ESP-LCD or link the full
 GSP renderer.
 
-See [Reuse C UI business logic](../guide/simulator-preview.md#reuse-c-ui-business-logic)
+See [Reuse C UI business logic](../configuration/simulator-preview.md#reuse-c-ui-business-logic)
 for examples. The installed component's [bridge README](../../../tools/sim_bridge/README.md) lists supported
 C functions. Unimplemented functions fail at link time instead of silently
 succeeding. This version does not support concurrent calling threads,
 automatic reconnection or state replay after reset.
+
+The shared library contains the exact ESP-GSP version used to build it.
+sim_host rejects it before application startup unless its Backend ABI,
+descriptor size, reserved fields, run entry, and GSP version all match. This
+guards against stale build products, not hostile native code: a loaded library
+shares the simulator process and can crash or block it. Pass
+`tools/sim_bridge/run.py --socket-backend` when process isolation is required.
 
 With `capabilities.bridge_media_version: 1`, the library also maps dynamic
 List/Grid binders, row fields, COPY PNG/JPEG/QOI images, and Canvas
@@ -434,7 +444,8 @@ alive through bridge close. Forced termination cannot guarantee callbacks.
 First poll to finish local Canvas uploads/redraws: pending work makes flush
 return INVALID_STATE. Flush does not execute business callbacks, wait for
 animations/image publication/browser presentation, or require an idle frame
-to change. A finite timeout covers its socket I/O; UINT32_MAX waits indefinitely.
+to change. A finite timeout covers transport submission and reply wait;
+UINT32_MAX waits indefinitely.
 Zero queues locally and returns TIMEOUT. Timeout retains the fence and partial
 traffic for later poll/RPC, without cancelling it or invalidating the session.
 The native table holds at most 16 outstanding fences; full returns TIMEOUT
@@ -478,9 +489,10 @@ paths; `GSP_SIM_VERSION` overrides the managed simulator version;
 precedence. No product binary is selected implicitly from PATH or a development
 build. See the bridge README for direct CMake and unpacked-component use.
 
-The runner uses `--ready-file <PATH>` to obtain JSON fields `version`,
-`pid`, `backend`, `browser` and `bridge_version`; disabled endpoints
-are null. The PID belongs to the simulator, not its Python tool-manager parent.
+The runner uses `--ready-file <PATH>` to obtain JSON fields including
+`version`, `pid`, `backend_mode`, `backend`, `backend_library`, `browser`,
+`bridge_version`, and `dynamic_backend_abi_version`; disabled endpoints are
+null. The PID belongs to the simulator, not its Python tool-manager parent.
 Callers must use a fresh per-launch path, verify process ownership, tolerate
 a partially written file, and clean it up afterwards. Readiness means bound
 listeners, not completed application initialization or process liveness.

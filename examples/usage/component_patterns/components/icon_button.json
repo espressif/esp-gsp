@@ -1,0 +1,54 @@
+{
+  "params": [
+    "button_width",
+    "button_height",
+    "icon_path",
+    "icon_size",
+    "gap",
+    "label",
+    "callback"
+  ],
+  "objects": [
+    {
+      "type": "button",
+      "x": 0,
+      "y": 0,
+      "w": "$button_width",
+      "h": "$button_height",
+      "layout": "row",
+      "padding": 8,
+      "gap": "$gap",
+      "align_cross": "center",
+      "bg_color": "#20324B",
+      "fg_color": "#EAF2FB",
+      "border_color": "#3A5678",
+      "border_width": 1,
+      "radius": 10,
+      "callback": "$callback"
+    },
+    {
+      "type": "image",
+      "parent": 0,
+      "x": 0,
+      "y": 0,
+      "w": "$icon_size",
+      "h": "$icon_size",
+      "image": "$icon_path",
+      "fit": "contain"
+    },
+    {
+      "type": "label",
+      "parent": 0,
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 20,
+      "grow": 1,
+      "text": "$label",
+      "font_size": 13,
+      "text_align": "center",
+      "fg_color": "#EAF2FB",
+      "overflow": "ellipsis"
+    }
+  ]
+}

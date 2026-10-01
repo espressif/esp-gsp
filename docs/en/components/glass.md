@@ -4,12 +4,11 @@ Build-time frosted crop of a named static image backdrop.
 
 ## When to use
 
-Use it to communicate status, measurement, motion, or visual hierarchy.
+Use it to show status, a measurement, or motion.
 
 ## Local interactive preview
 
-First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
-then run from an unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands), then run from an unpacked component or public repository root with `gspc` and `gsp_sim_host`:
 
 ```sh
 mkdir -p gsp-out/widget-preview
@@ -17,95 +16,31 @@ gspc pack \
   examples/usage/widgets/glass/glass.json \
   --deployable -o gsp-out/widget-preview/glass.gspb
 gsp_sim_host \
-  --bundle gsp-out/widget-preview/glass.gspb
+  --bundle gsp-out/widget-preview/glass.gspb --frames 0
 ```
 
-These commands compile the JSON below and open it in the ESP-GSP simulator's
-browser preview.
+These commands compile the example and open it in the ESP-GSP simulator browser preview.
 
 ## Runtime behavior
 
 Blur, tint and rounded corners are baked at build time and drawn as native images at runtime. `backdrop` must reference an earlier static opaque Image with the same parent, containing the glass bounds. It does not blur other widgets or resample after runtime background replacement or independent glass movement. Preconfigure material variants and switch visibility for themes. Template membership and dynamic geometry expressions are unsupported.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
+If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
-## Complete example JSON
+## Example scene
 
 ```json
-{
-  "screen": "glass_demo",
-  "w": 320,
-  "h": 240,
-  "font": "../../../common/fonts/DejaVuSans.ttf",
-  "objects": [
-    {
-      "type": "image",
-      "parent": -1,
-      "name": "wall",
-      "x": 0,
-      "y": 0,
-      "w": 320,
-      "h": 240,
-      "image": "../../effects/assets/backdrop.svg",
-      "fit": "stretch"
-    },
-    {
-      "type": "glass",
-      "parent": -1,
-      "name": "panel",
-      "backdrop": "wall",
-      "x": 40,
-      "y": 45,
-      "w": 240,
-      "h": 150,
-      "blur": 14,
-      "tint_color": "#D8EAFF",
-      "tint_opacity": 65,
-      "radius": 18
-    },
-    {
-      "type": "label",
-      "parent": -1,
-      "x": 65,
-      "y": 70,
-      "w": 190,
-      "h": 24,
-      "text": "LIVING ROOM",
-      "font_size": 14,
-      "fg_color": "#FFFFFF",
-      "text_align": "center"
-    },
-    {
-      "type": "label",
-      "parent": -1,
-      "x": 65,
-      "y": 103,
-      "w": 190,
-      "h": 45,
-      "text": "22.6 C",
-      "font_size": 34,
-      "fg_color": "#FFFFFF",
-      "text_align": "center"
-    },
-    {
-      "type": "label",
-      "parent": -1,
-      "x": 65,
-      "y": 157,
-      "w": 190,
-      "h": 20,
-      "text": "Comfortable",
-      "font_size": 12,
-      "fg_color": "#E9F5FF",
-      "text_align": "center"
-    }
-  ]
-}
+{"screen":"glass_demo","w":320,"h":240,"font":"../../../common/fonts/DejaVuSans.ttf","objects":[
+{"type":"image","parent":-1,"name":"wall","x":0,"y":0,"w":320,"h":240,"image":"../../effects/assets/backdrop.svg","fit":"stretch"},
+{"type":"glass","parent":-1,"name":"panel","backdrop":"wall","x":40,"y":45,"w":240,"h":150,"blur":14,"tint_color":"#D8EAFF","tint_opacity":65,"radius":18},
+{"type":"label","parent":-1,"x":65,"y":70,"w":190,"h":24,"text":"LIVING ROOM","font_size":14,"fg_color":"#FFFFFF","text_align":"center"},
+{"type":"label","parent":-1,"x":65,"y":103,"w":190,"h":45,"text":"22.6 C","font_size":34,"fg_color":"#FFFFFF","text_align":"center"},
+{"type":"label","parent":-1,"x":65,"y":157,"w":190,"h":20,"text":"Comfortable","font_size":12,"fg_color":"#E9F5FF","text_align":"center"}]}
 ```
 
-This is `examples/usage/widgets/glass/glass.json`. Copy any relative assets referenced by the scene with it.
+The canonical example is [`glass.json`](../../../examples/usage/widgets/glass/glass.json). Copy any relative assets referenced by the scene with it.
 
-## Generated C API for this example
+## Generated C API
 
 ```c
 const gsp_component_directory_t *const * gsp_glass_docs_component_directories(uint16_t *out_count)
@@ -119,7 +54,7 @@ size_t gsp_glass_docs_dynamic_image_slots(void)
 
 These signatures come from the actual compiler output for this JSON.
 
-## Fields used by this example
+## Fields in this example
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -136,7 +71,8 @@ These signatures come from the actual compiler output for this JSON.
 | `tint_opacity` | `int` | — | default 70; 0…255 | — | tint strength |
 | `radius` | `int` | — | default 16; 0…128 | scene: —; template: — | rounded corner radius in pixels |
 
-<details><summary>Show other fields supported by this Widget</summary>
+<details>
+<summary>Show other fields supported by this Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -145,7 +81,8 @@ These signatures come from the actual compiler output for this JSON.
 
 </details>
 
-<details><summary>Show fields shared by every Widget</summary>
+<details>
+<summary>Show fields shared by every Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|

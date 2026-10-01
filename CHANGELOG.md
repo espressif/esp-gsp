@@ -1,5 +1,44 @@
 # Changelog
 
+## 1.6.0
+
+Use with GSPC 0.7.0 and simulator 1.6.0.
+
+- Add Grid and wrapped Row/Column layouts, reusable components and Button press styles with edge jitter tolerance.
+- Add application hooks, observers and named, length-checked Canvas APIs.
+- Reduce rendering work, retained memory and stack use; support optional feature linking.
+- Improve JPEG scaling and image memory handling; fix PNG/QOI/RLE decoding and PIE isolation.
+- Use the consuming firmware's tick rate and require `esp_display_present ^1.1.1` for the TE wakeup fix.
+- Improve diagnostics, simulator sessions and native backends; fix animated navigation and build/package integration.
+- Add trusted in-process simulator Backends using `.so`, `.dll` or `.dylib`
+  libraries on Linux, Windows and macOS, with defensive ABI and exact GSP
+  version validation before application code starts.
+- Reduce Socket Backend latency by disabling Nagle on accepted TCP connections,
+  while retaining the out-of-process transport for isolation and diagnostics.
+- Build executable and shared-library variants from `gsp_add_backend()`, and use
+  the shared library by default in the PC Backend runner.
+- Stop dispatching application callbacks after an in-process Backend observes
+  host shutdown, including timers that become due at the shutdown boundary.
+
+### Upgrading from 1.5.1
+
+Rebuild precompiled libraries, generated headers and applications together.
+
+- Cancelled contacts emit `cancel` instead of `release/click`; use it to stop actions started by `press`.
+- Canvas rejects shared resource views, including legacy push APIs. Stop and flush Canvas before switching to image setters.
+- Image buffers on PSRAM targets no longer fall back to internal RAM. Reserve PSRAM for the decode working set or reduce image sizes.
+
+Reconfigure and rebuild PC Backend build directories. Their generated manifest
+changes from version 1 to version 2 and now contains `backend_library`; stale
+manifests are rejected by the current build helper. Dynamic Backend libraries
+must be rebuilt against ESP-GSP 1.6.0 because the simulator requires an exact
+GSP version match.
+
+`tools/sim_bridge/run.py` now loads the shared library by default; use this mode
+for lower simulator call latency. Pass `--socket-backend` to retain the 1.5.1
+out-of-process behavior, including process isolation. Only load trusted dynamic
+Backend libraries because they run inside the simulator process.
+
 ## 1.5.1
 
 - Reduce Bundle loading overhead by reusing validated startup views, using

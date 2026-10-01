@@ -8,46 +8,46 @@ Current GSPC registry coverage.
 |---|---:|
 | Registered widgets | 28 |
 | Compile-time composites | 6 |
-| Total field definitions | 2495 |
+| Total field definitions | 2568 |
 | Dynamic capability fields | 236 |
 
 ## Components
 
 | Component | Kind | Facets | Fields | Events |
 |---|---|---|---:|---|
-| `container` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 94 | yes |
-| `label` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 93 | yes |
-| `button` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `text`, `background_opacity`, `border`, `border_side`, `image`, `boolean`, `interaction`, `template` | 98 | yes |
-| `image` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `image`, `text`, `interaction`, `template` | 94 | yes |
-| `rect` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 93 | yes |
-| `shape` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `shape`, `interaction`, `template` | 93 | yes |
-| `progress` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `interaction`, `template` | 95 | yes |
-| `chart` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `stroke`, `interaction`, `template` | 97 | yes |
-| `slider` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `slider`, `interaction`, `template` | 98 | yes |
-| `arc` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `arc`, `interaction`, `template` | 99 | yes |
-| `needle` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `needle`, `stroke`, `interaction`, `template` | 94 | yes |
-| `spinner` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `spinner`, `stroke`, `interaction`, `template` | 93 | yes |
+| `container` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 97 | yes |
+| `label` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 96 | yes |
+| `button` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `text`, `background_opacity`, `border`, `border_side`, `image`, `boolean`, `interaction`, `template` | 105 | yes |
+| `image` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `image`, `text`, `interaction`, `template` | 97 | yes |
+| `rect` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 96 | yes |
+| `shape` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `shape`, `interaction`, `template` | 96 | yes |
+| `progress` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `interaction`, `template` | 98 | yes |
+| `chart` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `stroke`, `interaction`, `template` | 100 | yes |
+| `slider` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `slider`, `interaction`, `template` | 101 | yes |
+| `arc` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `arc`, `interaction`, `template` | 102 | yes |
+| `needle` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `needle`, `stroke`, `interaction`, `template` | 97 | yes |
+| `spinner` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `spinner`, `stroke`, `interaction`, `template` | 96 | yes |
 | `effect` | `Widget` | `core`, `visibility`, `interaction` | 29 | yes |
 | `charging_orb` | `Widget` | `core`, `visibility`, `interaction` | 30 | yes |
 | `carousel` | `Widget` | `core`, `visibility`, `interaction` | 26 | yes |
 | `flip_card` | `Widget` | `core`, `visibility`, `interaction` | 25 | yes |
 | `glass` | `Widget` | `core`, `visibility` | 15 | no |
-| `toggle` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `slider`, `interaction`, `template` | 95 | yes |
-| `checkbox` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 92 | yes |
-| `radio` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 92 | yes |
-| `clock` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 99 | yes |
-| `page_flow` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `data`, `interaction`, `template` | 106 | yes |
-| `stackview` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 99 | yes |
-| `drawer` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 95 | yes |
-| `layer` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 95 | yes |
+| `toggle` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `slider`, `interaction`, `template` | 98 | yes |
+| `checkbox` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 95 | yes |
+| `radio` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 95 | yes |
+| `clock` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 102 | yes |
+| `page_flow` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `data`, `interaction`, `template` | 109 | yes |
+| `stackview` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 102 | yes |
+| `drawer` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 98 | yes |
+| `layer` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 98 | yes |
 | `tabview` | `Composite` | `core` | 25 | yes |
 | `dropdown` | `Composite` | `core` | 26 | yes |
 | `msgbox` | `Composite` | `composite_core` | 21 | yes |
 | `table` | `Composite` | `core` | 19 | yes |
 | `keyboard` | `Composite` | `core` | 36 | yes |
-| `list` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `list_data`, `scroll_snapshot`, `interaction`, `template` | 100 | yes |
-| `wheel` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `wheel_behavior`, `data`, `list_data`, `interaction`, `template` | 101 | yes |
-| `grid` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `grid_data`, `scroll_snapshot`, `interaction`, `template` | 97 | yes |
+| `list` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `list_data`, `scroll_snapshot`, `interaction`, `template` | 103 | yes |
+| `wheel` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `wheel_behavior`, `data`, `list_data`, `interaction`, `template` | 104 | yes |
+| `grid` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `grid_data`, `scroll_snapshot`, `interaction`, `template` | 100 | yes |
 | `message_list` | `Composite` | `core`, `visibility`, `row_template`, `message_list` | 31 | yes |
 
 ## Fields by widget
@@ -68,7 +68,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |
@@ -167,7 +170,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |
@@ -265,7 +271,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |
@@ -351,6 +360,10 @@ Current GSPC registry coverage.
 | `selected_image` | `path` | no | no | — | selected-state image path |
 | `disabled_image` | `path` | no | no | — | disabled-state image path |
 | `checkable` | `bool` | no | no | `false` | toggle selected state on click |
+| `press_feedback` | `bool` | no | no | — | enable shape-aware press feedback; false disables automatic shading |
+| `pressed_dim` | `int` | no | no | — | pressed background/image darkening, 0 unchanged to 255 black |
+| `pressed_color` | `color` | no | no | — | pressed background color, overriding automatic background darkening |
+| `pressed_shadow` | `bool` | no | no | — | keep the static shadow while pressed (default true) |
 
 ### `image`
 
@@ -368,7 +381,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |
@@ -467,7 +483,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |
@@ -565,7 +584,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |
@@ -663,7 +685,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |
@@ -763,7 +788,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |
@@ -865,7 +893,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |
@@ -968,7 +999,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |
@@ -1072,7 +1106,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |
@@ -1171,7 +1208,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |
@@ -1419,7 +1459,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |
@@ -1519,7 +1562,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |
@@ -1616,7 +1662,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |
@@ -1713,7 +1762,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |
@@ -1817,7 +1869,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |
@@ -1928,7 +1983,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |
@@ -2032,7 +2090,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |
@@ -2132,7 +2193,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |
@@ -2384,7 +2448,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |
@@ -2489,7 +2556,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |
@@ -2595,7 +2665,10 @@ Current GSPC registry coverage.
 | `max_width` | `int` | no | no | — | compile-time maximum width in px |
 | `min_height` | `int` | no | no | — | compile-time minimum height in px |
 | `max_height` | `int` | no | no | — | compile-time maximum height in px |
-| `layout` | `enum` | no | no | — | child auto-layout: row/column |
+| `layout` | `enum` | no | no | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | no | no | `false` | wrap row/column children into additional lines |
+| `grid_columns` | `int` | no | no | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | no | no | `1` | column span in the parent grid layout |
 | `gap` | `int` | no | no | `0` | auto-layout gap in px |
 | `padding` | `int` | no | no | `0` | auto-layout padding in px |
 | `padding_left` | `int` | no | no | — | row layout: leading padding override |

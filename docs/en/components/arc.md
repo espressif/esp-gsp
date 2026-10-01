@@ -4,12 +4,11 @@ Circular value indicator with an optional draggable range.
 
 ## When to use
 
-Use it when a user must inspect or change a bounded numeric value.
+Use it for a value with a clear minimum and maximum.
 
 ## Local interactive preview
 
-First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
-then run from an unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands), then run from an unpacked component or public repository root with `gspc` and `gsp_sim_host`:
 
 ```sh
 mkdir -p gsp-out/widget-preview
@@ -17,71 +16,30 @@ gspc pack \
   examples/usage/widgets/arc/arc.json \
   --deployable -o gsp-out/widget-preview/arc.gspb
 gsp_sim_host \
-  --bundle gsp-out/widget-preview/arc.gspb
+  --bundle gsp-out/widget-preview/arc.gspb --frames 0
 ```
 
-These commands compile the JSON below and open it in the ESP-GSP simulator's
-browser preview.
-
-This preview shows the initial state authored in JSON. To reproduce application-driven motion, update the corresponding properties through the simulator backend/API or device code.
+These commands compile the example and open it in the ESP-GSP simulator browser preview.
 
 ## Runtime behavior
 
-Pointer input updates retained component state through the same runtime property path used on device.
+Clicking or dragging updates the retained value. Application code can update the same value through the generated setter.
 
 `start_angle` is measured clockwise from the top: right is 90°, bottom 180°, left 270°. `sweep` is a clockwise span of 1–360°; increasing value from min to max fills in that direction.
 
 ![Arc angles](../../assets/arc-angles.svg)
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
+If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
-## Complete example JSON
+## Example scene
 
 ```json
-{
-  "screen": "widget_arc",
-  "w": 480,
-  "h": 320,
-  "screen_bg": "#101827",
-  "objects": [
-    {
-      "type": "arc",
-      "parent": -1,
-      "name": "level",
-      "x": 150,
-      "y": 55,
-      "w": 180,
-      "h": 180,
-      "min": 0,
-      "max": 100,
-      "value": 72,
-      "start_angle": 135,
-      "sweep": 270,
-      "thickness": 18,
-      "bg_color": "#334155",
-      "fg_color": "#38BDF8"
-    },
-    {
-      "type": "arc",
-      "parent": -1,
-      "x": 190,
-      "y": 95,
-      "w": 100,
-      "h": 100,
-      "value": 38,
-      "start_angle": 180,
-      "sweep": 180,
-      "thickness": 10,
-      "bg_color": "#293548",
-      "fg_color": "#A78BFA"
-    }
-  ]
-}
+{"screen":"widget_arc","w":480,"h":320,"screen_bg":"#101827","objects":[{"type":"arc","parent":-1,"name":"level","x":150,"y":55,"w":180,"h":180,"min":0,"max":100,"value":72,"start_angle":135,"sweep":270,"thickness":18,"bg_color":"#334155","fg_color":"#38BDF8"},{"type":"arc","parent":-1,"x":190,"y":95,"w":100,"h":100,"value":38,"start_angle":180,"sweep":180,"thickness":10,"bg_color":"#293548","fg_color":"#A78BFA"}]}
 ```
 
-This is `examples/usage/widgets/arc/arc.json`. Copy any relative assets referenced by the scene with it.
+The canonical example is [`arc.json`](../../../examples/usage/widgets/arc/arc.json). Copy any relative assets referenced by the scene with it.
 
-## Generated C API for this example
+## Generated C API
 
 ```c
 const gsp_component_directory_t *const * gsp_arc_docs_component_directories(uint16_t *out_count)
@@ -95,7 +53,7 @@ size_t gsp_arc_docs_dynamic_image_slots(void)
 
 These signatures come from the actual compiler output for this JSON.
 
-## Fields used by this example
+## Fields in this example
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -115,7 +73,8 @@ These signatures come from the actual compiler output for this JSON.
 | `sweep` | `int` | — | default 270; 1…360 | — | clockwise arc span in degrees |
 | `thickness` | `int` | — | 0…65535 | — | stroke thickness; omitted = max(min(w,h)/8, 2); 0 clamps to 1 |
 
-<details><summary>Show other fields supported by this Widget</summary>
+<details>
+<summary>Show other fields supported by this Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -123,7 +82,10 @@ These signatures come from the actual compiler output for this JSON.
 | `max_width` | `int` | — | 0…65535 | — | compile-time maximum width in px |
 | `min_height` | `int` | — | 0…65535 | — | compile-time minimum height in px |
 | `max_height` | `int` | — | 0…65535 | — | compile-time maximum height in px |
-| `layout` | `enum` | — | `row`, `column` | — | child auto-layout: row/column |
+| `layout` | `enum` | — | `row`, `column`, `grid` | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | — | default `false` | — | wrap row/column children into additional lines |
+| `grid_columns` | `int` | — | 1…65535 | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | — | default 1; 1…65535 | — | column span in the parent grid layout |
 | `gap` | `int` | — | default 0; 0…4096 | — | auto-layout gap in px |
 | `padding` | `int` | — | default 0; 0…4096 | — | auto-layout padding in px |
 | `padding_left` | `int` | — | 0…4096 | — | row layout: leading padding override |
@@ -205,7 +167,8 @@ These signatures come from the actual compiler output for this JSON.
 
 </details>
 
-<details><summary>Show fields shared by every Widget</summary>
+<details>
+<summary>Show fields shared by every Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|

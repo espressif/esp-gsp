@@ -4,12 +4,11 @@ Charging progress with liquid, halo or plasma styles and optional particles.
 
 ## When to use
 
-Use it to communicate status, measurement, motion, or visual hierarchy.
+Use it to show status, a measurement, or motion.
 
 ## Local interactive preview
 
-First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
-then run from an unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands), then run from an unpacked component or public repository root with `gspc` and `gsp_sim_host`:
 
 ```sh
 mkdir -p gsp-out/widget-preview
@@ -17,19 +16,18 @@ gspc pack \
   examples/usage/widgets/charging_orb/charging_orb.json \
   --deployable -o gsp-out/widget-preview/charging_orb.gspb
 gsp_sim_host \
-  --bundle gsp-out/widget-preview/charging_orb.gspb
+  --bundle gsp-out/widget-preview/charging_orb.gspb --frames 0
 ```
 
-These commands compile the JSON below and open it in the ESP-GSP simulator's
-browser preview.
+These commands compile the example and open it in the ESP-GSP simulator browser preview.
 
 ## Runtime behavior
 
-The simulator and device runtime render the same compiled geometry. Application-driven property changes require a simulator backend or device code.
+The simulator and device runtime use the same compiled geometry. The preview starts with the JSON values; application-driven updates need the simulator backend/API or device code.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
+If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
-## Complete example JSON
+## Example scene
 
 ```json
 {
@@ -85,9 +83,9 @@ Give every object that application code must read or update a stable `name`. GSP
 }
 ```
 
-This is `examples/usage/widgets/charging_orb/charging_orb.json`. Copy any relative assets referenced by the scene with it.
+The canonical example is [`charging_orb.json`](../../../examples/usage/widgets/charging_orb/charging_orb.json). Copy any relative assets referenced by the scene with it.
 
-## Generated C API for this example
+## Generated C API
 
 ```c
 const gsp_component_directory_t *const * gsp_charging_orb_docs_component_directories(uint16_t *out_count)
@@ -111,7 +109,7 @@ size_t gsp_charging_orb_docs_dynamic_image_slots(void)
 
 These signatures come from the actual compiler output for this JSON.
 
-## Fields used by this example
+## Fields in this example
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -132,7 +130,8 @@ These signatures come from the actual compiler output for this JSON.
 | `charging` | `bool` | — | default `true` | — | enable charging motion and particles |
 | `particles` | `int` | — | default 4; 0…6 | `runtime_style` | maximum soft energy particles |
 
-<details><summary>Show other fields supported by this Widget</summary>
+<details>
+<summary>Show other fields supported by this Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -152,7 +151,8 @@ These signatures come from the actual compiler output for this JSON.
 
 </details>
 
-<details><summary>Show fields shared by every Widget</summary>
+<details>
+<summary>Show fields shared by every Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|

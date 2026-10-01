@@ -16,6 +16,8 @@ struct bridge_canvas_frame {
     uint16_t bind, scene;
     const void *pixels;
     size_t stride;
+    size_t size_bytes;
+    bool bounded;
     bool has_dirty;
     gsp_rect_t dirty;
     esp_gsp_canvas_release_cb_t release;
@@ -338,8 +340,15 @@ static bool valid_dirty(gsp_rect_t r, uint32_t width, uint32_t height)
 {
     return r.x1 >= 0 && r.y1 >= 0 && r.x2 > r.x1 && r.y2 > r.y1 && (uint32_t)r.x2 <= width && (uint32_t)r.y2 <= height;
 }
+
+static bool extent_fits(size_t stride, size_t height, size_t size_bytes)
+{
+    return height == 0 || stride <= size_bytes / height;
+}
+
 static esp_gsp_err_t canvas_upload(esp_gsp_handle_t ui, uint16_t bind, const void *pixels,
-                                   size_t stride, const uint32_t info[8], const gsp_rect_t *dirty)
+                                   size_t stride, size_t size_bytes, bool bounded,
+                                   const uint32_t info[8], const gsp_rect_t *dirty)
 {
     const size_t pixel_bytes = info[2] == 0 ? 2U : 3U;
     if (!pixels || !info[1] || stride < (size_t)info[0] * pixel_bytes ||
@@ -347,6 +356,9 @@ static esp_gsp_err_t canvas_upload(esp_gsp_handle_t ui, uint16_t bind, const voi
         return ESP_GSP_ERR_INVALID_ARG;
     }
     const size_t full_size = stride * info[1];
+    if (bounded && (size_bytes == 0 || full_size > size_bytes)) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
     struct bridge_canvas *canvas = NULL;
     if (bridge_canvas_patch_enabled(ui)) {
         canvas = canvas_track(ui, bind, (uint16_t)info[3]);
@@ -406,15 +418,23 @@ static esp_gsp_err_t canvas_upload(esp_gsp_handle_t ui, uint16_t bind, const voi
     return rc;
 }
 static esp_gsp_err_t canvas_push(esp_gsp_handle_t ui, uint16_t bind, const void *pixels,
-                                 size_t stride, const gsp_rect_t *dirty, esp_gsp_canvas_release_cb_t release, void *ctx)
+                                 size_t stride, size_t size_bytes, bool bounded,
+                                 const gsp_rect_t *dirty,
+                                 esp_gsp_canvas_release_cb_t release, void *ctx)
 {
     if (bridge_drawing(ui)) {
         return ESP_GSP_ERR_INVALID_STATE;
     }
     uint32_t info[8];
     esp_gsp_err_t rc = canvas_info(ui, bind, info);
+    if (rc == ESP_GSP_OK && bounded &&
+            (!info[1] || !extent_fits(stride, info[1], size_bytes) ||
+             (dirty && !valid_dirty(*dirty, info[0], info[1])))) {
+        rc = ESP_GSP_ERR_INVALID_ARG;
+    }
     if (rc == ESP_GSP_OK) {
-        rc = canvas_upload(ui, bind, pixels, stride, info, dirty);
+        rc = canvas_upload(ui, bind, pixels, stride, size_bytes, bounded,
+                           info, dirty);
     }
     if (rc == ESP_GSP_OK) {
         struct bridge_canvas *c = canvas_find(ui, bind);
@@ -431,10 +451,14 @@ static esp_gsp_err_t canvas_push(esp_gsp_handle_t ui, uint16_t bind, const void 
 }
 
 static esp_gsp_err_t canvas_try_push(esp_gsp_handle_t ui, uint16_t bind,
-                                     const void *pixels, size_t stride, const gsp_rect_t *dirty,
-                                     esp_gsp_canvas_release_cb_t release, void *ctx)
+                                     const void *pixels, size_t stride,
+                                     size_t size_bytes, bool bounded,
+                                     const gsp_rect_t *dirty,
+                                     esp_gsp_canvas_release_cb_t release,
+                                     void *ctx)
 {
     if (!ui || !pixels || !stride || stride > MAX_BINARY_BYTES ||
+            (bounded && size_bytes == 0) ||
             (dirty && (dirty->x1 < 0 || dirty->y1 < 0 || dirty->x2 <= dirty->x1 || dirty->y2 <= dirty->y1))) {
         return ESP_GSP_ERR_INVALID_ARG;
     }
@@ -454,13 +478,14 @@ static esp_gsp_err_t canvas_try_push(esp_gsp_handle_t ui, uint16_t bind,
     struct bridge_canvas_frame *f = &m->frames[(m->frame_head + m->frame_count++) % CANVAS_QUEUE_CAPACITY];
     *f = (struct bridge_canvas_frame) {
         .bind = bind, .scene = gsp_sim_bridge_current_scene(ui), .pixels = pixels,
-        .stride = stride, .has_dirty = dirty != NULL, .release = release, .ctx = ctx,
+        .stride = stride, .size_bytes = size_bytes, .bounded = bounded,
+        .has_dirty = dirty != NULL, .release = release, .ctx = ctx,
     };
     if (dirty) {
         f->dirty = *dirty;
     }
     struct bridge_canvas *c = canvas_find(ui, bind);
-    if (c) {
+    if (c && !bounded) {
         c->draw = NULL;
         c->pending = false;
     }
@@ -470,13 +495,49 @@ static esp_gsp_err_t canvas_try_push(esp_gsp_handle_t ui, uint16_t bind,
 esp_gsp_err_t esp_gsp_canvas_try_push(esp_gsp_handle_t ui, uint16_t bind, const void *pixels,
                                       size_t stride, esp_gsp_canvas_release_cb_t release, void *ctx)
 {
-    return canvas_try_push(ui, bind, pixels, stride, NULL, release, ctx);
+    return canvas_try_push(ui, bind, pixels, stride, 0, false, NULL, release, ctx);
 }
 
 esp_gsp_err_t esp_gsp_canvas_try_push_dirty(esp_gsp_handle_t ui, uint16_t bind, const void *pixels,
         size_t stride, gsp_rect_t dirty, esp_gsp_canvas_release_cb_t release, void *ctx)
 {
-    return canvas_try_push(ui, bind, pixels, stride, &dirty, release, ctx);
+    return canvas_try_push(ui, bind, pixels, stride, 0, false, &dirty, release, ctx);
+}
+
+static esp_gsp_err_t canvas_submit_frame(
+    esp_gsp_handle_t ui, uint16_t bind,
+    const esp_gsp_canvas_frame_t *frame, bool nonblocking)
+{
+    if (!ui || frame == NULL || frame->struct_size < sizeof(*frame) ||
+            !frame->pixels || !frame->size_bytes || !frame->stride_bytes ||
+            (frame->dirty &&
+             (frame->dirty->x1 < 0 || frame->dirty->y1 < 0 ||
+              frame->dirty->x2 <= frame->dirty->x1 ||
+              frame->dirty->y2 <= frame->dirty->y1))) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    if (nonblocking) {
+        return canvas_try_push(ui, bind, frame->pixels, frame->stride_bytes,
+                               frame->size_bytes, true, frame->dirty,
+                               frame->on_release, frame->release_ctx);
+    }
+    return canvas_push(ui, bind, frame->pixels, frame->stride_bytes,
+                       frame->size_bytes, true, frame->dirty,
+                       frame->on_release, frame->release_ctx);
+}
+
+esp_gsp_err_t esp_gsp_canvas_submit_frame(
+    esp_gsp_handle_t ui, uint16_t bind,
+    const esp_gsp_canvas_frame_t *frame)
+{
+    return canvas_submit_frame(ui, bind, frame, false);
+}
+
+esp_gsp_err_t esp_gsp_canvas_try_submit_frame(
+    esp_gsp_handle_t ui, uint16_t bind,
+    const esp_gsp_canvas_frame_t *frame)
+{
+    return canvas_submit_frame(ui, bind, frame, true);
 }
 
 static void queued_release(esp_gsp_handle_t ui, const struct bridge_canvas_frame *f)
@@ -499,7 +560,16 @@ void bridge_canvas_drain(esp_gsp_handle_t ui)
         esp_gsp_err_t rc = canvas_info(ui, f.bind, info);
         if (rc == ESP_GSP_OK) {
             rc = info[3] != f.scene ? ESP_GSP_ERR_INVALID_STATE :
-                 canvas_upload(ui, f.bind, f.pixels, f.stride, info, f.has_dirty ? &f.dirty : NULL);
+                 canvas_upload(ui, f.bind, f.pixels, f.stride,
+                               f.size_bytes, f.bounded, info,
+                               f.has_dirty ? &f.dirty : NULL);
+        }
+        if (rc == ESP_GSP_OK && f.bounded) {
+            struct bridge_canvas *canvas = canvas_find(ui, f.bind);
+            if (canvas) {
+                canvas->draw = NULL;
+                canvas->pending = false;
+            }
         }
         if (rc != ESP_GSP_OK) {
             fprintf(stderr, "sim_bridge: queued Canvas frame rejected (bind=%u code=%d)\n", f.bind, rc);
@@ -519,11 +589,11 @@ void bridge_canvas_cancel(esp_gsp_handle_t ui)
 }
 esp_gsp_err_t esp_gsp_canvas_push(esp_gsp_handle_t ui, uint16_t bind, const void *pixels, size_t stride, esp_gsp_canvas_release_cb_t release, void *ctx)
 {
-    return canvas_push(ui, bind, pixels, stride, NULL, release, ctx);
+    return canvas_push(ui, bind, pixels, stride, 0, false, NULL, release, ctx);
 }
 esp_gsp_err_t esp_gsp_canvas_push_dirty(esp_gsp_handle_t ui, uint16_t bind, const void *pixels, size_t stride, gsp_rect_t dirty, esp_gsp_canvas_release_cb_t release, void *ctx)
 {
-    return canvas_push(ui, bind, pixels, stride, &dirty, release, ctx);
+    return canvas_push(ui, bind, pixels, stride, 0, false, &dirty, release, ctx);
 }
 
 esp_gsp_err_t esp_gsp_canvas_set_draw_cb(esp_gsp_handle_t ui, uint16_t bind, esp_gsp_canvas_draw_cb_t draw, void *ctx)
@@ -672,7 +742,8 @@ esp_gsp_err_t bridge_media_poll(esp_gsp_handle_t ui)
             continue;
         }
         uint32_t info[8] = {c->width, c->height, c->format, c->scene};
-        esp_gsp_err_t rc = canvas_upload(ui, c->bind, c->pixels, c->stride, info,
+        esp_gsp_err_t rc = canvas_upload(ui, c->bind, c->pixels, c->stride,
+                                         0, false, info,
                                          has_dirty ? &dirty : NULL);
         if (rc != ESP_GSP_OK) {
             return rc;

@@ -43,6 +43,16 @@ def manifest_scene_binds():
 
 
 class BenchmarkSceneCoverageTests(unittest.TestCase):
+    def test_page_flow_has_no_unpainted_tab_bar(self):
+        for path in sorted(SCENE_DIR.glob("bench_*.json")):
+            if "_alt_" in path.name:
+                continue
+            objects = json.loads(path.read_text())["objects"]
+            flow = next(obj for obj in objects if obj.get("name") == "bench_flow")
+            self.assertEqual(flow.get("bar_height"), 0, path.name)
+            self.assertEqual(flow["page_count"], 3, path.name)
+            self.assertTrue(flow["cyclic"], path.name)
+
     def test_vector_manifest_and_command_contracts_match(self):
         manifest = dict(re.findall(r'^BENCH_CASE\((P_VECTOR_\w+),\s*\w+,\s*"([^"]+)"',
                                    CASE_MANIFEST.read_text(), re.MULTILINE))

@@ -1,6 +1,6 @@
 # ESP-GSP Documentation
 
-[Documentation languages](../README.md) | **English** | [中文](../zh-Hans/README.md)
+[Documentation languages](../README.md) | **English** | [中文](../zh-cn/README.md)
 
 Start with the getting-started guide, use the topic guides for integration steps,
 and look up fields and APIs in the reference pages.
@@ -26,6 +26,7 @@ and look up fields and APIs in the reference pages.
 | Load preprocessed images and animations from SD/NAND | [External assets](guide/external-assets.md) |
 | Use scenes, viewports, drawers, and retained navigation | [Navigation and viewports](guide/navigation.md) |
 | Start, update, synchronize, suspend, and stop safely | [Lifecycle and threading](guide/lifecycle.md) |
+| Customize drawing, input and business callbacks | [Application customization](guide/customization.md) |
 | Understand public structures and ownership | [Application structures](guide/application-structures.md) |
 | Integrate RGB, MIPI-DSI, SPI, or QSPI presentation | [Display presentation](guide/display.md) |
 
@@ -33,13 +34,13 @@ and look up fields and APIs in the reference pages.
 
 | Task | Guide or reference |
 |---|---|
-| Select JSON demand, Kconfig policy, and instance overrides | [Configuration model](guide/configuration.md) |
+| Select JSON demand, Kconfig policy, and instance overrides | [Configuration model](configuration/index.md) |
 | Look up runtime configuration fields and precedence | [Configuration reference](reference/configuration.md) |
 | Use ESP-IDF `menuconfig` and reproducible defaults | [Kconfig guide](reference/kconfig.md) |
-| Diagnose compiler, link, runtime, display, and input failures | [Troubleshooting](guide/troubleshooting.md) |
+| Diagnose compiler, link, runtime, display, and input failures | [Troubleshooting](configuration/troubleshooting.md) |
 | Look up application and platform APIs | [Public API map](reference/api.md) |
 | Look up exact public declarations and contracts | [Function reference](reference/api-functions.md) |
-| Preview, test, and automate with the simulator | [Simulator preview and testing](guide/simulator-preview.md) |
+| Preview, test, and automate with the simulator | [Simulator preview and testing](configuration/simulator-preview.md) |
 | Look up simulator CLI, API, and backend reference | [Simulator reference](reference/simulator.md) |
 
 ## Reference

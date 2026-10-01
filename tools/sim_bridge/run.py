@@ -18,18 +18,22 @@ import webbrowser
 
 # Importing the sibling helper must not add cache files to managed_components.
 sys.dont_write_bytecode = True
-from build import add_build_arguments, build_project, executable
+from build import add_build_arguments, build_project, executable, validate_backend_manifest
+
+
+def component_version(component: Path) -> str:
+    text = (component / "idf_component.yml").read_text(encoding="utf-8")
+    match = re.search(r'''^version:\s*["']?([0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.+-]+)?)["']?\s*(?:#.*)?$''', text, re.MULTILINE)
+    if not match:
+        raise RuntimeError("Cannot read ESP-GSP version from idf_component.yml")
+    return match.group(1)
 
 
 def simulator_command(override: str | None, version: str | None, component: Path) -> list[str]:
     if override:
         return [executable(override, "sim")]
     if not version:
-        text = (component / "idf_component.yml").read_text(encoding="utf-8")
-        match = re.search(r'''^version:\s*["']?([0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.+-]+)?)["']?\s*(?:#.*)?$''', text, re.MULTILINE)
-        if not match:
-            raise RuntimeError("Cannot read ESP-GSP version from idf_component.yml; use --sim-version or --host")
-        version = match.group(1)
+        version = component_version(component)
     if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.+-]+)?", version):
         raise RuntimeError("Simulator version must be an exact version, e.g. 1.1.0")
     return [sys.executable, "-m", "gsp.execute", "--version", version, "sim"]
@@ -51,9 +55,34 @@ def dynamic_font_path(value: str | Path | None) -> Path | None:
 
 def host_command(host: list[str], manifest: dict, args: argparse.Namespace, ready: Path) -> list[str]:
     """Build the sim_host command before it creates the UI/runtime instance."""
+    validate_backend_manifest(manifest)
     command = [*host, "--bundle", manifest["bundle"], "--frames", "0",
-               "--backend-enable", "--backend-required",
-               "--backend-idle-timeout", "30", "--ready-file", str(ready)]
+               "--backend-required", "--ready-file", str(ready)]
+    backend_port = getattr(args, "backend_port", None)
+    socket_backend = getattr(args, "socket_backend", False) or backend_port is not None
+    if socket_backend:
+        command += ["--backend-idle-timeout", "30"]
+        if backend_port is None:
+            command.append("--backend-enable")
+        else:
+            command += ["--backend-listen", f"tcp://127.0.0.1:{backend_port}"]
+    else:
+        library = Path(manifest["backend_library"]).resolve(strict=True)
+        if not library.is_file():
+            raise RuntimeError(f"Backend library is not a regular file: {library}")
+        command += ["--backend-library", str(library)]
+    for field, option, prefix in (("api_port", "--api-listen", "tcp://127.0.0.1:"),
+                                  ("visual_port", "--visual-listen", "127.0.0.1:")):
+        port = getattr(args, field, None)
+        if port is not None:
+            command += [option, f"{prefix}{port}"]
+    if getattr(args, "input_mode", None) is not None:
+        command += ["--input-mode", args.input_mode]
+    if manifest.get("api_json"):
+        sidecar = Path(manifest["api_json"]).resolve(strict=True)
+        if not sidecar.is_file():
+            raise RuntimeError(f"API sidecar is not a regular file: {sidecar}")
+        command += ["--api-json", str(sidecar)]
     font = dynamic_font_path(args.dynamic_font)
     if font is not None:
         # sim_host reads this before load_with_config(), which mirrors applying
@@ -120,10 +149,18 @@ def wait_ready(proc: subprocess.Popen, path: Path, timeout: float, *, managed: b
         except (FileNotFoundError, json.JSONDecodeError):
             time.sleep(0.05)
             continue
-        if (not isinstance(info, dict) or info.get("version") != 1 or info.get("bridge_version") != 1 or
+        if not isinstance(info, dict):
+            raise RuntimeError("Incompatible sim_host readiness metadata")
+        socket_ready = (info.get("backend_mode", "socket") == "socket" and
+                        isinstance(info.get("backend"), str) and
+                        info["backend"].startswith("tcp://127."))
+        library_ready = (info.get("backend_mode") == "library" and
+                         info.get("dynamic_backend_abi_version") == 1 and
+                         isinstance(info.get("backend_library"), str) and
+                         bool(info["backend_library"]))
+        if (info.get("version") != 1 or info.get("bridge_version") != 1 or
                 type(info.get("pid")) is not int or info["pid"] <= 0 or
-                (not managed and info["pid"] != proc.pid) or not isinstance(info.get("backend"), str) or
-                not info["backend"].startswith("tcp://127.")):
+                (not managed and info["pid"] != proc.pid) or not (socket_ready or library_ready)):
             raise RuntimeError("Incompatible sim_host readiness metadata")
         # gsp.execute waits for a child simulator, so its PID is not the PID in
         # ready.json. On POSIX both must belong to the session we just created.
@@ -133,10 +170,10 @@ def wait_ready(proc: subprocess.Popen, path: Path, timeout: float, *, managed: b
     raise RuntimeError("Timed out waiting for sim_host; use a release with --ready-file and bridge_version=1")
 
 
-def start(command: list[str]) -> subprocess.Popen:
+def start(command: list[str], **kwargs) -> subprocess.Popen:
     if os.name == "nt":
-        return subprocess.Popen(command, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
-    return subprocess.Popen(command, start_new_session=True)
+        return subprocess.Popen(command, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP, **kwargs)
+    return subprocess.Popen(command, start_new_session=True, **kwargs)
 
 
 def stop(proc: subprocess.Popen | None, *, tree: bool = False, child_pid: int | None = None) -> None:
@@ -174,8 +211,66 @@ def stop(proc: subprocess.Popen | None, *, tree: bool = False, child_pid: int | 
             pass
 
 
+def probe_simulator(command: list[str], timeout: float) -> subprocess.CompletedProcess:
+    proc = start(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    try:
+        stdout, stderr = proc.communicate(timeout=timeout)
+        return subprocess.CompletedProcess(command, proc.returncode, stdout, stderr)
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError("Simulator preflight timed out; check tool installation and startup") from exc
+    finally:
+        stop(proc, tree=True)
+        if proc.stdout:
+            proc.stdout.close()
+        if proc.stderr:
+            proc.stderr.close()
+
+
+def simulator_preflight(host: list[str], component: Path, timeout: float) -> dict:
+    """Observe tool identity; equal versions do not prove API compatibility."""
+    result = probe_simulator([*host, "--capabilities"], timeout)
+    if result.returncode:
+        raise RuntimeError(f"Simulator preflight failed ({result.returncode}): {result.stderr.strip()}")
+    try:
+        capabilities = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("Simulator preflight did not return capability JSON") from exc
+    if not isinstance(capabilities, dict) or not isinstance(capabilities.get("runtime_version"), str):
+        raise RuntimeError("Simulator preflight is missing runtime_version")
+    expected = component_version(component)
+    observed = capabilities["runtime_version"]
+    if observed != expected:
+        print(f"sim_bridge: component {expected}, simulator runtime {observed}; versions differ. "
+              "Use matching tools before accepting application behavior.", file=sys.stderr)
+    return {"component_version": expected, "simulator": capabilities,
+            "version_match": observed == expected}
+
+
+def port_number(value: str) -> int:
+    try:
+        port = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("port must be an integer from 0 to 65535") from exc
+    if not 0 <= port <= 65535:
+        raise argparse.ArgumentTypeError("port must be from 0 to 65535")
+    return port
+
+
+def validate_session(args: argparse.Namespace) -> None:
+    ports = [getattr(args, name, None) for name in ("api_port", "backend_port", "visual_port")]
+    fixed = [port for port in ports if port not in (None, 0)]
+    if len(set(fixed)) != len(fixed):
+        raise RuntimeError("API, backend and visual ports must be distinct (0 allocates a free port)")
+    if args.headless and getattr(args, "visual_port", None) is not None:
+        raise RuntimeError("--visual-port cannot be used with --headless")
+
+
 def run_backend(args: argparse.Namespace, manifest: dict) -> int:
-    host = simulator_command(args.host, args.sim_version, Path(manifest["component_root"]))
+    validate_session(args)
+    component = Path(manifest["component_root"])
+    host = simulator_command(args.host, args.sim_version, component)
+    contract = simulator_preflight(host, component, args.startup_timeout)
+    print("Tool contract: " + json.dumps(contract, sort_keys=True), flush=True)
     sim = backend = None
     info = {}
     with tempfile.TemporaryDirectory(prefix="gsp-sim-bridge-") as temporary:
@@ -184,19 +279,33 @@ def run_backend(args: argparse.Namespace, manifest: dict) -> int:
         try:
             sim = start(command)
             info = wait_ready(sim, ready, args.startup_timeout, managed=not args.host)
-            backend_command = [manifest["executable"], "--endpoint", info["backend"]]
-            if args.duration:
-                backend_command += ["--duration-ms", str(max(1, round(args.duration * 1000)))]
-            backend = start(backend_command)
+            if info.get("backend_mode", "socket") == "socket":
+                backend_command = [manifest["executable"], "--endpoint", info["backend"]]
+                if args.duration:
+                    backend_command += ["--duration-ms", str(max(1, round(args.duration * 1000)))]
+                backend = start(backend_command)
+            session = {"phase": "backend_spawned" if backend else "backend_loaded",
+                       "listeners": info, "bundle": manifest["bundle"],
+                       "api_json": manifest.get("api_json")}
+            if backend is not None:
+                session["backend_pid"] = backend.pid
+            print("Session: " + json.dumps(session, sort_keys=True), flush=True)
+            if info.get("api"):
+                print(f"API: {info['api']}", flush=True)
             if info.get("browser"):
                 print(f"Preview: {info['browser']}", flush=True)
                 if not args.no_browser:
                     webbrowser.open(info["browser"])
-            while backend.poll() is None:
-                if sim.poll() is not None:
-                    raise RuntimeError(f"sim_host exited while the backend was running ({sim.returncode})")
+            if backend is not None:
+                while backend.poll() is None:
+                    if sim.poll() is not None:
+                        raise RuntimeError(f"sim_host exited while the backend was running ({sim.returncode})")
+                    time.sleep(0.05)
+                return backend.returncode
+            deadline = time.monotonic() + args.duration if args.duration else None
+            while sim.poll() is None and (deadline is None or time.monotonic() < deadline):
                 time.sleep(0.05)
-            return backend.returncode
+            return 0 if sim.poll() is None else sim.returncode
         finally:
             stop(backend, tree=True)
             stop(sim, tree=True, child_pid=info.get("pid"))
@@ -210,8 +319,16 @@ def add_run_arguments(parser: argparse.ArgumentParser) -> None:
                         help="Override simulator version; default is the linked ESP-GSP component version")
     parser.add_argument("--dynamic-font", default=os.environ.get("GSP_SIM_DYNAMIC_FONT"),
                         help="TrueType/OpenType font loaded by sim_host before UI startup")
+    for channel in ("api", "backend", "visual"):
+        parser.add_argument(f"--{channel}-port", type=port_number,
+                            help=f"Loopback {channel} port; 0 allocates a free port" +
+                            ("; selects Socket mode" if channel == "backend" else ""))
+    parser.add_argument("--input-mode", choices=("shared", "api-exclusive", "browser-exclusive"),
+                        help="Input ownership; omitted preserves the simulator default")
     parser.add_argument("--headless", action="store_true")
     parser.add_argument("--no-browser", action="store_true")
+    parser.add_argument("--socket-backend", action="store_true",
+                        help="Run the isolated executable Backend instead of the default shared library")
     parser.add_argument("--duration", type=float, default=0, help="Backend running time in seconds; 0 runs until interrupted")
     parser.add_argument("--startup-timeout", type=float, default=180,
                         help="Seconds for simulator download/startup (default: 180)")
@@ -226,11 +343,12 @@ def main() -> int:
     try:
         # Do this before an often-expensive native build.  host_command()
         # repeats the normalization for callers that use run_backend() directly.
+        validate_session(args)
         args.dynamic_font = dynamic_font_path(args.dynamic_font)
         return run_backend(args, build_project(args))
     except KeyboardInterrupt:
         return 130
-    except (RuntimeError, OSError, ValueError, subprocess.CalledProcessError) as exc:
+    except (RuntimeError, OSError, ValueError, subprocess.SubprocessError) as exc:
         parser.exit(1, f"sim_bridge: {exc}\n")
 
 

@@ -1,0 +1,28 @@
+{
+  "params": [
+    "badge_width",
+    "badge_height",
+    "text",
+    "bg_color",
+    "fg_color",
+    "name"
+  ],
+  "objects": [
+    {
+      "type": "label",
+      "x": 0,
+      "y": 0,
+      "w": "$badge_width",
+      "h": "$badge_height",
+      "text": "$text",
+      "font_size": 11,
+      "text_align": "center",
+      "overflow": "ellipsis",
+      "bg_color": "$bg_color",
+      "fg_color": "$fg_color",
+      "radius": 12,
+      "bind": "$name",
+      "font_charset": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+-"
+    }
+  ]
+}

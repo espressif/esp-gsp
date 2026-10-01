@@ -1,6 +1,6 @@
 # Widget library
 
-This page lists every Widget currently registered by GSPC. Each page provides a real example, exact fields and C APIs, and a published simulator preview command.
+This is the complete list of Widgets registered by GSPC. Each page includes when to use it, a runnable JSON example, the generated C API, field notes, and a browser preview.
 
 ## Value controls
 

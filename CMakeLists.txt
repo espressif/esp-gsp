@@ -11,7 +11,6 @@ set(gsp_srcs
     "src/codec/gsp_codec_rle16.c"
     "src/codec/gsp_codec_rle16_a8.c"
     "src/codec/gsp_codec_rle32.c"
-    "src/codec/gsp_codec_png.c"
     "src/runtime/gsp_container.c"
     "src/runtime/gsp_decode_task.c"
     "src/runtime/gsp_gfb.c"
@@ -23,6 +22,7 @@ set(gsp_srcs
     "src/runtime/gsp_gsb.c"
     "src/runtime/gsp_image_cache.c"
     "src/runtime/gsp_image_layout.c"
+    "src/runtime/gsp_image_memory.c"
     "src/runtime/gsp_input.c"
     "src/runtime/gsp_pointer.c"
     "src/runtime/gsp_multitouch.c"
@@ -40,7 +40,6 @@ set(gsp_srcs
     "src/runtime/gsp_font_catalog.c"
     "src/runtime/esp_gsp_font_file.c"
     "src/runtime/gsp_anim.c"
-    "src/codec/eaf/gfx_eaf_dec.c"
     "src/widget/gsp_widget.c"
     "src/present/gsp_dirty.c"
     "src/present/gsp_region_cost.c"
@@ -61,6 +60,8 @@ set(gsp_srcs
     "src/platform/esp_idf/gsp_esp_runtime.c"
     "src/platform/esp_idf/esp_gsp_esp_lcd.c"
     "src/ui/esp_gsp_api.c"
+    "src/ui/esp_gsp_extension.c"
+    "src/ui/esp_gsp_hooks.c"
     "src/ui/esp_gsp_diagnostics.c"
     "src/ui/esp_gsp_deployable.c"
     "src/ui/gsp_app.c"
@@ -87,17 +88,12 @@ set(gsp_srcs
     "src/effect/gsp_transition_compose.c"
     "src/accel/gsp_accel.c"
     "src/renderer/gsp_renderer.c"
-    "src/renderer/gsp_procedural.c"
-    "src/renderer/gsp_flip_card.c"
-    "src/renderer/gsp_procedural_extended.c"
-    "src/renderer/gsp_procedural_controls.c"
-    "src/renderer/gsp_vector.c"
+    "src/renderer/gsp_render_tables.c"
     "src/renderer/gsp_render_effect.c"
     "src/runtime/gsp_transform.c"
     "src/renderer/kernel_rgb565/gsp_kernel_rgb565.c"
     "src/renderer/kernel_rgb888/gsp_kernel_rgb888.c"
-    "src/renderer/kernel_argb8888/gsp_kernel_argb8888.c"
-    "src/renderer/reference/gsp_reference.c")
+    "src/renderer/kernel_argb8888/gsp_kernel_argb8888.c")
 set(gsp_priv_include_dirs
     "priv_include"
     "src/ui"
@@ -130,6 +126,38 @@ if(gsp_jpeg_enabled)
     list(APPEND gsp_priv_requires esp_driver_jpeg)
     list(APPEND gsp_srcs "src/codec/gsp_codec_jpeg.c")
 endif()
+
+# PNG decoding, EAF playback, the reference rasterizer, vector outlines and
+# procedural effects follow the same link contract: each is reached only
+# through a weak provider, so a disabled source build leaves the member out
+# and a prebuilt consumer leaves it unrooted.
+set(gsp_optional_members PNG EAF REFERENCE_RENDERER VECTOR PROCEDURAL)
+set(gsp_PNG_provider gsp_codec_png_provider)
+set(gsp_PNG_srcs "src/codec/gsp_codec_png.c")
+set(gsp_EAF_provider gsp_anim_eaf_provider)
+set(gsp_EAF_srcs "src/runtime/gsp_anim_eaf.c" "src/codec/eaf/gfx_eaf_dec.c")
+set(gsp_REFERENCE_RENDERER_provider gsp_reference_provider)
+set(gsp_REFERENCE_RENDERER_srcs "src/renderer/reference/gsp_reference.c")
+set(gsp_VECTOR_provider gsp_vector_provider)
+set(gsp_VECTOR_srcs "src/renderer/gsp_vector.c")
+set(gsp_PROCEDURAL_provider gsp_procedural_provider)
+set(gsp_PROCEDURAL_srcs
+    "src/renderer/gsp_procedural.c"
+    "src/renderer/gsp_procedural_extended.c"
+    "src/renderer/gsp_procedural_controls.c"
+    "src/renderer/gsp_flip_card.c")
+foreach(member IN LISTS gsp_optional_members)
+    set(gsp_${member}_enabled ON)
+    if(DEFINED CONFIG_ESP_GSP_ENABLE_${member}
+            AND NOT CONFIG_ESP_GSP_ENABLE_${member}
+            AND NOT ESP_GSP_BUILD_PREBUILT)
+        set(gsp_${member}_enabled OFF)
+    endif()
+    if(gsp_${member}_enabled)
+        list(APPEND gsp_srcs ${gsp_${member}_srcs})
+    endif()
+endforeach()
+
 if(CONFIG_SOC_CPU_HAS_PIE)
     list(APPEND gsp_srcs
         "src/renderer/kernel_rgb565/gsp_kernel_rgb565_pie.S"
@@ -255,3 +283,13 @@ else()
     message(STATUS "esp-gsp: JPEG decoding disabled by "
         "CONFIG_ESP_GSP_ENABLE_JPEG=n")
 endif()
+
+foreach(member IN LISTS gsp_optional_members)
+    if(gsp_${member}_enabled)
+        target_link_libraries(${COMPONENT_LIB} INTERFACE
+            "-Wl,-u,${gsp_${member}_provider}")
+    else()
+        message(STATUS "esp-gsp: ${member} disabled by "
+            "CONFIG_ESP_GSP_ENABLE_${member}=n")
+    endif()
+endforeach()

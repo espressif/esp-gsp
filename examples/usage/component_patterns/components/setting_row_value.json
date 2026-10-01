@@ -1,0 +1,80 @@
+{
+  "params": [
+    "row_width",
+    "title",
+    "subtitle",
+    "value",
+    "callback",
+    "value_name"
+  ],
+  "objects": [
+    {
+      "type": "button",
+      "x": 0,
+      "y": 0,
+      "w": "$row_width",
+      "h": 58,
+      "layout": "row",
+      "padding": 12,
+      "gap": 8,
+      "align_cross": "center",
+      "bg_color": "#18263A",
+      "border_color": "#2A4160",
+      "border_width": 1,
+      "radius": 10,
+      "callback": "$callback"
+    },
+    {
+      "type": "container",
+      "parent": 0,
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 34,
+      "grow": 1,
+      "layout": "column",
+      "gap": 2,
+      "align_cross": "stretch"
+    },
+    {
+      "type": "label",
+      "parent": 1,
+      "x": 0,
+      "y": 0,
+      "w": 1,
+      "h": 19,
+      "text": "$title",
+      "font_size": 15,
+      "fg_color": "#F3F7FC",
+      "overflow": "ellipsis"
+    },
+    {
+      "type": "label",
+      "parent": 1,
+      "x": 0,
+      "y": 0,
+      "w": 1,
+      "h": 13,
+      "text": "$subtitle",
+      "font_size": 11,
+      "fg_color": "#8FA8C4",
+      "overflow": "ellipsis"
+    },
+    {
+      "type": "label",
+      "name": "$value_name",
+      "parent": 0,
+      "x": 0,
+      "y": 0,
+      "w": 82,
+      "h": 28,
+      "text": "$value",
+      "font_size": 13,
+      "text_align": "right",
+      "fg_color": "#A9C7E7",
+      "overflow": "ellipsis",
+      "bind": "$value_name",
+      "font_charset": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .:-_/%+"
+    }
+  ]
+}

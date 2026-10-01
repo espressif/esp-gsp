@@ -4,12 +4,11 @@ Swipeable multi-page viewport with horizontal or vertical motion.
 
 ## When to use
 
-Use it to organize content, visibility, or navigation while preserving hierarchy.
+Use it to group content, control visibility, or move between pages.
 
 ## Local interactive preview
 
-First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
-then run from an unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands), then run from an unpacked component or public repository root with `gspc` and `gsp_sim_host`:
 
 ```sh
 mkdir -p gsp-out/widget-preview
@@ -17,156 +16,28 @@ gspc pack \
   examples/usage/widgets/page_flow/page_flow.json \
   --deployable -o gsp-out/widget-preview/page_flow.gspb
 gsp_sim_host \
-  --bundle gsp-out/widget-preview/page_flow.gspb
+  --bundle gsp-out/widget-preview/page_flow.gspb --frames 0
 ```
 
-These commands compile the JSON below and open it in the ESP-GSP simulator's
-browser preview.
+These commands compile the example and open it in the ESP-GSP simulator browser preview.
 
 ## Runtime behavior
 
-Children retain their hierarchy. Set clip_children on a Container or Layer to clip child drawing and input to its rectangular bounds. Nested clips intersect and move with their parent. Use fixed w/h for the viewport; radius styles the background and border.
+Children keep their hierarchy. `clip_children` limits drawing and input to the parent rectangle. Use fixed `w` and `h` for a viewport; `radius` styles its background and border.
 
 Use `pages: ["first", "second"]` to name page roots explicitly in page-index order. Its length must equal `page_count`; each entry must uniquely reference a direct child. Lay pages out along `axis` in viewport-width or viewport-height steps. Children not listed in `pages` stay fixed. When omitted, direct children named `<name>_tab0`, `<name>_tab1`, etc. remain supported. Nested transforms follow parent relationships; object array order still controls paint order.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
+If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
-## Complete example JSON
+## Example scene
 
 ```json
-{
-  "screen": "widget_page_flow",
-  "w": 480,
-  "h": 320,
-  "screen_bg": "#101827",
-  "font": "../../../common/fonts/DejaVuSans.ttf",
-  "swipe": false,
-  "objects": [
-    {
-      "type": "page_flow",
-      "parent": -1,
-      "name": "onboarding",
-      "x": 0,
-      "y": 0,
-      "w": 480,
-      "h": 320,
-      "page_count": 3,
-      "selected": 0,
-      "axis": "horizontal",
-      "cyclic": true,
-      "bar_height": 0,
-      "pages": [
-        "onboarding_tab0",
-        "onboarding_tab1",
-        "onboarding_tab2"
-      ]
-    },
-    {
-      "type": "layer",
-      "parent": 0,
-      "name": "onboarding_tab0",
-      "x": 0,
-      "y": 0,
-      "w": 480,
-      "h": 320,
-      "bg_color": "#123A5A"
-    },
-    {
-      "type": "label",
-      "parent": 1,
-      "x": 55,
-      "y": 95,
-      "w": 370,
-      "h": 55,
-      "text": "Page Flow 1",
-      "font_size": 30,
-      "text_align": "center",
-      "fg_color": "#FFFFFF"
-    },
-    {
-      "type": "label",
-      "parent": 1,
-      "x": 55,
-      "y": 165,
-      "w": 370,
-      "h": 40,
-      "text": "Swipe horizontally",
-      "text_align": "center",
-      "fg_color": "#BAE6FD"
-    },
-    {
-      "type": "layer",
-      "parent": 0,
-      "name": "onboarding_tab1",
-      "x": 480,
-      "y": 0,
-      "w": 480,
-      "h": 320,
-      "bg_color": "#4A234F"
-    },
-    {
-      "type": "label",
-      "parent": 4,
-      "x": 55,
-      "y": 95,
-      "w": 370,
-      "h": 55,
-      "text": "Page Flow 2",
-      "font_size": 30,
-      "text_align": "center",
-      "fg_color": "#FFFFFF"
-    },
-    {
-      "type": "label",
-      "parent": 4,
-      "x": 55,
-      "y": 165,
-      "w": 370,
-      "h": 40,
-      "text": "Content follows the gesture",
-      "text_align": "center",
-      "fg_color": "#F5D0FE"
-    },
-    {
-      "type": "layer",
-      "parent": 0,
-      "name": "onboarding_tab2",
-      "x": 960,
-      "y": 0,
-      "w": 480,
-      "h": 320,
-      "bg_color": "#234A38"
-    },
-    {
-      "type": "label",
-      "parent": 7,
-      "x": 55,
-      "y": 95,
-      "w": 370,
-      "h": 55,
-      "text": "Page Flow 3",
-      "font_size": 30,
-      "text_align": "center",
-      "fg_color": "#FFFFFF"
-    },
-    {
-      "type": "label",
-      "parent": 7,
-      "x": 55,
-      "y": 165,
-      "w": 370,
-      "h": 40,
-      "text": "Cyclic navigation enabled",
-      "text_align": "center",
-      "fg_color": "#BBF7D0"
-    }
-  ]
-}
+{"screen":"widget_page_flow","w":480,"h":320,"screen_bg":"#101827","font":"../../../common/fonts/DejaVuSans.ttf","swipe":false,"objects":[{"type":"page_flow","parent":-1,"name":"onboarding","x":0,"y":0,"w":480,"h":320,"page_count":3,"selected":0,"axis":"horizontal","cyclic":true,"bar_height":0,"pages":["onboarding_tab0","onboarding_tab1","onboarding_tab2"]},{"type":"layer","parent":0,"name":"onboarding_tab0","x":0,"y":0,"w":480,"h":320,"bg_color":"#123A5A"},{"type":"label","parent":1,"x":55,"y":95,"w":370,"h":55,"text":"Page Flow 1","font_size":30,"text_align":"center","fg_color":"#FFFFFF"},{"type":"label","parent":1,"x":55,"y":165,"w":370,"h":40,"text":"Swipe horizontally","text_align":"center","fg_color":"#BAE6FD"},{"type":"layer","parent":0,"name":"onboarding_tab1","x":480,"y":0,"w":480,"h":320,"bg_color":"#4A234F"},{"type":"label","parent":4,"x":55,"y":95,"w":370,"h":55,"text":"Page Flow 2","font_size":30,"text_align":"center","fg_color":"#FFFFFF"},{"type":"label","parent":4,"x":55,"y":165,"w":370,"h":40,"text":"Content follows the gesture","text_align":"center","fg_color":"#F5D0FE"},{"type":"layer","parent":0,"name":"onboarding_tab2","x":960,"y":0,"w":480,"h":320,"bg_color":"#234A38"},{"type":"label","parent":7,"x":55,"y":95,"w":370,"h":55,"text":"Page Flow 3","font_size":30,"text_align":"center","fg_color":"#FFFFFF"},{"type":"label","parent":7,"x":55,"y":165,"w":370,"h":40,"text":"Cyclic navigation enabled","text_align":"center","fg_color":"#BBF7D0"}]}
 ```
 
-This is `examples/usage/widgets/page_flow/page_flow.json`. Copy any relative assets referenced by the scene with it.
+The canonical example is [`page_flow.json`](../../../examples/usage/widgets/page_flow/page_flow.json). Copy any relative assets referenced by the scene with it.
 
-## Generated C API for this example
+## Generated C API
 
 ```c
 const gsp_component_directory_t *const * gsp_page_flow_docs_component_directories(uint16_t *out_count)
@@ -184,7 +55,7 @@ size_t gsp_page_flow_docs_dynamic_image_slots(void)
 
 These signatures come from the actual compiler output for this JSON.
 
-## Fields used by this example
+## Fields in this example
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -202,7 +73,8 @@ These signatures come from the actual compiler output for this JSON.
 | `bar_height` | `int` | — | default 56; 0…4096 | — | tab bar height |
 | `cyclic` | `bool` | — | default `false` | — | cyclic page wrap |
 
-<details><summary>Show other fields supported by this Widget</summary>
+<details>
+<summary>Show other fields supported by this Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -210,7 +82,10 @@ These signatures come from the actual compiler output for this JSON.
 | `max_width` | `int` | — | 0…65535 | — | compile-time maximum width in px |
 | `min_height` | `int` | — | 0…65535 | — | compile-time minimum height in px |
 | `max_height` | `int` | — | 0…65535 | — | compile-time maximum height in px |
-| `layout` | `enum` | — | `row`, `column` | — | child auto-layout: row/column |
+| `layout` | `enum` | — | `row`, `column`, `grid` | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | — | default `false` | — | wrap row/column children into additional lines |
+| `grid_columns` | `int` | — | 1…65535 | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | — | default 1; 1…65535 | — | column span in the parent grid layout |
 | `gap` | `int` | — | default 0; 0…4096 | — | auto-layout gap in px |
 | `padding` | `int` | — | default 0; 0…4096 | — | auto-layout padding in px |
 | `padding_left` | `int` | — | 0…4096 | — | row layout: leading padding override |
@@ -301,7 +176,8 @@ These signatures come from the actual compiler output for this JSON.
 
 </details>
 
-<details><summary>Show fields shared by every Widget</summary>
+<details>
+<summary>Show fields shared by every Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|

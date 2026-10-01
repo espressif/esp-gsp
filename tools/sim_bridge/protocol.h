@@ -9,7 +9,7 @@
  * Arguments/results are arrays of eight uint32_t words. Signed values use
  * their two's-complement bit pattern. Append operations; never renumber. */
 #define GSP_SIM_BRIDGE_VERSION 1
-#define GSP_SIM_BRIDGE_API_VERSION 3
+#define GSP_SIM_BRIDGE_API_VERSION 4
 enum gsp_sim_bridge_op {
     GSP_BRIDGE_QUERY_API_VERSION = 0,
     GSP_BRIDGE_GET_VALUE = 1,
@@ -48,4 +48,10 @@ enum gsp_sim_bridge_op {
     GSP_BRIDGE_COMPONENT_PLAY_ANIMATION,
     GSP_BRIDGE_COMPONENT_STOP_ANIMATION,
     GSP_BRIDGE_COMPONENT_SET_POSITION,
+    GSP_BRIDGE_PROPERTY_INFO,
+    GSP_BRIDGE_PROPERTY_INFO_AT,
 };
+
+/* PROPERTY_INFO / PROPERTY_INFO_AT results:
+ * key, type, storage, codec, min lo/hi, max lo/hi.
+ * Bounds use signed 64-bit two's-complement, low word first. */

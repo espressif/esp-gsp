@@ -13,6 +13,10 @@ Engine throughput is not an optical measurement of panel refresh rate.
 ## Usage
 
 - [Hello world](usage/hello_world/README.md): bundle startup and generated C APIs.
+- [Custom drawing](usage/custom_draw/README.md): native Canvas regions, tagged
+  registration results, instance observers and overridable core notification hooks.
+- [Reusable project components](usage/component_patterns/README.md): compile-time
+  component definitions, Grid/Wrap layout and generated application bindings.
 - [Widgets](usage/widgets/README.md): individual authored controls and components.
 - [Effects](usage/effects/README.md): effects, image projections and minimal integration.
 - [External assets](usage/external_assets/README.md): mounted filesystems, asynchronous

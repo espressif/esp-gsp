@@ -1,0 +1,78 @@
+{
+  "params": [
+    "row_width",
+    "title",
+    "subtitle",
+    "checked",
+    "callback",
+    "toggle_name"
+  ],
+  "objects": [
+    {
+      "type": "container",
+      "x": 0,
+      "y": 0,
+      "w": "$row_width",
+      "h": 58,
+      "layout": "row",
+      "padding": 12,
+      "gap": 8,
+      "align_cross": "center",
+      "bg_color": "#18263A",
+      "border_color": "#2A4160",
+      "border_width": 1,
+      "radius": 10
+    },
+    {
+      "type": "container",
+      "parent": 0,
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 34,
+      "grow": 1,
+      "layout": "column",
+      "gap": 2,
+      "align_cross": "stretch"
+    },
+    {
+      "type": "label",
+      "parent": 1,
+      "x": 0,
+      "y": 0,
+      "w": 1,
+      "h": 19,
+      "text": "$title",
+      "font_size": 15,
+      "fg_color": "#F3F7FC",
+      "overflow": "ellipsis"
+    },
+    {
+      "type": "label",
+      "parent": 1,
+      "x": 0,
+      "y": 0,
+      "w": 1,
+      "h": 13,
+      "text": "$subtitle",
+      "font_size": 11,
+      "fg_color": "#8FA8C4",
+      "overflow": "ellipsis"
+    },
+    {
+      "type": "toggle",
+      "name": "$toggle_name",
+      "parent": 0,
+      "x": 0,
+      "y": 0,
+      "w": 58,
+      "h": 30,
+      "checked": "$checked",
+      "track_size": 26,
+      "bg_color": "#334155",
+      "fg_color": "#38BDF8",
+      "knob_color": "#F8FAFC",
+      "callback": "$callback"
+    }
+  ]
+}

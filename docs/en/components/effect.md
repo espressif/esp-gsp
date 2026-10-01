@@ -4,12 +4,11 @@ Pulse, rotating ring, liquid progress or shimmer with automatic playback.
 
 ## When to use
 
-Use it to communicate status, measurement, motion, or visual hierarchy.
+Use it to show status, a measurement, or motion.
 
 ## Local interactive preview
 
-First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
-then run from an unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands), then run from an unpacked component or public repository root with `gspc` and `gsp_sim_host`:
 
 ```sh
 mkdir -p gsp-out/widget-preview
@@ -17,110 +16,37 @@ gspc pack \
   examples/usage/widgets/effect/effect.json \
   --deployable -o gsp-out/widget-preview/effect.gspb
 gsp_sim_host \
-  --bundle gsp-out/widget-preview/effect.gspb
+  --bundle gsp-out/widget-preview/effect.gspb --frames 0
 ```
 
-These commands compile the JSON below and open it in the ESP-GSP simulator's
-browser preview.
+These commands compile the example and open it in the ESP-GSP simulator browser preview.
 
 ## Runtime behavior
 
-The simulator and device runtime render the same compiled geometry. Application-driven property changes require a simulator backend or device code.
+The simulator and device runtime use the same compiled geometry. The preview starts with the JSON values; application-driven updates need the simulator backend/API or device code.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
+If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
-## Complete example JSON
+## Example scene
 
 ```json
 {
-  "screen": "effects",
-  "w": 320,
-  "h": 240,
-  "screen_bg": "#0B1424",
+  "screen": "effects", "w": 320, "h": 240, "screen_bg": "#0B1424",
   "font": "../../../common/fonts/DejaVuSans.ttf",
   "objects": [
-    {
-      "type": "label",
-      "parent": -1,
-      "x": 16,
-      "y": 10,
-      "w": 288,
-      "h": 24,
-      "text": "GSP  /  MOTION",
-      "font_size": 18,
-      "fg_color": "#E8F4FF"
-    },
-    {
-      "type": "effect",
-      "parent": -1,
-      "name": "charge",
-      "x": 28,
-      "y": 54,
-      "w": 112,
-      "h": 112,
-      "effect": "liquid",
-      "value": 62,
-      "fg_color": "#35DCBA",
-      "bg_color": "#153D4A",
-      "period_ms": 2400
-    },
-    {
-      "type": "label",
-      "parent": -1,
-      "x": 48,
-      "y": 97,
-      "w": 72,
-      "h": 32,
-      "text": "62%",
-      "font_size": 26,
-      "fg_color": "#FFFFFF",
-      "text_align": "center"
-    },
-    {
-      "type": "effect",
-      "parent": -1,
-      "name": "loading",
-      "x": 188,
-      "y": 56,
-      "w": 76,
-      "h": 76,
-      "effect": "ring",
-      "value": 35,
-      "fg_color": "#6BAFFF",
-      "period_ms": 1200
-    },
-    {
-      "type": "effect",
-      "parent": -1,
-      "name": "status",
-      "x": 212,
-      "y": 144,
-      "w": 28,
-      "h": 28,
-      "effect": "pulse",
-      "fg_color": "#C99AFF",
-      "period_ms": 2000
-    },
-    {
-      "type": "effect",
-      "parent": -1,
-      "name": "scan",
-      "x": 28,
-      "y": 196,
-      "w": 264,
-      "h": 14,
-      "effect": "shimmer",
-      "fg_color": "#9ACFFF",
-      "bg_color": "#1C3350",
-      "period_ms": 1800
-    }
+    {"type":"label","parent":-1,"x":16,"y":10,"w":288,"h":24,"text":"GSP  /  MOTION","font_size":18,"fg_color":"#E8F4FF"},
+    {"type":"effect","parent":-1,"name":"charge","x":28,"y":54,"w":112,"h":112,"effect":"liquid","value":62,"fg_color":"#35DCBA","bg_color":"#153D4A","period_ms":2400},
+    {"type":"label","parent":-1,"x":48,"y":97,"w":72,"h":32,"text":"62%","font_size":26,"fg_color":"#FFFFFF","text_align":"center"},
+    {"type":"effect","parent":-1,"name":"loading","x":188,"y":56,"w":76,"h":76,"effect":"ring","value":35,"fg_color":"#6BAFFF","period_ms":1200},
+    {"type":"effect","parent":-1,"name":"status","x":212,"y":144,"w":28,"h":28,"effect":"pulse","fg_color":"#C99AFF","period_ms":2000},
+    {"type":"effect","parent":-1,"name":"scan","x":28,"y":196,"w":264,"h":14,"effect":"shimmer","fg_color":"#9ACFFF","bg_color":"#1C3350","period_ms":1800}
   ]
 }
 ```
 
-This is `examples/usage/widgets/effect/effect.json`. Copy any relative assets referenced by the scene with it.
+The canonical example is [`effect.json`](../../../examples/usage/widgets/effect/effect.json). Copy any relative assets referenced by the scene with it.
 
-## Generated C API for this example
+## Generated C API
 
 ```c
 const gsp_component_directory_t *const * gsp_effect_docs_component_directories(uint16_t *out_count)
@@ -178,7 +104,7 @@ size_t gsp_effect_docs_dynamic_image_slots(void)
 
 These signatures come from the actual compiler output for this JSON.
 
-## Fields used by this example
+## Fields in this example
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -195,7 +121,8 @@ These signatures come from the actual compiler output for this JSON.
 | `value` | `int` | — | default 100; 0…100 | — | liquid level or visual intensity in percent |
 | `period_ms` | `int` | — | default 2800; 100…60000 | `runtime_style` | one animation cycle in milliseconds |
 
-<details><summary>Show other fields supported by this Widget</summary>
+<details>
+<summary>Show other fields supported by this Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -218,7 +145,8 @@ These signatures come from the actual compiler output for this JSON.
 
 </details>
 
-<details><summary>Show fields shared by every Widget</summary>
+<details>
+<summary>Show fields shared by every Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|

@@ -430,3 +430,13 @@ const esp_gsp_project_config_t *esp_gsp_project_config(void)
 {
     return &s_project_config;
 }
+
+/* SDK timing follows the consumer even when the core is precompiled. */
+uint32_t esp_gsp_project_tick_rate_hz(void)
+{
+#ifdef ESP_PLATFORM
+    return CONFIG_FREERTOS_HZ;
+#else
+    return 1000U;
+#endif
+}

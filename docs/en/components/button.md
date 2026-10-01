@@ -4,12 +4,11 @@ Clickable content surface that triggers declarative actions or application callb
 
 ## When to use
 
-Use it to present or activate a primary piece of interface content.
+Use it for the main text, image, or action on a screen.
 
 ## Local interactive preview
 
-First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
-then run from an unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands), then run from an unpacked component or public repository root with `gspc` and `gsp_sim_host`:
 
 ```sh
 mkdir -p gsp-out/widget-preview
@@ -17,96 +16,41 @@ gspc pack \
   examples/usage/widgets/button/button.json \
   --deployable -o gsp-out/widget-preview/button.gspb
 gsp_sim_host \
-  --bundle gsp-out/widget-preview/button.gspb
+  --bundle gsp-out/widget-preview/button.gspb --frames 0
 ```
 
-These commands compile the JSON below and open it in the ESP-GSP simulator's
-browser preview.
+These commands compile the example and open it in the ESP-GSP simulator browser preview.
 
 ## Runtime behavior
 
-State images use disabled > pressed > checked > normal priority. Missing disabled or pressed artwork falls back to selected_image when checked, then to image. Set checkable to true to toggle checked on click, or control checked through the generated API. States share the normal image cache and may mix bitmaps with compiled SVG.
+For a circular button, set equal w/h and radius = w/2. The hard shadow follows the radius; shadow_spread grows its size. Shadow blur and circular image clipping are not supported. Use image transparency for circular artwork. The touch area remains rectangular.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
+To darken a button and hide its shadow while pressed, add pressed_dim: 64 and pressed_shadow: false. pressed_dim ranges from 0 (unchanged) to 255 (black). pressed_color sets a specific pressed background color; borders, outlines and text keep their colors. press_feedback: false disables automatic darkening and cannot be combined with pressed_dim or pressed_color.
 
-## Complete example JSON
+These fields are optional. If any is present, the default dim strength is 96 and the shadow is kept unless overridden. With none present, the existing global press feedback applies. Moving beyond the edge margin or starting a parent gesture cancels release/click and restores its appearance; use `cancel` for application cleanup.
+
+State images use disabled > pressed > selected > normal priority. pressed_image overrides automatic image dimming. Missing artwork falls back to selected_image when checked, otherwise image. checkable: true toggles checked on click and requires selected_image; generated APIs can also set checked. Bitmap and compiled SVG states use the same cache mechanism, but different resources occupy separate entries.
+
+Automatic dimming is generated from authored colors and static images. Bound or themed backgrounds require pressed_color; changing the normal color later does not regenerate the pressed style. For animated or tinted images, supply pressed_image. State images cannot share a runtime resource bind. Press styles and state images are not supported inside recycled templates.
+
+Image dimming adds a compiled resource, including a selected variant when needed. It avoids computing darkened pixels on the device, but increases bundle/cache use; first display may still require decoding.
+
+If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
+
+## Example scene
 
 ```json
-{
-  "screen": "widget_button",
-  "w": 480,
-  "h": 320,
-  "screen_bg": "#101827",
-  "font": "../../../common/fonts/DejaVuSans.ttf",
-  "objects": [
-    {
-      "type": "button",
-      "parent": -1,
-      "name": "primary",
-      "callback": "primary_click",
-      "x": 70,
-      "y": 70,
-      "w": 160,
-      "h": 54,
-      "text": "Primary",
-      "font_size": 18,
-      "bg_color": "#2563EB",
-      "fg_color": "#FFFFFF",
-      "radius": 12
-    },
-    {
-      "type": "button",
-      "parent": -1,
-      "callback": "secondary_click",
-      "x": 250,
-      "y": 70,
-      "w": 160,
-      "h": 54,
-      "text": "Secondary",
-      "font_size": 18,
-      "bg_color": "#26364D",
-      "fg_color": "#DCE8F7",
-      "border_color": "#4B607D",
-      "border_width": 1,
-      "radius": 12
-    },
-    {
-      "type": "button",
-      "parent": -1,
-      "callback": "muted_click",
-      "x": 150,
-      "y": 160,
-      "w": 180,
-      "h": 48,
-      "text": "Muted",
-      "font_size": 16,
-      "bg_color": "#334155",
-      "fg_color": "#94A3B8",
-      "radius": 24
-    },
-    {
-      "type": "button",
-      "parent": -1,
-      "name": "favorite",
-      "x": 190,
-      "y": 232,
-      "w": 100,
-      "h": 56,
-      "image": "favorite_normal.svg",
-      "pressed_image": "favorite_pressed.svg",
-      "selected_image": "favorite_selected.svg",
-      "disabled_image": "favorite_disabled.svg",
-      "checkable": true
-    }
-  ]
-}
+{"screen":"widget_button","w":480,"h":320,"screen_bg":"#101827","font":"../../../common/fonts/DejaVuSans.ttf","objects":[{"type":"button","parent":-1,"name":"primary","callback":"primary_click","x":70,"y":70,"w":160,"h":54,"text":"Primary","font_size":18,"bg_color":"#2563EB","fg_color":"#FFFFFF","radius":12,"shadow_color":"#000000","shadow_offset_y":4,"pressed_dim":64,"pressed_shadow":false},{"type":"button","parent":-1,"callback":"secondary_click","x":250,"y":70,"w":160,"h":54,"text":"Secondary","font_size":18,"bg_color":"#26364D","fg_color":"#DCE8F7","border_color":"#4B607D","border_width":1,"radius":12,"pressed_color":"#142033"},{"type":"button","parent":-1,"callback":"muted_click","x":150,"y":160,"w":180,"h":48,"text":"Muted","font_size":16,"bg_color":"#334155","fg_color":"#94A3B8","radius":24},{"type":"button","parent":-1,"name":"favorite","x":190,"y":232,"w":100,"h":56,"image":"favorite_normal.svg","pressed_image":"favorite_pressed.svg","selected_image":"favorite_selected.svg","disabled_image":"favorite_disabled.svg","checkable":true},{"type":"button","parent":-1,"callback":"secondary_click","x":40,"y":225,"w":64,"h":64,"bg_color":"#2563EB","radius":32,"shadow_color":"#000000","shadow_offset_y":4,"shadow_spread":2,"pressed_dim":64,"pressed_shadow":false}]}
 ```
 
-This is `examples/usage/widgets/button/button.json`. Copy any relative assets referenced by the scene with it.
+The canonical example is [`button.json`](../../../examples/usage/widgets/button/button.json). Copy any relative assets referenced by the scene with it.
 
-## Generated C API for this example
+## Generated C API
+
+`dispatch_call` requires `GSP_GENERATE_WEAK_EVENT_HANDLERS` on an ELF GCC/Clang target; see [optional business handlers](../guide/customization.md).
 
 ```c
+bool gsp_widget_button_dispatch_call( esp_gsp_handle_t gsp, const esp_gsp_event_t *event, void *user_ctx)
 bool gsp_widget_button_event_decode_call( const esp_gsp_event_t *event, gsp_widget_button_call_event_t *out_event)
 bool gsp_widget_button_event_is_muted_click( const esp_gsp_event_t *event)
 bool gsp_widget_button_event_is_primary_click( const esp_gsp_event_t *event)
@@ -126,7 +70,7 @@ size_t gsp_button_docs_dynamic_image_slots(void)
 
 These signatures come from the actual compiler output for this JSON.
 
-## Fields used by this example
+## Fields in this example
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -140,6 +84,9 @@ These signatures come from the actual compiler output for this JSON.
 | `fg_color` | `color` | — | — | — | foreground color (text/knob/line/mark per type) |
 | `bg_color` | `color` | — | — | yes | background/fill color (#RRGGBB or #RRGGBBAA) |
 | `radius` | `int` | — | default 0; 0…65535 | scene: —; template: — | corner radius in px |
+| `shadow_color` | `color` | — | — | — | static hard-shadow color |
+| `shadow_offset_y` | `int` | — | -32768…32767 | — | static hard-shadow y offset |
+| `shadow_spread` | `int` | — | 0…4096 | — | static hard-shadow spread in px |
 | `text` | `string` | — | — | yes | static text content (UTF-8) |
 | `font_size` | `int` | — | 1…255 | — | per-object font pixel size |
 | `border_color` | `color` | — | — | — | border stroke color |
@@ -150,8 +97,12 @@ These signatures come from the actual compiler output for this JSON.
 | `selected_image` | `path` | — | — | — | selected-state image path |
 | `disabled_image` | `path` | — | — | — | disabled-state image path |
 | `checkable` | `bool` | — | default `false` | — | toggle selected state on click |
+| `pressed_dim` | `int` | — | 0…255 | — | pressed background/image darkening, 0 unchanged to 255 black |
+| `pressed_color` | `color` | — | — | — | pressed background color, overriding automatic background darkening |
+| `pressed_shadow` | `bool` | — | — | — | keep the static shadow while pressed (default true) |
 
-<details><summary>Show other fields supported by this Widget</summary>
+<details>
+<summary>Show other fields supported by this Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -159,7 +110,10 @@ These signatures come from the actual compiler output for this JSON.
 | `max_width` | `int` | — | 0…65535 | — | compile-time maximum width in px |
 | `min_height` | `int` | — | 0…65535 | — | compile-time minimum height in px |
 | `max_height` | `int` | — | 0…65535 | — | compile-time maximum height in px |
-| `layout` | `enum` | — | `row`, `column` | — | child auto-layout: row/column |
+| `layout` | `enum` | — | `row`, `column`, `grid` | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | — | default `false` | — | wrap row/column children into additional lines |
+| `grid_columns` | `int` | — | 1…65535 | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | — | default 1; 1…65535 | — | column span in the parent grid layout |
 | `gap` | `int` | — | default 0; 0…4096 | — | auto-layout gap in px |
 | `padding` | `int` | — | default 0; 0…4096 | — | auto-layout padding in px |
 | `padding_left` | `int` | — | 0…4096 | — | row layout: leading padding override |
@@ -178,11 +132,8 @@ These signatures come from the actual compiler output for this JSON.
 | `opacity` | `int` | — | default 255; 0…255 | scene: —; template: — | 0-255 blend opacity |
 | `bg_gradient` | `color` | — | — | — | second gradient stop (with bg_color) |
 | `gradient_dir` | `enum` | — | default vertical; `vertical`, `horizontal` | — | gradient direction |
-| `shadow_color` | `color` | — | — | — | static hard-shadow color |
 | `shadow_opacity` | `int` | — | default 96; 0…255 | — | static hard-shadow opacity |
 | `shadow_offset_x` | `int` | — | -32768…32767 | — | static hard-shadow x offset |
-| `shadow_offset_y` | `int` | — | -32768…32767 | — | static hard-shadow y offset |
-| `shadow_spread` | `int` | — | 0…4096 | — | static hard-shadow spread in px |
 | `shadow_radius` | `int` | — | 0…65535 | — | static hard-shadow corner radius |
 | `text_line_space` | `int` | — | default 0; 0…4096 | — | extra spacing between static text rows in px |
 | `text_vertical_align` | `enum` | — | default auto; `auto`, `top`, `center`, `bottom` | — | static text block placement; auto preserves single-line center and multiline top |
@@ -232,10 +183,12 @@ These signatures come from the actual compiler output for this JSON.
 | `max_instances` | `int` | — | 1…65535 | — | maximum simultaneously live template instances; included in the automatic pool requirement |
 | `dynamic_color` | `bool` | — | — | — | template member exposes a per-instance color slot |
 | `dynamic_image` | `bool` | — | — | — | template image exposes a per-instance resource slot |
+| `press_feedback` | `bool` | — | — | — | enable shape-aware press feedback; false disables automatic shading |
 
 </details>
 
-<details><summary>Show fields shared by every Widget</summary>
+<details>
+<summary>Show fields shared by every Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|

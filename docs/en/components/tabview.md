@@ -4,12 +4,11 @@ Compile-time tab bar and swipeable page content.
 
 ## When to use
 
-Use it when a familiar interaction is best delivered as a ready-made group of native controls.
+Use it when a common interaction is easier to express as one ready-made control.
 
 ## Local interactive preview
 
-First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
-then run from an unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands), then run from an unpacked component or public repository root with `gspc` and `gsp_sim_host`:
 
 ```sh
 mkdir -p gsp-out/widget-preview
@@ -17,111 +16,26 @@ gspc pack \
   examples/usage/widgets/tabview/tabview.json \
   --deployable -o gsp-out/widget-preview/tabview.gspb
 gsp_sim_host \
-  --bundle gsp-out/widget-preview/tabview.gspb
+  --bundle gsp-out/widget-preview/tabview.gspb --frames 0
 ```
 
-These commands compile the JSON below and open it in the ESP-GSP simulator's
-browser preview.
+These commands compile the example and open it in the ESP-GSP simulator browser preview.
 
 ## Runtime behavior
 
-GSPC compiles the group into native primitives and generates adapters for application behavior exposed by named elements.
+GSPC lowers the group to native primitives. Give an object a stable `name` when application code must control it.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
+If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
-## Complete example JSON
+## Example scene
 
 ```json
-{
-  "screen": "widget_tabview",
-  "w": 480,
-  "h": 320,
-  "screen_bg": "#101827",
-  "font": "../../../common/fonts/DejaVuSans.ttf",
-  "swipe": false,
-  "objects": [
-    {
-      "type": "tabview",
-      "parent": -1,
-      "name": "feature_tabs",
-      "x": 0,
-      "y": 0,
-      "w": 480,
-      "h": 320,
-      "tabs": [
-        "Overview",
-        "Metrics",
-        "Settings"
-      ],
-      "selected": 0,
-      "bar_height": 52,
-      "cyclic": true,
-      "bg_color": "#101827",
-      "active_color": "#38BDF8",
-      "font_size": 15
-    },
-    {
-      "type": "label",
-      "parent_name": "feature_tabs_tab0",
-      "x": 40,
-      "y": 55,
-      "w": 400,
-      "h": 50,
-      "text": "Overview content",
-      "font_size": 26,
-      "text_align": "center",
-      "fg_color": "#FFFFFF"
-    },
-    {
-      "type": "chart",
-      "parent_name": "feature_tabs_tab1",
-      "x": 50,
-      "y": 35,
-      "w": 380,
-      "h": 170,
-      "points": [
-        12,
-        35,
-        27,
-        58,
-        44,
-        79,
-        65,
-        92
-      ],
-      "grid_lines": 3,
-      "bg_color": "#142033",
-      "fg_color": "#A78BFA"
-    },
-    {
-      "type": "toggle",
-      "parent_name": "feature_tabs_tab2",
-      "x": 200,
-      "y": 70,
-      "w": 80,
-      "h": 40,
-      "checked": true,
-      "bg_color": "#334155",
-      "fg_color": "#22C55E"
-    },
-    {
-      "type": "label",
-      "parent_name": "feature_tabs_tab2",
-      "x": 80,
-      "y": 140,
-      "w": 320,
-      "h": 35,
-      "text": "Swipe or tap a tab",
-      "text_align": "center",
-      "fg_color": "#94A3B8"
-    }
-  ]
-}
+{"screen":"widget_tabview","w":480,"h":320,"screen_bg":"#101827","font":"../../../common/fonts/DejaVuSans.ttf","swipe":false,"objects":[{"type":"tabview","parent":-1,"name":"feature_tabs","x":0,"y":0,"w":480,"h":320,"tabs":["Overview","Metrics","Settings"],"selected":0,"bar_height":52,"cyclic":true,"bg_color":"#101827","active_color":"#38BDF8","font_size":15},{"type":"label","parent_name":"feature_tabs_tab0","x":40,"y":55,"w":400,"h":50,"text":"Overview content","font_size":26,"text_align":"center","fg_color":"#FFFFFF"},{"type":"chart","parent_name":"feature_tabs_tab1","x":50,"y":35,"w":380,"h":170,"points":[12,35,27,58,44,79,65,92],"grid_lines":3,"bg_color":"#142033","fg_color":"#A78BFA"},{"type":"toggle","parent_name":"feature_tabs_tab2","x":200,"y":70,"w":80,"h":40,"checked":true,"bg_color":"#334155","fg_color":"#22C55E"},{"type":"label","parent_name":"feature_tabs_tab2","x":80,"y":140,"w":320,"h":35,"text":"Swipe or tap a tab","text_align":"center","fg_color":"#94A3B8"}]}
 ```
 
-This is `examples/usage/widgets/tabview/tabview.json`. Copy any relative assets referenced by the scene with it.
+The canonical example is [`tabview.json`](../../../examples/usage/widgets/tabview/tabview.json). Copy any relative assets referenced by the scene with it.
 
-## Generated C API for this example
+## Generated C API
 
 ```c
 const gsp_component_directory_t *const * gsp_tabview_docs_component_directories(uint16_t *out_count)
@@ -145,7 +59,7 @@ size_t gsp_tabview_docs_dynamic_image_slots(void)
 
 These signatures come from the actual compiler output for this JSON.
 
-## Fields used by this example
+## Fields in this example
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -164,7 +78,8 @@ These signatures come from the actual compiler output for this JSON.
 | `font_size` | `int` | — | 1…255 | — | per-object font pixel size |
 | `selected` | `int` | — | default 0; 0…65535 | yes | initially selected tab |
 
-<details><summary>Show other fields supported by this Widget</summary>
+<details>
+<summary>Show other fields supported by this Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -181,7 +96,8 @@ These signatures come from the actual compiler output for this JSON.
 
 </details>
 
-<details><summary>Show fields shared by every Widget</summary>
+<details>
+<summary>Show fields shared by every Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|

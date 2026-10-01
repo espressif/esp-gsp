@@ -37,7 +37,7 @@ ESP-GSP 适用于界面结构在构建期确定，但文字、数值、图片、
 
 <!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.5.1:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.6.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -49,7 +49,7 @@ python -m pip install -U esp-gsp-tools
 
 编译器配置使用当前 ESP-IDF Python 环境。PATH 中已有配套 `gspc` 时可离线使用，
 否则 CMake 调用工具管理器；源码仓库默认通过 Cargo 构建当前编译器。
-版本固定、离线使用和安装错误处理见[编译器选择](docs/zh-Hans/guide/workflow.md#编译器选择)。
+版本固定、离线使用和安装错误处理见[编译器选择](docs/zh-cn/guide/workflow.md#编译器选择)。
 
 ## 集成到现有工程
 
@@ -57,7 +57,7 @@ python -m pip install -U esp-gsp-tools
 
 <!-- gsp-version:dependency-command -->
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.5.1"
+idf.py add-dependency "espressif/esp-gsp^1.6.0"
 python -m pip install -U esp-gsp-tools
 ```
 <!-- /gsp-version:dependency-command -->
@@ -87,7 +87,7 @@ gsp_add_bundle(${COMPONENT_LIB})
 下次构建会校验全部场景、编译资源、嵌入一个 Bundle，并生成 `bundle_gsp.h`。
 从 `gsp_bundle_config()` 和 `ESP_GSP_ESP_LCD_CONFIG_INIT()` 开始初始化，再调用
 生成的 `gsp_<scene>_<name>_*()` 函数。完整集成和显示启动代码见
-[中文快速入门](docs/zh-Hans/getting-started.md)。
+[中文快速入门](docs/zh-cn/getting-started.md)。
 
 ## 重要运行约束
 
@@ -103,17 +103,17 @@ gsp_add_bundle(${COMPONENT_LIB})
 
 | 任务 | 从这里开始 |
 |---|---|
-| 安装并运行第一个场景 | [中文快速入门](docs/zh-Hans/getting-started.md) |
-| 理解推荐开发流程 | [工程工作流](docs/zh-Hans/guide/workflow.md) |
-| 使用 Agent 编写和验证界面 | [Agent 辅助 UI 开发](docs/zh-Hans/guide/agent-assisted-ui.md) |
-| 编写 JSON 和选择字段 | [场景指南](docs/zh-Hans/guide/scenes.md)与[字段参考](docs/zh-Hans/reference/authoring.md) |
-| 学习某个控件 | [控件库](docs/zh-Hans/components/index.md) |
-| 连接应用状态 | [运行时与生成 API](docs/zh-Hans/guide/runtime-api.md) |
-| 配置内存和功能 | [配置模型](docs/zh-Hans/guide/configuration.md)与[Kconfig](docs/zh-Hans/reference/kconfig.md) |
-| 集成显示链路 | [显示集成](docs/zh-Hans/guide/display.md) |
-| 无硬件预览 | [模拟器预览](docs/zh-Hans/guide/simulator-preview.md) |
-| 排查问题 | [故障排查](docs/zh-Hans/guide/troubleshooting.md) |
-| 查询准确 C 声明 | [公共函数参考](docs/zh-Hans/reference/api-functions.md) |
+| 安装并运行第一个场景 | [中文快速入门](docs/zh-cn/getting-started.md) |
+| 理解推荐开发流程 | [工程工作流](docs/zh-cn/guide/workflow.md) |
+| 使用 Agent 编写和验证界面 | [Agent 辅助 UI 开发](docs/zh-cn/guide/agent-assisted-ui.md) |
+| 编写 JSON 和选择字段 | [场景指南](docs/zh-cn/guide/scenes.md)与[字段参考](docs/zh-cn/reference/authoring.md) |
+| 学习某个控件 | [控件库](docs/zh-cn/components/index.md) |
+| 连接应用状态 | [运行时与生成 API](docs/zh-cn/guide/runtime-api.md) |
+| 配置内存和功能 | [配置模型](docs/zh-cn/configuration/index.md)与[Kconfig](docs/zh-cn/reference/kconfig.md) |
+| 集成显示链路 | [显示集成](docs/zh-cn/guide/display.md) |
+| 无硬件预览 | [模拟器预览](docs/zh-cn/configuration/simulator-preview.md) |
+| 排查问题 | [故障排查](docs/zh-cn/configuration/troubleshooting.md) |
+| 查询准确 C 声明 | [公共函数参考](docs/zh-cn/reference/api-functions.md) |
 
 [文档入口](docs/README.md)包含完整的英文和简体中文文档。仓库还提供用于产品展示
 的[真实场景示例](examples/scenarios/README.md)和用于硬件测量的

@@ -81,7 +81,7 @@ executable when it is not available through `PATH`.
 ## Use current sources of truth
 
 Read documentation from the ESP-GSP component selected by the application
-build. Start with the matching language under `docs/en/` or `docs/zh-Hans/`,
+build. Start with the matching language under `docs/en/` or `docs/zh-cn/`,
 then load only the pages needed for the task:
 
 - `guide/workflow.md` for JSON, application, and BSP ownership;
@@ -90,7 +90,7 @@ then load only the pages needed for the task:
   callbacks, collections, Canvas, and buffer ownership;
 - `reference/configuration.md` for `gsp_add_bundle()` and runtime configuration;
 - `reference/simulator.md` for simulator CLI, automation API, and evidence limits;
-- `guide/simulator-preview.md` for preview workflows and testing strategies;
+- `configuration/simulator-preview.md` for preview workflows and testing strategies;
 - `tools/sim_bridge/README.md` for running portable application C code with the
   simulator and the bridge's supported API subset;
 - `components/<widget>.md` and `examples/usage/widgets/<widget>/<widget>.json` for a
@@ -120,6 +120,10 @@ replaced with `.api.json`.
 `gspc doctor [project]` reports the compiler contract, sidecar commands and
 scene files; when a build description is available it also reports target
 facts. An unavailable build contract is unknown, not a host-profile fallback.
+Read `build_contract.status` and resolve `error`, `missing`, or `stale_reasons`
+when reported. `observed` identifies the selected build's metadata snapshot.
+An explicit `--build` selects only that build directory. Use the owning
+configure/build to validate the configuration and tool compatibility.
 
 Keep these disposable exports below the ignored build tree.
 The installed compiler schema, selected component documentation, public
@@ -268,8 +272,9 @@ automation-owned preview can look interactive while rejecting the user's
 input.
 
 When running more than one simulator on the same machine, assign explicit,
-distinct visual, API, and backend ports instead of relying on automatic port
-allocation. Record which bundle/project owns each endpoint. If a captured
+distinct visual and API ports, plus Backend ports when using the optional
+Socket mode, instead of relying on automatic port allocation. Record which
+bundle/project owns each endpoint. If a captured
 simulator image differs greatly from the expected scene, check for another
 running simulator, including one from a different project, before treating the
 image as evidence of a UI regression.
@@ -290,19 +295,27 @@ python <selected-esp-gsp-component>/tools/sim_bridge/run.py \
     --project <application-pc-project>
 ```
 
-The runner builds the deployable Bundle and generated headers, builds and starts
-the native Backend, selects version-pinned GSPC and simulator tools, and opens
-the preview. Prefer an existing project adapter or the component's
+The runner builds the deployable Bundle and generated headers, builds both a
+shared library and a Socket executable, and loads the library by default.
+Use `--socket-backend` for process isolation; `--backend-port` also selects
+Socket mode. Library ESP-GSP and Backend ABI versions must match sim_host.
+For automation, use `--headless --api-port <port> --input-mode api-exclusive`;
+a user preview can use `--visual-port <port> --input-mode browser-exclusive`.
+Use distinct ports and build directories. The runner loads the API sidecar and
+reports tool identity and endpoints. After `backend_loaded` or `backend_spawned`,
+observe the application and capture its rendered state. Prefer an existing
+project adapter or the component's
 `examples/usage/hello_world/pc` and `examples/usage/sim_bridge_media/pc`
 examples. For a project without a PC adapter, inspect
 `tools/sim_bridge/README.md` before deciding whether its hardware dependencies
 can be isolated behind a small PC HAL/mock.
 
 The bridge implements a supported subset of `esp_gsp.h` and runs application
-callbacks on one native Backend thread. Use it to check application behavior;
-it does not reproduce ESP-IDF task scheduling, peripheral behavior, panel
-timing, or device performance. Build the owning ESP-IDF application and use the
-board for those checks.
+callbacks on one native Backend thread. The default shared library is trusted
+code inside sim_host and can crash or block it; the Socket mode isolates that
+failure. Use either mode to check application behavior, not ESP-IDF task
+scheduling, peripheral behavior, panel timing, or device performance. Build
+the owning ESP-IDF application and use the board for those checks.
 
 ### Locate the simulator
 

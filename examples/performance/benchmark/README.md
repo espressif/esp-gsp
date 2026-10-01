@@ -159,6 +159,14 @@ and `down`, plus `prepends` and `appends`. Protocol 25 checks that scroll comman
 keep pace with rendered frames. Compare results within the same protocol and
 display configuration.
 
+Protocol 26 resets PageFlow to page 0 on every entry and requests the next page
+every 750 ms of wall time, waiting for the previous transition to settle.
+The viewport has no tab-bar reservation. `page_flow completed=... pages_mask=...`
+counts observed page-and-offset completion, excluding the initial reset.
+A valid measured run requires at least three completions, all three pages
+(`pages_mask=7`) and zero errors; a short soak that cannot cover this cycle is
+not a valid result. Earlier protocol scores do not establish this motion coverage.
+
 The composites page gives each tab 15 seconds on C3 (45 seconds total) and
 12 seconds on other targets (36 seconds total). `keyboard_window_ms` in the
 configuration fingerprint records the per-tab window. It drives the keyboard

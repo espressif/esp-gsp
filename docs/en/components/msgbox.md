@@ -4,12 +4,11 @@ Compile-time modal dialog with title, message and action buttons.
 
 ## When to use
 
-Use it when a familiar interaction is best delivered as a ready-made group of native controls.
+Use it when a common interaction is easier to express as one ready-made control.
 
 ## Local interactive preview
 
-First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
-then run from an unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands), then run from an unpacked component or public repository root with `gspc` and `gsp_sim_host`:
 
 ```sh
 mkdir -p gsp-out/widget-preview
@@ -17,110 +16,31 @@ gspc pack \
   examples/usage/widgets/msgbox/msgbox.json \
   --deployable -o gsp-out/widget-preview/msgbox.gspb
 gsp_sim_host \
-  --bundle gsp-out/widget-preview/msgbox.gspb
+  --bundle gsp-out/widget-preview/msgbox.gspb --frames 0
 ```
 
-These commands compile the JSON below and open it in the ESP-GSP simulator's
-browser preview.
+These commands compile the example and open it in the ESP-GSP simulator browser preview.
 
 ## Runtime behavior
 
-GSPC compiles the group into native primitives and generates adapters for application behavior exposed by named elements.
+GSPC lowers the group to native primitives. Give an object a stable `name` when application code must control it.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
+If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
-## Complete example JSON
+## Example scene
 
 ```json
-{
-  "screen": "widget_msgbox",
-  "w": 480,
-  "h": 320,
-  "screen_bg": "#101827",
-  "font": "../../../common/fonts/DejaVuSans.ttf",
-  "objects": [
-    {
-      "type": "container",
-      "parent": -1,
-      "x": 34,
-      "y": 30,
-      "w": 412,
-      "h": 260,
-      "bg_color": "#172235",
-      "border_color": "#2D425F",
-      "border_width": 1,
-      "radius": 16
-    },
-    {
-      "type": "label",
-      "parent": 0,
-      "x": 30,
-      "y": 34,
-      "w": 352,
-      "h": 38,
-      "text": "Display preferences",
-      "font_size": 24,
-      "fg_color": "#F8FAFC"
-    },
-    {
-      "type": "label",
-      "parent": 0,
-      "x": 30,
-      "y": 86,
-      "w": 352,
-      "h": 54,
-      "text": "Changes are reviewed before they are applied to the device.",
-      "font_size": 15,
-      "fg_color": "#94A3B8"
-    },
-    {
-      "type": "button",
-      "parent": 0,
-      "x": 106,
-      "y": 174,
-      "w": 200,
-      "h": 48,
-      "text": "Review changes",
-      "font_size": 16,
-      "bg_color": "#2563EB",
-      "fg_color": "#FFFFFF",
-      "radius": 12,
-      "events": [
-        {
-          "event": "click",
-          "action": "show",
-          "target_name": "confirm_dialog"
-        }
-      ]
-    },
-    {
-      "type": "msgbox",
-      "name": "confirm_dialog",
-      "title": "Apply changes?",
-      "text": "The new display and interaction settings will become active immediately.",
-      "buttons": [
-        "Cancel",
-        "Apply"
-      ],
-      "callback": "confirm_choice",
-      "w": 390,
-      "h": 235,
-      "font_size": 15,
-      "dismissable": true,
-      "hidden": true,
-      "bg_color": "#172235",
-      "fg_color": "#E2E8F0",
-      "button_color": "#2563EB"
-    }
-  ]
-}
+{"screen":"widget_msgbox","w":480,"h":320,"screen_bg":"#101827","font":"../../../common/fonts/DejaVuSans.ttf","objects":[{"type":"container","parent":-1,"x":34,"y":30,"w":412,"h":260,"bg_color":"#172235","border_color":"#2D425F","border_width":1,"radius":16},{"type":"label","parent":0,"x":30,"y":34,"w":352,"h":38,"text":"Display preferences","font_size":24,"fg_color":"#F8FAFC"},{"type":"label","parent":0,"x":30,"y":86,"w":352,"h":54,"text":"Changes are reviewed before they are applied to the device.","font_size":15,"fg_color":"#94A3B8"},{"type":"button","parent":0,"x":106,"y":174,"w":200,"h":48,"text":"Review changes","font_size":16,"bg_color":"#2563EB","fg_color":"#FFFFFF","radius":12,"events":[{"event":"click","action":"show","target_name":"confirm_dialog"}]},{"type":"msgbox","name":"confirm_dialog","title":"Apply changes?","text":"The new display and interaction settings will become active immediately.","buttons":["Cancel","Apply"],"callback":"confirm_choice","w":390,"h":235,"font_size":15,"dismissable":true,"hidden":true,"bg_color":"#172235","fg_color":"#E2E8F0","button_color":"#2563EB"}]}
 ```
 
-This is `examples/usage/widgets/msgbox/msgbox.json`. Copy any relative assets referenced by the scene with it.
+The canonical example is [`msgbox.json`](../../../examples/usage/widgets/msgbox/msgbox.json). Copy any relative assets referenced by the scene with it.
 
-## Generated C API for this example
+## Generated C API
+
+`dispatch_call` requires `GSP_GENERATE_WEAK_EVENT_HANDLERS` on an ELF GCC/Clang target; see [optional business handlers](../guide/customization.md).
 
 ```c
+bool gsp_widget_msgbox_dispatch_call( esp_gsp_handle_t gsp, const esp_gsp_event_t *event, void *user_ctx)
 bool gsp_widget_msgbox_event_decode_call( const esp_gsp_event_t *event, gsp_widget_msgbox_call_event_t *out_event)
 bool gsp_widget_msgbox_event_is_confirm_choice( const esp_gsp_event_t *event)
 const gsp_component_directory_t *const * gsp_msgbox_docs_component_directories(uint16_t *out_count)
@@ -135,7 +55,7 @@ size_t gsp_msgbox_docs_dynamic_image_slots(void)
 
 These signatures come from the actual compiler output for this JSON.
 
-## Fields used by this example
+## Fields in this example
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -154,7 +74,8 @@ These signatures come from the actual compiler output for this JSON.
 | `hidden` | `bool` | — | default `true` | yes | start hidden |
 | `dismissable` | `bool` | — | default `false` | — | scrim tap closes |
 
-<details><summary>Show other fields supported by this Widget</summary>
+<details>
+<summary>Show other fields supported by this Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -166,7 +87,8 @@ These signatures come from the actual compiler output for this JSON.
 
 </details>
 
-<details><summary>Show fields shared by every Widget</summary>
+<details>
+<summary>Show fields shared by every Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|

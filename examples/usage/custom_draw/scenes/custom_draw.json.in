@@ -1,0 +1,18 @@
+{
+  "screen": "custom_draw",
+  "w": @CUSTOM_DRAW_SCREEN_W@,
+  "h": @CUSTOM_DRAW_SCREEN_H@,
+  "objects": [
+    {
+      "type": "image",
+      "name": "wave_canvas",
+      "x": @CUSTOM_DRAW_CANVAS_X@,
+      "y": @CUSTOM_DRAW_CANVAS_Y@,
+      "w": 200,
+      "h": 100,
+      "image": "@CUSTOM_DRAW_PLACEHOLDER@",
+      "codec": "store",
+      "bind": "wave_canvas"
+    }
+  ]
+}

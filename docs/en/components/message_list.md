@@ -4,12 +4,11 @@ Virtualized conversation viewport with incoming and outgoing bubbles.
 
 ## When to use
 
-Use it when a familiar interaction is best delivered as a ready-made group of native controls.
+Use it when a common interaction is easier to express as one ready-made control.
 
 ## Local interactive preview
 
-First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
-then run from an unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands), then run from an unpacked component or public repository root with `gspc` and `gsp_sim_host`:
 
 ```sh
 mkdir -p gsp-out/widget-preview
@@ -17,97 +16,31 @@ gspc pack \
   examples/usage/widgets/message_list/message_list.json \
   --deployable -o gsp-out/widget-preview/message_list.gspb
 gsp_sim_host \
-  --bundle gsp-out/widget-preview/message_list.gspb
+  --bundle gsp-out/widget-preview/message_list.gspb --frames 0
 ```
 
-These commands compile the JSON below and open it in the ESP-GSP simulator's
-browser preview.
-
-This preview shows the initial state authored in JSON. To reproduce application-driven motion, update the corresponding properties through the simulator backend/API or device code.
+These commands compile the example and open it in the ESP-GSP simulator browser preview.
 
 ## Runtime behavior
 
-GSPC compiles the group into native primitives and generates adapters for application behavior exposed by named elements.
+GSPC lowers the group to native primitives. Give an object a stable `name` when application code must control it.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
+If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
-## Complete example JSON
+## Example scene
 
 ```json
-{
-  "screen": "widget_message_list",
-  "w": 480,
-  "h": 320,
-  "screen_bg": "#101827",
-  "font": "../../../common/fonts/DejaVuSans.ttf",
-  "font_charset": " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,?—'",
-  "objects": [
-    {
-      "type": "message_list",
-      "parent": -1,
-      "name": "conversation",
-      "x": 30,
-      "y": 24,
-      "w": 420,
-      "h": 230,
-      "background_color": "#142033",
-      "incoming_color": "#263A4F",
-      "outgoing_color": "#2563EB",
-      "message_text_color": "#EEF4FA",
-      "outgoing_text_color": "#FFFFFF",
-      "bubble_radius": 14,
-      "bubble_padding_x": 12,
-      "bubble_padding_y": 8,
-      "message_gap": 8,
-      "side_margin": 12,
-      "max_bubble_width": 310,
-      "max_message_height": 120,
-      "font_size": 14
-    },
-    {
-      "type": "container",
-      "parent": -1,
-      "x": 30,
-      "y": 270,
-      "w": 350,
-      "h": 36,
-      "bg_color": "#213047",
-      "radius": 18
-    },
-    {
-      "type": "label",
-      "parent": 1,
-      "x": 15,
-      "y": 8,
-      "w": 320,
-      "h": 22,
-      "text": "Application-backed messages appear above",
-      "font_size": 12,
-      "fg_color": "#8294AC"
-    },
-    {
-      "type": "button",
-      "parent": -1,
-      "callback": "send_click",
-      "x": 394,
-      "y": 270,
-      "w": 56,
-      "h": 36,
-      "text": ">",
-      "font_size": 16,
-      "bg_color": "#2563EB",
-      "fg_color": "#FFFFFF",
-      "radius": 18
-    }
-  ]
-}
+{"screen":"widget_message_list","w":480,"h":320,"screen_bg":"#101827","font":"../../../common/fonts/DejaVuSans.ttf","font_charset":" ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,?—'","objects":[{"type":"message_list","parent":-1,"name":"conversation","x":30,"y":24,"w":420,"h":230,"background_color":"#142033","incoming_color":"#263A4F","outgoing_color":"#2563EB","message_text_color":"#EEF4FA","outgoing_text_color":"#FFFFFF","bubble_radius":14,"bubble_padding_x":12,"bubble_padding_y":8,"message_gap":8,"side_margin":12,"max_bubble_width":310,"max_message_height":120,"font_size":14},{"type":"container","parent":-1,"x":30,"y":270,"w":350,"h":36,"bg_color":"#213047","radius":18},{"type":"label","parent":1,"x":15,"y":8,"w":320,"h":22,"text":"Application-backed messages appear above","font_size":12,"fg_color":"#8294AC"},{"type":"button","parent":-1,"callback":"send_click","x":394,"y":270,"w":56,"h":36,"text":">","font_size":16,"bg_color":"#2563EB","fg_color":"#FFFFFF","radius":18}]}
 ```
 
-This is `examples/usage/widgets/message_list/message_list.json`. Copy any relative assets referenced by the scene with it.
+The canonical example is [`message_list.json`](../../../examples/usage/widgets/message_list/message_list.json). Copy any relative assets referenced by the scene with it.
 
-## Generated C API for this example
+## Generated C API
+
+`dispatch_call` requires `GSP_GENERATE_WEAK_EVENT_HANDLERS` on an ELF GCC/Clang target; see [optional business handlers](../guide/customization.md).
 
 ```c
+bool gsp_widget_message_list_dispatch_call( esp_gsp_handle_t gsp, const esp_gsp_event_t *event, void *user_ctx)
 bool gsp_widget_message_list_event_decode_call( const esp_gsp_event_t *event, gsp_widget_message_list_call_event_t *out_event)
 bool gsp_widget_message_list_event_is_send_click( const esp_gsp_event_t *event)
 const gsp_component_directory_t *const * gsp_message_list_docs_component_directories(uint16_t *out_count)
@@ -142,7 +75,7 @@ size_t gsp_message_list_docs_dynamic_image_slots(void)
 
 These signatures come from the actual compiler output for this JSON.
 
-## Fields used by this example
+## Fields in this example
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -167,7 +100,8 @@ These signatures come from the actual compiler output for this JSON.
 | `max_message_height` | `int` | — | default 320; 16…32767 | — | maximum message height |
 | `font_size` | `int` | — | 1…255 | — | per-object font pixel size |
 
-<details><summary>Show other fields supported by this Widget</summary>
+<details>
+<summary>Show other fields supported by this Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -184,7 +118,8 @@ These signatures come from the actual compiler output for this JSON.
 
 </details>
 
-<details><summary>Show fields shared by every Widget</summary>
+<details>
+<summary>Show fields shared by every Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|

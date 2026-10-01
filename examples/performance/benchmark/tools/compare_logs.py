@@ -87,6 +87,10 @@ DRAWER_RE = re.compile(
     r"^bench: drawer opens=(?P<opens>\d+)"
     r"\s+closes=(?P<closes>\d+)\s+errors=(?P<errors>\d+)$"
 )
+PAGE_FLOW_RE = re.compile(
+    r"^bench: page_flow completed=(?P<completed>\d+)"
+    r" pages_mask=(?P<pages_mask>\d+) errors=(?P<errors>\d+)$"
+)
 DETAIL_RE = re.compile(
     r"^bench: detail\[(?P<name>.+)\]"
     r"\s+frames=(?P<frames>\d+)\s+elapsed_us=(?P<elapsed>\d+)"
@@ -237,6 +241,7 @@ def parse_log(path: Path) -> Run:
     raw_busy_us: int | None = None
     config_values: dict[str, str] = {}
     drawer_result: tuple[int, int, int] | None = None
+    page_flow_result: tuple[int, int, int] | None = None
     keyboard_result: tuple[
         int, int | None, int, int, int | None, int | None,
         int | None, int | None, str, str | None,
@@ -250,6 +255,10 @@ def parse_log(path: Path) -> Run:
     capacity_results = {}
     dropdown_result = None
     for line in transition_text.splitlines():
+        match = PAGE_FLOW_RE.match(line)
+        if match:
+            page_flow_result = tuple(int(match[key]) for key in ("completed", "pages_mask", "errors"))
+            continue
         match = VECTOR_RESULT_RE.match(line)
         if match:
             vector_results[match["name"]] = tuple(int(match[key]) for key in ("updates", "commands", "errors"))
@@ -476,6 +485,10 @@ def parse_log(path: Path) -> Run:
                     raise ValueError(f"{path}: missing repaint load on {name!r}")
             elif requests:
                 raise ValueError(f"{path}: unexpected repaint load on {name!r}")
+    if protocol >= 26 and "page flow" in pages:
+        if page_flow_result is None or page_flow_result[0] < 3 or \
+                page_flow_result[1] != 7 or page_flow_result[2] != 0:
+            raise ValueError(f"{path}: page flow must complete a cycle through all three pages without errors")
     if protocol >= 24 and "messages" in pages:
         messages = re.findall(
             r"^bench: messages count=(\d+) first=(\d+) errors=(\d+) "

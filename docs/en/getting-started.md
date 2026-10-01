@@ -1,12 +1,5 @@
 # Getting Started
 
-## Initialization task stack and integrity checks
-
-Creation and resource verification run synchronously on the calling task. Start a new integration with the `hello_world` setting `CONFIG_ESP_MAIN_TASK_STACK_SIZE=20480`; when starting from a custom task, size that task instead. This 20 KiB starting point is not a universal minimum. Measure `uxTaskGetStackHighWaterMark()` with the intended fonts, decoders and logging before reducing it. Render-task `task_stack_size`/Kconfig settings do not increase the initialization caller's stack.
-
-Keep CRC validation enabled by default. Large scans give the scheduler opportunities to run between chunks. Do not disable the task watchdog to work around startup stalls. `disable_bundle_crc` is only for static assets verified by another trusted mechanism.
-
-
 This guide builds the default embedded-bundle path: an ESP-IDF application
 owns the display, ESP-GSP compiles one JSON scene during the build, and the
 application updates the UI through the generated C API.
@@ -16,7 +9,7 @@ example:
 
 <!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.5.1:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.6.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -39,13 +32,26 @@ Touch is optional. When present, the BSP supplies an
 `esp_lcd_touch_handle_t` whose coordinates match the logical display
 orientation.
 
+## Before first startup: stack and integrity checks
+
+Bundle creation and resource checks run on the task that starts ESP-GSP. Begin
+with the `hello_world` setting `CONFIG_ESP_MAIN_TASK_STACK_SIZE=20480`, or give
+your custom startup task the equivalent headroom. This is a starting point, not
+a minimum: measure `uxTaskGetStackHighWaterMark()` with the fonts, decoders and
+logging used by the product before reducing it. Render-task stack settings do
+not increase the caller's stack.
+
+Keep Bundle CRC checks enabled. Do not disable the task watchdog to mask a
+startup stall. Use `disable_bundle_crc` only when another trusted mechanism has
+already verified the static assets.
+
 ## 1. Add the component
 
 From the ESP-IDF project root:
 
 <!-- gsp-version:dependency-command -->
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.5.1"
+idf.py add-dependency "espressif/esp-gsp^1.6.0"
 ```
 <!-- /gsp-version:dependency-command -->
 
@@ -54,7 +60,7 @@ The equivalent component manifest entry is:
 <!-- gsp-version:dependency-manifest -->
 ```yaml
 dependencies:
-  espressif/esp-gsp: "^1.5.1"
+  espressif/esp-gsp: "^1.6.0"
 ```
 <!-- /gsp-version:dependency-manifest -->
 
@@ -80,7 +86,7 @@ project marker takes precedence over the component marker:
 
 <!-- gsp-version:compiler-pin -->
 ```sh
-echo '0.6.1' > .gspc_version
+echo '0.7.0' > .gspc_version
 idf.py build
 ```
 <!-- /gsp-version:compiler-pin -->

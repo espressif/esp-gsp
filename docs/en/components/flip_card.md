@@ -4,12 +4,11 @@ Two compiled image faces with an interruptible perspective flip.
 
 ## When to use
 
-Use it to present or activate a primary piece of interface content.
+Use it for the main text, image, or action on a screen.
 
 ## Local interactive preview
 
-First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
-then run from an unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands), then run from an unpacked component or public repository root with `gspc` and `gsp_sim_host`:
 
 ```sh
 mkdir -p gsp-out/widget-preview
@@ -17,19 +16,18 @@ gspc pack \
   examples/usage/widgets/flip_card/flip_card.json \
   --deployable -o gsp-out/widget-preview/flip_card.gspb
 gsp_sim_host \
-  --bundle gsp-out/widget-preview/flip_card.gspb
+  --bundle gsp-out/widget-preview/flip_card.gspb --frames 0
 ```
 
-These commands compile the JSON below and open it in the ESP-GSP simulator's
-browser preview.
+These commands compile the example and open it in the ESP-GSP simulator browser preview.
 
 ## Runtime behavior
 
 With `runtime_style: true`, generated setters control depth, opacity and duration at runtime; `flipped` selects the target face. Tap flips by default; `enabled: false` disables taps. The tap callback uses the `value` event and does not signal animation completion. Paths are relative to the scene and accept PNG, JPEG and the supported GSP SVG subset; each source is limited to 2 MiB and is resized to a texture of at most 256 pixels per side. Configure up to three additional skins in `image_sets` and switch with `set_image_set()`; group 0 is the original front/back pair. Images are compiled into the bundle. Arbitrary runtime file imports, template membership and dynamic geometry expressions are unsupported.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
+If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
-## Complete example JSON
+## Example scene
 
 ```json
 {
@@ -87,9 +85,9 @@ Give every object that application code must read or update a stable `name`. GSP
 }
 ```
 
-This is `examples/usage/widgets/flip_card/flip_card.json`. Copy any relative assets referenced by the scene with it.
+The canonical example is [`flip_card.json`](../../../examples/usage/widgets/flip_card/flip_card.json). Copy any relative assets referenced by the scene with it.
 
-## Generated C API for this example
+## Generated C API
 
 ```c
 const gsp_component_directory_t *const * gsp_flip_card_docs_component_directories(uint16_t *out_count)
@@ -125,7 +123,7 @@ size_t gsp_flip_card_docs_dynamic_image_slots(void)
 
 These signatures come from the actual compiler output for this JSON.
 
-## Fields used by this example
+## Fields in this example
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -143,7 +141,8 @@ These signatures come from the actual compiler output for this JSON.
 | `depth` | `int` | — | default 60; 0…100 | `runtime_style` | perspective strength in percent |
 | `period_ms` | `int` | — | default 560; 100…60000 | `runtime_style` | flip duration in milliseconds |
 
-<details><summary>Show other fields supported by this Widget</summary>
+<details>
+<summary>Show other fields supported by this Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -161,7 +160,8 @@ These signatures come from the actual compiler output for this JSON.
 
 </details>
 
-<details><summary>Show fields shared by every Widget</summary>
+<details>
+<summary>Show fields shared by every Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|

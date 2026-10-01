@@ -5,6 +5,7 @@
  */
 #pragma once
 #include "gsp_sim_bridge.h"
+#include "gsp_sim_backend.h"
 #include "../protocol.h"
 
 /* Internal synchronous JSON call. Params must be one JSON object.
@@ -47,3 +48,6 @@ bool bridge_images_notify(esp_gsp_handle_t ui, const char *method, const char *p
 void bridge_images_poll(esp_gsp_handle_t ui);
 void bridge_images_close(esp_gsp_handle_t ui, gsp_err_t status);
 void bridge_payloads_shutdown(esp_gsp_handle_t ui);
+esp_gsp_err_t bridge_open_inproc(const gsp_sim_host_api_v1_t *host,
+                                 esp_gsp_handle_t *out);
+bool bridge_inproc_closed(esp_gsp_handle_t ui);

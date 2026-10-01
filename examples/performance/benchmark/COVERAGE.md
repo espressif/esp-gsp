@@ -24,7 +24,7 @@ acceptance columns describe the additional runtime coverage.
 | `list`, `wheel` | `P_WIDGETS`, `P_WHEEL` | Bound rows, repeated absolute scrolling, three momentum rollers, snapping/fade; lists are emptied on exit and restored on re-entry |
 | `grid` | `P_GRID` | 24-cell industrial gallery, cell binding and repeated synthetic drags; positive binds/drags and zero errors required |
 | `message_list` | `P_MESSAGES` | Variable-height bubbles; protocol 25 uses per-frame bidirectional scroll steps, a fixed lap start and prepend/append; action counters and API errors checked; immutable samples use trusted revisions |
-| `page_flow`, `stackview` | `P_FLOW`, `P_STACK` | Cyclic page selection, animated stack push/pop; failures recorded in component counters |
+| `page_flow`, `stackview` | `P_FLOW`, `P_STACK` | Protocol 26 verifies a complete three-page PageFlow cycle with settled page/offset reads; animated stack push/pop records API failures |
 | `drawer` | `P_DRAWER` | Repeated edge drag, open-state check, slider/toggle/button interaction, close-state check; positive equal open/close counts and zero errors required |
 | `dropdown` | `P_DROPDOWN`, `P_COMPOSITES` | Dedicated menu open/select/read-back loop; verified selections must be positive with zero errors |
 | `tabview`, `table`, `keyboard`, `msgbox` | `P_COMPOSITES` | Three tabs, 15 seconds each on C3 and 12 on other targets: data table, bounded typing/deletion, repeated modal show/hide; keyboard final text must match the expected string and exceed 63 bytes |

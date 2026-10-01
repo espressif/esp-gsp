@@ -111,6 +111,14 @@ When an ESP-IDF build already exists, run `gspc doctor <project> --build
 agent workflow; an unavailable build description must remain an unknown rather
 than being replaced with a host assumption.
 
+`build_contract.status` distinguishes `unavailable` (no description), `invalid`
+(malformed description), `incomplete` (required facts missing), `stale` (project
+or target mismatch), and `observed` (build metadata read). Use `missing` and
+`stale_reasons` to resolve reported issues. An explicit `--build` selects only
+that build directory. The command's exit status indicates whether the report
+was generated; the owning ESP-IDF configure/build validates the configuration
+and tool compatibility.
+
 Use [Scene JSON](scenes.md) to understand authored structure,
 [Runtime and generated API](runtime-api.md) for application integration, and
 the [Widget library](../components/index.md) for every supported control.
@@ -124,7 +132,7 @@ runtime hit-test proof.
 
 ## Choose the preview path
 
-Use the standalone simulator from [Simulator preview and testing](simulator-preview.md)
+Use the standalone simulator from [Simulator preview and testing](../configuration/simulator-preview.md)
 for scene layout, declarative actions, and control behavior. This checks the
 scene without running the owning application's C tasks or product state logic.
 
@@ -151,6 +159,13 @@ The component also includes `examples/usage/hello_world/pc` and
 flow. From a source checkout, invoke that checkout's
 `tools/sim_bridge/run.py`. See the [sim_bridge guide](../../../tools/sim_bridge/README.md)
 for requirements, tool selection, PC HAL/mocks, and the supported API subset.
+
+For automation, the runner accepts `--headless --api-port 8266 --backend-port
+8684 --input-mode api-exclusive`. It loads the matching API sidecar and prints
+actual session addresses plus observed tool versions. Use distinct ports for
+separate sessions. After `backend_spawned`, wait for the requested application
+state and capture the rendered result. For bounded checks use
+`--duration` so the runner supervises Backend completion and host cleanup.
 
 Use sim_bridge to check application behavior. Its supported API subset and
 single-thread Backend contract differ from ESP-IDF task scheduling; it does not

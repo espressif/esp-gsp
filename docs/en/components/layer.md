@@ -4,12 +4,11 @@ Full or partial visual layer used for overlays and visibility groups.
 
 ## When to use
 
-Use it to organize content, visibility, or navigation while preserving hierarchy.
+Use it to group content, control visibility, or move between pages.
 
 ## Local interactive preview
 
-First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
-then run from an unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands), then run from an unpacked component or public repository root with `gspc` and `gsp_sim_host`:
 
 ```sh
 mkdir -p gsp-out/widget-preview
@@ -17,202 +16,45 @@ gspc pack \
   examples/usage/widgets/layer/layer.json \
   --deployable -o gsp-out/widget-preview/layer.gspb
 gsp_sim_host \
-  --bundle gsp-out/widget-preview/layer.gspb
+  --bundle gsp-out/widget-preview/layer.gspb --frames 0
 ```
 
-These commands compile the JSON below and open it in the ESP-GSP simulator's
-browser preview.
+These commands compile the example and open it in the ESP-GSP simulator browser preview.
 
 ## Runtime behavior
 
-Children retain their hierarchy. Set clip_children on a Container or Layer to clip child drawing and input to its rectangular bounds. Nested clips intersect and move with their parent. Use fixed w/h for the viewport; radius styles the background and border.
+Children keep their hierarchy. `clip_children` limits drawing and input to the parent rectangle. Use fixed `w` and `h` for a viewport; `radius` styles its background and border.
 
 Dynamic `opacity` changes the layer's own drawing, not the opacity of its entire subtree. A grouping-only layer with no visual content of its own cannot use dynamic `w`, `h`, `radius`, or `opacity`; the compiler rejects these declarations. Dynamic `x`/`y` can move such a subtree. See [dynamic property scope](../guide/scenes.md#dynamic-property-scope).
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
+If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
-## Complete example JSON
+## Example scene
 
 ```json
 {
-  "screen": "widget_layer",
-  "w": 480,
-  "h": 320,
-  "screen_bg": "#0D1522",
-  "font": "../../../common/fonts/DejaVuSans.ttf",
-  "objects": [
-    {
-      "type": "layer",
-      "parent": -1,
-      "x": 24,
-      "y": 28,
-      "w": 310,
-      "h": 244,
-      "bg_color": "#173A72",
-      "opacity": 235,
-      "border_color": "#2E68B7",
-      "border_width": 1,
-      "radius": 18
-    },
-    {
-      "type": "label",
-      "parent": 0,
-      "x": 22,
-      "y": 20,
-      "w": 260,
-      "h": 32,
-      "text": "Base layer",
-      "font_size": 23,
-      "fg_color": "#FFFFFF"
-    },
-    {
-      "type": "label",
-      "parent": 0,
-      "x": 22,
-      "y": 62,
-      "w": 255,
-      "h": 48,
-      "text": "Content remains grouped below the overlay.",
-      "font_size": 16,
-      "fg_color": "#BFDBFE"
-    },
-    {
-      "type": "container",
-      "parent": 0,
-      "x": 22,
-      "y": 132,
-      "w": 120,
-      "h": 70,
-      "bg_color": "#23529A",
-      "radius": 11
-    },
-    {
-      "type": "label",
-      "parent": 3,
-      "x": 12,
-      "y": 10,
-      "w": 96,
-      "h": 22,
-      "text": "STATUS",
-      "font_size": 13,
-      "fg_color": "#93C5FD"
-    },
-    {
-      "type": "label",
-      "parent": 3,
-      "x": 12,
-      "y": 35,
-      "w": 96,
-      "h": 25,
-      "text": "Ready",
-      "font_size": 18,
-      "fg_color": "#FFFFFF"
-    },
-    {
-      "type": "button",
-      "parent": -1,
-      "x": 350,
-      "y": 28,
-      "w": 104,
-      "h": 46,
-      "text": "Toggle",
-      "font_size": 16,
-      "bg_color": "#2563EB",
-      "fg_color": "#FFFFFF",
-      "radius": 11,
-      "events": [
-        {
-          "event": "click",
-          "action": "toggle",
-          "target_name": "overlay"
-        }
-      ]
-    },
-    {
-      "type": "layer",
-      "parent": -1,
-      "name": "overlay",
-      "x": 154,
-      "y": 86,
-      "w": 300,
-      "h": 202,
-      "bg_color": "#6D28D9",
-      "opacity": 242,
-      "border_color": "#C4B5FD",
-      "border_width": 1,
-      "radius": 18
-    },
-    {
-      "type": "label",
-      "parent": 7,
-      "x": 22,
-      "y": 20,
-      "w": 190,
-      "h": 32,
-      "text": "Overlay layer",
-      "font_size": 23,
-      "fg_color": "#FFFFFF"
-    },
-    {
-      "type": "label",
-      "parent": 7,
-      "x": 22,
-      "y": 62,
-      "w": 255,
-      "h": 50,
-      "text": "One visibility action controls this complete subtree.",
-      "font_size": 16,
-      "fg_color": "#EDE9FE"
-    },
-    {
-      "type": "container",
-      "parent": 7,
-      "x": 22,
-      "y": 126,
-      "w": 112,
-      "h": 40,
-      "bg_color": "#8B5CF6",
-      "radius": 20
-    },
-    {
-      "type": "label",
-      "parent": 10,
-      "x": 10,
-      "y": 8,
-      "w": 92,
-      "h": 24,
-      "text": "TOP LAYER",
-      "font_size": 13,
-      "text_align": "center",
-      "fg_color": "#FFFFFF"
-    },
-    {
-      "type": "button",
-      "parent": 7,
-      "x": 158,
-      "y": 126,
-      "w": 120,
-      "h": 40,
-      "text": "Hide layer",
-      "font_size": 15,
-      "bg_color": "#4C1D95",
-      "fg_color": "#FFFFFF",
-      "radius": 10,
-      "events": [
-        {
-          "event": "click",
-          "action": "hide",
-          "target_name": "overlay"
-        }
-      ]
-    }
+  "screen":"widget_layer","w":480,"h":320,"screen_bg":"#0D1522","font":"../../../common/fonts/DejaVuSans.ttf",
+  "objects":[
+    {"type":"layer","parent":-1,"x":24,"y":28,"w":310,"h":244,"bg_color":"#173A72","opacity":235,"border_color":"#2E68B7","border_width":1,"radius":18},
+    {"type":"label","parent":0,"x":22,"y":20,"w":260,"h":32,"text":"Base layer","font_size":23,"fg_color":"#FFFFFF"},
+    {"type":"label","parent":0,"x":22,"y":62,"w":255,"h":48,"text":"Content remains grouped below the overlay.","font_size":16,"fg_color":"#BFDBFE"},
+    {"type":"container","parent":0,"x":22,"y":132,"w":120,"h":70,"bg_color":"#23529A","radius":11},
+    {"type":"label","parent":3,"x":12,"y":10,"w":96,"h":22,"text":"STATUS","font_size":13,"fg_color":"#93C5FD"},
+    {"type":"label","parent":3,"x":12,"y":35,"w":96,"h":25,"text":"Ready","font_size":18,"fg_color":"#FFFFFF"},
+    {"type":"button","parent":-1,"x":350,"y":28,"w":104,"h":46,"text":"Toggle","font_size":16,"bg_color":"#2563EB","fg_color":"#FFFFFF","radius":11,"events":[{"event":"click","action":"toggle","target_name":"overlay"}]},
+    {"type":"layer","parent":-1,"name":"overlay","x":154,"y":86,"w":300,"h":202,"bg_color":"#6D28D9","opacity":242,"border_color":"#C4B5FD","border_width":1,"radius":18},
+    {"type":"label","parent":7,"x":22,"y":20,"w":190,"h":32,"text":"Overlay layer","font_size":23,"fg_color":"#FFFFFF"},
+    {"type":"label","parent":7,"x":22,"y":62,"w":255,"h":50,"text":"One visibility action controls this complete subtree.","font_size":16,"fg_color":"#EDE9FE"},
+    {"type":"container","parent":7,"x":22,"y":126,"w":112,"h":40,"bg_color":"#8B5CF6","radius":20},
+    {"type":"label","parent":10,"x":10,"y":8,"w":92,"h":24,"text":"TOP LAYER","font_size":13,"text_align":"center","fg_color":"#FFFFFF"},
+    {"type":"button","parent":7,"x":158,"y":126,"w":120,"h":40,"text":"Hide layer","font_size":15,"bg_color":"#4C1D95","fg_color":"#FFFFFF","radius":10,"events":[{"event":"click","action":"hide","target_name":"overlay"}]}
   ]
 }
 ```
 
-This is `examples/usage/widgets/layer/layer.json`. Copy any relative assets referenced by the scene with it.
+The canonical example is [`layer.json`](../../../examples/usage/widgets/layer/layer.json). Copy any relative assets referenced by the scene with it.
 
-## Generated C API for this example
+## Generated C API
 
 ```c
 const gsp_component_directory_t *const * gsp_layer_docs_component_directories(uint16_t *out_count)
@@ -226,7 +68,7 @@ size_t gsp_layer_docs_dynamic_image_slots(void)
 
 These signatures come from the actual compiler output for this JSON.
 
-## Fields used by this example
+## Fields in this example
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -243,7 +85,8 @@ These signatures come from the actual compiler output for this JSON.
 | `border_color` | `color` | — | — | — | border stroke color |
 | `border_width` | `int` | — | 0…65535 | — | border stroke width (needs border_color) |
 
-<details><summary>Show other fields supported by this Widget</summary>
+<details>
+<summary>Show other fields supported by this Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -251,7 +94,10 @@ These signatures come from the actual compiler output for this JSON.
 | `max_width` | `int` | — | 0…65535 | — | compile-time maximum width in px |
 | `min_height` | `int` | — | 0…65535 | — | compile-time minimum height in px |
 | `max_height` | `int` | — | 0…65535 | — | compile-time maximum height in px |
-| `layout` | `enum` | — | `row`, `column` | — | child auto-layout: row/column |
+| `layout` | `enum` | — | `row`, `column`, `grid` | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | — | default `false` | — | wrap row/column children into additional lines |
+| `grid_columns` | `int` | — | 1…65535 | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | — | default 1; 1…65535 | — | column span in the parent grid layout |
 | `gap` | `int` | — | default 0; 0…4096 | — | auto-layout gap in px |
 | `padding` | `int` | — | default 0; 0…4096 | — | auto-layout padding in px |
 | `padding_left` | `int` | — | 0…4096 | — | row layout: leading padding override |
@@ -332,7 +178,8 @@ These signatures come from the actual compiler output for this JSON.
 
 </details>
 
-<details><summary>Show fields shared by every Widget</summary>
+<details>
+<summary>Show fields shared by every Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|

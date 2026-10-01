@@ -1,11 +1,13 @@
 # Native C simulator bridge
 
 `sim_bridge` builds portable C UI/application sources into a native Backend
-executable. It implements a supported subset of the existing `esp_gsp.h` API
-over sim_host's loopback TCP Backend channel. Application callbacks, their
-`user_ctx` pointers and timers stay in the native process; rendering and
-animations run in sim_host. Python builds and supervises processes, but is
-not an RPC relay.
+shared library and an optional isolated Backend executable. It implements a
+supported subset of the existing `esp_gsp.h` API. The default runner loads the
+`.so`, `.dylib`, or `.dll` directly into sim_host; `--socket-backend` retains
+the loopback TCP process boundary for isolation and transport testing.
+Application callbacks, their `user_ctx` pointers and timers stay on one native
+Backend thread; rendering and animations run in sim_host. Python builds and
+supervises the session, but is not an RPC relay.
 
 ## Requirements and quick start
 
@@ -77,8 +79,44 @@ python managed_components/espressif__esp-gsp/tools/sim_bridge/run.py --project p
 The manager also supports `GSP_TOOLS_NO_AUTO_DOWNLOAD=1` for cached-only use.
 If tools are missing, install the manager into the runner's Python environment,
 or obtain compatible binaries from [release downloads](https://github.com/espressif/esp-gsp/releases).
-The simulator must support `--ready-file` and `bridge_version: 1`; update the
-component and matching simulator together if that capability is absent.
+The simulator must report `dynamic_backend_abi_version: 1` and support
+`--ready-file`; update the component and matching simulator together if that
+capability is absent. The shared library embeds `GSP_VERSION_STRING`. sim_host
+requires an exact match with its embedded runtime before starting application
+code; `--sim-version` cannot be used to bypass that check.
+
+### Automation sessions
+
+Start an automation session with explicit loopback ports and API input control:
+
+```sh
+python managed_components/espressif__esp-gsp/tools/sim_bridge/run.py --project pc --headless \
+  --api-port 8266 --backend-port 8684 --input-mode api-exclusive
+```
+
+For a separate interactive preview, omit `--headless`, set `--visual-port`, and
+use `--input-mode browser-exclusive`. Give each session distinct nonzero ports
+and each concurrent build its own `--build-dir`. Port `0` allocates a free port.
+`--visual-port` and `--headless` are mutually exclusive. Omitted options retain
+the simulator defaults; `--api-port` enables the API channel and `--backend-port`
+selects Socket mode.
+
+The runner loads `api_json` from the build manifest to enable named queries,
+inputs and callbacks. GSPC generates the sidecar with its Bundle, and the host
+checks their identity. Manifests without the optional field use numeric APIs.
+
+After building the Backend, the runner queries simulator `--capabilities`.
+Invalid responses and timeouts stop startup. Version differences are reported
+while allowing explicit tool overrides. The `Tool contract:` JSON log contains
+the component version, simulator capabilities and `version_match` result.
+
+The `Session:` JSON log reports endpoints, Bundle and sidecar paths with
+`backend_loaded` for a library or `backend_spawned` and its PID for Socket mode. `API:` and
+`Preview:` print their respective endpoints. Wait for the desired application
+state or callback before capturing a screenshot. Use the application's render
+fence to synchronize completed updates; a frame wait advances simulation time.
+For bounded runs, `--duration <seconds>` waits for Backend completion and cleans
+up the host process tree.
 
 ### Dynamic font at startup
 
@@ -99,17 +137,18 @@ therefore installed while sim_host loads the bundle, before the native Backend
 gets its initialization callback. This option is intentionally a launch-time
 configuration: it cannot replace a font in an already running bridge UI.
 
-The runner compiles a deployable bundle and its C headers together, builds
-the native program, starts sim_host, reads its actual listener address, and
-starts the Backend. It opens the preview URL unless `--headless` or
-`--no-browser` is used. Ctrl-C, Backend exit, host failure or startup timeout
+The runner compiles a deployable bundle and its C headers together, builds the
+shared library plus Socket executable, and starts sim_host with the library by
+default. Pass `--socket-backend` to start the executable and connect it to the
+host's loopback endpoint instead. It opens the preview URL unless `--headless`
+or `--no-browser` is used. Ctrl-C, Backend exit, host failure or startup timeout
 stops the processes it owns, including the manager's simulator child. POSIX
 termination permits application cleanup; Windows process termination may be
-immediate. Native Backend cleanup has up to six seconds before forced
-termination; cleanup callbacks are not guaranteed after a crash or forced stop.
-`--startup-timeout` defaults to 180 seconds and includes initial
-simulator download; increase it on slow connections. The browser tab is not closed
-by the runner. `--duration` starts counting after application initialization.
+immediate. Cleanup callbacks are not guaranteed after a crash or forced stop.
+`--startup-timeout` defaults to 180 seconds and includes initial simulator
+download; increase it on slow connections. The browser tab is not closed by
+the runner. In shared-library mode, `--duration` starts after host readiness;
+readiness does not guarantee that application initialization has completed.
 
 Use `--build-dir` to isolate concurrent builds, `--config Debug` to change
 configuration, and `--generator Ninja` to select a CMake generator. A build
@@ -199,9 +238,12 @@ you want the same application-root override as the Python runner.
 Set `-DESP_GSP_PYTHON_EXECUTABLE=/path/to/python` if CMake should use a
 particular Python environment. Do not edit files in `managed_components`.
 
-CMake writes `<target>-<configuration>.json` with executable/bundle paths;
-this works with both single- and multi-configuration generators. For multiple
-backends in one CMake project, pass `--target` to the Python scripts.
+CMake produces `<target>_backend.dll`, `lib<target>_backend.dylib`, or
+`lib<target>_backend.so` together with the existing executable. It writes a
+version-2 `<target>-<configuration>.json` manifest containing
+`backend_library`, `executable`, and `bundle`; this works with both single- and
+multi-configuration generators. For multiple backends in one CMake project,
+pass `--target` to the Python scripts.
 
 ## Execution and compatibility contract
 
@@ -212,11 +254,22 @@ thread may perform mock I/O, but must hand results to application-owned
 queues for the UI thread to consume. This is narrower than the device API's
 “callable from any task” guarantee.
 
-Synchronous RPC waits keep receiving responses and queue UI notifications;
-they never recursively invoke business callbacks. Callbacks may therefore
-call supported GSP APIs synchronously. Keep them short. Timers use monotonic
-host time and coalesce missed ticks rather than replaying a burst. Host
-headless Backend runs are paced to wall clock as well.
+Synchronous bridge calls keep receiving responses and queue UI notifications;
+they never recursively invoke business callbacks. In shared-library mode the
+same command contract uses in-process queues; in Socket mode it uses framed
+JSON-RPC over loopback TCP. The host services commands while waiting for the
+next frame, so accepted state changes are not quantized to one RPC per frame.
+Callbacks may call supported GSP APIs synchronously. Keep them short. Timers
+use monotonic host time and coalesce missed ticks rather than replaying a burst.
+Host headless Backend runs are paced to wall clock as well.
+
+The shared library is trusted native code. sim_host validates the query symbol,
+ABI number, exact descriptor size, embedded GSP version, reserved fields, and
+run entry before registering it as the Backend. Those checks defend against
+stale or accidentally incompatible build products; they cannot sandbox a
+malicious library or recover from its memory corruption, crash, or deadlock.
+Use `--socket-backend` when process isolation is more important than local-call
+latency or when diagnosing transport behavior.
 
 `gsp_sim_bridge_current_scene()` exposes the scene from the initial handshake
 and subsequent notifications. No synthetic initial scene-change callback is
@@ -231,6 +284,8 @@ advance frames as soon as the Backend connects.
 | Component info; value/color/visible/checked/enabled reads and writes | Supported; integer writes reuse `set_component_i32` |
 | Component text; scalar property get/set; RGB888 color helpers | Supported; original tagged scalar types retained |
 | Atomic component position setter | Supported with `bridge_api_version: 3` |
+| Property metadata by semantic key or index | Supported with `bridge_api_version: 4`; signed 64-bit bounds preserved |
+| Named image scale get/set | Uses the existing unsigned Q16.16 scalar property operations |
 | Bind/component value/color animations; scalar property animations and `*_to`; bounded property play/stop | Executed by GSP inside sim_host |
 | Press-feedback policy and generated effective-visibility queries | Supported with `bridge_api_version: 2`; visibility descriptors are copied over the Backend boundary |
 | Events and timer create/delete | Native callback/context storage and event loop |
@@ -255,6 +310,12 @@ without sending an unknown RPC.
 `esp_gsp_component_set_position()` requires `bridge_api_version: 3`. Both
 coordinates are validated and submitted as one core operation. Older hosts
 return `ESP_GSP_ERR_NOT_SUPPORTED` without sending an unknown operation.
+
+`esp_gsp_component_get_property_info()` and `get_property_info_at()` require
+`bridge_api_version: 4`. Older hosts return `ESP_GSP_ERR_NOT_SUPPORTED` and
+leave the output unchanged. `esp_gsp_image_get_scale()` and `set_scale()` use
+the original property operations, so they also work with older hosts that
+expose the image's scale property.
 
 Only exported implementations are linkable. Unsupported public C functions
 produce a link error, not a success stub. The shared headers describe the
@@ -501,7 +562,7 @@ alone is an assertion about image contents. For encoded images, also wait for
 successful image completion before the fence. Browser presentation has no
 acknowledgement in this API.
 
-Flush's finite timeout instead covers its socket writes and reply wait;
+Flush's finite timeout instead covers its transport submission and reply wait;
 `UINT32_MAX` waits indefinitely. Zero admits a fence locally without I/O and
 returns `ESP_GSP_ERR_TIMEOUT`. A timeout does not cancel the fence or poison
 the connection: later poll/RPC/flush resumes partial traffic and consumes late

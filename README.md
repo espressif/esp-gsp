@@ -39,7 +39,7 @@ Create the smallest complete example directly from the ESP Component Registry:
 
 <!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.5.1:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.6.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -63,7 +63,7 @@ From the ESP-IDF project root:
 
 <!-- gsp-version:dependency-command -->
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.5.1"
+idf.py add-dependency "espressif/esp-gsp^1.6.0"
 python -m pip install -U esp-gsp-tools
 ```
 <!-- /gsp-version:dependency-command -->
@@ -119,10 +119,10 @@ integration and display startup code.
 | Author JSON and choose fields | [Scene guide](docs/en/guide/scenes.md) and [field reference](docs/en/reference/authoring.md) |
 | Learn a control | [Widget library](docs/en/components/index.md) |
 | Connect application state | [Runtime and generated API](docs/en/guide/runtime-api.md) |
-| Configure memory and features | [Configuration](docs/en/guide/configuration.md) and [Kconfig](docs/en/reference/kconfig.md) |
+| Configure memory and features | [Configuration](docs/en/configuration/index.md) and [Kconfig](docs/en/reference/kconfig.md) |
 | Integrate a display | [Display presentation](docs/en/guide/display.md) |
-| Preview without hardware | [Simulator preview](docs/en/guide/simulator-preview.md) |
-| Diagnose a problem | [Troubleshooting](docs/en/guide/troubleshooting.md) |
+| Preview without hardware | [Simulator preview](docs/en/configuration/simulator-preview.md) |
+| Diagnose a problem | [Troubleshooting](docs/en/configuration/troubleshooting.md) |
 | Look up exact C declarations | [Function reference](docs/en/reference/api-functions.md) |
 
 The [documentation index](docs/README.md) links the complete English and

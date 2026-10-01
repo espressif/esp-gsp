@@ -1021,7 +1021,7 @@ def scene(width, height, rgb888=False):
         "type": "page_flow", "parent": p, "name": "bench_flow",
         "x": 0, "y": flow_y, "w": width, "h": flow_h,
         "page_count": 3, "selected": 0, "axis": "horizontal",
-        "cyclic": True,
+        "cyclic": True, "bar_height": 0,
     })
     flow_colors = ("#143A5A", "#4A234F", "#234A38")
     for index, color in enumerate(flow_colors):

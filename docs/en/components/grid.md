@@ -4,12 +4,11 @@ Virtualized multi-column collection backed by a reusable cell template.
 
 ## When to use
 
-Use it to browse, select, or present repeated application data efficiently.
+Use it to show or choose from a collection of repeated items.
 
 ## Local interactive preview
 
-First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands),
-then run from an unpacked component or public repository root:
+First [set up the commands from the compatibility guide](../reference/compatibility.md#tool-commands), then run from an unpacked component or public repository root with `gspc` and `gsp_sim_host`:
 
 ```sh
 mkdir -p gsp-out/widget-preview
@@ -17,80 +16,26 @@ gspc pack \
   examples/usage/widgets/grid/grid.json \
   --deployable -o gsp-out/widget-preview/grid.gspb
 gsp_sim_host \
-  --bundle gsp-out/widget-preview/grid.gspb
+  --bundle gsp-out/widget-preview/grid.gspb --frames 0
 ```
 
-These commands compile the JSON below and open it in the ESP-GSP simulator's
-browser preview.
+These commands compile the example and open it in the ESP-GSP simulator browser preview.
 
 ## Runtime behavior
 
-Rows or cells are rendered from scene data and can connect to scrolling, selection, or application data adapters.
+The scene defines the item layout. Fixed items work without an application adapter; dynamic data needs an adapter or backend.
 
-Give every object that application code must read or update a stable `name`. GSPC generates the typed functions listed below for named objects.
+If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
-## Complete example JSON
+## Example scene
 
 ```json
-{
-  "screen": "widget_grid",
-  "w": 480,
-  "h": 320,
-  "screen_bg": "#101827",
-  "font": "../../../common/fonts/DejaVuSans.ttf",
-  "objects": [
-    {
-      "type": "layer",
-      "parent": -1,
-      "x": 0,
-      "y": 0,
-      "w": 480,
-      "h": 320
-    },
-    {
-      "type": "container",
-      "parent": 0,
-      "x": 0,
-      "y": 0,
-      "w": 116,
-      "h": 82,
-      "template": "preview_cell",
-      "bg_color": "#1D2D44",
-      "border_color": "#334A68",
-      "border_width": 1,
-      "radius": 10
-    },
-    {
-      "type": "image",
-      "parent": 1,
-      "x": 8,
-      "y": 8,
-      "w": 100,
-      "h": 66,
-      "image": "../../../performance/benchmark/scenes/bench_industrial.png"
-    },
-    {
-      "type": "grid",
-      "parent": 0,
-      "name": "gallery",
-      "x": 44,
-      "y": 28,
-      "w": 392,
-      "h": 264,
-      "column_count": 3,
-      "column_gap": 14,
-      "row_gap": 12,
-      "cell_template": "preview_cell",
-      "item_count": 15,
-      "scroll_snapshot": true
-    }
-  ]
-}
+{"screen":"widget_grid","w":480,"h":320,"screen_bg":"#101827","font":"../../../common/fonts/DejaVuSans.ttf","objects":[{"type":"layer","parent":-1,"x":0,"y":0,"w":480,"h":320},{"type":"container","parent":0,"x":0,"y":0,"w":116,"h":82,"template":"preview_cell","bg_color":"#1D2D44","border_color":"#334A68","border_width":1,"radius":10},{"type":"image","parent":1,"x":8,"y":8,"w":100,"h":66,"image":"../../../performance/benchmark/scenes/bench_industrial.png"},{"type":"grid","parent":0,"name":"gallery","x":44,"y":28,"w":392,"h":264,"column_count":3,"column_gap":14,"row_gap":12,"cell_template":"preview_cell","item_count":15,"scroll_snapshot":true}]}
 ```
 
-This is `examples/usage/widgets/grid/grid.json`. Copy any relative assets referenced by the scene with it.
+The canonical example is [`grid.json`](../../../examples/usage/widgets/grid/grid.json). Copy any relative assets referenced by the scene with it.
 
-## Generated C API for this example
+## Generated C API
 
 ```c
 const gsp_component_directory_t *const * gsp_grid_docs_component_directories(uint16_t *out_count)
@@ -106,7 +51,7 @@ size_t gsp_grid_docs_dynamic_image_slots(void)
 
 These signatures come from the actual compiler output for this JSON.
 
-## Fields used by this example
+## Fields in this example
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -124,7 +69,8 @@ These signatures come from the actual compiler output for this JSON.
 | `scroll_snapshot` | `bool` | — | default `false` | — | cache two viewport frames while scrolling; falls back to live rendering when memory is unavailable |
 | `item_count` | `int` | — | default 0; 0…4294967295 | — | initial grid item count |
 
-<details><summary>Show other fields supported by this Widget</summary>
+<details>
+<summary>Show other fields supported by this Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
@@ -132,7 +78,10 @@ These signatures come from the actual compiler output for this JSON.
 | `max_width` | `int` | — | 0…65535 | — | compile-time maximum width in px |
 | `min_height` | `int` | — | 0…65535 | — | compile-time minimum height in px |
 | `max_height` | `int` | — | 0…65535 | — | compile-time maximum height in px |
-| `layout` | `enum` | — | `row`, `column` | — | child auto-layout: row/column |
+| `layout` | `enum` | — | `row`, `column`, `grid` | — | child auto-layout: row/column/grid |
+| `layout_wrap` | `bool` | — | default `false` | — | wrap row/column children into additional lines |
+| `grid_columns` | `int` | — | 1…65535 | — | equal-width column count for grid layout |
+| `grid_column_span` | `int` | — | default 1; 1…65535 | — | column span in the parent grid layout |
 | `gap` | `int` | — | default 0; 0…4096 | — | auto-layout gap in px |
 | `padding` | `int` | — | default 0; 0…4096 | — | auto-layout padding in px |
 | `padding_left` | `int` | — | 0…4096 | — | row layout: leading padding override |
@@ -214,7 +163,8 @@ These signatures come from the actual compiler output for this JSON.
 
 </details>
 
-<details><summary>Show fields shared by every Widget</summary>
+<details>
+<summary>Show fields shared by every Widget</summary>
 
 | Field | Type | Required | Default / range | Dynamic | Compiler definition |
 |---|---|---:|---|---:|---|
