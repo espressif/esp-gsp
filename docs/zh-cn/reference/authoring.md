@@ -1,6 +1,6 @@
 # ESP-GSP 场景编写参考
 
-GSPC 版本：0.7.0。
+GSPC 版本：0.8.0。
 
 本页是 JSON 场景的完整字段参考。学习单个控件时优先使用
 [控件库](../components/index.md)中的可运行示例。
@@ -1211,6 +1211,7 @@ GSPC 版本：0.7.0。
 | `max_instances` | `int` | — | 1…65535 | — | 同时存活模板实例的最大数量；计入自动推导的资源池需求 |
 | `dynamic_color` | `bool` | — | — | — | 模板成员公开每实例独立颜色槽 |
 | `dynamic_image` | `bool` | — | — | — | 模板图片公开每实例独立资源槽 |
+| `canvas` | `enum` | — | `draw`, `push` | — | Canvas 生产方式：绘制回调或借用帧；生成独立资源视图 |
 | `image_opacity` | `int` | — | 默认 255; 0…255 | — | 仅图片透明度；固定栅格图片的变换可在编译期烘焙 alpha |
 
 ### 键盘（`keyboard`）

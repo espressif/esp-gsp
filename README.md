@@ -39,11 +39,14 @@ Create the smallest complete example directly from the ESP Component Registry:
 
 <!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.6.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.7.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
 <!-- /gsp-version:registry-example -->
+
+The component targets ESP32, ESP32-C2/C3/C5/C6/H4, ESP32-S3, ESP32-P4 and
+ESP32-S31. H4 and S31 use ESP-IDF's `--preview` target flag.
 
 The example includes checked profiles for ESP32-C3, ESP32-S3, ESP32-P4 and
 ESP32-S31. Select the profile that matches the real board and verify its panel
@@ -63,7 +66,7 @@ From the ESP-IDF project root:
 
 <!-- gsp-version:dependency-command -->
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.6.0"
+idf.py add-dependency "espressif/esp-gsp^1.7.0"
 python -m pip install -U esp-gsp-tools
 ```
 <!-- /gsp-version:dependency-command -->

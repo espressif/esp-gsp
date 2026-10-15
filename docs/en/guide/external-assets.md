@@ -90,12 +90,13 @@ quality is 1–100 (profile default); max_fps limits imported animation rate.
 | jpeg | Explicit JPEG/JPEG+A8, including software decoding; lossy color, lossless alpha |
 | raw | Native pixels for still images; lossless animation unless animation_codec overrides it |
 
-Pixel format, alpha representation and native dimensions must match the target;
-opaque image-fit allows different source dimensions. Use transparent placeholders
-for alpha assets. Mismatches retain the previous picture rather than removing
-alpha. Static JPEG/JPEG+A8 requires image caching. Animations have their own frame
-storage. STORE and supported QOI/RLE still-image codecs can work without
-whole-image caching.
+Pixel format and native dimensions must match the target; opaque image-fit allows
+different source dimensions. An opaque PNG or JPEG can target a transparent
+placeholder and fills its alpha with 255. Use JPEG+A8 or another transparent
+resource when the asset carries real alpha. Mismatches retain the previous
+picture rather than removing alpha. Static JPEG/JPEG+A8 requires image caching.
+Animations have their own frame storage. STORE and supported QOI/RLE still-image
+codecs can work without whole-image caching.
 
 ## Row / Widget and names
 
@@ -164,6 +165,22 @@ unsubmitted buffers, preserving displayed sources. failed_stage distinguishes fi
 is the encoded allocation requirement, not the decoded budget. Other failures stop that
 request; resubmit after recovery. Stop retains the picture; show restarts it.
 The earlier simple status API remains available.
+
+Use `esp_gsp_assets_get_publication()` to drive a loading placeholder:
+
+```c
+esp_gsp_asset_publication_t publication;
+if (esp_gsp_assets_get_publication(assets, ui,
+        esp_gsp_asset_image_target(image_bind), &publication) == ESP_GSP_OK &&
+        publication.has_frame) {
+    // This request has published a complete image to the UI.
+}
+```
+
+The snapshot contains the current `request_id` and `has_frame`. Once true,
+`has_frame` stays true during later reads, including when a later frame fails
+and the previous image remains visible. A new show, stop or scene change clears
+it. This identifies UI publication; it does not measure LCD scanout.
 
 The [external-assets example](../../../examples/usage/external_assets/main/app_main.c)
 checks startup status for up to five seconds without blocking the UI task. A

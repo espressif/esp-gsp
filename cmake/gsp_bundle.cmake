@@ -124,6 +124,10 @@ function(_esp_gsp_jpeg_profile_args out_var decoded_cache_available)
 endfunction()
 
 function(gsp_add_bundle target)
+    get_property(runtime_finalized GLOBAL PROPERTY ESP_GSP_RUNTIME_FINALIZED)
+    if(runtime_finalized)
+        message(FATAL_ERROR "gsp_add_bundle: register bundles before the deferred runtime specialization step")
+    endif()
     cmake_parse_arguments(
         ARG "DEPLOYABLE"
         "PROFILE;SYMBOL;PIXEL_FORMAT;IMAGE_CACHE_BYTES;DYNAMIC_FONT"
@@ -437,6 +441,8 @@ function(gsp_add_bundle target)
     add_custom_target(${target}_gsp_${ARG_SYMBOL}
         DEPENDS "${bundle_path}" "${api_header}")
     add_dependencies(${target} ${target}_gsp_${ARG_SYMBOL})
+    set_property(GLOBAL APPEND PROPERTY ESP_GSP_RUNTIME_BUNDLES "${bundle_path}")
+    set_property(GLOBAL APPEND PROPERTY ESP_GSP_RUNTIME_BUNDLE_TARGETS "${target}_gsp_${ARG_SYMBOL}")
 
     target_sources(${target} PRIVATE "${embed_s}" ${dynamic_font_embed_s})
     # Generated headers land in the per-scene gen dirs.
@@ -452,6 +458,10 @@ endfunction()
 #                [PIXEL_FORMAT rgb565|rgb888] [PROFILE target.yaml])
 # Emits a copy-ready external package and generated names; never embeds payloads.
 function(gsp_add_assets target)
+    get_property(runtime_finalized GLOBAL PROPERTY ESP_GSP_RUNTIME_FINALIZED)
+    if(runtime_finalized)
+        message(FATAL_ERROR "gsp_add_assets: register packages before the deferred runtime specialization step")
+    endif()
     cmake_parse_arguments(ARG "" "MANIFEST;SYMBOL;PIXEL_FORMAT;PROFILE" "" ${ARGN})
     if(ARG_UNPARSED_ARGUMENTS OR NOT ARG_MANIFEST)
         message(FATAL_ERROR "gsp_add_assets: provide MANIFEST assets.json")
@@ -543,6 +553,8 @@ function(gsp_add_assets target)
         VERBATIM)
     add_custom_target(gsp_assets_${ARG_SYMBOL} DEPENDS "${package}" "${header}")
     add_dependencies(${target} gsp_assets_${ARG_SYMBOL})
+    set_property(GLOBAL APPEND PROPERTY ESP_GSP_RUNTIME_BUNDLES "${package}")
+    set_property(GLOBAL APPEND PROPERTY ESP_GSP_RUNTIME_BUNDLE_TARGETS "gsp_assets_${ARG_SYMBOL}")
     target_include_directories(${target} PRIVATE "${gen_dir}")
     message(STATUS "esp-gsp: copy external asset package from ${package} to your mounted filesystem")
 endfunction()

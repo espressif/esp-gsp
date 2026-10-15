@@ -1,4 +1,4 @@
-version: 1.6.0
+version: 1.7.0
 targets:
 - esp32c3
 - esp32s3
@@ -6,6 +6,9 @@ targets:
 - esp32s31
 - esp32c5
 - esp32c6
+- esp32h4
+- esp32c2
+- esp32
 description: Espressif Graphics Scene Processor, an ahead-of-time compiled UI 
   framework for ESP-IDF.
 dependencies:
@@ -15,7 +18,7 @@ dependencies:
     registry_url: https://components.espressif.com
   idf: '>=6.0'
   espressif/esp_display_present:
-    version: ^1.1.1
+    version: ^1.1.2
     registry_url: https://components.espressif.com
   espressif/freetype:
     version: ^2.14.2

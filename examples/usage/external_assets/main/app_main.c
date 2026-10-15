@@ -31,6 +31,7 @@ static void check_startup_assets(esp_gsp_assets_t *assets, esp_gsp_handle_t ui)
                 continue;
             }
             esp_gsp_asset_status_t status;
+            esp_gsp_asset_publication_t publication;
             esp_gsp_err_t ret = esp_gsp_assets_get_status(assets, ui,
                                 esp_gsp_asset_image_target(binds[i]), &status);
             if (ret != ESP_GSP_OK) {
@@ -45,8 +46,10 @@ static void check_startup_assets(esp_gsp_assets_t *assets, esp_gsp_handle_t ui)
             } else if (status.state == ESP_GSP_ASSET_STOPPED) {
                 ESP_LOGW(TAG, "%s: stopped (error=%d)", names[i], status.last_error);
                 checked[i] = true;
-            } else if (status.state == ESP_GSP_ASSET_READY || status.state == ESP_GSP_ASSET_FINISHED) {
-                ESP_LOGI(TAG, "%s: frame ready", names[i]);
+            } else if (esp_gsp_assets_get_publication(assets, ui,
+                       esp_gsp_asset_image_target(binds[i]), &publication) == ESP_GSP_OK &&
+                       publication.request_id == status.request_id && publication.has_frame) {
+                ESP_LOGI(TAG, "%s: first frame ready", names[i]);
                 checked[i] = true;
             } else {
                 pending = true;

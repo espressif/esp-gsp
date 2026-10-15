@@ -1,6 +1,6 @@
 # ESP-GSP Authoring Reference
 
-GSPC version: 0.7.0.
+GSPC version: 0.8.0.
 
 Declare runtime-update fields using the dynamic forms listed in the tables. See [dynamic property scope](../guide/scenes.md#dynamic-property-scope) for declaration forms and object-versus-subtree behavior.
 
@@ -478,6 +478,7 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `max_instances` | int | — | maximum simultaneously live template instances; included in the automatic pool requirement [1..65535] |
 | `dynamic_color` | bool | — | template member exposes a per-instance color slot |
 | `dynamic_image` | bool | — | template image exposes a per-instance resource slot |
+| `canvas` | enum(`draw`/`push`) | — | Canvas producer: draw callback or borrowed frames; creates an independent resource view |
 | `image_opacity` | int | `255` | image-only opacity; fixed raster transforms may bake alpha at compile time [0..255] |
 
 ### `rect`

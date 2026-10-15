@@ -152,6 +152,7 @@ size_t gsp_image_docs_dynamic_image_slots(void)
 | `max_instances` | `int` | — | 1…65535 | — | 同时存活模板实例的最大数量；计入自动推导的资源池需求 |
 | `dynamic_color` | `bool` | — | — | — | 模板成员公开每实例独立颜色槽 |
 | `dynamic_image` | `bool` | — | — | — | 模板图片公开每实例独立资源槽 |
+| `canvas` | `enum` | — | `draw`, `push` | — | Canvas 生产方式：绘制回调或借用帧；生成独立资源视图 |
 | `image_opacity` | `int` | — | 默认 255; 0…255 | — | 仅图片透明度；固定栅格图片的变换可在编译期烘焙 alpha |
 
 </details>

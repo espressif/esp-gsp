@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.7.0
+
+Use with GSPC 0.8.0 and simulator 1.7.0.
+
+- Add ESP32-H4, ESP32-C2 and classic ESP32 packages.
+- Add opt-in application-specific runtime linking with dynamic capability declarations and bundle admission checks.
+- Reduce rendering, binding, text and idle work; bound command batches and preserve shared accelerator settings.
+- Preserve PNG alpha and JPEG colors; support JPEG on alpha targets and fix animation timing and callbacks.
+- Isolate Canvas views and expose request-scoped image publication.
+- Fix paint/hit order, TabView selection, dynamic geometry, template animation damage, scrolling and snapshots.
+- Improve PC Backend loading, input, timers and error handling.
+
+### Upgrading from 1.6.0
+
+Require `esp_display_present ^1.1.2`. Regenerate affected scenes and headers with
+GSPC 0.8.0, and rebuild precompiled libraries, PC Backends and applications with
+runtime/simulator 1.7.0.
+New paint order and dynamic hit geometry use GSB 2.20/2.21.
+Existing resource replay and public ABI versions are unchanged.
+
 ## 1.6.0
 
 Use with GSPC 0.7.0 and simulator 1.6.0.

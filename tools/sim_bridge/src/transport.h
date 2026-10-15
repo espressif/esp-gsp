@@ -13,6 +13,8 @@
 char *bridge_rpc(esp_gsp_handle_t ui, const char *method, const char *params);
 char *bridge_json_quote(const char *text);
 int64_t bridge_json_number(const char *json, const char *key, int64_t fallback);
+bool bridge_json_hex(const char *json, const char *key, char *out, size_t capacity);
+bool bridge_keyboard_text_enabled(esp_gsp_handle_t ui);
 esp_gsp_err_t bridge_command(esp_gsp_handle_t ui, const char *method, const char *params);
 esp_gsp_err_t bridge_scalar(esp_gsp_handle_t ui, unsigned op, const uint32_t args[8], uint32_t out[8]);
 
@@ -43,6 +45,9 @@ void bridge_canvas_cancel(esp_gsp_handle_t ui);
 struct bridge_images;
 struct bridge_images **bridge_images_slot(esp_gsp_handle_t ui);
 bool bridge_images_enabled(esp_gsp_handle_t ui);
+uint64_t bridge_scene_generation(esp_gsp_handle_t ui);
+esp_gsp_err_t bridge_widget_set_image_ex(esp_gsp_handle_t ui, esp_gsp_widget_t widget,
+        uint16_t slot, const void *data, size_t size, const esp_gsp_image_options_t *options);
 bool bridge_images_pending(esp_gsp_handle_t ui);
 bool bridge_images_notify(esp_gsp_handle_t ui, const char *method, const char *params);
 void bridge_images_poll(esp_gsp_handle_t ui);

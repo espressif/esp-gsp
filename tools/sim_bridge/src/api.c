@@ -550,6 +550,73 @@ esp_gsp_err_t esp_gsp_keyboard_attach(esp_gsp_handle_t ui, uint16_t action_id, u
 {
     return pair(ui, "keyboard_attach", "action_id", action_id, "text_bind", text_bind);
 }
+
+esp_gsp_err_t esp_gsp_keyboard_attach_ex(esp_gsp_handle_t ui, uint16_t action_id, uint16_t text_bind, size_t max_bytes)
+{
+    if (ui == NULL) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    if (action_id == ESP_GSP_KEYBOARD_NONE) {
+        return esp_gsp_keyboard_attach(ui, action_id, text_bind);
+    }
+    if (max_bytes > UINT32_MAX) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    if (!bridge_keyboard_text_enabled(ui)) {
+        return ESP_GSP_ERR_NOT_SUPPORTED;
+    }
+    char params[128];
+    snprintf(params, sizeof(params), "{\"action_id\":%u,\"text_bind\":%u,\"max_bytes\":%zu}", action_id, text_bind, max_bytes);
+    return bridge_command(ui, "keyboard_attach_ex", params);
+}
+
+esp_gsp_err_t esp_gsp_keyboard_text_size(esp_gsp_handle_t ui, size_t *out_size)
+{
+    if (ui == NULL || out_size == NULL) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    if (!bridge_keyboard_text_enabled(ui)) {
+        return ESP_GSP_ERR_NOT_SUPPORTED;
+    }
+    char *reply = bridge_rpc(ui, "keyboard_text_size", "{}");
+    if (reply == NULL) {
+        return ESP_GSP_FAIL;
+    }
+    esp_gsp_err_t rc = (esp_gsp_err_t)bridge_json_number(reply, "result_code", ESP_GSP_FAIL);
+    int64_t size = bridge_json_number(reply, "size", 0);
+    free(reply);
+    if (rc == ESP_GSP_OK) {
+        if (size <= 0 || (uint64_t)size > SIZE_MAX) {
+            return ESP_GSP_FAIL;
+        }
+        *out_size = (size_t)size;
+    }
+    return rc;
+}
+
+esp_gsp_err_t esp_gsp_keyboard_text(esp_gsp_handle_t ui, char *out_text, size_t capacity)
+{
+    if (ui == NULL || out_text == NULL || capacity == 0) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    out_text[0] = '\0';
+    if (!bridge_keyboard_text_enabled(ui)) {
+        return ESP_GSP_ERR_NOT_SUPPORTED;
+    }
+    char params[64];
+    snprintf(params, sizeof(params), "{\"capacity\":%zu}", capacity > UINT32_MAX ? (size_t)UINT32_MAX : capacity);
+    char *reply = bridge_rpc(ui, "keyboard_text", params);
+    if (reply == NULL) {
+        return ESP_GSP_FAIL;
+    }
+    esp_gsp_err_t rc = (esp_gsp_err_t)bridge_json_number(reply, "result_code", ESP_GSP_FAIL);
+    if ((rc == ESP_GSP_OK || rc == ESP_GSP_ERR_INVALID_SIZE) &&
+            !bridge_json_hex(reply, "utf8_hex", out_text, capacity)) {
+        rc = ESP_GSP_FAIL;
+    }
+    free(reply);
+    return rc;
+}
 esp_gsp_err_t esp_gsp_set_cursor(esp_gsp_handle_t ui, uint16_t bind)
 {
     return single(ui, "set_cursor", "bind_id", bind);

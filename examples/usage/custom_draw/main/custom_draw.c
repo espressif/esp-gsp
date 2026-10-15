@@ -61,9 +61,9 @@ static void custom_draw_draw(
                        sizeof(native));
             } else {
                 uint8_t *pixel = line + (size_t)column * pixel_bytes;
-                pixel[0] = red;
+                pixel[0] = blue;
                 pixel[1] = green;
-                pixel[2] = blue;
+                pixel[2] = red;
             }
         }
     }

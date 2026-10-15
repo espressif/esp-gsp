@@ -67,6 +67,12 @@ caller-owned GSPB bytes.
 
 ## Submission and committed state
 
+ESP-IDF acceleration is shared by UI instances. The first active reference
+sets its policy; later references retain that policy and keep the backend
+alive. Use matching acceleration settings across simultaneous instances.
+Release all instances before changing the shared policy; a failed startup
+does not change the policy of an existing instance.
+
 State setters are asynchronous on ESP-IDF:
 
 ```text

@@ -26,6 +26,15 @@ struct bridge_asset_target {
     esp_gsp_handle_t gsp;
     esp_gsp_asset_target_t target;
     esp_gsp_asset_status_t status;
+    uint64_t scene_generation;
+    unsigned references;
+    bool attached, published;
+};
+
+struct bridge_asset_completion {
+    /* Accepted uploads keep the target alive after the package is closed. */
+    struct bridge_asset_target *target;
+    uint32_t request;
 };
 
 struct esp_gsp_assets {
@@ -38,6 +47,14 @@ struct esp_gsp_assets {
     bool closing;
     struct bridge_asset_target *targets;
 };
+
+static uint32_t next_request_id(esp_gsp_assets_t *assets)
+{
+    if (++assets->next_request == 0) {
+        ++assets->next_request;
+    }
+    return assets->next_request;
+}
 
 static uint16_t le16(const uint8_t *p)
 {
@@ -125,6 +142,8 @@ static struct bridge_asset_target *track_target(esp_gsp_assets_t *assets,
         return NULL;
     }
     p->gsp = gsp; p->target = target;
+    p->references = 1;
+    p->attached = true;
     p->next = assets->targets; assets->targets = p;
     return p;
 }
@@ -340,19 +359,92 @@ static esp_gsp_err_t unwrap_image(const uint8_t *grb, size_t size, uint32_t name
     return ESP_GSP_OK;
 }
 
+static void release_target(struct bridge_asset_target *target)
+{
+    if (--target->references == 0) {
+        free(target);
+    }
+}
+
+static void upload_complete(esp_gsp_handle_t gsp, uint16_t bind,
+                            gsp_err_t result, void *ctx)
+{
+    (void)bind;
+    struct bridge_asset_completion *completion = ctx;
+    struct bridge_asset_target *target = completion->target;
+    bool stopped_request = target->status.state == ESP_GSP_ASSET_STOPPING &&
+                           target->status.pending &&
+                           target->status.request_id != completion->request;
+    if (target->attached && stopped_request) {
+        /* stop_target() advances the public request ID, while this accepted
+         * upload still owns one completion callback. Retire that callback
+         * without allowing it to publish a stopped request. */
+        target->status.pending = false;
+        target->status.state = ESP_GSP_ASSET_STOPPED;
+    } else if (target->attached && target->status.request_id == completion->request &&
+               target->status.state != ESP_GSP_ASSET_STOPPED) {
+        target->status.pending = false;
+        if (target->scene_generation != bridge_scene_generation(gsp)) {
+            target->status.state = ESP_GSP_ASSET_STOPPED;
+        } else {
+            target->published = result == GSP_OK;
+            target->status.state = result == GSP_OK ? ESP_GSP_ASSET_READY : ESP_GSP_ASSET_FAILED;
+            target->status.last_error = result;
+            target->status.failed_stage = result == GSP_OK ? ESP_GSP_ASSET_QUEUED : ESP_GSP_ASSET_DECODING;
+        }
+    }
+    release_target(target);
+    free(completion);
+}
+
 static esp_gsp_err_t upload_target(esp_gsp_handle_t gsp, esp_gsp_asset_target_t target,
-                                   const void *data, size_t size)
+                                   const void *data, size_t size,
+                                   const esp_gsp_image_options_t *options)
 {
     if (target.kind == ESP_GSP_ASSET_IMAGE) {
-        return esp_gsp_set_image(gsp, target.bind, data, size);
+        return esp_gsp_set_image_ex(gsp, target.bind, data, size, options);
     }
     if (target.kind == ESP_GSP_ASSET_ROW) {
-        return esp_gsp_row_set_image(gsp, target.row, target.resource_slot, data, size);
+        return esp_gsp_row_set_image_ex(gsp, target.row, target.resource_slot, data, size, options);
     }
     if (target.kind == ESP_GSP_ASSET_WIDGET) {
-        return esp_gsp_widget_set_image(gsp, target.bind, target.resource_slot, data, size);
+        return bridge_widget_set_image_ex(gsp, target.bind, target.resource_slot, data, size, options);
     }
     return ESP_GSP_ERR_INVALID_ARG;
+}
+
+static esp_gsp_err_t upload_tracked(struct bridge_asset_target *target,
+                                    const void *data, size_t size)
+{
+    if (!bridge_images_enabled(target->gsp)) {
+        esp_gsp_err_t rc = upload_target(target->gsp, target->target, data, size, NULL);
+        if (rc == ESP_GSP_OK) {
+            target->status.state = ESP_GSP_ASSET_READY;
+        }
+        return rc;
+    }
+    struct bridge_asset_completion *completion = malloc(sizeof(*completion));
+    if (!completion) {
+        return ESP_GSP_ERR_NO_MEM;
+    }
+    *completion = (struct bridge_asset_completion) {
+        target, target->status.request_id
+    };
+    ++target->references;
+    target->status.state = ESP_GSP_ASSET_DECODING;
+    target->status.pending = true;
+    const esp_gsp_image_options_t options = {
+        .ownership = ESP_GSP_IMAGE_COPY,
+        .on_complete = upload_complete,
+        .complete_ctx = completion,
+    };
+    esp_gsp_err_t rc = upload_target(target->gsp, target->target, data, size, &options);
+    if (rc != ESP_GSP_OK) {
+        target->status.pending = false;
+        release_target(target);
+        free(completion);
+    }
+    return rc;
 }
 
 static esp_gsp_err_t show_target(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp,
@@ -370,9 +462,11 @@ static esp_gsp_err_t show_target(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp,
         return ESP_GSP_ERR_NO_MEM;
     }
     tracked->target = target;
+    tracked->published = false;
+    tracked->scene_generation = bridge_scene_generation(gsp);
     tracked->status = (esp_gsp_asset_status_t) {
         .state = ESP_GSP_ASSET_READING,
-        .request_id = ++assets->next_request, .last_error = GSP_OK
+        .request_id = next_request_id(assets), .last_error = GSP_OK
     };
     esp_gsp_err_t rc = resolve_asset(assets, &asset);
     if (rc == ESP_GSP_OK && asset.member_count != 1) {
@@ -402,14 +496,12 @@ static esp_gsp_err_t show_target(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp,
         rc = unwrap_image(member, member_size, asset.name_hash, &image, &image_size);
     }
     if (rc == ESP_GSP_OK) {
-        rc = upload_target(gsp, target, image, image_size);
+        rc = upload_tracked(tracked, image, image_size);
     }
     if (member) {
         free(member);
     }
     if (rc == ESP_GSP_OK) {
-        tracked->status.state = ESP_GSP_ASSET_READY;
-        tracked->status.last_error = GSP_OK;
         assets->stats.submitted_frames++;
     } else {
         tracked->status.state = ESP_GSP_ASSET_FAILED;
@@ -488,6 +580,31 @@ esp_gsp_err_t esp_gsp_assets_get_status(esp_gsp_assets_t *assets, esp_gsp_handle
     return ESP_GSP_OK;
 }
 
+esp_gsp_err_t esp_gsp_assets_get_publication(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp,
+        esp_gsp_asset_target_t target, esp_gsp_asset_publication_t *out)
+{
+    if (!out) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    *out = (esp_gsp_asset_publication_t) {
+        0
+    };
+    if (!assets || !gsp) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    struct bridge_asset_target *tracked = find_target(assets, gsp, &target);
+    if (!tracked || !target_same_token(&tracked->target, &target)) {
+        return ESP_GSP_ERR_NOT_FOUND;
+    }
+    if (!bridge_images_enabled(gsp)) {
+        return ESP_GSP_ERR_NOT_SUPPORTED;
+    }
+    out->request_id = tracked->status.request_id;
+    out->has_frame = tracked->published &&
+                     tracked->scene_generation == bridge_scene_generation(gsp);
+    return ESP_GSP_OK;
+}
+
 gsp_err_t esp_gsp_assets_status(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp,
                                 uint16_t bind, bool *pending)
 {
@@ -496,6 +613,9 @@ gsp_err_t esp_gsp_assets_status(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp,
     }
     esp_gsp_asset_status_t status;
     esp_gsp_err_t rc = esp_gsp_assets_get_status(assets, gsp, esp_gsp_asset_image_target(bind), &status);
+    if (pending && rc == ESP_GSP_OK) {
+        *pending = status.pending;
+    }
     return rc == ESP_GSP_OK ? status.last_error : (rc == ESP_GSP_ERR_NOT_FOUND ? GSP_ERR_NOT_FOUND : GSP_ERR_INVALID_ARG);
 }
 
@@ -509,8 +629,10 @@ esp_gsp_err_t esp_gsp_assets_stop_target(esp_gsp_assets_t *assets, esp_gsp_handl
     if (!tracked || !target_same_token(&tracked->target, &target)) {
         return ESP_GSP_ERR_NOT_FOUND;
     }
-    tracked->status.state = ESP_GSP_ASSET_STOPPED;
-    tracked->status.pending = false;
+    tracked->status.request_id = next_request_id(assets);
+    tracked->status.state = tracked->status.pending ?
+                            ESP_GSP_ASSET_STOPPING : ESP_GSP_ASSET_STOPPED;
+    tracked->published = false;
     return ESP_GSP_OK;
 }
 
@@ -539,7 +661,9 @@ esp_gsp_err_t esp_gsp_assets_close_wait(esp_gsp_assets_t *assets, uint32_t timeo
     assets->closing = true;
     while (assets->targets) {
         struct bridge_asset_target *next = assets->targets->next;
-        free(assets->targets); assets->targets = next;
+        assets->targets->attached = false;
+        release_target(assets->targets);
+        assets->targets = next;
     }
     fclose(assets->file); free(assets);
     return ESP_GSP_OK;

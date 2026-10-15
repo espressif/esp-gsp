@@ -1,10 +1,10 @@
 # Message List (`gsp_message_list`)
 
-Virtualized conversation viewport with incoming and outgoing bubbles.
+A virtualized conversation viewport with built-in incoming and outgoing bubble styles.
 
 ## When to use
 
-Use it when a common interaction is easier to express as one ready-made control.
+Use Message List when you need a chat-like conversation UI. It provides ready-made bubble layout and scrolling behavior, saving you from assembling bubbles manually.
 
 ## Local interactive preview
 
@@ -23,9 +23,11 @@ These commands compile the example and open it in the ESP-GSP simulator browser 
 
 ## Runtime behavior
 
-GSPC lowers the group to native primitives. Give an object a stable `name` when application code must control it.
+GSPC compiles the Message List into native drawing primitives. Give any object that your application code needs to control a stable `name`.
 
-If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
+Generated rows, bubbles, and their runtime controls paint at the Message List's position in scene order. Foreground objects declared later (such as a Drawer) will cover them. Place overlays that must stay on top after the Message List in the scene.
+
+Give any object that your application code needs to read or update a stable `name`. GSPC generates the typed functions listed below for each named object.
 
 ## Example scene
 

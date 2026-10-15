@@ -74,6 +74,11 @@ typedef struct {
     bool pending;
 } esp_gsp_asset_status_t;
 typedef struct {
+    /** Same per-target request identifier as esp_gsp_asset_status_t. */
+    uint32_t request_id;
+    bool has_frame;
+} esp_gsp_asset_publication_t;
+typedef struct {
     size_t encoded_bytes, encoded_peak_bytes, encoded_budget_bytes;
     size_t decoded_bytes, decoded_peak_bytes;
     size_t index_bytes;
@@ -133,6 +138,16 @@ esp_gsp_err_t esp_gsp_assets_show_target_name(esp_gsp_assets_t *assets, esp_gsp_
         esp_gsp_asset_target_t target, const char *name, bool once);
 esp_gsp_err_t esp_gsp_assets_get_status(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp,
                                         esp_gsp_asset_target_t target, esp_gsp_asset_status_t *out_status);
+/** Snapshot the current request's first successful UI publication.
+ * has_frame remains true during later reads and after a later frame fails.
+ * A new show, stop or scene change clears it; request_id distinguishes a
+ * replacement request even while the previous image remains visible.
+ * Unlike the transient READY state, this can drive loading placeholders.
+ * Publication means the UI accepted the complete image, not LCD scanout.
+ * On error the output is zeroed; a target not yet submitted is NOT_FOUND.
+ */
+esp_gsp_err_t esp_gsp_assets_get_publication(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp,
+        esp_gsp_asset_target_t target, esp_gsp_asset_publication_t *out_publication);
 esp_gsp_err_t esp_gsp_assets_stop_target(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp,
         esp_gsp_asset_target_t target);
 /** On-demand overview: encoded bytes belong to this package; optional gsp
@@ -158,7 +173,7 @@ esp_gsp_err_t esp_gsp_assets_stop(esp_gsp_assets_t *assets,
  * unmount storage or destroy the UI until close returns ESP_GSP_OK. */
 esp_gsp_err_t esp_gsp_assets_close(esp_gsp_assets_t *assets);
 /** Explicit wait budget; zero polls. Does not forcibly cancel a driver read.
- * On timeout status/stats and another close are allowed; show is rejected.
+ * On timeout status/publication/stats and another close are allowed; show is rejected.
  * Call from an application task, not a render/decode callback. Other callers
  * must be quiescent before successful close frees the handle. Published source
  * buffers survive close until UI replacement/shutdown. NULL succeeds. */

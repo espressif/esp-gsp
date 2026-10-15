@@ -111,6 +111,9 @@ When an ESP-IDF build already exists, run `gspc doctor <project> --build
 agent workflow; an unavailable build description must remain an unknown rather
 than being replaced with a host assumption.
 
+Source checkout directory names may vary. Read `build_contract.component.selected_names`
+for the actual CMake component identifiers and `component.paths` for their roots.
+
 `build_contract.status` distinguishes `unavailable` (no description), `invalid`
 (malformed description), `incomplete` (required facts missing), `stale` (project
 or target mismatch), and `observed` (build metadata read). Use `missing` and

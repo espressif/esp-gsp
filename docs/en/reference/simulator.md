@@ -209,6 +209,9 @@ screenshots or coordinate input after runtime movement and animation.
 | `set_visible` | `{ "bind_id": N, "visible": bool }` | Toggle component visibility |
 | `set_component_i32` | `{ "component_key": N, "property_key": N, "value": N }` | Set component property by key |
 | `keyboard_attach` | `{ "action_id": N, "text_bind": N }` | Attach virtual keyboard |
+| `keyboard_attach_ex` | `{ "action_id": N, "text_bind": N, "max_bytes": N }` | Attach a virtual keyboard with an explicit UTF-8 byte limit; `max_bytes` excludes the trailing NUL |
+| `keyboard_text_size` | — | Read the required keyboard-text capacity, including the trailing NUL; Backend/Browser read-only |
+| `keyboard_text` | `{ "capacity": N }` (optional) | Read current keyboard text; insufficient capacity returns `ESP_GSP_ERR_INVALID_SIZE` with a valid UTF-8 prefix; Backend/Browser read-only |
 | `set_cursor` | `{ "bind_id": N }` | Show/hide text cursor; `65535` hides it |
 | `set_swipe_transition` | `{ "transition": N }` | Select swipe transition visual |
 | `set_swipe_fade_black_point` | `{ "drag_percent": N }` | Set swipe fade black point (1..99) |
@@ -247,29 +250,44 @@ Browser never receives their data-source requests or binary-upload access.
 
 ### Component motion and conditional waiting
 
-Probe `capabilities.component_motion_version`, `component_events_version` and
-`wait_component_version` (1 = supported, 0 = unavailable with the loaded WASM).
-`component_get_motion` accepts `{"name":"pages"}` or a numeric `component_key`,
-plus an optional current `scene`. Its result contains `result_code` and `state`:
-`value` is the committed page/open state, `target` is the destination, and
-`dragging`/`settling` indicate motion. A failed query may return `state: null`;
-check the result code.
+Before using these methods, check `capabilities.component_motion_version`,
+`component_events_version`, and `wait_component_version`. A value of `1`
+means supported; `0` means the loaded WASM does not include the feature.
 
-`wait_component` accepts the same target and optional `value` and `max_frames`
-(default 300, range 1–36000). It returns `status: "settled"`, final `state` and
-`frames_waited` when motion stops and the requested value matches. Omitting
-`value` waits only for rest. The limit counts successfully advanced simulation
-frames, not wall-clock time. Timeout returns `-32020` with
-`data.reason: "timeout"` and the last state; scene changes/reset cancel the wait.
-Unsupported or failed state queries also return errors. These observation
-methods remain available while Backend owns state writes.
+**Querying motion state.**
+`component_get_motion` accepts `{"name":"pages"}` or a numeric
+`component_key`, with an optional `scene`. The response contains
+`result_code` and a `state` object:
 
-Subscribe to `component_event` to receive `component_key`, `scene_id`, `kind`,
-`flags` and `state`. Flags are bitwise: value changed = 1, settled = 2,
-motion changed = 4. Events are coalesced per UI step, not a history of every
-request. Use the control API for assertions: Browser notifications share a
-droppable frame queue. `wait` only counts frames and `render_fence` marks a
-render boundary; neither proves animation or business completion.
+- `value` — committed page index or open/close state.
+- `target` — destination value during a transition.
+- `dragging` / `settling` — whether the user is still dragging or the
+  component is animating toward the target.
+
+A failed query may return `state: null`; always check `result_code`.
+
+**Waiting for a component to settle.**
+`wait_component` takes the same target identifier plus optional `value`
+(the expected final value; omit to wait for any settled state) and
+`max_frames` (default 300, range 1–36 000). When the component stops
+moving and the value matches, the response contains
+`status: "settled"`, the final `state`, and `frames_waited`. The budget
+counts simulation frames, not wall-clock time. On timeout the method
+returns error `-32020` with `data.reason: "timeout"` and the last
+observed state. A scene change or `reset` cancels any pending wait.
+These observation methods remain available even when Backend owns
+state writes.
+
+**Component event notifications.**
+Subscribe to `component_event` to receive per-step notifications with
+`component_key`, `scene_id`, `kind`, `flags`, and `state`. The `flags`
+field is a bitmask: value changed (`1`), settled (`2`), motion
+changed (`4`). Events are coalesced per UI step and do not record every
+intermediate request. For deterministic assertions, use the control API
+(`wait_component` or `component_get_motion`); Browser WebSocket
+notifications share a droppable frame queue. Note that `wait` only
+counts frames and `render_fence` only marks a render boundary — neither
+guarantees that an animation or business operation has completed.
 
 ### Notification events
 
@@ -356,17 +374,22 @@ Rows can be recycled while a backend is working: a nonzero row result code
 can mean a stale token or another failure, such as an invalid field slot.
 Inspect the result code; never retry a token known to be stale.
 
-Backend TCP/Unix connections accept COPY-only Content-Length binary uploads:
-`X-GSP-Kind: image` and `row-image` accept PNG, JPEG, or QOI; `canvas` accepts
-a complete raw frame with stride and height headers (optional dirty rectangle).
-The host replies with `binary_result`; direct-draw callbacks stay local to the
-render task, so a remote producer pushes frames rather than waiting for a
-callback. `canvas_stop` stops a producer. These extensions are Backend-only;
-native C producers should use the component's
-[bridge library](../../../tools/sim_bridge/README.md) to handle framing and
-buffer lifetimes. The simulator
-capability bitmap advertises this decoder support as `ESP_GSP_SIM_CAP_QOI`
-(bit 7, value `128`).
+Backend TCP/Unix connections also support binary uploads using COPY
+semantics with `Content-Length` framing:
+
+- `X-GSP-Kind: image` and `row-image` — accept PNG, JPEG, or QOI data.
+- `X-GSP-Kind: canvas` — accepts a complete raw frame with stride and
+  height headers (and an optional dirty rectangle).
+
+The host confirms each upload with a `binary_result` notification.
+Direct-draw callbacks run inside the render task, so a remote
+(socket-based) producer should push frames instead of waiting for a
+draw callback; call `canvas_stop` to stop a remote producer. These
+binary extensions are Backend-only. Native C producers should use the
+component's [bridge library](../../../tools/sim_bridge/README.md) for
+framing and buffer lifetime management. The simulator capability bitmap
+reports QOI decoder support as `ESP_GSP_SIM_CAP_QOI` (bit 7,
+value `128`).
 
 ### Backend Python example
 
@@ -401,6 +424,13 @@ C functions. Unimplemented functions fail at link time instead of silently
 succeeding. This version does not support concurrent calling threads,
 automatic reconnection or state replay after reset.
 
+The supplied entry points own event dispatch after app initialization returns.
+A custom entry point must repeatedly call `gsp_sim_bridge_poll()` on its Backend
+thread, including while idle; host rendering and input acknowledgments do not
+drive C callbacks or timers for it. Never block this thread waiting for input.
+See [custom entry-point requirements](../../../tools/sim_bridge/README.md#custom-entry-point-keep-the-event-loop-running)
+for command queues, partial input and an event-loop example.
+
 The shared library contains the exact ESP-GSP version used to build it.
 sim_host rejects it before application startup unless its Backend ABI,
 descriptor size, reserved fields, run entry, and GSP version all match. This
@@ -408,95 +438,179 @@ guards against stale build products, not hostile native code: a loaded library
 shares the simulator process and can crash or block it. Pass
 `tools/sim_bridge/run.py --socket-backend` when process isolation is required.
 
-With `capabilities.bridge_media_version: 1`, the library also maps dynamic
-List/Grid binders, row fields, COPY PNG/JPEG/QOI images, and Canvas
-push/draw/invalidate/stop. See `examples/usage/sim_bridge_media` for a runnable
-project. A List must have a compiled runtime row template; Grid template
-images need `dynamic_image: true`. Grid callbacks receive actual resource/text
-slots. Row tokens are reusable until invalidated by recycling; overflow is
-fatal, not silently replayed.
+### Dynamic media
 
-Canvas draw runs on a full native offscreen buffer at poll time. Hosts with
-`bridge_canvas_patch_version: 1` transfer small dirty invalidations as packed
-row patches after an initial keyframe; large or unsynchronized updates use a
-full frame. It is not the device's
-render-task/tile callback contract. Only read-only GSP queries are permitted
-inside draw; scene changes disable callbacks until re-registered. Explicit
-sync push disables that target's callback and invokes release once before
-returning on success; failure retains caller ownership. Upload success is
-not render completion.
+When `capabilities.bridge_media_version` is `1`, the bridge library
+supports dynamic List/Grid binders, row fields, COPY-mode PNG/JPEG/QOI
+images, and Canvas push/draw/invalidate/stop. See
+`examples/usage/sim_bridge_media` for a runnable project.
 
-`canvas_try_push*` instead admits a borrowed pointer into a local eight-frame
-FIFO with no socket I/O; success immediately disables the target's local draw
-callback. Queue-full returns TIMEOUT without ownership transfer. Keep the
-entire frame immutable until release. Poll uploads frames; synchronous GSP
-RPC calls also drain earlier frames to preserve order. Target/stride/dirty
-validation and scene mismatch can reject an already admitted frame, with a
-diagnostic. Release runs exactly once after upload, rejection or local shutdown,
-not as confirmation of host acceptance/display. Queued releases must not
-mutate GSP, poll or close; they may run before a synchronous RPC. The default
-main cancels queued frames before app deinit; custom mains keep their contexts
-alive through bridge close. Forced termination cannot guarantee callbacks.
+- A List must have a compiled runtime row template.
+- Grid template images require `dynamic_image: true`; Grid callbacks
+  receive the actual resource and text slots.
+- Row tokens can be reused until the row is recycled. Overflow is fatal
+  and requires a session restart — it is not silently replayed.
 
-`bridge_fence_version: 1` adds Backend-only `render_fence` (`{}` →
-`{"result_code":0}` after a subsequent host step/render attempt), used by
-`esp_gsp_flush`. API/Browser cannot invoke it; API frame waits remain `wait`.
-First poll to finish local Canvas uploads/redraws: pending work makes flush
-return INVALID_STATE. Flush does not execute business callbacks, wait for
-animations/image publication/browser presentation, or require an idle frame
-to change. A finite timeout covers transport submission and reply wait;
-UINT32_MAX waits indefinitely.
-Zero queues locally and returns TIMEOUT. Timeout retains the fence and partial
-traffic for later poll/RPC, without cancelling it or invalidating the session.
-The native table holds at most 16 outstanding fences; full returns TIMEOUT
-without admission. Poll's own timeout is only an idle wait, not an upload budget.
-See `tools/sim_bridge/README.md` for the producer-pause/poll/flush pattern.
+### Canvas rendering
 
-`bridge_image_version: 1` adds image EX COPY/BORROW/TAKE, borrowed/owned helpers,
-completion/release callbacks and cache keys. Transport remains COPY; the
-native borrowed/owned source is retained until actual GSP input release.
-`image_complete` reports runtime publication/failure/cancellation;
-`image_release` ends source retention. Callbacks execute at poll time, not in
-the host render task. Only 128 tracked images may remain retained; immediate
-rejection transfers no ownership and invokes no callbacks. On local shutdown,
-unobserved completion becomes CANCELLED (orderly close) or IO (transport
-failure), not an assertion about the host's final image. Default main settles
-these callbacks before app deinit. Custom applications keep contexts alive
-through bridge close. Full details are in `tools/sim_bridge/README.md`.
+The bridge draws into a full native offscreen buffer during `poll`.
+When the host reports `bridge_canvas_patch_version: 1`, incremental
+dirty regions are transferred as packed row patches after the initial
+keyframe; large or out-of-sync updates fall back to a full frame. This
+is not the same as the device's render-task/tile callback model.
 
-The host adds two Backend-only methods:
+Inside a draw callback, only read-only GSP queries are allowed. Scene
+changes disable the callback until it is re-registered.
 
-- `bridge_call`: fixed-width scalar queries, typed writes, animations,
-  Canvas dimensions/format/scene and component RESOURCE-bind lookup;
-  no native pointers are accepted.
-- `component_set_text`: text updates addressed by component key.
+**Synchronous push** (`canvas_push`) disables the target's draw callback
+and, on success, invokes release once before returning. On failure the
+caller retains ownership. Upload success does not imply render completion.
 
-Existing methods such as `set_value`, `set_text` and `set_component_i32`
-are reused directly. `capabilities` reports `bridge_version: 1`,
-`bridge_media_version: 1`, `bridge_image_version: 1` and
-`bridge_fence_version: 1`, `bridge_canvas_patch_version: 1` and `current_scene`
-for initial negotiation.
-Applications normally use the C wrappers rather than encode these operations.
-The component includes `tools/sim_bridge/protocol.h` for the scalar operation IDs.
+**Asynchronous push** (`canvas_try_push*`) places a borrowed pointer
+into a local 8-frame FIFO without any socket I/O. On success the
+target's local draw callback is disabled immediately. If the queue is
+full, the call returns `TIMEOUT` without transferring ownership. The
+frame buffer must remain immutable until released.
 
-The runner defaults to the component containing the script, normally
-`managed_components/espressif__esp-gsp`, and writes builds under the application's
-working directory. GSPC uses `.gspc_version`; the simulator uses the selected
-component's `idf_component.yml` version. Both are invoked through the installed
-`esp-gsp-tools` manager. `GSPC_EXECUTABLE` / `GSP_SIM_EXECUTABLE` override tool
-paths; `GSP_SIM_VERSION` overrides the managed simulator version;
-`ESP_GSP_COMPONENT_DIR` overrides the component path. CLI equivalents take
-precedence. No product binary is selected implicitly from PATH or a development
-build. See the bridge README for direct CMake and unpacked-component use.
+`poll` uploads queued frames; synchronous GSP RPC calls also drain
+earlier frames to preserve ordering. Validation failures (wrong
+target, stride, dirty region, or scene mismatch) can reject an
+already-queued frame — a diagnostic is printed in that case. Each
+admitted frame is released exactly once, whether after upload,
+rejection, or local shutdown. Release does not confirm host
+acceptance or display. Release callbacks from queued frames must not
+mutate GSP state, call `poll`, or close the bridge; they may fire
+before a synchronous RPC returns. The default entry point cancels
+queued frames before app deinit; custom entry points must keep their
+contexts alive until bridge close returns. Forced process termination
+cannot guarantee that release callbacks run.
 
-The runner uses `--ready-file <PATH>` to obtain JSON fields including
-`version`, `pid`, `backend_mode`, `backend`, `backend_library`, `browser`,
-`bridge_version`, and `dynamic_backend_abi_version`; disabled endpoints are
-null. The PID belongs to the simulator, not its Python tool-manager parent.
-Callers must use a fresh per-launch path, verify process ownership, tolerate
-a partially written file, and clean it up afterwards. Readiness means bound
-listeners, not completed application initialization or process liveness.
-Backend-only headless runs are wall-clock paced to match native timers.
+### Render fence
+
+When `capabilities.bridge_fence_version` is `1`, the Backend-only
+method `render_fence` is available (C wrapper: `esp_gsp_flush`). It
+takes no parameters (`{}`) and responds with `{"result_code":0}` after
+the host completes a subsequent step/render attempt. API and Browser
+channels cannot call this method; use `wait` for frame-based delays on
+the API channel.
+
+Before calling flush, `poll` must finish all local Canvas
+uploads/redraws; pending local work causes flush to return
+`INVALID_STATE`. Flush does not execute business callbacks, wait for
+animations, image publication, or browser presentation. An idle frame
+with no visible changes can still satisfy the fence.
+
+Timeout behavior:
+
+- A finite timeout covers transport submission and the reply wait.
+  `UINT32_MAX` waits indefinitely.
+- A timeout of zero queues the fence locally and returns `TIMEOUT`
+  immediately.
+- On timeout, the fence and any partial traffic are retained for later
+  `poll`/RPC processing — the request is not cancelled and the session
+  remains valid.
+- The native table holds at most 16 outstanding fences; a full table
+  returns `TIMEOUT` without queuing.
+- The timeout parameter on `poll` itself is only an idle wait, not an
+  upload budget.
+
+See `tools/sim_bridge/README.md` for the producer-pause / poll / flush
+pattern.
+
+### Image lifecycle
+
+When `capabilities.bridge_image_version` is `1`, the bridge supports
+extended image operations: COPY, BORROW, and TAKE semantics, plus
+borrowed/owned helper functions, completion/release callbacks, and
+cache keys. Regardless of source semantics, transport to the host
+always uses COPY; a native borrowed or owned source is retained until
+GSP actually releases the input.
+
+- `image_complete` notifies the application of runtime publication,
+  failure, or cancellation.
+- `image_release` signals that the source data is no longer needed.
+- Callbacks execute during `poll`, not inside the host render task.
+
+At most 128 images may be tracked simultaneously. Exceeding this limit
+causes immediate rejection — no ownership is transferred and no
+callbacks are invoked. On local shutdown, images whose completion was
+not yet observed are reported as `CANCELLED` (orderly close) or `IO`
+(transport failure); these codes describe the bridge shutdown, not the
+host's final treatment of the image. The default entry point settles
+all pending callbacks before app deinit. Custom entry points must keep
+their contexts alive until bridge close returns. Full details are in
+`tools/sim_bridge/README.md`.
+
+### Backend-only methods
+
+The host exposes two additional Backend-only methods:
+
+- `bridge_call` — fixed-width scalar queries, typed writes, animations,
+  Canvas dimensions/format/scene queries, and component RESOURCE-bind
+  lookup. No native pointers are accepted.
+- `component_set_text` — write text addressed by component key.
+
+Standard methods such as `set_value`, `set_text`, and `set_component_i32`
+work unchanged on the Backend channel. The `capabilities` response
+reports `bridge_version`, `bridge_media_version`, `bridge_image_version`,
+`bridge_fence_version`, `bridge_keyboard_text_version`,
+`bridge_canvas_patch_version`, and `current_scene` for initial negotiation.
+When `bridge_keyboard_text_version` is `1`, the native bridge exposes the
+same keyboard text readback contract: required capacity includes the trailing
+NUL, and a short buffer returns a complete UTF-8 prefix with
+`ESP_GSP_ERR_INVALID_SIZE`.
+
+Applications typically use the C wrapper functions rather than encoding
+these operations directly. Scalar operation IDs are defined in
+`tools/sim_bridge/protocol.h`.
+
+### Runner configuration
+
+The runner script defaults to the component directory containing it
+(normally `managed_components/espressif__esp-gsp`) and writes build
+artifacts under the application's working directory. The GSPC version
+comes from `.gspc_version`; the simulator version comes from the
+component's `idf_component.yml`. Both tools are invoked through the
+installed `esp-gsp-tools` manager.
+
+Environment variable overrides:
+
+| Variable | Purpose |
+|---|---|
+| `GSPC_EXECUTABLE` / `GSP_SIM_EXECUTABLE` | Override tool paths |
+| `GSP_SIM_VERSION` | Override the managed simulator version |
+| `ESP_GSP_COMPONENT_DIR` | Override the component path |
+
+CLI equivalents take precedence over environment variables. The runner
+never selects a binary implicitly from `PATH` or a development build
+directory. See the bridge README for direct CMake and
+unpacked-component use.
+
+`sim_host --capabilities` reports `keyboard_text_version` for the loaded WASM
+and `dynamic_backend_loader_supported` for the host process. When the loader
+value is `false`, `sim_bridge/run.py` automatically selects the Socket Backend
+instead of attempting to load a native shared library.
+
+### Ready file
+
+The runner passes `--ready-file <PATH>` to the simulator, which writes
+a JSON file containing `version`, `pid`, `backend_mode`, `backend`,
+`backend_library`, `browser`, `bridge_version`, and
+`dynamic_backend_abi_version`. Disabled endpoints appear as `null`.
+The PID belongs to the simulator process, not its Python tool-manager
+parent.
+
+Callers should:
+
+- Use a fresh, per-launch file path.
+- Verify process ownership of the PID.
+- Tolerate a partially written file during startup.
+- Clean up the file after the simulator exits.
+
+The ready file signals that listeners are bound, not that application
+initialization is complete or that the process is still alive.
+Backend-only headless runs advance at wall-clock pace to match native
+timers.
 
 ## Run on the board
 

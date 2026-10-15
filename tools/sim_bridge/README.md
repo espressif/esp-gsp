@@ -77,6 +77,9 @@ python managed_components/espressif__esp-gsp/tools/sim_bridge/run.py --project p
 ```
 
 The manager also supports `GSP_TOOLS_NO_AUTO_DOWNLOAD=1` for cached-only use.
+The simulator reports `dynamic_backend_loader_supported` separately from the
+Backend ABI version. A build without shared-library loading automatically uses
+the Socket Backend in the runner; an ABI version alone does not promise loading.
 If tools are missing, install the manager into the runner's Python environment,
 or obtain compatible binaries from [release downloads](https://github.com/espressif/esp-gsp/releases).
 The simulator must report `dynamic_backend_abi_version: 1` and support
@@ -117,6 +120,16 @@ state or callback before capturing a screenshot. Use the application's render
 fence to synchronize completed updates; a frame wait advances simulation time.
 For bounded runs, `--duration <seconds>` waits for Backend completion and cleans
 up the host process tree.
+
+### Keyboard text readback
+
+The bridge implements `esp_gsp_keyboard_text_size()` and
+`esp_gsp_keyboard_text()` for reading the keyboard's current UTF-8 text, and
+`esp_gsp_keyboard_attach_ex()` for selecting its byte capacity. Readback preserves
+the device contract: required size includes NUL, and a small buffer returns
+`ESP_GSP_ERR_INVALID_SIZE` with a complete UTF-8 prefix. The simulator's
+`bridge_keyboard_text_version` capability identifies this support; an older
+simulator returns `ESP_GSP_ERR_NOT_SUPPORTED` through the bridge.
 
 ### Dynamic font at startup
 
@@ -214,11 +227,13 @@ void gsp_bridge_app_deinit(esp_gsp_handle_t ui)
 ```
 
 Do not call `gsp_bundle_config()` or start an ESP-LCD renderer in this adapter.
-The default native `main` opens the Backend connection, checks protocol
-compatibility, invokes init, then pumps callbacks and timers until exit.
-Initialization must return; a blocking application loop would prevent event
-dispatch. For a custom entry point, link `esp_gsp::sim_bridge` directly and use
-`gsp_sim_bridge_open/poll/close` instead of `gsp_add_backend`'s default main.
+Both supplied entry points (the shared library and the Socket executable)
+initialize the application, then pump callbacks and timers until exit.
+`gsp_bridge_app_init()` must return; a blocking application loop inside it
+would prevent event dispatch. Applications using these entry points do not
+need their own polling loop. For a custom entry point, link
+`esp_gsp::sim_bridge` directly and use `gsp_sim_bridge_open/poll/close` instead;
+the custom entry point takes ownership of the event loop described below.
 Call close only after leaving callbacks/poll, never from inside a callback.
 
 Build without launching, or invoke CMake directly:
@@ -244,6 +259,47 @@ version-2 `<target>-<configuration>.json` manifest containing
 `backend_library`, `executable`, and `bundle`; this works with both single- and
 multi-configuration generators. For multiple backends in one CMake project,
 pass `--target` to the Python scripts.
+
+## Custom entry point: keep the event loop running
+
+After opening the bridge and initializing the application, call
+`gsp_sim_bridge_poll()` repeatedly on the same Backend thread, **even when
+there is no user input, no new command, or no visible screen change**.
+`gsp_sim_bridge_open()` does not create a background event dispatcher.
+Unlike the device's GSP task, a custom PC entry point depends on its caller
+to keep callbacks and timers running. The default entry points already do this.
+
+Do not block that thread in `fgets()`, a blocking socket/queue read, or a long
+sleep while waiting for control input. Check input without blocking and process
+only a bounded batch before polling again. A partially received line must not
+block the loop while waiting for its newline. Alternatively, let a worker read
+input and enqueue commands; only the Backend thread may execute their GSP calls.
+
+For example, the loop after successful bridge/app initialization can be:
+
+```c
+/* app_* are application helpers, not bridge APIs. Both must return promptly. */
+while (rc == ESP_GSP_OK && !app_should_stop()) {
+    app_drain_commands_nonblocking(ui, 16); /* At most 16 ready commands. */
+    rc = gsp_sim_bridge_poll(ui, 20);
+}
+/* Then perform teardown on this thread; preserve contexts through close. */
+```
+
+The timeout is an idle wait, shortened for due timers or queued work; it is not
+a fixed sleep or a limit on callback execution time. Keep initialization,
+callbacks and command handlers short. Blocking a UI callback can stall progress
+on the device too. Do not add a second polling thread while leaving GSP calls
+on the first thread: that violates the bridge's single-thread contract.
+
+If a control responds only after another click or screenshot request, inspect
+the Backend loop first. The host may keep rendering animations while C callbacks
+remain undelivered. An input RPC acknowledgment or a running host is not proof
+that application callbacks have executed. Extra screenshots or repeated clicks
+are not a substitute for polling. Regression tests should send a single tap,
+then observe its application result without sending another input, wait or
+capture command to wake the Backend. Also check timer progress during idle input
+and while a command is only partially received.
 
 ## Execution and compatibility contract
 
@@ -359,6 +415,13 @@ A valid token can publish multiple fields or multiple updates; it is not
 consumed by the first update. Do not retry an expired token. Binder failures
 are logged; they cannot be returned to the render task retroactively.
 
+Row publication and List total/refresh operations preserve the corresponding
+ESP-GSP API error codes. Row text/value/color setters can return
+`ESP_GSP_ERR_INVALID_ARG` for stale tokens or invalid arguments; automatic slot
+lookup can return `ESP_GSP_ERR_NOT_FOUND`. Check the returned code instead of
+treating every failure as a recycled row. Image upload acceptance remains separate from
+`image_complete`, which reports the result of applying the queued image.
+
 Author a List/Wheel that actually has a runtime row template: a short static
 list that fits its viewport may compile without one and cannot be bound as a
 dynamic list. Grid template images need `"dynamic_image": true`, and text
@@ -416,6 +479,14 @@ reported too. `image_release` marks the end of encoded-input retention, not
 the end of decoding. Nonzero cache keys are forwarded to GSP unchanged:
 reuse a key only for identical immutable encoded content and change it when
 content changes. They do not suppress transport uploads.
+
+External-package images expose the same `esp_gsp_assets_get_publication()`
+query as the device. `has_frame` becomes true after a successful
+`image_complete`, and a replacement request, stop or scene change clears it.
+`request_id` identifies the current request while an older image may remain
+visible. Closing a package safely detaches uploads whose callbacks are still
+pending. Hosts without `bridge_image_version: 1` retain package uploads;
+the publication query returns `ESP_GSP_ERR_NOT_SUPPORTED` with a zeroed output.
 
 Callbacks stay on the calling thread and are dispatched by poll, never
 recursively while waiting for a binary reply. Completion callbacks may call

@@ -335,9 +335,19 @@ only when the next hardware decode does not need it. A sufficiently sized
 surface still needed by the next job is reused. There is no background expiry
 timer. Scratch is recreated lazily when needed.
 
-Eligible P4/S31 hardware JPEG resizes decode directly into PSRAM staging, avoiding a
-second full-frame scratch buffer and copy. Staging includes MCU height and cache
-alignment padding while preserving logical dimensions and packed source rows.
+P4/S31 hardware JPEG decoding preserves JFIF's full-range YCbCr. Eligible 4:2:0
+streams decode into packed YUV420 scratch (1.5 bytes per padded pixel), then PPA
+converts with the full-range matrix into the aligned PSRAM RGB target. PPA rounding
+and RGB565 quantization can differ from the software decoder. Other sampling,
+unaligned/internal targets and unavailable PPA use YUV444 scratch (3 bytes per
+padded pixel) plus CPU conversion; RGB888 can reuse a suitable target in place.
+Encrypted-PSRAM exemption builds keep the CPU conversion path. Hardware failures
+retain software fallback. Include shared YUV scratch and conversion time when
+measuring memory and performance; hardware JPEG decode counters include conversion.
+
+Resize staging includes MCU height and cache alignment padding while preserving
+logical dimensions and packed source rows. Image allocations align pixels and
+their private prefix to at least 64 bytes and the allocated heap's cache line.
 Images needing MCU width padding keep the existing path, including its scaler.
 Reservation can reclaim idle hardware scratch without waiting for an active
 JPEG job. It does not clear the full staging buffer under the cache lock or fall
@@ -462,16 +472,69 @@ caller and no later release callback runs.
 The currently displayed image remains visible while its replacement decodes.
 If replacement decoding fails, the previous image stays visible.
 
+Completion and release callbacks may submit another image, but must not wait for
+its completion. The runtime commits
+or detaches the previous request before invoking application code and completes
+each accepted request once. A superseded request's cancellation is reported after
+its replacement is installed; a request submitted by that callback remains newer.
+
 The authored placeholder, not the replacement, fixes the decoded pixel format.
-An opaque PNG may replace a transparent placeholder (alpha becomes 255). An RGBA
-PNG replaces an opaque placeholder only when every pixel is opaque; a PNG with
-transparent pixels is rejected there. Author a transparent placeholder when the
-replacement needs transparency.
+An opaque PNG or JPEG may replace a transparent placeholder (alpha becomes 255).
+JPEG has no alpha samples; use JPEG+A8 when the replacement carries a separate
+lossless alpha plane. RGBA and RGB+tRNS PNGs replace an opaque placeholder only
+when every pixel is opaque. Author a transparent placeholder when the replacement
+needs transparency.
+Runtime PNG supports non-interlaced 8-bit RGB/RGBA, including RGB `tRNS` color keys.
+Keys are compared before native color quantization and produce alpha 0 or 255;
+unused high key bits are masked as required by the PNG specification;
+the same opaque-placeholder rule applies. Palette, grayscale, 16-bit and interlaced
+PNG remain unsupported at runtime; the compiler can convert supported source files.
 
 ## Canvas producers
 
+In GSP native buffers, RGB888 pixels use B, G, R byte order; RGB565 uses native
+packed 16-bit values. Use this layout for borrowed frames and Direct Draw.
+
 Use Canvas when an external producer owns continuously changing pixels, such
 as a camera preview, video frame, or live raster plot.
+
+Declare the producer on a named scene Image:
+
+```json
+{
+  "type": "image", "w": 200, "h": 100,
+  "image": "assets/placeholder.png", "codec": "raw",
+  "bind": "preview", "canvas": "draw"
+}
+```
+
+`canvas: "draw"` checks direct-draw compatibility; `canvas: "push"` checks the
+placeholder for borrowed frame submission and allows supported image transforms
+and blit opacity. Both reserve an independent mutable resource view, while
+identical immutable image data stays shared. Ordinary Images keep their existing
+deduplication. The declaration does not register a producer, allocate frame
+buffers, or change runtime APIs. It requires a compiler that exposes
+`canvas_resource_views` in `gspc schema --authoring`; compilers without this capability
+reject the new field.
+
+Use a resource bind (`bind_target` omitted or `"resource"`) and a static opaque
+raster placeholder in an RGB565/RGB888 scene. Draw mode additionally requires
+fixed opacity 255, `fit: "stretch"`/`"fill"`, scale/store_scale 1, scalable false,
+and omitted or fixed `rotation: 0`. Draw mode does not generate a runtime
+rotation setter; use push mode for runtime rotation. Push mode preserves the existing transform/cache
+requirements; frames must match the compiled placeholder's native dimensions,
+which can differ from the authored box when fit/scaling is enabled. Transparent,
+SVG and animated placeholders, ARGB8888 scenes, and list/template instances are
+rejected. `esp_gsp_canvas_check()` checks direct-draw compatibility, so it can reject
+a transformed push target. Existing scenes without `canvas` keep their behavior
+and still rely on runtime admission checks.
+
+Independent views still consume the configured Canvas slot pool. The current
+default is 2 active producers; size `ESP_GSP_CANVAS_SLOTS` or the per-instance
+`ESP_GSP_FIELD_CANVAS_SLOTS` override for the maximum simultaneous producers
+(currently 1–8). Merely declaring a target does not occupy a slot; installing a
+callback or submitting a frame does. Queue acceptance remains distinct from
+Canvas admission; observe the Canvas result/release callbacks.
 
 The frame-push API accepts complete or dirty frame updates and borrows each
 buffer until its release callback. Do not reuse or free a submitted frame
@@ -622,7 +685,23 @@ GIF/APNG images accept these `animation_codec` policies:
 
 Opaque animations use JPEG. If any frame has transparency, the entire animation uses JPEG+A8: lossy color and lossless alpha, with no silent transparency removal. GIF/APNG frames are composited onto complete canvases before encoding; frame durations and loop counts are preserved. `max_fps` still caps the imported frame rate. Explicit `codec: "jpeg"` also works for animations; `animation_codec` takes precedence when both are present. With `animation_codec`, omitted `quality` uses the profile's `jpeg_quality`.
 
+Holds longer than 65,535 ms are split into compatible frame entries that share
+compressed patch bytes. Merging unchanged frames and `max_fps` decimation preserve
+their accumulated duration. Compilation rejects sequences exceeding the container's
+65,535 frame entries, 65,535 finite loops or 32-bit payload offsets instead of
+truncating them. Reports count patch work for each replayed hold entry.
+
+Rebuild external asset packages together with generated headers when long holds add entries.
+
 JPEG mode decodes and redraws complete frames. It trades resource space for access to hardware decoding; sparse UI animations may still benefit more from QOI patches. `animation_frame_budget_bytes` limits decoded-frame storage, not encoded Flash size; inspect resource reports for encoded size. Reports distinguish `anim_qoi`, `anim_jpeg`, and `anim_jpeg_a8`.
+
+`animation_max_players` is a separate per-scene Profile limit for independent
+compiled animation resources. It defaults to 4 and can be raised in the YAML
+Profile passed through `--profile` or `gsp_add_backend(... PROFILE ...)`.
+On devices, `CONFIG_ESP_GSP_MAX_ASSET_ANIMS=0` derives the runtime capacity
+from Bundle requirements; explicit project or instance limits must still cover
+those resources. Hidden animations can pause, but their compiled resources
+still count toward the player limit.
 
 Without `animation_codec`, `size` compares the complete QOI delta and
 JPEG/JPEG+A8 payloads. `auto` and `speed` consider hardware JPEG only when the
@@ -637,6 +716,24 @@ Transparent animations keep QOI automatically; use explicit
 `animation_codec` always takes precedence.
 Animations use a separate frame buffer; `cache_policy` and `store_scale` are
 static-image options and are rejected on animations.
+
+Lossless compiled animations keep one native pixel canvas. The first frame is
+fully decoded before publication. Before each later frame's first update, the
+runtime checks every QOI patch without writing pixels. Invalid
+content freezes playback on the last valid frame; its pixels, frame index and
+timeline remain unchanged. Playback visits frames in order, so an in-player
+validation progress marker reuses the results on later loops without allocating
+a heap cache or second pixel canvas. Keep borrowed animation bytes immutable until the player
+is closed. The first traversal adds a syntax scan of compressed patches;
+include this first-use cost when measuring playback latency.
+
+QOI region selection also considers bounded row-span candidates for thin or
+irregular changes. The default retains the original candidate unless stored
+bytes, pixel work and the existing per-region call-cost proxy do not increase.
+The existing `speed` image policy may allow up to 10% growth per frame, including
+patch-table bytes, when extra regions save enough pixels. This remains the same
+QOI animation format. More regions can increase display-window overhead;
+measure the target's decode, rendering and presentation together.
 
 JPEG color conversion can differ between hardware and software decoders. Use
 `lossless` for icons, brand colors and other UI assets that need consistent color;

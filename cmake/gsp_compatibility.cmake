@@ -25,6 +25,9 @@ function(_esp_gsp_require_equal label actual expected)
 endfunction()
 
 function(esp_gsp_validate_gspc_compatibility compatibility_json)
+    # Functions are global, but the first includer's directory variables are
+    # not. Load the generated values in this call's scope as well.
+    include("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/gsp_compatibility_contract.cmake")
     _esp_gsp_json_get(contract_schema "${compatibility_json}"
         schema_version)
     _esp_gsp_require_equal("contract schema" "${contract_schema}"

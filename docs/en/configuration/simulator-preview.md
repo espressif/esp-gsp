@@ -137,6 +137,16 @@ The examples demonstrate the split:
 - `sim_bridge_media/pc`: portable List/Grid binders, QOI images and Canvas
   offscreen drawing; select this project with the same runner command.
 
+The supplied shared-library and Socket executable entry points keep events and
+timers running after `gsp_bridge_app_init()` returns; business code does not need
+to call `gsp_sim_bridge_poll()` itself. Initialization and callbacks must return
+promptly. If you replace the entry point with your own `open/poll/close` loop,
+you must keep polling on the Backend thread even while no input arrives.
+`open()` does not start a background dispatcher. Blocking command reads can
+leave a click pending until the next input, even while the host keeps rendering.
+Use nonblocking input or an input worker that hands commands to the Backend
+thread. See the [custom entry-point example](../../../tools/sim_bridge/README.md#custom-entry-point-keep-the-event-loop-running).
+
 Isolate drivers, RTOS tasks and hardware services behind an application
 HAL/PC mock. Version 1 requires one Backend calling thread; callbacks can
 make synchronous supported GSP calls, while workers hand data over through

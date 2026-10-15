@@ -21,6 +21,8 @@ gsp_sim_host \
 
 These commands compile the example and open it in the ESP-GSP simulator browser preview.
 
+Generated keys paint at the Keyboard's position in scene order, so later foreground objects and Drawers can cover them.
+
 ## Runtime behavior
 
 `input: true` marks the target text field, but key taps write to it only after the application attaches the keyboard action to that field's text bind. For C integration, use the bundle header from `gspc compile --api-header app.h` or the ESP-GSP CMake build. After entering this scene, expose its IDs before including that header and attach them:

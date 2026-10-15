@@ -10,9 +10,9 @@ CMake 会立即停止并给出不匹配项，不会把问题推迟到设备运�
 
 | 项目 | 当前值 | 链接 |
 |---|---:|---|
-| ESP-GSP 组件 | `1.6.0` | [Component Registry](https://components.espressif.com/components/espressif/esp-gsp/versions/1.6.0/readme) |
-| ESP-GSP 模拟器 | `1.6.0` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/sim/v1.6.0/manifest.json) |
-| 推荐 GSPC | `0.7.0` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/gspc/v0.7.0/manifest.json) |
+| ESP-GSP 组件 | `1.7.0` | [Component Registry](https://components.espressif.com/components/espressif/esp-gsp/versions/1.7.0/readme) |
+| ESP-GSP 模拟器 | `1.7.0` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/sim/v1.7.0/manifest.json) |
+| 推荐 GSPC | `0.8.0` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/gspc/v0.8.0/manifest.json) |
 | GSB | `2.7` |  |
 | GRB | `1.4` |  |
 | GFB | `1.2` |  |
@@ -31,13 +31,13 @@ CMake 会立即停止并给出不匹配项，不会把问题推迟到设备运�
 都在相同 URL 的 `.sig` 后缀地址提供独立 Ed25519 签名。需要自动选择平台、校验签名
 和缓存文件时，建议使用下文的 `esp-gsp-tools`。
 
-| 平台 | GSPC `0.7.0` | 模拟器 `1.6.0` |
+| 平台 | GSPC `0.8.0` | 模拟器 `1.7.0` |
 |---|---|---|
-| Linux ARM64 | [gspc-0.7.0-linux-aarch64.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.7.0/gspc-0.7.0-linux-aarch64.tar.gz) | [sim-1.6.0-linux-aarch64.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.6.0/sim-1.6.0-linux-aarch64.tar.gz) |
-| Linux x86_64 | [gspc-0.7.0-linux-x86_64.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.7.0/gspc-0.7.0-linux-x86_64.tar.gz) | [sim-1.6.0-linux-x86_64.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.6.0/sim-1.6.0-linux-x86_64.tar.gz) |
-| Windows x86_64 | [gspc-0.7.0-windows-x86_64.zip](https://dl.espressif.com/AE/gsp/gspc/v0.7.0/gspc-0.7.0-windows-x86_64.zip) | [sim-1.6.0-windows-x86_64.zip](https://dl.espressif.com/AE/gsp/sim/v1.6.0/sim-1.6.0-windows-x86_64.zip) |
-| Windows ARM64 | [gspc-0.7.0-windows-aarch64.zip](https://dl.espressif.com/AE/gsp/gspc/v0.7.0/gspc-0.7.0-windows-aarch64.zip) | [sim-1.6.0-windows-aarch64.zip](https://dl.espressif.com/AE/gsp/sim/v1.6.0/sim-1.6.0-windows-aarch64.zip) |
-| macOS Universal 2 | [gspc-0.7.0-macos-universal2.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.7.0/gspc-0.7.0-macos-universal2.tar.gz) | [sim-1.6.0-macos-universal2.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.6.0/sim-1.6.0-macos-universal2.tar.gz) |
+| Linux ARM64 | [gspc-0.8.0-linux-aarch64.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.8.0/gspc-0.8.0-linux-aarch64.tar.gz) | [sim-1.7.0-linux-aarch64.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.7.0/sim-1.7.0-linux-aarch64.tar.gz) |
+| Linux x86_64 | [gspc-0.8.0-linux-x86_64.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.8.0/gspc-0.8.0-linux-x86_64.tar.gz) | [sim-1.7.0-linux-x86_64.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.7.0/sim-1.7.0-linux-x86_64.tar.gz) |
+| Windows x86_64 | [gspc-0.8.0-windows-x86_64.zip](https://dl.espressif.com/AE/gsp/gspc/v0.8.0/gspc-0.8.0-windows-x86_64.zip) | [sim-1.7.0-windows-x86_64.zip](https://dl.espressif.com/AE/gsp/sim/v1.7.0/sim-1.7.0-windows-x86_64.zip) |
+| Windows ARM64 | [gspc-0.8.0-windows-aarch64.zip](https://dl.espressif.com/AE/gsp/gspc/v0.8.0/gspc-0.8.0-windows-aarch64.zip) | [sim-1.7.0-windows-aarch64.zip](https://dl.espressif.com/AE/gsp/sim/v1.7.0/sim-1.7.0-windows-aarch64.zip) |
+| macOS Universal 2 | [gspc-0.8.0-macos-universal2.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.8.0/gspc-0.8.0-macos-universal2.tar.gz) | [sim-1.7.0-macos-universal2.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.7.0/sim-1.7.0-macos-universal2.tar.gz) |
 
 上表是当前推荐组合。安装 `esp-gsp-tools` 后可运行
 `python -m gsp.execute --version '<GSPC version>' gspc compatibility` 查看机器可读
@@ -57,8 +57,8 @@ Registry 组件中的每个预编译库都带有 `prebuilt/<variant>/build-info.
 
 ```sh
 python -m pip install -U esp-gsp-tools
-gspc() { python -m gsp.execute --version 0.7.0 gspc "$@"; }
-gsp_sim_host() { python -m gsp.execute --version 1.6.0 sim "$@"; }
+gspc() { python -m gsp.execute --version 0.8.0 gspc "$@"; }
+gsp_sim_host() { python -m gsp.execute --version 1.7.0 sim "$@"; }
 ```
 
 其他 shell 可使用 `python -m gsp.execute --version VERSION gspc` 或

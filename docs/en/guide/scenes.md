@@ -71,8 +71,11 @@ the compiler preserves authored draw order.
 
 ## Reusable project components
 
-Grid/wrap and component expansion require GSPC 0.7.0, paired with ESP-GSP
-1.6.0. See the [1.6.0 release notes](../../../CHANGELOG.md#160).
+Grid/wrap and component expansion were introduced with GSPC 0.7.0 and
+ESP-GSP 1.6.0. For the current ESP-GSP 1.7.0 release, use the matched GSPC
+0.8.0 toolchain from the [compatibility contract](../reference/compatibility.md).
+Compiler-owned virtual collection content can use the GSB 2.20
+`instance_order` variant; rebuild affected scenes with the matched toolchain.
 
 A scene's `components` map, or JSON files loaded with `--components-dir`, defines
 parameterized subtrees. Each definition has an `objects` array and an optional
@@ -512,3 +515,9 @@ input interceptor; use scene widgets for built-in layout, focus and hit handling
 A Keyboard declaration generates its pages and keys at build time. The active page
 handles rendering and input, while the bundle stores all pages. Sharing one keyboard
 across pages keeps both the JSON and compiled resources smaller.
+
+## Dynamic geometry and input
+
+Dynamic width, height and position update painted bounds and interactive hit bounds together. Template geometry value slots retain their existing 0–100 percentage semantics. Layout and `clip_children` keep their declared bounds. Parent visibility parks owned row instances, and nested movement invalidates the old and final painted areas.
+
+Regenerate scenes with the matching compiler and runtime. Dynamic interactive geometry emits the REQUIRED `HIT_GEOMETRY` section in GSB 2.21; an earlier runtime rejects it. Existing resources keep their original contract.

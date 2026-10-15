@@ -27,6 +27,8 @@ GSPC lowers the group to native primitives. Give an object a stable `name` when 
 
 If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
+Generated cells, labels and grid lines paint at the Table's position in scene order, so later foreground objects and Drawers can cover them.
+
 ## Example scene
 
 ```json

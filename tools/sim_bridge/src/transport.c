@@ -70,7 +70,7 @@ struct gsp_ui_core {
     bool canvas_patch_enabled, drawing, closing;
     uint8_t api_version;
     bool read_timeout;
-    bool component_motion_enabled, component_events_enabled;
+    bool component_motion_enabled, component_events_enabled, keyboard_text_enabled;
     bool draining_canvas, canvas_queue_closed;
     char read_header[4096];
     size_t header_used, body_size, body_used;
@@ -80,6 +80,7 @@ struct gsp_ui_core {
     struct bridge_media *media;
     struct bridge_images *images;
     uint16_t scene;
+    uint64_t scene_generation;
     esp_gsp_event_cb_t callback;
     void *callback_ctx;
     esp_gsp_event_t events[EVENT_LIMIT];
@@ -107,6 +108,10 @@ bool bridge_images_enabled(esp_gsp_handle_t ui)
 {
     return ui && ui->image_enabled;
 }
+uint64_t bridge_scene_generation(esp_gsp_handle_t ui)
+{
+    return ui ? ui->scene_generation : 0;
+}
 bool bridge_media_enabled(esp_gsp_handle_t ui)
 {
     return ui && ui->media_enabled;
@@ -130,6 +135,11 @@ bool bridge_widget_enabled(esp_gsp_handle_t ui)
 bool bridge_component_motion_enabled(esp_gsp_handle_t ui)
 {
     return ui && ui->component_motion_enabled;
+}
+
+bool bridge_keyboard_text_enabled(esp_gsp_handle_t ui)
+{
+    return ui && ui->keyboard_text_enabled;
 }
 void bridge_set_pointer_observer(esp_gsp_handle_t ui,
                                  esp_gsp_pointer_observer_cb_t cb, void *user_ctx)
@@ -312,6 +322,40 @@ static const char *field(const char *json, const char *key)
         }
     }
     return NULL;
+}
+
+bool bridge_json_hex(const char *json, const char *key, char *out, size_t capacity)
+{
+    if (out == NULL || capacity == 0) {
+        return false;
+    }
+    out[0] = '\0';
+    const char *p = field(json, key);
+    if (p == NULL || *p++ != '"') {
+        return false;
+    }
+    const char *end = strchr(p, '"');
+    if (end == NULL || ((size_t)(end - p) & 1U) != 0 || (size_t)(end - p) / 2 >= capacity) {
+        return false;
+    }
+    size_t length = (size_t)(end - p) / 2;
+    for (size_t i = 0; i < length; ++i) {
+        unsigned char digits[2] = {(unsigned char)p[2 * i], (unsigned char)p[2 * i + 1]};
+        unsigned values[2];
+        for (unsigned j = 0; j < 2; ++j) {
+            if (digits[j] >= '0' && digits[j] <= '9') {
+                values[j] = digits[j] - '0';
+            } else if (digits[j] >= 'a' && digits[j] <= 'f') {
+                values[j] = digits[j] - 'a' + 10;
+            } else {
+                out[0] = '\0';
+                return false;
+            }
+        }
+        out[i] = (char)((values[0] << 4) | values[1]);
+    }
+    out[length] = '\0';
+    return true;
 }
 
 int64_t bridge_json_number(const char *json, const char *key, int64_t fallback)
@@ -698,6 +742,7 @@ static bool notification(esp_gsp_handle_t ui, const char *body)
         event.type = ESP_GSP_EVENT_SCENE_CHANGED;
         event.scene_id = (uint16_t)bridge_json_number(params, "to", ui->scene);
         ui->scene = event.scene_id;
+        ++ui->scene_generation;
         ui->component_head = ui->component_count = 0;
         bridge_media_scene_changed(ui);
     } else if (!strncmp(method, "\"pointer\"", 9)) {
@@ -994,6 +1039,7 @@ esp_gsp_err_t gsp_sim_bridge_open(const char *endpoint, esp_gsp_handle_t *out)
     ui->api_version = api_version >= GSP_SIM_BRIDGE_API_VERSION ?
                       GSP_SIM_BRIDGE_API_VERSION : api_version > 0 ? (uint8_t)api_version : 1;
     ui->component_motion_enabled = bridge_json_number(caps, "component_motion_version", 0) == 1;
+    ui->keyboard_text_enabled = bridge_json_number(caps, "bridge_keyboard_text_version", 0) == 1;
     ui->component_events_enabled = bridge_json_number(caps, "component_events_version", 0) == 1;
     free(caps);
     *out = ui;
@@ -1037,6 +1083,7 @@ esp_gsp_err_t bridge_open_inproc(const gsp_sim_host_api_v1_t *host,
     int64_t api_version = bridge_json_number(caps, "bridge_api_version", 1);
     ui->api_version = api_version >= 3 ? 3 : api_version >= 2 ? 2 : 1;
     ui->component_motion_enabled = bridge_json_number(caps, "component_motion_version", 0) == 1;
+    ui->keyboard_text_enabled = bridge_json_number(caps, "bridge_keyboard_text_version", 0) == 1;
     ui->component_events_enabled = bridge_json_number(caps, "component_events_version", 0) == 1;
     free(caps);
     *out = ui;

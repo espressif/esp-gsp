@@ -1323,6 +1323,29 @@ esp_gsp_err_t esp_gsp_assets_show_target_name(esp_gsp_assets_t *assets, esp_gsp_
 esp_gsp_err_t esp_gsp_assets_get_status(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, esp_gsp_asset_target_t target, esp_gsp_asset_status_t *out_status);
 ```
 
+### `esp_gsp_assets_get_publication()`
+
+读取当前请求的首帧发布状态，后续读取期间仍可判断是否已加载。
+
+- **头文件:** `include/esp_gsp_assets.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_get_publication(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, esp_gsp_asset_target_t target, esp_gsp_asset_publication_t *out_publication);
+```
+
+<details><summary>完整接口契约（英文）</summary>
+
+Snapshot the current request's first successful UI publication.
+has_frame remains true during later reads and after a later frame fails.
+A new show, stop or scene change clears it; request_id distinguishes a
+replacement request even while the previous image remains visible.
+Unlike the transient READY state, this can drive loading placeholders.
+Publication means the UI accepted the complete image, not LCD scanout.
+On error the output is zeroed; a target not yet submitted is NOT_FOUND.
+
+</details>
+
 ### `esp_gsp_assets_stop_target()`
 
 停止指定目标的后续帧，保留已显示内容。
@@ -1424,7 +1447,7 @@ esp_gsp_err_t esp_gsp_assets_close_wait(esp_gsp_assets_t *assets, uint32_t timeo
 <details><summary>完整接口契约（英文）</summary>
 
 Explicit wait budget; zero polls. Does not forcibly cancel a driver read.
-On timeout status/stats and another close are allowed; show is rejected.
+On timeout status/publication/stats and another close are allowed; show is rejected.
 Call from an application task, not a render/decode callback. Other callers
 must be quiescent before successful close frees the handle. Published source
 buffers survive close until UI replacement/shutdown. NULL succeeds.
@@ -2528,6 +2551,9 @@ void *esp_gsp_timer_create(esp_gsp_handle_t gsp, uint32_t period_ms, esp_gsp_tim
 
 Periodic callback in render-task context (lv_timer equivalent).
 Returns a handle usable with esp_gsp_timer_delete; NULL on error.
+ESP-IDF schedules the first callback one period after registration using
+its monotonic clock and wakes an idle service. Callback execution can still
+be delayed by rendering or other task work; this is not a real-time deadline.
 With the ESP-IDF runtime attached, creation and deletion may be called from
 application tasks or timer callbacks, but not from an ISR. Keep the app and
 runtime alive throughout these calls. Unattached portable apps require

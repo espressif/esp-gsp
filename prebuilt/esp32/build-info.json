@@ -1,0 +1,42 @@
+{
+  "archive": {
+    "file": "libesp-gsp.a",
+    "sha256": "36b4627e0007f4d4c25a32ef7bf0115bd54d6f448a700d8188018c473e2ab44e"
+  },
+  "build": {
+    "assertions": "enabled",
+    "core_compile_units": 104,
+    "fast_math": false,
+    "lto_flag_source": "sdkconfig",
+    "lto_flags": [
+      "-fno-lto"
+    ],
+    "optimization_flags": [
+      "-O2"
+    ]
+  },
+  "compiler": {
+    "executable": "xtensa-esp32-elf-gcc",
+    "version": "xtensa-esp-elf-gcc (crosstool-NG esp-15.2.0_20251204) 15.2.0"
+  },
+  "component": {
+    "name": "espressif/esp-gsp",
+    "version": "1.7.0"
+  },
+  "esp_idf": {
+    "commit": "fff9895c82d744c7237be8847347bdd1b07c6643",
+    "dirty": false,
+    "version": "v6.1"
+  },
+  "schema_version": 1,
+  "source": {
+    "commit": "fd993f5742cc66325918548d6925346799060b68",
+    "dirty": false
+  },
+  "target": {
+    "idf_target": "esp32",
+    "revision_max_full": 399,
+    "revision_min_full": 0,
+    "variant": "esp32"
+  }
+}

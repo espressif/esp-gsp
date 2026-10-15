@@ -237,6 +237,11 @@ esp_gsp_err_t esp_gsp_widget_set_image(esp_gsp_handle_t ui, esp_gsp_widget_t wid
 {
     return widget_submit(ui, widget, slot, data, size, NULL);
 }
+esp_gsp_err_t bridge_widget_set_image_ex(esp_gsp_handle_t ui, esp_gsp_widget_t widget,
+        uint16_t slot, const void *data, size_t size, const esp_gsp_image_options_t *options)
+{
+    return widget_submit(ui, widget, slot, data, size, options);
+}
 esp_gsp_err_t esp_gsp_widget_set_image_borrowed(esp_gsp_handle_t ui, esp_gsp_widget_t widget, uint16_t slot, const void *data, size_t size, esp_gsp_image_release_cb_t cb, void *ctx)
 {
     const esp_gsp_image_options_t options = {.ownership = ESP_GSP_IMAGE_BORROW, .on_release = cb, .release_ctx = ctx};

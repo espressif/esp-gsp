@@ -39,7 +39,8 @@ idf.py --preview -B build_rgb888 -D SDKCONFIG="$PWD/build_rgb888/sdkconfig" \
 ```
 
 The scene is configured in the build directory. The opaque 200x100 placeholder
-supplies native dimensions. The renderer owns temporary destination pixels; the
+supplies native dimensions and belongs to this example's only Image target.
+The renderer owns temporary destination pixels; the
 application owns drawing state and uses one producer per bind. Direct draw runs
 on the render task, so it must not block, log, call setters, flush, stop, or
 retain the surface pointer. The extension observer is observation-only; handle
@@ -60,5 +61,6 @@ esp_gsp_esp_lcd_start_prepared() 成功只表示运行时启动成功，不能�
 
 使用与当前组件配套的 GSPC，并确保包含公开的
 esp_gsp_extension.h、prepared start API 和同一次编译生成的 bundle_gsp.h。
-scene 在构建目录中配置；200x100 不透明占位图提供原生尺寸。Canvas 回调运行在渲染任务，
+scene 在构建目录中配置；200x100 不透明占位图提供原生尺寸，仅供示例中的一个 Image
+目标使用。Canvas 回调运行在渲染任务，
 不能阻塞、打印日志、调用状态修改 API、flush/stop 或保留 surface 指针；后续工作交给应用任务。

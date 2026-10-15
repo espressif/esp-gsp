@@ -21,6 +21,8 @@ gsp_sim_host \
 
 这些命令会编译当前示例，并在 ESP-GSP 模拟器中打开浏览器预览。
 
+生成的按键按 Keyboard 在场景中的位置绘制，后续前景对象和 Drawer 可以遮挡它们。
+
 ## 运行方式
 
 `input: true` 标记目标文字输入字段，但按键只有在应用将键盘 action 接到该字段的 text bind 后才会写入。C 集成使用 `gspc compile --api-header app.h` 或 ESP-GSP CMake 构建生成的 bundle 头文件。进入本场景后，在包含该头文件前启用场景限定 ID，并接入键盘：

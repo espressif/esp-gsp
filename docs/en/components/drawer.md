@@ -25,6 +25,16 @@ These commands compile the example and open it in the ESP-GSP simulator browser 
 
 Children keep their hierarchy. `clip_children` limits drawing and input to the parent rectangle. Use fixed `w` and `h` for a viewport; `radius` styles its background and border.
 
+Paint order follows the scene's `objects` array. Place the underlying page's
+images and other content before the Drawer, followed by its children. A late
+page image placed between the Drawer and its controls can cover the background
+while those controls remain visible. `parent_name` establishes coordinates and
+inheritance; it does not move an object in paint order. When rearranging objects,
+update numeric `parent` references or use named parents.
+
+`gspc diagnose scene.json --layout-check` advises when a branch under an earlier
+object is interleaved with Drawer content.
+
 If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
 ## Example scene

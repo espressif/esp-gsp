@@ -19,6 +19,7 @@ set(gsp_srcs
     "src/runtime/gsp_asset_delta.c"
     "src/platform/esp_idf/esp_gsp_assets.c"
     "src/runtime/gsp_bundle.c"
+    "src/runtime/gsp_runtime_specialization.c"
     "src/runtime/gsp_gsb.c"
     "src/runtime/gsp_image_cache.c"
     "src/runtime/gsp_image_layout.c"
@@ -258,6 +259,8 @@ if(gsp_use_prebuilt)
     target_link_libraries(${COMPONENT_LIB} INTERFACE gsp_prebuilt)
     set_property(TARGET ${COMPONENT_LIB}
         PROPERTY ESP_GSP_PREBUILT TRUE)
+    set_property(TARGET ${COMPONENT_LIB}
+        PROPERTY ESP_GSP_PREBUILT_LIBRARY "${GSP_PREBUILT_LIB}")
 else()
     if(gsp_jpeg_enabled)
         idf_component_optional_requires(PRIVATE espressif__esp_new_jpeg)
@@ -278,7 +281,7 @@ set_property(TARGET ${COMPONENT_LIB}
     PROPERTY ESP_GSP_JPEG_ENABLED ${gsp_jpeg_enabled})
 if(gsp_jpeg_enabled)
     target_link_libraries(${COMPONENT_LIB} INTERFACE
-        "-Wl,-u,gsp_codec_jpeg_provider")
+        "$<$<NOT:$<BOOL:$<TARGET_PROPERTY:${COMPONENT_LIB},ESP_GSP_RUNTIME_SPECIALIZED>>>:-Wl,-u,gsp_codec_jpeg_provider>")
 else()
     message(STATUS "esp-gsp: JPEG decoding disabled by "
         "CONFIG_ESP_GSP_ENABLE_JPEG=n")
@@ -287,9 +290,28 @@ endif()
 foreach(member IN LISTS gsp_optional_members)
     if(gsp_${member}_enabled)
         target_link_libraries(${COMPONENT_LIB} INTERFACE
-            "-Wl,-u,${gsp_${member}_provider}")
+            "$<$<NOT:$<BOOL:$<TARGET_PROPERTY:${COMPONENT_LIB},ESP_GSP_RUNTIME_SPECIALIZED>>>:-Wl,-u,${gsp_${member}_provider}>")
     else()
         message(STATUS "esp-gsp: ${member} disabled by "
             "CONFIG_ESP_GSP_ENABLE_${member}=n")
     endif()
 endforeach()
+
+# Manual disables remain capability ceilings in automatic mode. Static needs
+# that exceed them are diagnosed by GSPC before the firmware is linked.
+set(gsp_runtime_disabled "")
+if(NOT gsp_jpeg_enabled)
+    list(APPEND gsp_runtime_disabled jpeg)
+endif()
+foreach(member IN LISTS gsp_optional_members)
+    if(NOT gsp_${member}_enabled)
+        if(member STREQUAL "REFERENCE_RENDERER")
+            list(APPEND gsp_runtime_disabled reference)
+        else()
+            string(TOLOWER "${member}" feature)
+            list(APPEND gsp_runtime_disabled "${feature}")
+        endif()
+    endif()
+endforeach()
+set_property(TARGET ${COMPONENT_LIB}
+    PROPERTY ESP_GSP_RUNTIME_DISABLED_FEATURES "${gsp_runtime_disabled}")

@@ -1,10 +1,10 @@
 # Grid (`gsp_grid`)
 
-Virtualized multi-column collection backed by a reusable cell template.
+A virtualized multi-column collection that recycles cells from a reusable template.
 
 ## When to use
 
-Use it to show or choose from a collection of repeated items.
+Use Grid when you need to display or select from a collection of repeated items in a multi-column layout — for example, a photo gallery or a settings grid.
 
 ## Local interactive preview
 
@@ -23,9 +23,11 @@ These commands compile the example and open it in the ESP-GSP simulator browser 
 
 ## Runtime behavior
 
-The scene defines the item layout. Fixed items work without an application adapter; dynamic data needs an adapter or backend.
+The scene JSON defines the cell layout template. Fixed items work without an application adapter; dynamic data requires an adapter or a backend.
 
-If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
+Generated cells paint at the Grid's position in scene order. Foreground objects declared later in the scene (such as a Drawer) will cover the cells. If you need an overlay to stay above the Grid, place its content after the Grid in the scene.
+
+Give any object that your application code needs to read or update a stable `name`. GSPC generates the typed functions listed below for each named object.
 
 ## Example scene
 

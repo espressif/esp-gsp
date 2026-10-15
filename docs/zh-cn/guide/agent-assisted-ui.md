@@ -79,6 +79,9 @@ Skill 遵循与[推荐工程工作流](workflow.md)相同的职责模型：
 使用其中报告的 Target、组件和配置契约；如果找不到构建描述，应保持为未知，
 不能用 host 默认配置代替。
 
+源码 checkout 的目录名可以不同。使用 `build_contract.component.selected_names`
+取得实际 CMake 组件标识，使用 `component.paths` 确认对应目录。
+
 `build_contract.status` 区分 `unavailable`（未找到描述）、`invalid`（无效描述）、
 `incomplete`（必要信息缺失）、`stale`（项目或 Target 不一致）和
 `observed`（已读取构建元数据）。根据 `missing`、`stale_reasons` 处理报告的问题。

@@ -18,6 +18,14 @@ extern "C" {
  * Canvas uploads/draws have completed (otherwise flush returns INVALID_STATE).
  * Only numeric IPv4 loopback TCP endpoints are accepted in version 1. */
 esp_gsp_err_t gsp_sim_bridge_open(const char *endpoint, esp_gsp_handle_t *out);
+/* Dispatch queued application events and due timers on the owning thread.
+ * A custom entry point must call this repeatedly, including while idle or
+ * waiting for external input; open() does not start a background dispatcher.
+ * Blocking command reads on this thread stop callbacks and timers. Use
+ * nonblocking input or have workers enqueue commands for this thread.
+ * The supplied executable/shared-library entry points already own this loop;
+ * their app_init must return, and callbacks must not call poll recursively.
+ * timeout_ms bounds the idle wait, not total work or callback duration. */
 esp_gsp_err_t gsp_sim_bridge_poll(esp_gsp_handle_t ui, uint32_t timeout_ms);
 void gsp_sim_bridge_close(esp_gsp_handle_t ui);
 uint16_t gsp_sim_bridge_current_scene(esp_gsp_handle_t ui);

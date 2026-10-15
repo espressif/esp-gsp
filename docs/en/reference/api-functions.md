@@ -944,6 +944,17 @@ Get assets status.
 esp_gsp_err_t esp_gsp_assets_get_status(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, esp_gsp_asset_target_t target, esp_gsp_asset_status_t *out_status);
 ```
 
+### `esp_gsp_assets_get_publication()`
+
+Snapshot the current request's first successful UI publication. has_frame remains true during later reads and after a later frame fails. A new show, stop or scene change clears it; request_id distinguishes a replacement request even while the previous image remains visible. Unlike the transient READY state, this can drive loading placeholders. Publication means the UI accepted the complete image, not LCD scanout. On error the output is zeroed; a target not yet submitted is NOT_FOUND.
+
+- **Header:** `include/esp_gsp_assets.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_assets_get_publication(esp_gsp_assets_t *assets, esp_gsp_handle_t gsp, esp_gsp_asset_target_t target, esp_gsp_asset_publication_t *out_publication);
+```
+
 ### `esp_gsp_assets_stop_target()`
 
 Stop assets target.
@@ -1001,7 +1012,7 @@ esp_gsp_err_t esp_gsp_assets_close(esp_gsp_assets_t *assets);
 
 ### `esp_gsp_assets_close_wait()`
 
-Explicit wait budget; zero polls. Does not forcibly cancel a driver read. On timeout status/stats and another close are allowed; show is rejected. Call from an application task, not a render/decode callback. Other callers must be quiescent before successful close frees the handle. Published source buffers survive close until UI replacement/shutdown. NULL succeeds.
+Explicit wait budget; zero polls. Does not forcibly cancel a driver read. On timeout status/publication/stats and another close are allowed; show is rejected. Call from an application task, not a render/decode callback. Other callers must be quiescent before successful close frees the handle. Published source buffers survive close until UI replacement/shutdown. NULL succeeds.
 
 - **Header:** `include/esp_gsp_assets.h`
 - **Return type:** `esp_gsp_err_t`
@@ -1693,7 +1704,7 @@ esp_gsp_err_t esp_gsp_query_visibility(esp_gsp_handle_t gsp, const esp_gsp_visib
 
 ### `esp_gsp_timer_create()`
 
-Periodic callback in render-task context (lv_timer equivalent). Returns a handle usable with esp_gsp_timer_delete; NULL on error. With the ESP-IDF runtime attached, creation and deletion may be called from application tasks or timer callbacks, but not from an ISR. Keep the app and runtime alive throughout these calls. Unattached portable apps require caller serialization with app stepping and other timer operations. The caller owns user_ctx and must keep it alive until callbacks have exited.
+Periodic callback in render-task context (lv_timer equivalent). Returns a handle usable with esp_gsp_timer_delete; NULL on error. ESP-IDF schedules the first callback one period after registration using its monotonic clock and wakes an idle service. Callback execution can still be delayed by rendering or other task work; this is not a real-time deadline. With the ESP-IDF runtime attached, creation and deletion may be called from application tasks or timer callbacks, but not from an ISR. Keep the app and runtime alive throughout these calls. Unattached portable apps require caller serialization with app stepping and other timer operations. The caller owns user_ctx and must keep it alive until callbacks have exited.
 
 - **Header:** `include/esp_gsp.h`
 - **Return type:** `void *`

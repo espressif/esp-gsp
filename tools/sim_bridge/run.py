@@ -53,13 +53,14 @@ def dynamic_font_path(value: str | Path | None) -> Path | None:
     return path
 
 
-def host_command(host: list[str], manifest: dict, args: argparse.Namespace, ready: Path) -> list[str]:
+def host_command(host: list[str], manifest: dict, args: argparse.Namespace, ready: Path,
+                 *, loader_supported: bool = True) -> list[str]:
     """Build the sim_host command before it creates the UI/runtime instance."""
     validate_backend_manifest(manifest)
     command = [*host, "--bundle", manifest["bundle"], "--frames", "0",
                "--backend-required", "--ready-file", str(ready)]
     backend_port = getattr(args, "backend_port", None)
-    socket_backend = getattr(args, "socket_backend", False) or backend_port is not None
+    socket_backend = getattr(args, "socket_backend", False) or backend_port is not None or not loader_supported
     if socket_backend:
         command += ["--backend-idle-timeout", "30"]
         if backend_port is None:
@@ -238,6 +239,8 @@ def simulator_preflight(host: list[str], component: Path, timeout: float) -> dic
     if not isinstance(capabilities, dict) or not isinstance(capabilities.get("runtime_version"), str):
         raise RuntimeError("Simulator preflight is missing runtime_version")
     expected = component_version(component)
+    if "dynamic_backend_loader_supported" in capabilities and not isinstance(capabilities["dynamic_backend_loader_supported"], bool):
+        raise RuntimeError("Simulator returned an invalid shared-library loader capability")
     observed = capabilities["runtime_version"]
     if observed != expected:
         print(f"sim_bridge: component {expected}, simulator runtime {observed}; versions differ. "
@@ -275,7 +278,10 @@ def run_backend(args: argparse.Namespace, manifest: dict) -> int:
     info = {}
     with tempfile.TemporaryDirectory(prefix="gsp-sim-bridge-") as temporary:
         ready = Path(temporary) / "ready.json"
-        command = host_command(host, manifest, args, ready)
+        loader_supported = contract["simulator"].get("dynamic_backend_loader_supported", True)
+        if not loader_supported and not getattr(args, "socket_backend", False):
+            print("sim_bridge: simulator uses Socket Backend because shared-library loading is unavailable", flush=True)
+        command = host_command(host, manifest, args, ready, loader_supported=loader_supported)
         try:
             sim = start(command)
             info = wait_ready(sim, ready, args.startup_timeout, managed=not args.host)

@@ -1,10 +1,10 @@
 # Wheel (`gsp_wheel`)
 
-Single-column collection with row snapping and optional cyclic selection.
+A single-column selector with row snapping and optional cyclic scrolling.
 
 ## When to use
 
-Use it to show or choose from a collection of repeated items.
+Use Wheel when you need to pick one item from a scrollable list — for example, a date or time picker.
 
 ## Local interactive preview
 
@@ -23,9 +23,18 @@ These commands compile the example and open it in the ESP-GSP simulator browser 
 
 ## Runtime behavior
 
-Set `cyclic: true` for continuous scrolling across the first and last items. For data that changes at runtime, set `dynamic_items: true` to keep the same bind, set_total and refresh APIs regardless of the initial item count. Call the generated bind helper once with `(ui, NULL, NULL)` for compiled item text; application-owned data uses a row callback. Declare the characters needed by future values with font_charset. No slot IDs are needed. Selection APIs use logical item indexes.
+Set `cyclic: true` to allow continuous scrolling between the first and last items.
 
-If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
+When item content changes at runtime, set `dynamic_items: true`. This keeps the bind, `set_total`, and refresh APIs working regardless of the initial item count.
+
+- **Compiled item text:** call the generated bind helper once with `(ui, NULL, NULL)`.
+- **Application-owned data:** use a row callback and declare future characters with `font_charset`.
+
+Selection APIs use logical item indexes directly — you do not need to work with Slot IDs.
+
+Generated rows paint at the Wheel's position in scene order. Foreground objects declared later (such as a Drawer) will cover the rows. Place overlays that must stay above the Wheel after it in the scene.
+
+Give any object that your application code needs to read or update a stable `name`. GSPC generates the typed functions listed below for each named object.
 
 ## Example scene
 

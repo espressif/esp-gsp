@@ -152,6 +152,7 @@ These signatures come from the actual compiler output for this JSON.
 | `max_instances` | `int` | — | 1…65535 | — | maximum simultaneously live template instances; included in the automatic pool requirement |
 | `dynamic_color` | `bool` | — | — | — | template member exposes a per-instance color slot |
 | `dynamic_image` | `bool` | — | — | — | template image exposes a per-instance resource slot |
+| `canvas` | `enum` | — | `draw`, `push` | — | Canvas producer: draw callback or borrowed frames; creates an independent resource view |
 | `image_opacity` | `int` | — | default 255; 0…255 | — | image-only opacity; fixed raster transforms may bake alpha at compile time |
 
 </details>

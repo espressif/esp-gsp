@@ -310,6 +310,11 @@ static inline esp_gsp_config_set_result_t esp_gsp_config_override_set(
             value > UINT32_MAX) {
         return ESP_GSP_CONFIG_SET_INVALID_FIELD;
     }
+    if (overrides->inline_count > ESP_GSP_CONFIG_INLINE_OVERRIDES ||
+            (overrides->external_count != 0 &&
+             overrides->external_entries == NULL)) {
+        return ESP_GSP_CONFIG_SET_INVALID_TABLE;
+    }
     const esp_gsp_config_desc_t *desc = esp_gsp_config_desc(field);
     if (desc == NULL || !desc->overrideable) {
         return ESP_GSP_CONFIG_SET_INVALID_FIELD;
@@ -326,6 +331,13 @@ static inline esp_gsp_config_set_result_t esp_gsp_config_override_set(
     if (overrides->inline_count >= ESP_GSP_CONFIG_INLINE_OVERRIDES) {
         return ESP_GSP_CONFIG_SET_INLINE_FULL;
     }
+    /* External entries are borrowed read-only; shadowing one would make the
+     * combined table invalid. Reject before changing the inline table. */
+    for (uint16_t index = 0; index < overrides->external_count; ++index) {
+        if (overrides->external_entries[index].field_id == (uint16_t)field) {
+            return ESP_GSP_CONFIG_SET_INVALID_TABLE;
+        }
+    }
     overrides->entries[overrides->inline_count++] =
         (esp_gsp_config_override_entry_t) {
             .field_id = (uint16_t)field,
@@ -339,7 +351,8 @@ static inline esp_gsp_config_set_result_t esp_gsp_config_override_bind_external(
         esp_gsp_config_overrides_t *overrides,
         const esp_gsp_config_override_entry_t *entries, uint16_t count)
 {
-    if (overrides == NULL || (count != 0 && entries == NULL)) {
+    if (overrides == NULL || (count != 0 && entries == NULL) ||
+            overrides->inline_count > ESP_GSP_CONFIG_INLINE_OVERRIDES) {
         return ESP_GSP_CONFIG_SET_INVALID_TABLE;
     }
     for (uint16_t index = 0; index < count; ++index) {

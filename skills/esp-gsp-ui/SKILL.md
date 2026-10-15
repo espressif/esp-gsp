@@ -81,8 +81,10 @@ executable when it is not available through `PATH`.
 ## Use current sources of truth
 
 Read documentation from the ESP-GSP component selected by the application
-build. Start with the matching language under `docs/en/` or `docs/zh-cn/`,
-then load only the pages needed for the task:
+build. Start with the matching language under `docs/en/` or `docs/zh-cn/`.
+In a framework source checkout, the corresponding maintained pages live under
+`docs/src/content/docs/` and its `zh-cn/` subtree. Load only the pages needed
+for the task:
 
 - `guide/workflow.md` for JSON, application, and BSP ownership;
 - `guide/scenes.md` for hierarchy, naming, actions, and templates;
@@ -202,9 +204,11 @@ patterns before applying them:
   or consume samples before drawing. Follow the selected version's target,
   callback and shutdown contracts; the PC bridge's offscreen preview does not
   verify device partition timing or memory use.
-- **Image memory:** inspect the bundle's resource report and target decoder/
-  cache configuration. Separate stored asset size from visible decoded memory;
-  check initial display and page transitions before changing the budget.
+- **Image memory:** inspect `*.execution.json` resources and
+  `resource_budget.source_variants` before changing assets or cache budgets.
+  Follow the selected component's `guide/media-and-data.md` for encoding,
+  decoding and budget rules; verify changes with `esp_gsp_media_stats()` and
+  the target's free heap and largest free blocks.
 
 When a requested control or style is absent, check the current public contract
 and offer the closest composition with its concrete behavior differences.

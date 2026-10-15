@@ -1,10 +1,10 @@
 # List (`gsp_list`)
 
-Scrollable fixed or application-backed vertical collection.
+A scrollable vertical collection that supports both fixed items and application-driven data sources.
 
 ## When to use
 
-Use it to show or choose from a collection of repeated items.
+Use List when you need to display or select from a collection of repeated items in a single column — for example, a contacts list or a settings menu.
 
 ## Local interactive preview
 
@@ -23,9 +23,11 @@ These commands compile the example and open it in the ESP-GSP simulator browser 
 
 ## Runtime behavior
 
-The scene defines the item layout. Fixed items work without an application adapter; dynamic data needs an adapter or backend.
+The scene JSON defines the row layout template. Fixed items work without an application adapter; dynamic data requires an adapter or a backend.
 
-If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
+Generated rows paint at the List's position in scene order. Foreground objects declared later in the scene (such as a Drawer) will cover the rows. If you need an overlay to stay above the List, place its content after the List in the scene.
+
+Give any object that your application code needs to read or update a stable `name`. GSPC generates the typed functions listed below for each named object.
 
 ## Example scene
 

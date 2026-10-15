@@ -116,6 +116,13 @@ CMake 将场景以 `--deployable` 打包，在同次构建中生成匹配的 `bu
 - `sim_bridge_media/pc`：可移植 List/Grid binder、QOI 图片和 Canvas 离屏绘制；
   使用同一启动命令替换 project 路径即可运行。
 
+默认动态库和 Socket 可执行文件入口会在 `gsp_bridge_app_init()` 返回后持续处理
+事件和定时器，业务代码无需自行调用 `gsp_sim_bridge_poll()`。初始化和回调应尽快返回。
+如果改用自定义 `open/poll/close` 入口，就必须在 Backend 线程中持续轮询，**没有输入时
+也不能停止**。`open()` 不会启动后台事件派发线程。阻塞式命令读取会让点击回调等到
+下一次输入才执行，即使宿主仍在绘制画面。应使用非阻塞输入，或让输入线程通过队列
+把命令交给 Backend 线程执行。参见[自定义入口示例](../../../tools/sim_bridge/README.md#custom-entry-point-keep-the-event-loop-running)。
+
 移植自己的工程时，先把驱动、RTOS 任务和硬件服务隔离到应用 HAL/PC Mock。
 第一版要求所有 GSP 调用在同一个 Backend 业务线程中执行；回调内可以同步调用
 已支持 API，工作线程需经应用队列交接数据。支持范围包括常用状态读写、标量属性、

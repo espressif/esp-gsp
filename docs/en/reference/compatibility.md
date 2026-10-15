@@ -12,9 +12,9 @@ runtime APIs; parsing, editing, or constructing bundle internals is unsupported.
 
 | Item | Current value | Link |
 |---|---:|---|
-| ESP-GSP component | `1.6.0` | [Component Registry](https://components.espressif.com/components/espressif/esp-gsp/versions/1.6.0/readme) |
-| ESP-GSP simulator | `1.6.0` | [Binary (manifest)](https://dl.espressif.com/AE/gsp/sim/v1.6.0/manifest.json) |
-| Recommended GSPC | `0.7.0` | [Binary (manifest)](https://dl.espressif.com/AE/gsp/gspc/v0.7.0/manifest.json) |
+| ESP-GSP component | `1.7.0` | [Component Registry](https://components.espressif.com/components/espressif/esp-gsp/versions/1.7.0/readme) |
+| ESP-GSP simulator | `1.7.0` | [Binary (manifest)](https://dl.espressif.com/AE/gsp/sim/v1.7.0/manifest.json) |
+| Recommended GSPC | `0.8.0` | [Binary (manifest)](https://dl.espressif.com/AE/gsp/gspc/v0.8.0/manifest.json) |
 | GSB | `2.7` |  |
 | GRB | `1.4` |  |
 | GFB | `1.2` |  |
@@ -34,13 +34,13 @@ download the archive directly. Each archive has a detached Ed25519 signature at
 the same URL with a `.sig` suffix; use `esp-gsp-tools` as shown below when you
 want automatic platform selection, signature verification, and caching.
 
-| Platform | GSPC `0.7.0` | Simulator `1.6.0` |
+| Platform | GSPC `0.8.0` | Simulator `1.7.0` |
 |---|---|---|
-| Linux ARM64 | [gspc-0.7.0-linux-aarch64.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.7.0/gspc-0.7.0-linux-aarch64.tar.gz) | [sim-1.6.0-linux-aarch64.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.6.0/sim-1.6.0-linux-aarch64.tar.gz) |
-| Linux x86_64 | [gspc-0.7.0-linux-x86_64.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.7.0/gspc-0.7.0-linux-x86_64.tar.gz) | [sim-1.6.0-linux-x86_64.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.6.0/sim-1.6.0-linux-x86_64.tar.gz) |
-| Windows x86_64 | [gspc-0.7.0-windows-x86_64.zip](https://dl.espressif.com/AE/gsp/gspc/v0.7.0/gspc-0.7.0-windows-x86_64.zip) | [sim-1.6.0-windows-x86_64.zip](https://dl.espressif.com/AE/gsp/sim/v1.6.0/sim-1.6.0-windows-x86_64.zip) |
-| Windows ARM64 | [gspc-0.7.0-windows-aarch64.zip](https://dl.espressif.com/AE/gsp/gspc/v0.7.0/gspc-0.7.0-windows-aarch64.zip) | [sim-1.6.0-windows-aarch64.zip](https://dl.espressif.com/AE/gsp/sim/v1.6.0/sim-1.6.0-windows-aarch64.zip) |
-| macOS Universal 2 | [gspc-0.7.0-macos-universal2.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.7.0/gspc-0.7.0-macos-universal2.tar.gz) | [sim-1.6.0-macos-universal2.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.6.0/sim-1.6.0-macos-universal2.tar.gz) |
+| Linux ARM64 | [gspc-0.8.0-linux-aarch64.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.8.0/gspc-0.8.0-linux-aarch64.tar.gz) | [sim-1.7.0-linux-aarch64.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.7.0/sim-1.7.0-linux-aarch64.tar.gz) |
+| Linux x86_64 | [gspc-0.8.0-linux-x86_64.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.8.0/gspc-0.8.0-linux-x86_64.tar.gz) | [sim-1.7.0-linux-x86_64.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.7.0/sim-1.7.0-linux-x86_64.tar.gz) |
+| Windows x86_64 | [gspc-0.8.0-windows-x86_64.zip](https://dl.espressif.com/AE/gsp/gspc/v0.8.0/gspc-0.8.0-windows-x86_64.zip) | [sim-1.7.0-windows-x86_64.zip](https://dl.espressif.com/AE/gsp/sim/v1.7.0/sim-1.7.0-windows-x86_64.zip) |
+| Windows ARM64 | [gspc-0.8.0-windows-aarch64.zip](https://dl.espressif.com/AE/gsp/gspc/v0.8.0/gspc-0.8.0-windows-aarch64.zip) | [sim-1.7.0-windows-aarch64.zip](https://dl.espressif.com/AE/gsp/sim/v1.7.0/sim-1.7.0-windows-aarch64.zip) |
+| macOS Universal 2 | [gspc-0.8.0-macos-universal2.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.8.0/gspc-0.8.0-macos-universal2.tar.gz) | [sim-1.7.0-macos-universal2.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.7.0/sim-1.7.0-macos-universal2.tar.gz) |
 
 Run `python -m gsp.execute --version '<GSPC version>' gspc compatibility` after
 installing `esp-gsp-tools` to inspect the selected compiler. The command returns
@@ -65,8 +65,8 @@ shell; these functions select the versions in the table above for this session:
 
 ```sh
 python -m pip install -U esp-gsp-tools
-gspc() { python -m gsp.execute --version 0.7.0 gspc "$@"; }
-gsp_sim_host() { python -m gsp.execute --version 1.6.0 sim "$@"; }
+gspc() { python -m gsp.execute --version 0.8.0 gspc "$@"; }
+gsp_sim_host() { python -m gsp.execute --version 1.7.0 sim "$@"; }
 ```
 
 In other shells, use `python -m gsp.execute --version VERSION gspc` or

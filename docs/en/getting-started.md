@@ -1,15 +1,15 @@
 # Getting Started
 
-This guide builds the default embedded-bundle path: an ESP-IDF application
-owns the display, ESP-GSP compiles one JSON scene during the build, and the
-application updates the UI through the generated C API.
+This guide walks through the default embedded-bundle path: you write one JSON
+scene, the ESP-IDF build compiles it into a bundle, and your application
+updates the UI through generated C helpers.
 
-If you want to evaluate ESP-GSP before integrating it, start with the maintained
-example:
+If you want to evaluate ESP-GSP before integrating it, start with the
+maintained example:
 
 <!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.6.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.7.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -21,12 +21,12 @@ existing application.
 
 ## Prerequisites
 
-- ESP-IDF 6.0 or later is exported in the current shell.
-- Either `esp-gsp-tools` is installed for automatic resolution, or a compatible
-  GSPC release is available for explicit `GSPC_EXECUTABLE` selection.
-- A BSP or application layer can initialize an `esp_lcd` panel and fill an
-  `esp_display_present_target_config_t`.
-- The logical scene size and pixel format are known.
+- **ESP-IDF 6.0** or later, exported in the current shell.
+- Either `esp-gsp-tools` installed for automatic resolution, or a compatible
+  GSPC release available for explicit `GSPC_EXECUTABLE` selection.
+- A BSP or application layer that can initialize an `esp_lcd` panel and fill
+  an `esp_display_present_target_config_t`.
+- A known logical scene size and pixel format.
 
 Touch is optional. When present, the BSP supplies an
 `esp_lcd_touch_handle_t` whose coordinates match the logical display
@@ -36,10 +36,12 @@ orientation.
 
 Bundle creation and resource checks run on the task that starts ESP-GSP. Begin
 with the `hello_world` setting `CONFIG_ESP_MAIN_TASK_STACK_SIZE=20480`, or give
-your custom startup task the equivalent headroom. This is a starting point, not
-a minimum: measure `uxTaskGetStackHighWaterMark()` with the fonts, decoders and
-logging used by the product before reducing it. Render-task stack settings do
-not increase the caller's stack.
+your custom startup task the equivalent headroom.
+
+> **This is a starting point, not a minimum.** Measure
+> `uxTaskGetStackHighWaterMark()` with the fonts, decoders and logging used by
+> your product before reducing it. Render-task stack settings do not increase
+> the caller's stack.
 
 Keep Bundle CRC checks enabled. Do not disable the task watchdog to mask a
 startup stall. Use `disable_bundle_crc` only when another trusted mechanism has
@@ -51,7 +53,7 @@ From the ESP-IDF project root:
 
 <!-- gsp-version:dependency-command -->
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.6.0"
+idf.py add-dependency "espressif/esp-gsp^1.7.0"
 ```
 <!-- /gsp-version:dependency-command -->
 
@@ -60,33 +62,33 @@ The equivalent component manifest entry is:
 <!-- gsp-version:dependency-manifest -->
 ```yaml
 dependencies:
-  espressif/esp-gsp: "^1.6.0"
+  espressif/esp-gsp: "^1.7.0"
 ```
 <!-- /gsp-version:dependency-manifest -->
 
 For a local ESP-GSP component directory, use Component Manager `override_path`
-or add it to `EXTRA_COMPONENT_DIRS`. Keep only one selected component copy in a
-build so the compiler, public headers, and runtime come from the same version;
-applications do not need their implementation sources.
+or add it to `EXTRA_COMPONENT_DIRS`. Keep only one copy of the component in a
+build so the compiler, public headers, and runtime all come from the same
+version. Applications do not need implementation sources.
 
 ## 2. Install GSPC; add the simulator when needed
 
 Install the toolchain manager. CMake reads the component's `.gspc_version` and
-invokes `esp-gsp-tools`; the first invocation downloads and verifies that GSPC
-release into the local cache automatically:
+invokes `esp-gsp-tools`. On the first run, the manager downloads, verifies and
+caches the matching GSPC release automatically:
 
 ```sh
 python -m pip install -U esp-gsp-tools
 ```
 
-The default `.gspc_version` in the component package is the latest GSPC version
-compatible with the current GSP release at publish time. To override the GSPC
-version for an IDF project, create `.gspc_version` in the project root; the
-project marker takes precedence over the component marker:
+The default `.gspc_version` inside the component package names the latest GSPC
+version compatible with the current GSP release at publish time. To override the
+GSPC version for a particular IDF project, create `.gspc_version` in the project
+root — the project marker takes precedence over the component marker:
 
 <!-- gsp-version:compiler-pin -->
 ```sh
-echo '0.7.0' > .gspc_version
+echo '0.8.0' > .gspc_version
 idf.py build
 ```
 <!-- /gsp-version:compiler-pin -->
@@ -94,9 +96,9 @@ idf.py build
 > [!TIP]
 >
 > If the manager cannot be installed or automatic downloads are unsuitable, see
-> the [Compatibility contract](reference/compatibility.md), unpack the
-> archive into a stable tool directory, and override via an environment variable
-> or CMake argument:
+> the [Compatibility contract](reference/compatibility.md), unpack the archive
+> into a stable tool directory, and override via an environment variable or
+> CMake argument:
 >
 > ```shell
 > export GSPC_EXECUTABLE=/absolute/path/to/gspc
@@ -108,10 +110,9 @@ idf.py build
 Do not copy a compiler from an unrelated source checkout merely because
 `gspc --version` runs.
 
-The simulator is optional; firmware builds do not require it. Select the
-`sim` version using the `version` field from
-`idf_component.yml` (the ESP-GSP component version), not the GSPC version in
-`.gspc_version`:
+The simulator is optional — firmware builds do not require it. Select the `sim`
+version using the `version` field from `idf_component.yml` (the ESP-GSP
+component version), **not** the GSPC version in `.gspc_version`:
 
 ```sh
 python -m gsp.execute --version '<ESP-GSP version>' sim --bundle product.gspb
@@ -177,12 +178,12 @@ Create `scenes/main.json`:
 ```
 
 Use `name` only for elements the application must address. Use `callback` for
-actions that must cross from the UI into product logic. Asset paths are
-relative to the scene file.
+actions that must cross from the UI into product logic. Asset paths are relative
+to the scene file.
 
 Read the [Scene JSON guide](guide/scenes.md) for hierarchy, field selection,
-runtime naming, and reference-image translation. The exhaustive field and
-widget reference is available in [Scene authoring](reference/authoring.md).
+runtime naming, and reference-image translation. The exhaustive field and widget
+reference is in [Scene authoring](reference/authoring.md).
 
 ## 4. Register the bundle
 
@@ -200,10 +201,10 @@ RGB565. Keep scene JSON and scene-relative assets in the `scenes` directory.
 
 `gsp_add_bundle()` performs four jobs during the ESP-IDF build:
 
-1. validates and compiles the JSON scene;
-2. tracks referenced fonts and images as build dependencies;
-3. packs the generated scene and resources into an embedded bundle;
-4. adds `bundle_gsp.h` and the per-scene generated headers to the component's
+1. Validates and compiles the JSON scene.
+2. Tracks referenced fonts and images as build dependencies.
+3. Packs the generated scene and resources into an embedded bundle.
+4. Adds `bundle_gsp.h` and per-scene generated headers to the component's
    include path.
 
 The default symbol is `bundle`. For multiple independent bundles, or for JSON
@@ -217,8 +218,8 @@ gsp_add_bundle(${COMPONENT_LIB}
 ```
 
 With `SYMBOL product`, include `product_gsp.h` and initialize with
-`gsp_product_config()`. The startup example below uses the default `bundle` symbol.
-Set a different `SYMBOL` for each bundle. See
+`gsp_product_config()`. The startup example below uses the default `bundle`
+symbol. Set a different `SYMBOL` for each bundle. See
 [Configuration](reference/configuration.md) for all build-time options.
 
 ## 5. Start the UI
@@ -262,7 +263,7 @@ void app_main(void)
 }
 ```
 
-`board_display_init()` and `board_touch_init()` are placeholders for the
+`board_display_init()` and `board_touch_init()` are placeholders for your
 product BSP. The repository's shared
 [`examples/common/hw_init`](../../examples/common/hw_init) component shows
 complete panel targets used by the examples.
@@ -276,38 +277,37 @@ idf.py set-target <target>
 idf.py build
 ```
 
-If the scene, an asset, a selected Kconfig capacity, or a bundle option is
-invalid, generation fails as part of this build. After a successful build,
-use editor completion or inspect `bundle_gsp.h`. Generated names follow:
+If the scene, an asset, a Kconfig capacity, or a bundle option is invalid,
+generation fails as part of this build. After a successful build, use editor
+completion or inspect `bundle_gsp.h`. Generated names follow the pattern:
 
 ```text
 gsp_<scene>_<named-element>_<operation>()
 ```
 
 The available operations depend on the element type and dynamic properties.
-Update JSON and rebuild to refresh the available helpers; use the declarations
-and editor completion from the generated header.
+Update JSON and rebuild to refresh the helpers; use the declarations and editor
+completion from the generated header.
 
 ## 7. Configure product limits when needed
 
 ESP-GSP works with balanced defaults. If the scene compiler reports a capacity
-shortage, or product measurements justify a feature, memory, task, or input
-change, open:
+shortage, or product measurements justify a change, open:
 
 ```sh
 idf.py menuconfig
 ```
 
-Then navigate to `Component config -> ESP-GSP`. Use `menuconfig` for the
-active build and keep intentional clean-build values in `sdkconfig.defaults`.
-The active `sdkconfig` is the value that actually controls an existing build.
-See the [ESP-IDF Kconfig guide](reference/kconfig.md) for target-specific defaults,
+Then navigate to `Component config -> ESP-GSP`. Use `menuconfig` for the active
+build and keep intentional clean-build values in `sdkconfig.defaults`. The
+active `sdkconfig` is the value that actually controls an existing build. See
+the [ESP-IDF Kconfig guide](reference/kconfig.md) for target-specific defaults,
 runtime precedence, memory trade-offs, and a clean-profile validation command.
 
 ## 8. Run the maintained example
 
-`examples/usage/hello_world` is the smallest complete repository integration. For
-the included ESP32-P4 profile:
+`examples/usage/hello_world` is the smallest complete repository integration.
+For the included ESP32-P4 profile:
 
 ```sh
 cd examples/usage/hello_world
@@ -318,7 +318,7 @@ idf.py flash monitor
 
 ESP-IDF automatically applies `sdkconfig.defaults.esp32p4` after the base
 defaults. Other checked-in `sdkconfig.defaults.<target>` fragments exercise
-different display paths. Their pins and timings are examples; they must match
+different display paths. Their pins and timings are examples — they must match
 the actual board before flashing.
 
 ## 9. Use the normal edit loop
@@ -339,7 +339,7 @@ integrate application state and events
 preview -> target build -> check display and interaction on the board
 ```
 
-Continue with [Recommended development workflow](guide/workflow.md).
-For ownership, callback, and shutdown rules, read
-[Application lifecycle](guide/lifecycle.md) before adding runtime media,
-lists, or background tasks.
+Continue with [Recommended development workflow](guide/workflow.md). For
+ownership, callback, and shutdown rules, read
+[Application lifecycle](guide/lifecycle.md) before adding runtime media, lists,
+or background tasks.

@@ -1307,6 +1307,9 @@ esp_gsp_err_t esp_gsp_canvas_stop(esp_gsp_handle_t gsp, uint16_t bind);
 
 /** Periodic callback in render-task context (lv_timer equivalent).
  *  Returns a handle usable with esp_gsp_timer_delete; NULL on error.
+ *  ESP-IDF schedules the first callback one period after registration using
+ *  its monotonic clock and wakes an idle service. Callback execution can still
+ *  be delayed by rendering or other task work; this is not a real-time deadline.
  *  With the ESP-IDF runtime attached, creation and deletion may be called from
  *  application tasks or timer callbacks, but not from an ISR. Keep the app and
  *  runtime alive throughout these calls. Unattached portable apps require

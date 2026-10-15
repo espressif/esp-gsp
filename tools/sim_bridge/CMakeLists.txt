@@ -40,6 +40,13 @@ if(GSP_SIM_BRIDGE_BUILD_TESTS)
         COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_transport.py"
             "$<TARGET_FILE:bridge_test_client>")
     add_test(NAME bridge_inproc_close COMMAND bridge_inproc_close_test)
+    add_executable(bridge_assets_publication_test tests/assets_publication.c src/assets.c)
+    target_include_directories(bridge_assets_publication_test PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/src"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../../include")
+    add_test(NAME bridge_assets_publication COMMAND bridge_assets_publication_test
+        "${CMAKE_CURRENT_BINARY_DIR}/asset-publication.gspb")
     add_test(NAME bridge_rpc_client
         COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_rpc_client.py")
 endif()
