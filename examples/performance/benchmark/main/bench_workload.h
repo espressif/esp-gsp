@@ -31,6 +31,11 @@ typedef struct {
 
 void bench_workload_init(bench_workload_t *workload, bool rgb888);
 
+/* Reset the next tween direction. */
+void bench_workload_reset_tweens(bench_workload_t *workload);
+/* Reset the Grid's coast and cached window after the caller releases injected input. */
+esp_gsp_err_t bench_workload_reset_grid(esp_gsp_handle_t ui, esp_gsp_grid_t grid);
+
 /** Timer callback shared by the ESP benchmark and its host runner. */
 void bench_workload_drive_tweens(esp_gsp_handle_t ui, void *user_ctx);
 

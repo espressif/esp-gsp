@@ -16,8 +16,8 @@ GSPC 会自动推导场景中声明的列表、文字、图片和模板实例需
 选项，其他配置都收在 **Advanced settings (optional)** 里。已保存的 `sdkconfig`
 和实例覆盖会继续生效。
 
-**关于 "0 = 自动" 字段**：标注了 "0 = 自动" 的字段会根据场景需求自动配置，其他
-字段请参照各自说明填写。高级设置涉及应用并发、任务调优和产品容量等进阶配置。
+**关于 "0 = 自动" 字段**：可由内容推导的容量字段根据 Bundle 需求配置；缓存预算、
+任务默认值等其他自动设置遵循各自字段说明。高级设置涉及应用并发、任务调优和产品容量等进阶配置。
 编译器会在出现容量冲突时给出对应的配置项名称。预编译库的能力上限可通过
 `ESP_GSP_BUILD_CAP_*` 常量查询。
 
@@ -56,7 +56,7 @@ gsp_add_bundle(${COMPONENT_LIB} SCENES "../scenes/home.json")
 gsp_specialize_runtime(DYNAMIC_FEATURES NONE)
 ```
 
-`NONE` 表示不额外使用下表中的六类能力。文字、数值、主题、列表、模板实例、定时器和
+`NONE` 表示不额外使用下表中的能力。文字、数值、主题、列表、模板实例、定时器和
 已编译动画仍可动态更新。构建分析全部已注册的 Bundle 和资源包，自动保留页面、
 隐藏内容、模板和动画需要的模块，不改变资源编码或画面效果。
 
@@ -74,9 +74,11 @@ gsp_specialize_runtime(DYNAMIC_FEATURES jpeg png eaf)
 | `reference` | 额外使用 RGB565/RGB888 之外的场景，如 ARGB8888 叠加层 |
 | `vector` | 编译清单之外的 vector 资源 |
 | `procedural` | 编译清单之外带 procedural 命令的场景 |
+| `anim_deflate` | 编译清单之外包含分组 DEFLATE 动画的资源包，包括 GRB 1.7 和 1.8 |
+| `anim_spans` | 编译清单之外包含编译期 span 动画的 GRB 1.8 资源包；帧使用分组 DEFLATE 时还须声明 `anim_deflate` |
 
 每个工程调用一次，放在 `idf_component_register()` 之后。不填写 `DYNAMIC_FEATURES`
-等同于 `AUTO`，保守保留所有手动启用的模块；`ALL` 明确保留全部六类能力。
+等同于 `AUTO`，保守保留所有手动启用的模块；`ALL` 保留全部已启用能力。
 未调用该函数的工程保持原有链接方式。手动关闭的 Kconfig 功能仍是能力上限；
 资源或明确声明的动态能力与之冲突时，构建指出需要修改的配置项。
 

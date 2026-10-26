@@ -57,9 +57,10 @@ loading or error behavior; declare those behaviors in the scene and application.
 }
 ```
 
-Required top-level fields are `screen`, `w`, `h` and a non-empty `objects`
-array. Scene size is in logical pixels and must match the bundle/BSP display
-path. `w` and `h` must be greater than zero. `default_font_size`, when present,
+Required top-level fields are `screen`, `w`, `h` and an `objects` array. An
+empty array is valid for a background-only scene. Scene size is in logical
+pixels and must match the bundle/BSP display path. `w` and `h` must be greater
+than zero. `default_font_size`, when present,
 must be 1–255. Build uses the same field type, enum, range and semantic checks
 as `gspc diagnose`, so unsupported combinations fail before lowering. The
 documented rectangle aliases retain their legacy color fields; unknown fields
@@ -72,8 +73,8 @@ the compiler preserves authored draw order.
 ## Reusable project components
 
 Grid/wrap and component expansion were introduced with GSPC 0.7.0 and
-ESP-GSP 1.6.0. For the current ESP-GSP 1.7.0 release, use the matched GSPC
-0.8.0 toolchain from the [compatibility contract](../reference/compatibility.md).
+ESP-GSP 1.6.0. For current projects, use the matched compiler/runtime pair from
+the [compatibility contract](../reference/compatibility.md).
 Compiler-owned virtual collection content can use the GSB 2.20
 `instance_order` variant; rebuild affected scenes with the matched toolchain.
 
@@ -109,6 +110,28 @@ state and resource capacity; compare against an equivalent hand-authored scene.
 Use `gspc diagnose --components-dir <directory> <scene.json>` for expansion and
 build-semantic diagnostics. A daemon request with `level: "schema"` checks source
 structure only; use `level: "compile"` for the complete validation path.
+
+For project builds, pass `COMPONENTS_DIR` to `gsp_add_bundle()` and to the PC
+adapter's `gsp_add_backend()`. Both use the same definitions and resolve the
+directory relative to the calling `CMakeLists.txt`:
+
+```cmake
+gsp_add_bundle(${COMPONENT_LIB}
+    COMPONENTS_DIR ../ui/components
+    SCENES ../ui/scenes/home.json ../ui/scenes/settings.json)
+```
+
+Each top-level JSON filename is its component name (`Card.json` defines `Card`).
+Edits, additions and removals rebuild the bundle; generated compilation contexts
+retain the directory for diagnosis and preview. Keep existing inline definitions
+when they suit the project; a shared directory is optional.
+
+Compilation checks substituted component fields with the same widget field,
+type, range and action rules as directly declared objects. Invalid fields stop
+compilation before new resources and headers are generated. Field diagnostics
+identify the authored definition, instance argument or shared style through
+`file`, `path` and `range`; a definition need not have a flattened `objectIndex`.
+Keys with punctuation use bracket notation in diagnostic paths.
 
 ## Appearance
 
@@ -347,10 +370,11 @@ compression policy. The alpha plane and multiple opacity variants can increase
 resource size; identical encoded payloads are deduplicated. Runtime transforms
 then use the baked alpha without an extra opacity operation.
 
-For a translucent raster image, literal `rotation: 0` is normalized to no
-runtime rotation property and emits a warning. Opaque images retain their
-rotation property at zero. A bounded dynamic rotation remains a runtime
-property even when its default is zero.
+For a translucent bitmap source, literal `rotation: 0` is normalized to no
+runtime rotation property and emits a warning. Opaque bitmap sources retain
+their rotation property at zero. SVG raster imports keep literal zero rotation
+static. A bounded dynamic rotation remains a runtime property even when its
+default is zero.
 
 ## Field decisions
 
@@ -370,6 +394,13 @@ property even when its default is zero.
 Later objects paint and hit-test above earlier objects. Keep Drawer descendants
 after their Drawer. Use `hidden` for initial visibility and `enabled` only when
 runtime enabled/disabled behavior is required.
+
+`gspc diagnose scene.json --layout-check` can list candidate intersections
+between static root Button/Label/Toggle boxes, with a suggested probe point. Reports
+are bounded and informational; intentional layering remains valid. Dynamic or
+parented geometry needs preview and real input checks. Use the native runner's
+[coordinate taps and callback expectations](../../../tools/sim_bridge/README.md#repeatable-application-checks)
+to check event routing and underlying application state.
 
 ### Runtime-created template instances
 
@@ -461,6 +492,14 @@ and required glyphs. An unnamed static hidden subtree without visibility binding
 or declarative visibility references is removed at compile time. Statically hidden
 template members are not drawn.
 
+An object's visibility gates drawing and input for its entire authored subtree,
+including children of a button or other widget and children painted outside the
+parent's rectangle. Each child's own visibility is preserved: showing the parent
+does not show a child that is itself hidden, and showing a child cannot bypass a
+hidden ancestor. Use `enabled` to control interaction while keeping the object
+visible. Visibility is compiled into the bundle; regenerate affected bundles
+with the corrected compiler to obtain this behavior.
+
 The bundle header exports `GSP_<SCENE>_OBJ_KEY_<NAME>` by default, for example
 `GSP_HOME_OBJ_KEY_EYE`. These stable keys require neither LEGACY nor RAW_IDS switches.
 Renaming the JSON object makes use of its old symbol fail during application compilation.
@@ -500,12 +539,25 @@ List, PageFlow, StackView and Drawer provide their own rectangular viewports.
 The child viewport is rectangular. For static circular or path masks, bake the
 mask into the image alpha channel.
 
+For a PageFlow or Drawer with authored `enabled`, disabling interaction cancels
+an active pan on the next input sample or frame. Re-enabling allows new contacts;
+the cancelled contact stays consumed until release. Application navigation APIs
+remain available while gestures are disabled.
+
 ## Shared UI
 
 Place a shared header, navigation bar or keyboard outside the page roots of a
 PageFlow/StackView in one scene. The pages can then change while the shared controls
 keep their state. Use component definitions to reuse the same UI across separate scenes;
 each scene has its own control instances.
+
+PageFlow, StackView and Drawer move only their descendants. Independent content
+that overlaps a moving viewport keeps its authored position and paint order.
+The runtime uses frozen viewport snapshots only when it can establish isolation
+from independent paint; otherwise it renders live transforms (List's
+`scroll_snapshot` follows the same rule), which can increase rendering work.
+Animated jumps longer than one page
+extent land immediately when snapshots are unavailable.
 
 For application-drawn overlays, register `esp_gsp_set_overlay_contributor()`. It draws
 rounded rectangles and caller-owned A8 glyph bitmaps, and rebuilds them against the

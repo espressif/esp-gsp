@@ -18,7 +18,7 @@ This is the complete list of Widgets registered by GSPC. Each page includes when
 | Widget | JSON type | Purpose | Example |
 |---|---|---|---|
 | [Button](./button.md) | `button` | Clickable content surface that triggers declarative actions or application callbacks. | [`button.json`](../../../examples/usage/widgets/button/button.json) |
-| [Image](./image.md) | `image` | Static or animated raster asset with contain, cover and stretch fitting. | [`image.json`](../../../examples/usage/widgets/image/image.json) |
+| [Image](./image.md) | `image` | Static or animated raster assets and compiled SVG vectors, with contain, cover and stretch fitting. | [`image.json`](../../../examples/usage/widgets/image/image.json) |
 | [Label](./label.md) | `label` | Static or runtime-bound UTF-8 text with alignment and overflow control. | [`label.json`](../../../examples/usage/widgets/label/label.json) |
 
 ## Data and choices
@@ -42,7 +42,7 @@ This is the complete list of Widgets registered by GSPC. Each page includes when
 | [Effect](./effect.md) | `effect` | Pulse, rotating ring, liquid progress or shimmer with automatic playback. | [`effect.json`](../../../examples/usage/widgets/effect/effect.json) |
 | [Flip Card](./flip_card.md) | `flip_card` | Two compiled image faces with an interruptible perspective flip. | [`flip_card.json`](../../../examples/usage/widgets/flip_card/flip_card.json) |
 | [Frosted Glass](./glass.md) | `glass` | Build-time frosted crop of a named static image backdrop. | [`glass.json`](../../../examples/usage/widgets/glass/glass.json) |
-| [Needle](./needle.md) | `needle` | Rotating gauge hand with configurable pivot, angle and tail. | [`needle.json`](../../../examples/usage/widgets/needle/needle.json) |
+| [Needle](./needle.md) | `needle` | Rotating gauge hand with a center pivot, configurable angle and tail. | [`needle.json`](../../../examples/usage/widgets/needle/needle.json) |
 | [Rectangle](./rect.md) | `rect` | Lightweight rectangular visual with fill, border, radius and opacity. | [`rect.json`](../../../examples/usage/widgets/rect/rect.json) |
 | [Shape](./shape.md) | `shape` | Rectangle, rounded geometry, circle or line rendered without an image asset. | [`shape.json`](../../../examples/usage/widgets/shape/shape.json) |
 | [Spinner](./spinner.md) | `spinner` | Indeterminate animated activity indicator. | [`spinner.json`](../../../examples/usage/widgets/spinner/spinner.json) |

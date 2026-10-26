@@ -38,23 +38,17 @@ PageFlow, TabView, StackView, Drawer, List, and Wheel move content inside a
 bounded viewport. Their authored children move and clip together, and only the
 affected viewport is invalidated.
 
-Animated PageFlow and StackView changes freeze the source and destination of
-that viewport, so crossing several logical pages never exposes the pages in
-between and still takes one normal settle duration. If the two viewport buffers
-cannot be allocated, the page change completes atomically; Drawer continues on
-its bounded transform path. Repeated snapshot failures back off progressively,
-so a low-memory target remains responsive without repeatedly probing the heap;
-one successful capture restores the normal retry cadence.
-
 PageFlow and Drawer follow the pointer during a drag and settle after release.
 Their release policy matches scene navigation: a deliberate quarter-extent
 pull commits by position, while a shorter flick uses recent velocity or
 displacement. A confirmed reversal cancels before the final quarter of travel.
 Settle duration is velocity-adaptive (normally 80–220 ms), so a phone-style
 flick completes promptly and a slow drag still lands smoothly.
-On the ESP-LCD adapter, release is confirmed after two consecutive empty touch
-reports. This masks a single controller dropout during an active drag while
-adding only one active input poll (normally 10 ms) to a real finger lift.
+In polling mode, the ESP-LCD touch adapter confirms release after the configured
+number of consecutive empty reports (default two). The default masks a single
+controller dropout and adds one active input poll to a real finger lift.
+Interrupt mode consumes fresh IRQ reports only and accepts a fresh empty report
+as release without waiting for a second interrupt.
 StackView changes its active page through push/pop operations. List and Wheel
 recycle visible rows, so application row binders must use the row token and
 must not retain a row handle after the callback returns.
@@ -63,10 +57,11 @@ must not retain a row handle after the callback returns.
 
 A jump between non-adjacent pages freezes the source and target viewports into
 two snapshots and slides between them, so the pages in between never appear.
-The source and target use two independently allocated viewport-sized frames
-(`width × height × pixel bytes` each), from PSRAM when available. They do not
-require one double-sized contiguous block, and the composite is painted
-straight into each presenter band, so no third staging frame is needed.
+The source and target share one contiguous two-frame atlas, allocated from
+PSRAM when available. Budget `2 × width × height × pixel bytes`, plus alignment
+and any repair metadata, and check the largest free block as well as total free
+memory. Composition paints directly into each presenter band, without a third
+full-size staging frame.
 
 Progress is normalized to one viewport regardless of how many pages the jump
 crosses. A three-page jump therefore animates over the same settle as a
@@ -77,6 +72,14 @@ instantly rather than scrolling live: losing the animation is preferable to
 dragging the intermediate pages across the screen. Single-viewport jumps and
 drags still animate without a snapshot, because only the two neighbouring pages
 can enter the viewport.
+
+Endpoint lists retain their rows while the snapshot is active. If a content
+update invalidates a multi-page snapshot, navigation lands at its target before
+live rendering resumes. Adjacent motion and Drawer can continue from their
+current offset. A new navigation request or press finishes a pending multi-page
+jump before using its position, so hit testing cannot target an unseen page.
+Repeated allocation failures back off; one successful capture
+restores the normal retry cadence.
 
 Navigation triggered from scene JSON honors `"animated": false` on `set_page`,
 `stack_push`, `stack_pop`, `drawer_open` and `drawer_close`, matching the

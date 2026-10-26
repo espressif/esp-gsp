@@ -14,7 +14,9 @@ GSPC derives the declared scene, list, text, image-target and template-instance 
 
 `menuconfig → ESP-GSP` exposes only three feature options at the top level: image caching, background decoding and transition snapshots. Other settings live under **Advanced settings (optional)**. Any saved `sdkconfig` values and instance overrides remain active.
 
-**Fields labelled "0 = automatic"** use authored requirements. Follow the field descriptions for other values. Advanced settings cover application concurrency, task tuning and product capacities. The compiler reports known capacity conflicts together with their configuration symbols. Prebuilt capability limits are available as `ESP_GSP_BUILD_CAP_*` constants.
+**Authored-capacity fields labelled "0 = automatic"** use bundle requirements.
+Other automatic settings, such as cache budgets and task defaults, follow their
+own field descriptions. Advanced settings cover application concurrency, task tuning and product capacities. The compiler reports known capacity conflicts together with their configuration symbols. Prebuilt capability limits are available as `ESP_GSP_BUILD_CAP_*` constants.
 
 Applications can supply images, text, timers and instances at runtime. Declare known peaks in scenes and templates; use instance overrides for any additional application capacity.
 
@@ -45,7 +47,7 @@ gsp_add_bundle(${COMPONENT_LIB} SCENES "../scenes/home.json")
 gsp_specialize_runtime(DYNAMIC_FEATURES NONE)
 ```
 
-`NONE` declares no additional use of the six capabilities below. Text, values,
+`NONE` declares no additional use of the capabilities below. Text, values,
 themes, lists, template instances, timers and compiled animations remain dynamic.
 The build considers every registered bundle and asset package, including hidden
 content and templates, without changing resource encoding or rendering quality.
@@ -64,10 +66,12 @@ gsp_specialize_runtime(DYNAMIC_FEATURES jpeg png eaf)
 | `reference` | Additional scenes using formats other than RGB565/RGB888, such as ARGB8888 overlays |
 | `vector` | Vector resources outside the compiled input set |
 | `procedural` | Additional scenes containing procedural commands |
+| `anim_deflate` | Additional packages containing grouped DEFLATE animations, including GRB 1.7 and 1.8 |
+| `anim_spans` | Additional GRB 1.8 packages containing compiled span animations; also declare `anim_deflate` when their frames use grouped DEFLATE |
 
 Call once per project, after `idf_component_register()`. Omitting `DYNAMIC_FEATURES`
 selects `AUTO`, conservatively retaining all manually enabled features. `ALL`
-explicitly requires all six. Projects that do not call the helper keep their existing
+retains all enabled capabilities. Projects that do not call the helper keep their existing
 linking behavior. Manual Kconfig disables remain capability ceilings; conflicting
 resources or explicit dynamic requirements fail with the relevant configuration name.
 

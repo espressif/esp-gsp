@@ -106,6 +106,20 @@ void bench_workload_init(bench_workload_t *workload, bool rgb888)
     }
 }
 
+void bench_workload_reset_tweens(bench_workload_t *workload)
+{
+    workload->tween_tick = 0;
+}
+
+esp_gsp_err_t bench_workload_reset_grid(esp_gsp_handle_t ui, esp_gsp_grid_t grid)
+{
+    esp_gsp_err_t ret = esp_gsp_grid_refresh(ui, grid);
+    if (ret == ESP_GSP_OK) {
+        ret = esp_gsp_list_scroll_to(ui, grid, 0);
+    }
+    return ret;
+}
+
 static void effect_image_complete(esp_gsp_handle_t ui, uint16_t bind,
                                   gsp_err_t status, void *ctx)
 {
@@ -236,17 +250,17 @@ void bench_workload_drive_tweens(esp_gsp_handle_t ui, void *user_ctx)
     };
 
     if (page_visible(ui, GSP_BIND_P_RECT1)) {
-        (void)esp_gsp_animate(ui, GSP_BIND_RV0, ESP_GSP_ANIM_CURRENT,
+        (void)esp_gsp_animate(ui, GSP_BIND_RV0, up ? 0 : 100,
                               up ? 100 : 0, 1000, ESP_GSP_EASE_IN_OUT);
     } else if (page_visible(ui, GSP_BIND_P_RECTS)) {
         for (uint8_t index = 0; index < 8; ++index) {
-            (void)esp_gsp_animate(ui, values[index], ESP_GSP_ANIM_CURRENT,
+            (void)esp_gsp_animate(ui, values[index], ((tick + index) & 1U) ? 0 : 100,
                                   ((tick + index) & 1U) ? 100 : 0, 1000,
                                   ESP_GSP_EASE_IN_OUT);
         }
     } else if (page_visible(ui, GSP_BIND_P_ARCS)) {
         for (uint8_t index = 0; index < 6; ++index) {
-            (void)esp_gsp_animate(ui, arcs[index], ESP_GSP_ANIM_CURRENT,
+            (void)esp_gsp_animate(ui, arcs[index], ((tick + index) & 1U) ? 0 : 100,
                                   ((tick + index) & 1U) ? 100 : 0, 1000,
                                   ESP_GSP_EASE_OUT);
         }

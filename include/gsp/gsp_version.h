@@ -7,9 +7,9 @@
 #pragma once
 
 #define GSP_VERSION_MAJOR 1
-#define GSP_VERSION_MINOR 7
+#define GSP_VERSION_MINOR 8
 #define GSP_VERSION_PATCH 0
-#define GSP_VERSION_STRING "1.7.0"
+#define GSP_VERSION_STRING "1.8.0"
 
 #define GSP_VERSION_VAL(major, minor, patch) (((major) << 16) | ((minor) << 8) | (patch))
 #define GSP_VERSION GSP_VERSION_VAL(GSP_VERSION_MAJOR, GSP_VERSION_MINOR, GSP_VERSION_PATCH)

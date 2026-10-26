@@ -4,7 +4,7 @@ Build-time frosted crop of a named static image backdrop.
 
 ## When to use
 
-Use it to show status, a measurement, or motion.
+Use it for a fixed frosted panel over a known static image.
 
 ## Local interactive preview
 
@@ -24,6 +24,8 @@ These commands compile the example and open it in the ESP-GSP simulator browser 
 ## Runtime behavior
 
 Blur, tint and rounded corners are baked at build time and drawn as native images at runtime. `backdrop` must reference an earlier static opaque Image with the same parent, containing the glass bounds. It does not blur other widgets or resample after runtime background replacement or independent glass movement. Preconfigure material variants and switch visibility for themes. Template membership and dynamic geometry expressions are unsupported.
+
+Each glass dimension is 1–512 pixels; the backdrop dimensions are 1–2048. Contain/cover backdrops require centered alignment and must be opaque after fitting. SVG backdrops use the supported vector importer before baking; a separate Image raster mode does not expand this widget's SVG support.
 
 If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 

@@ -1541,13 +1541,76 @@ def alt_scene(width, height):
     }
 
 
+def snapshot_repair_fixture(document, regions, commands):
+    """Add bounded fixed foreground paint to the existing PageFlow workload."""
+    objects = document["objects"]
+    page = next(i for i, obj in enumerate(objects) if obj.get("bind") == "p_flow")
+    flow = next(obj for obj in objects if obj.get("name") == "bench_flow")
+    width, height = flow["w"], flow["h"]
+    # Separate descendants prevent the compiler from merging the painted cells.
+    for tab in range(3):
+        parent = next(i for i, obj in enumerate(objects)
+                      if obj.get("name") == f"bench_flow_tab{tab}")
+        columns = 8
+        rows = (commands + columns - 1) // columns
+        cell_w, cell_h = max(2, width // columns), max(2, height // rows)
+        for index in range(commands):
+            objects.append({"type": "rect", "parent": parent,
+                            "name": f"repair_load_{tab}_{index}",
+                            "x": (index % columns) * cell_w,
+                            "y": (index // columns) * cell_h,
+                            "w": max(1, cell_w - 1), "h": max(1, cell_h - 1),
+                            "bg_color": ("#204060", "#603020", "#205040")[index % 3],
+                            "opacity": 160})
+    # The total fixed-paint area remains about one eighth of the viewport for
+    # every region count. Gaps keep the rectangles separate in the repair plan.
+    for index in range(regions):
+        stripe_h = max(1, height // (2 * regions))
+        objects.append({"type": "rect", "parent": page,
+                        "name": f"repair_fixed_{index}",
+                        "x": flow["x"] + width // 3,
+                        "y": flow["y"] + index * height // regions + stripe_h // 2,
+                        "w": max(1, width // 4), "h": stripe_h,
+                        "bg_color": "#F0B040", "opacity": 190})
+    return document
+
+
+def absolute_assets(value, directory):
+    """Keep diagnostic JSON usable outside the checked-in asset directory."""
+    if isinstance(value, dict):
+        return {key: absolute_assets(item, directory) for key, item in value.items()}
+    if isinstance(value, list):
+        return [absolute_assets(item, directory) for item in value]
+    if isinstance(value, str) and len(value) < 256:
+        path = directory / value
+        if path.is_file():
+            return str(path.resolve())
+    return value
+
+
 def main():
+    invocation_dir = Path.cwd()
     os.chdir(Path(__file__).resolve().parent)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--check", action="store_true",
         help="fail if checked-in generated scenes are stale")
+    parser.add_argument("--output-dir", type=Path,
+                        help="write generated scenes to a separate directory")
+    parser.add_argument("--snapshot-repair-regions", type=int, choices=(0, 1, 4, 16),
+                        help="diagnostic PageFlow fixed-paint regions; requires --output-dir")
+    parser.add_argument("--snapshot-repair-commands", type=int, default=128,
+                        help="moving rectangles per page in the diagnostic fixture (1..256)")
     args = parser.parse_args()
+    if args.snapshot_repair_regions is not None and (args.output_dir is None or args.check):
+        parser.error("snapshot repair fixtures require --output-dir and cannot use --check")
+    if not 1 <= args.snapshot_repair_commands <= 256:
+        parser.error("snapshot repair commands must be 1..256")
+    output_dir = (invocation_dir / args.output_dir).resolve() if args.output_dir else Path.cwd()
+    if args.snapshot_repair_regions is not None and output_dir == Path.cwd():
+        parser.error("snapshot repair fixtures must not replace the standard scenes")
+    if not args.check:
+        output_dir.mkdir(parents=True, exist_ok=True)
     generated_assets = {
         "bench_anim.gif": scanner_animation_bytes(),
         "bench_scale.png": scale_asset_bytes(),
@@ -1559,24 +1622,35 @@ def main():
             if not path.exists() or not asset_content_equal(path, content):
                 print(f"stale benchmark asset: {name}", file=sys.stderr)
                 return 1
-        else:
+        elif args.output_dir is None:
             path.write_bytes(content)
             print(f"wrote {name}")
     validate_assets()
     generated = {}
     for width, height in RESOLUTIONS:
         main_scene = scene(width, height)
+        if args.snapshot_repair_regions is not None:
+            snapshot_repair_fixture(main_scene, args.snapshot_repair_regions, args.snapshot_repair_commands)
+        if args.output_dir is not None:
+            main_scene = absolute_assets(main_scene, Path.cwd())
         name = f"bench_{width}.json"
         generated[name] = json.dumps(main_scene, indent=2) + "\n"
         alt = f"bench_alt_{width}.json"
-        generated[alt] = json.dumps(alt_scene(width, height), indent=2) + "\n"
+        alternate = alt_scene(width, height)
+        if args.output_dir is not None:
+            alternate = absolute_assets(alternate, Path.cwd())
+        generated[alt] = json.dumps(alternate, indent=2) + "\n"
     for width, height in ((1024, 600), (800, 480)):
         main_scene = scene(width, height, rgb888=True)
+        if args.snapshot_repair_regions is not None:
+            snapshot_repair_fixture(main_scene, args.snapshot_repair_regions, args.snapshot_repair_commands)
+        if args.output_dir is not None:
+            main_scene = absolute_assets(main_scene, Path.cwd())
         generated[f"bench_rgb888_{width}.json"] = json.dumps(
             main_scene, indent=2) + "\n"
     stale = []
     for name, content in generated.items():
-        path = Path(name)
+        path = output_dir / name
         if args.check:
             if not path.exists() or path.read_text(encoding="utf-8") != content:
                 stale.append(name)

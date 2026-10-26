@@ -89,8 +89,9 @@ project Kconfig -> GSPB JSON requirement -> esp_gsp_config_set() -> library cap
 `DEFAULT_DYNAMIC_IMAGE_SLOTS` counts active logical targets, not all product
 images. `CONTEXT_DEFAULT_INSTANCES` counts simultaneously live template
 copies, including visible recycled List/Grid rows and application-created
-widgets. The compiler records authored demand automatically; override only the
-additional peak created exclusively by application code. Too-small values and
+widgets. The compiler records authored demand automatically; when application
+code creates additional objects, set the total required capacity, including
+the compiled demand, rather than only the increment. Too-small values and
 values above a library cap fail explicitly instead of truncating content.
 
 `gsp_add_bundle(IMAGE_CACHE_BYTES ...)` sets `image_cache_bytes` in the
@@ -155,9 +156,10 @@ and skipped images use the placeholder and lazy-decode path. Increase
 `image_cache_bytes` or reduce decoded image sizes to make the complete first
 frame ready before presentation.
 
-An animated scene change is the one point where two scenes are resident at
-once, because the transition composites both. Applications that cannot afford
-that peak should navigate with `ESP_GSP_NO_TRANSITION`.
+An animated scene change requires the source and target working sets together
+while it composites them. Other retained scenes may also keep decoded images
+until cache pressure evicts them. `ESP_GSP_NO_TRANSITION` avoids the mandatory
+two-scene transition peak; it does not itself discard every inactive cache.
 
 When `ESP_GSP_FIELD_ENABLE_IMAGE_CACHE` is set to zero, compressed QOI and
 RLE-family resources decode by region. Runtime-published PNG and JPEG images
@@ -168,6 +170,13 @@ require the decoded-image cache and are rejected in this mode.
 `esp_gsp_esp_lcd_config_t` binds the UI to one display target and optional
 touch device.
 
+Zero task-stack and priority fields use the resolved instance/project policy;
+the values below are the default policy values. An active dynamic-font provider
+selects `task_stack_size_freetype`, and linked font/vector stack minima still
+apply. Setting `task_stack_psram` to false does not override an enabled project
+PSRAM-stack policy; disable that policy through instance configuration when
+internal stack memory is required.
+
 | Field | Zero/default behavior | Set it when |
 |---|---|---|
 | `struct_size` | `ESP_GSP_ESP_LCD_CONFIG_INIT()` sets the current size | never set it manually to another value |
@@ -177,8 +186,8 @@ touch device.
 | `touch_input_mode` | interrupt when available, otherwise polling | force polling or require interrupt mode |
 | `touch_wake_from_isr` | no application-owned interrupt notification | an ISR-safe application callback must wake its own task from the same touch interrupt |
 | `touch_wake_user_ctx` | null context is passed to `touch_wake_from_isr` | the wake callback needs application-owned context |
-| `task_stack_size` | 12288 bytes, or 24576 bytes when a dynamic TTF/OTF blob is configured | stack measurement shows a different requirement |
-| `task_stack_size_freetype` | 24576 bytes when a dynamic TTF/OTF blob is configured | measured FreeType paths justify another stack size |
+| `task_stack_size` | 12288 bytes, or 32768 bytes when dynamic text is active | stack measurement shows a different requirement |
+| `task_stack_size_freetype` | 32768 bytes when dynamic text is active | measured FreeType paths justify another stack size |
 | `task_priority` | 4 | integration scheduling requires a reviewed priority change |
 | `task_stack_psram` | follows the consuming project's render-stack memory choice | the render stack should use PSRAM and callbacks obey its flash/cache restrictions |
 | `perf_log` | false | five-second rendered-FPS logging is useful during measurement |
@@ -197,6 +206,11 @@ Keep display presentation mode on `ESP_DISPLAY_PRESENT_MODE_AUTO` for the
 normal path. Panel classification, framebuffer exposure, byte swapping,
 rotation and TE configuration belong to the BSP display target; see
 [Display Presentation](../guide/display.md).
+
+`CONFIG_ESP_GSP_ACCEL_SYNC_TIMEOUT_MS` is the deadline for reporting a stalled copy and
+disabling new copies on that engine. Buffers remain owned until hardware
+completion; a permanent stall blocks rendering until reset. Raising this
+deadline does not repair a lost completion notification.
 
 ## Adjusting memory use
 
@@ -241,13 +255,40 @@ the failure log; `LIMIT_EXCEEDED` alone does not prove heap exhaustion. Observe
 the media API's UI serialization requirements when reading its counters.
 
 Task-stack settings are under `ESP-GSP → Advanced settings (optional) → Project
-runtime defaults → Runtime tasks`. The default render stack is 12 KiB, or 24 KiB
-with dynamic FreeType; the decode stack is 4 KiB. Before enabling PSRAM stacks,
+runtime defaults → Runtime tasks`. The default render stack is 12 KiB, or 32 KiB
+with active dynamic FreeType; the decode stack is 4 KiB. Before enabling PSRAM stacks,
 audit Flash, NVS and filesystem calls made by the task and its callbacks; route
 them to an internal-stack task or Flash dispatcher where needed. Initialization
 still uses the caller's stack: changing the render stack does not change the
 `app_main()` stack. Reduce stack sizes only after measuring remaining stack
 across all enabled paths.
+
+Changing text within the compiled glyph set uses GFB and needs no raw-font
+fallback. GFB catalogs alone do not activate the dynamic-font cache or ID maps.
+
+The standard FreeType grayscale rasterizer uses a 16 KiB local render pool.
+Dynamic fonts and compiled vectors share a minimum of the linked pool plus
+16 KiB (32 KiB in standard builds). The runtime raises smaller requests and
+preserves larger settings. Failed optional font setup leaves static glyphs
+available and does not select the larger font stack. Increasing the glyph-cache
+bound does not increase the task stack.
+
+Faces with more than 32768 source glyphs use a stable ID map for dynamic text,
+allowing high FreeType glyph indices without changing the glyph-run format.
+The map is shared across sizes of the same face and grows on demand up to 32768
+distinct glyphs per face (up to 192 KiB per face, preferring PSRAM with internal
+RAM fallback). This metadata is outside the bitmap-cache budget and is released
+when the UI stops; growth temporarily retains both old and replacement entries.
+Resetting the bitmap cache keeps existing IDs valid.
+
+A resident session keeps its original task stack. Activating an app whose
+minimum exceeds that budget returns `ESP_ERR_INVALID_SIZE` before switching;
+size the session for its most demanding app or create a new session.
+User callbacks may require additional stack; measure the complete call path.
+
+When IDF stack-watermark support is enabled, the render task samples its
+historical minimum free stack at most once every five seconds and logs a warning
+once if it drops below 2 KiB.
 
 Startup `memory` logs inspect the actual stack address, including IDF global
 external-stack placement and fallback. Failed creation reports
@@ -261,6 +302,7 @@ gsp_add_bundle(<component-target>
     [PIXEL_FORMAT rgb565|rgb888]
     [IMAGE_CACHE_BYTES <bytes>]
     [DYNAMIC_FONT <font.ttf>]
+    [COMPONENTS_DIR <directory>]
     [SYMBOL <c_identifier>]
     [PROFILE <expert-profile.yaml>]
     [DEPLOYABLE])
@@ -272,6 +314,13 @@ directory has no JSON files. Explicit paths are the advanced path for scattered
 JSON, a subset of scenes, or multiple bundles. `PIXEL_FORMAT` defaults to
 `rgb565` when `PROFILE` is not supplied. `PROFILE` is an expert compiler
 override.
+
+`COMPONENTS_DIR` loads shared project component definitions from a directory
+relative to the calling `CMakeLists.txt`. It is optional; inline definitions
+remain supported. Definition and directory membership changes rebuild the
+bundle. See [reusable project components](../guide/scenes.md#reusable-project-components)
+for naming, parameters and the matching PC build option. Unknown arguments and
+`COMPONENTS_DIR` without a value fail during configuration.
 
 `DEPLOYABLE` is opt-in. It adds one self-describing GMD metadata member per
 scene so the resulting GSPB can be loaded without its generated C directory.
@@ -379,8 +428,14 @@ Useful SRAM relationships for capacity planning are:
 - Vector rendering needs additional memory even when image caching is disabled.
   Measure peak usage with the application's actual assets and transitions;
   memory is managed automatically.
-- FreeType bitmap storage is approximately
+- FreeType cached bitmap storage is approximately
   `FREETYPE_CACHE_GLYPHS * FREETYPE_GLYPH_MAX_PX^2` bytes.
+  The bound applies to both cached dimensions. Larger dynamic glyphs still
+  render through one reusable heap workspace, sized to the largest uncached
+  bitmap requested and released on cache reset/UI teardown. They are rasterized
+  again on later resolves. This workspace and FreeType's own working memory
+  are additional to the cache budget; raising the cache bound trades quadratic
+  cache memory growth for fewer rasterizations.
 - List text memory grows with the number of visible rows, text slots and text
   length. Measure peak usage with representative application data.
 - Increasing `QUEUE_DEPTH` and `TEXT_CAPACITY` increases memory use. Adjust

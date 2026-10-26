@@ -1,6 +1,6 @@
 # ESP-GSP 场景编写参考
 
-GSPC 版本：0.8.0。
+GSPC 版本：0.9.0。
 
 本页是 JSON 场景的完整字段参考。学习单个控件时优先使用
 [控件库](../components/index.md)中的可运行示例。
@@ -1212,7 +1212,8 @@ GSPC 版本：0.8.0。
 | `dynamic_color` | `bool` | — | — | — | 模板成员公开每实例独立颜色槽 |
 | `dynamic_image` | `bool` | — | — | — | 模板图片公开每实例独立资源槽 |
 | `canvas` | `enum` | — | `draw`, `push` | — | Canvas 生产方式：绘制回调或借用帧；生成独立资源视图 |
-| `image_opacity` | `int` | — | 默认 255; 0…255 | — | 仅图片透明度；固定栅格图片的变换可在编译期烘焙 alpha |
+| `svg_mode` | `enum` | — | `vector`, `raster` | — | SVG 导入：默认保留曲线，或按固定宽高显式烘焙静态像素 |
+| `image_opacity` | `int` | — | 默认 255; 0…255 | 场景: SVG; 模板: 不支持 | 仅图片透明度 0..255；场景 SVG 支持直接有界运行时控制，固定栅格图片可在编译期烘焙 alpha |
 
 ### 键盘（`keyboard`）
 

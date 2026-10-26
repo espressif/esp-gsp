@@ -162,8 +162,8 @@ decoder and cache configuration. Oversized runtime-fit bitmaps may receive a
 applying it. Ambiguous resource variants are left for manual inspection.
 
 Start with `gspc cards` for one widget. Add schema, docs, or inventory when the
-task needs field ranges, version details, or the full registry. `compile` /
-`pack` also write `*.api.json` next to generated headers so tools can map
+task needs field ranges, version details, or the full registry. With
+`--api-header`, `compile` / `pack` also write `*.api.json` next to generated headers so tools can map
 object names to helpers, binds and simulator RPC.
 
 The schema describes fields and ranges; diagnostics identify the JSON paths to edit.
@@ -223,7 +223,8 @@ The application converts color spaces and retains its full HSV state. Controls s
 resolve values in 100 intervals; choose the hue range with that resolution in mind.
 
 Generated Wheel bindings enable row snapping. Advanced Lists can opt in using
-`esp_gsp_list_snap()`. `cyclic: true` is rejected at compile time. `snap_to_item: false` disables snapping in both generated-header and deployable-metadata integration.
+`esp_gsp_list_snap()`. Set Wheel `cyclic: true` to wrap across the first and last
+items. `snap_to_item: false` disables snapping in both generated-header and deployable-metadata integration.
 Handle item selection through row callbacks; snapping controls the scroll position.
 
 ## Animations and transitions
@@ -306,3 +307,43 @@ application capacity. Static text does not consume runtime text slots.
 Linked scenes share one set of `(font, size)` packs. `--max-font-packs` defaults to 32,
 matching the ESP-GSP font capacity; custom runtimes can pass their supported limit.
 The compiler reports an over-limit shared set once for the bundle.
+
+## Review optional link modules
+
+After registering bundles with `gsp_add_bundle()` or `gsp_add_assets()`, run:
+
+```sh
+idf.py gsp_feature_report
+```
+
+The read-only report inspects the final GSPB bytes, including hidden scenes,
+templates and external assets. It lists optional JPEG, PNG, EAF,
+reference-renderer, vector, procedural, animation-span and animation-DEFLATE
+modules with their reasons. It does
+not change sdkconfig, resources or link roots and does not estimate Flash savings.
+Disabled capabilities are checked against final resources before the component
+is built; unchanged inputs reuse the successful check.
+
+Unknown requirements outside registered packages retain enabled modules.
+Use the existing `gsp_specialize_runtime(DYNAMIC_FEATURES ...)` declaration only
+when it covers direct APIs, downloads and OTA resources too; `NONE` declares
+that there are no such inputs. Extra packages belong in `EXTRA_BUNDLES`.
+`AUTO` and `ALL` respect disabled link capabilities. Dynamic features with a
+configuration option must be enabled in the project configuration. The span
+decoder has no separate menuconfig option; final resources and the runtime-link
+declaration determine whether it is retained.
+The report preserves an enabled reference-renderer fallback. Apply candidates
+that have configuration options through menuconfig, then compare APP binaries,
+functionality, frame times and memory on the intended board.
+
+The same analysis is available without build integration or sidecars:
+
+```sh
+gspc features app.gspb assets.gspb --sdkconfig build/config/sdkconfig.json
+gspc features app.gspb --sdkconfig build/config/sdkconfig.json --runtime png,jpeg --format json
+```
+
+Supply every application and external asset package. `--runtime auto` is the
+default; use `none`, `all` or a complete comma-separated declaration when known.
+`--check` validates requirements without printing suggestions. Rebuild or select
+GSPC with `compiler_features.link_feature_report: 2` for this entry point.

@@ -1,10 +1,10 @@
 # Needle (`gsp_needle`)
 
-Rotating gauge hand with configurable pivot, angle and tail.
+Rotating gauge hand with a center pivot, configurable angle and tail.
 
 ## When to use
 
-Use it to show status, a measurement, or motion.
+Use it for a gauge whose hand rotates around the center of its bounding box.
 
 ## Local interactive preview
 
@@ -24,6 +24,8 @@ These commands compile the example and open it in the ESP-GSP simulator browser 
 ## Runtime behavior
 
 The simulator and device runtime use the same compiled geometry. The preview starts with the JSON values; application-driven updates need the simulator backend/API or device code.
+
+The pivot is the center of the object's bounding box. `angle` is clockwise in degrees, with 0 pointing up and a range of 0–359. `tail_length` extends behind that center; the runtime caps it at the available hand length. Move or resize the object to position the pivot.
 
 If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 

@@ -45,8 +45,8 @@ typedef struct {
     esp_gsp_touch_input_mode_t touch_input_mode; /*!< auto by default */
     esp_gsp_esp_lcd_touch_wake_from_isr_cb_t touch_wake_from_isr;
     void *touch_wake_user_ctx;
-    uint32_t task_stack_size;       /*!< default 12288, or 24576 with TTF */
-    uint32_t task_stack_size_freetype; /*!< default 24576 with TTF */
+    uint32_t task_stack_size;       /*!< default 12288, or 32768 with active dynamic text */
+    uint32_t task_stack_size_freetype; /*!< default 32768; runtime enforces the linked provider minimum */
     uint32_t task_priority;         /*!< default 4 */
     bool task_stack_psram;          /*!< allocate render stack from PSRAM */
     bool perf_log;                  /*!< log rendered fps every 5 s */
@@ -89,6 +89,11 @@ typedef void (*esp_gsp_esp_lcd_prepare_cb_t)(esp_gsp_handle_t gsp,
  * On success no new GSP frame can be submitted until
  * esp_gsp_esp_lcd_resume_paused() is called. The function also waits for the
  * shared presenter transfer/present fences to retire.
+ * ESP_ERR_NOT_FINISHED means pause rollback could not restore the original
+ * app: *out_pause contains a valid token for retry with resume_paused(). This
+ * does not certify quiescence; do not hand the display to another producer.
+ * Other failures do not transfer a pause token. A non-NULL out_pause is cleared
+ * before argument validation; any previously stored token is not freed.
  */
 esp_err_t esp_gsp_esp_lcd_pause(
     esp_gsp_handle_t gsp,
@@ -99,6 +104,8 @@ esp_err_t esp_gsp_esp_lcd_pause(
  * Resume the exact UI paused by esp_gsp_esp_lcd_pause(), including a temporary
  * app running on a retained hub session. The pause token is consumed on
  * success and the first resumed frame is forced to redraw in full.
+ * On failure the token retains the original app for another resume attempt;
+ * do not free its borrowed resources or discard the token.
  */
 esp_err_t esp_gsp_esp_lcd_resume_paused(
     esp_gsp_esp_lcd_pause_t *pause,
@@ -107,14 +114,24 @@ esp_err_t esp_gsp_esp_lcd_resume_paused(
 /**
  * Pause a UI while retaining its scenes and component state. Its render task
  * and LCD host remain resident; decoded image surfaces are released.
+ * ESP_ERR_NOT_FINISHED means rollback to the hub also failed: *out_session
+ * contains a valid session with no temporary app. Retain it and retry with
+ * esp_gsp_esp_lcd_resume(session, NULL, ...) or destroy it. Other failures do
+ * not transfer a session to the caller.
  */
 esp_err_t esp_gsp_esp_lcd_suspend(
     esp_gsp_handle_t hub,
     esp_gsp_esp_lcd_session_t **out_session);
 
 /** Start an app bundle on a suspended hub's LCD host. The bundle must match
- *  the display width, height and pixel format. A startup failure resumes the
- *  hub and consumes the session. */
+ *  the display width, height and pixel format. A startup failure attempts to
+ *  resume the hub. Successful recovery consumes the session and returns the
+ *  startup error; ESP_ERR_NOT_FINISHED means recovery also failed and the
+ *  session remains owned by the caller with no temporary app. Retry with
+ *  esp_gsp_esp_lcd_resume(session, NULL, ...) or destroy the session.
+ *  ESP_ERR_INVALID_SIZE means the resident task stack cannot accommodate the
+ *  new app; create a larger session. Calls rejected by initial argument or
+ *  session-state validation do not consume the session. */
 esp_err_t esp_gsp_esp_lcd_start_on_session(
     esp_gsp_esp_lcd_session_t *session,
     const esp_gsp_config_t *app_config,
@@ -124,6 +141,7 @@ esp_err_t esp_gsp_esp_lcd_start_on_session(
  * Start an app and invoke @p prepare on the resident render task before the
  * first frame. This is intended for installing generic runtime contributors,
  * event handlers and timers without racing the initial render.
+ * Session ownership and failure recovery follow start_on_session().
  */
 esp_err_t esp_gsp_esp_lcd_start_on_session_prepared(
     esp_gsp_esp_lcd_session_t *session,
@@ -134,8 +152,10 @@ esp_err_t esp_gsp_esp_lcd_start_on_session_prepared(
 
 /** Replace the active temporary app while retaining the suspended hub.
  * Unlike esp_gsp_esp_lcd_resume(), this never reactivates or presents the
- * hub between the two Apps. On startup failure the hub is resumed and the
- * session is consumed. */
+ * hub between the two Apps. Startup failure follows start_on_session():
+ * successful hub recovery consumes the session; ESP_ERR_NOT_FINISHED retains
+ * an empty session for resume(session, NULL, ...) or destruction. Failure to
+ * suspend the current app leaves that app and session intact. */
 esp_err_t esp_gsp_esp_lcd_replace_on_session_prepared(
     esp_gsp_esp_lcd_session_t *session,
     esp_gsp_handle_t current_app,
@@ -146,14 +166,21 @@ esp_err_t esp_gsp_esp_lcd_replace_on_session_prepared(
 
 /**
  * Stop the temporary app, then resume the retained hub and force its first
- * frame to redraw. The session is consumed on success.
+ * frame to redraw. The session is consumed only on success. Pass NULL for app
+ * when no temporary app is active, including recovery after
+ * ESP_ERR_NOT_FINISHED. A pause failure leaves the temporary app alive and
+ * returns that error. ESP_ERR_NOT_FINISHED means the temporary app is gone
+ * but hub recovery failed; retain the session and retry with app=NULL.
  */
 esp_err_t esp_gsp_esp_lcd_resume(
     esp_gsp_esp_lcd_session_t *session,
     esp_gsp_handle_t app,
     esp_gsp_handle_t *out_hub);
 
-/** Destroy a suspended hub and its LCD host when no temporary app is active. */
+/** Destroy a suspended hub and its LCD host when no temporary app is active.
+ *  Failure retains the session and its resources for destruction retry;
+ *  after requesting destruction, do not start or resume an app on it.
+ *  Release borrowed bundle/font/display data only after ESP_OK. */
 esp_err_t esp_gsp_esp_lcd_session_destroy(
     esp_gsp_esp_lcd_session_t *session);
 

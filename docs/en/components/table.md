@@ -4,7 +4,7 @@ Compile-time table assembled from labels, cells and grid lines.
 
 ## When to use
 
-Use it when a common interaction is easier to express as one ready-made control.
+Use it for headers and rows known at build time. Use List or Grid for application-backed datasets that change at runtime.
 
 ## Local interactive preview
 
@@ -23,9 +23,7 @@ These commands compile the example and open it in the ESP-GSP simulator browser 
 
 ## Runtime behavior
 
-GSPC lowers the group to native primitives. Give an object a stable `name` when application code must control it.
-
-If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
+GSPC expands the headers, rows and grid lines into static primitives. Table has no runtime row binder or per-cell update API; rebuild the scene after changing its contents.
 
 Generated cells, labels and grid lines paint at the Table's position in scene order, so later foreground objects and Drawers can cover them.
 

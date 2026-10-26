@@ -128,15 +128,19 @@ if(gsp_jpeg_enabled)
     list(APPEND gsp_srcs "src/codec/gsp_codec_jpeg.c")
 endif()
 
-# PNG decoding, EAF playback, the reference rasterizer, vector outlines and
-# procedural effects follow the same link contract: each is reached only
+# Image codecs, EAF/grouped playback, the reference rasterizer, vector outlines
+# and procedural effects follow the same link contract: each is reached only
 # through a weak provider, so a disabled source build leaves the member out
 # and a prebuilt consumer leaves it unrooted.
-set(gsp_optional_members PNG EAF REFERENCE_RENDERER VECTOR PROCEDURAL)
+set(gsp_optional_members PNG EAF REFERENCE_RENDERER VECTOR PROCEDURAL ANIM_DEFLATE ANIM_SPANS)
 set(gsp_PNG_provider gsp_codec_png_provider)
 set(gsp_PNG_srcs "src/codec/gsp_codec_png.c")
 set(gsp_EAF_provider gsp_anim_eaf_provider)
 set(gsp_EAF_srcs "src/runtime/gsp_anim_eaf.c" "src/codec/eaf/gfx_eaf_dec.c")
+set(gsp_ANIM_DEFLATE_provider gsp_anim_deflate_provider)
+set(gsp_ANIM_DEFLATE_srcs "src/runtime/gsp_anim_deflate.c")
+set(gsp_ANIM_SPANS_provider gsp_anim_spans_provider)
+set(gsp_ANIM_SPANS_srcs "src/runtime/gsp_anim_spans.c")
 set(gsp_REFERENCE_RENDERER_provider gsp_reference_provider)
 set(gsp_REFERENCE_RENDERER_srcs "src/renderer/reference/gsp_reference.c")
 set(gsp_VECTOR_provider gsp_vector_provider)
@@ -149,6 +153,9 @@ set(gsp_PROCEDURAL_srcs
     "src/renderer/gsp_flip_card.c")
 foreach(member IN LISTS gsp_optional_members)
     set(gsp_${member}_enabled ON)
+    if(member STREQUAL "ANIM_DEFLATE" AND NOT ESP_GSP_BUILD_PREBUILT)
+        set(gsp_${member}_enabled ${CONFIG_ESP_GSP_ENABLE_ANIM_DEFLATE})
+    endif()
     if(DEFINED CONFIG_ESP_GSP_ENABLE_${member}
             AND NOT CONFIG_ESP_GSP_ENABLE_${member}
             AND NOT ESP_GSP_BUILD_PREBUILT)
@@ -262,6 +269,11 @@ if(gsp_use_prebuilt)
     set_property(TARGET ${COMPONENT_LIB}
         PROPERTY ESP_GSP_PREBUILT_LIBRARY "${GSP_PREBUILT_LIB}")
 else()
+    # Keep QOI branch targets word aligned on P4.
+    if(IDF_TARGET STREQUAL "esp32p4" AND CMAKE_C_COMPILER_ID STREQUAL "GNU")
+        set_property(SOURCE "${CMAKE_CURRENT_LIST_DIR}/src/codec/gsp_codec_qoi.c"
+            APPEND PROPERTY COMPILE_OPTIONS -falign-labels=4)
+    endif()
     if(gsp_jpeg_enabled)
         idf_component_optional_requires(PRIVATE espressif__esp_new_jpeg)
     endif()

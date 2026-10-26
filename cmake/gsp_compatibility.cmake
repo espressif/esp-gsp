@@ -25,6 +25,26 @@ function(_esp_gsp_require_equal label actual expected)
 endfunction()
 
 function(esp_gsp_validate_gspc_compatibility compatibility_json)
+    # Optional authoring tooling must not make an otherwise compatible older
+    # compiler unusable. Callers only advertise sidecars this tool can emit.
+    string(JSON context_schema ERROR_VARIABLE context_error GET
+        "${compatibility_json}" compiler_features compile_context)
+    if(context_error)
+        set(context_schema 0)
+    endif()
+    set_property(GLOBAL PROPERTY ESP_GSPC_CONTEXT_SCHEMA "${context_schema}")
+    string(JSON feature_report ERROR_VARIABLE feature_report_error GET
+        "${compatibility_json}" compiler_features link_feature_report)
+    if(feature_report_error)
+        set(feature_report 0)
+    endif()
+    set_property(GLOBAL PROPERTY ESP_GSPC_FEATURE_REPORT "${feature_report}")
+    string(JSON animation_deflate ERROR_VARIABLE animation_deflate_error GET
+        "${compatibility_json}" compiler_features animation_deflate)
+    if(animation_deflate_error)
+        set(animation_deflate 0)
+    endif()
+    set_property(GLOBAL PROPERTY ESP_GSPC_ANIMATION_DEFLATE "${animation_deflate}")
     # Functions are global, but the first includer's directory variables are
     # not. Load the generated values in this call's scope as well.
     include("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/gsp_compatibility_contract.cmake")

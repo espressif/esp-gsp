@@ -1,5 +1,41 @@
 # Changelog
 
+## 1.8.0
+
+Use with GSPC 0.9.0 and simulator 1.8.0.
+
+- Improve large/CFF glyph rendering, font catalog lifetimes, high-index glyphs and render-task stack handling.
+- Fix widget visibility and pan cancellation; preserve input order through static optimizations, transition endpoints, fixed paint and scrolling indicators.
+- Extend SVG imports, referenced-part baking and transforms; add vector opacity and native/optional DEFLATE animation patches.
+- Precompile RGB565 animation spans, palettes and frame reuse; reduce player memory and retain precise damage.
+- Improve image encoding and sparse patches; reduce vector work and redundant redraws; accelerate C3 blends and fix unaligned RGB565 fills.
+- Add build contexts, diagnostics and resource reports; share image payloads and source fingerprints during compilation.
+- Improve simulator property writes, verified input and waits for new events; reject stale callback checks and identify resource snapshots.
+- Reduce retained transition memory, coalesce fixed-paint repairs, fence asynchronous copies and preserve sessions when recovery or shutdown fails.
+
+### Upgrading from 1.7.0
+
+Require FreeType ^2.14.3. Regenerate bundles, headers and build contexts with
+GSPC 0.9.0; rebuild libraries, PC Backends and applications with
+ESP-GSP/simulator 1.8.0. GSB 2.22 vector opacity
+and GRB 1.6–1.8 animation variants require this runtime pair. Public ABI
+versions are unchanged. The runtime enforces the linked rasterizer's minimum stack
+(32 KiB in standard builds), preserving larger settings. Size resident sessions
+for their most demanding app. Compiled animation canvases and group workspaces
+now respect `ANIM_MAX_FRAME_BYTES`; an oversized player is skipped with a warning.
+For callback-backed Canvas content, request repaint through
+`esp_gsp_canvas_invalidate()` or `esp_gsp_canvas_invalidate_dirty()`; repeating a
+numeric/color setter may no longer schedule a redraw.
+Accelerator copy timeouts disable the affected engine while retaining in-flight
+buffers until completion; a permanent hardware stall requires reset.
+For older versions, also follow the intervening upgrade notes.
+
+Pause/session operations return `ESP_ERR_NOT_FINISHED` with a retained token
+when recovery fails. Retry `esp_gsp_esp_lcd_resume_paused()` for a pause token,
+or `esp_gsp_esp_lcd_resume(session, NULL, ...)` for an empty session. A failed
+`esp_gsp_esp_lcd_session_destroy()` retains ownership for destruction retry;
+release borrowed resources only after success.
+
 ## 1.7.0
 
 Use with GSPC 0.8.0 and simulator 1.7.0.

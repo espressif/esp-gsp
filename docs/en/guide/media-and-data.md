@@ -22,8 +22,8 @@ work. Reserve `preload` for resources that need to remain resident.
 On memory-constrained targets, region decoding handles supported lossless images
 without retaining every whole image. Select it with `image_cache_enabled: false`
 in the profile or `--default-disable-image-cache` for bundle compilation. JPEG
-uses the whole-image cache. Automatic encoding selects native pixels for image
-fit/rotation in region mode; explicitly compressed transformed images require
+uses the whole-image cache. With `codec: "auto"` or no codec override, compilation
+selects native pixels when fit/rotation requires them in region mode; compressed transformed images require
 the cache. When loading binaries directly, use the same cache mode in the runtime
 configuration. Bundle API headers apply the selected mode in their config helper.
 
@@ -67,12 +67,19 @@ Prefer the portable codec names `auto`, `speed`, `size`, `raw`, `lossless`, and 
 With a separately installed GSPC, check that `gspc compatibility` lists the
 requested modes in `compiler_features.image_policy_modes`. The source-tree
 compiler supports these modes.
-`auto` selects STORE, QOI/RLE, or hardware JPEG using target capability, cache
+`codec: "auto"` (or an omitted codec) uses the Profile's `image_codec` policy;
+per-image `speed` and `size` override that policy. With Profile `image_codec: auto`,
+GSPC selects STORE, QOI/RLE, or hardware JPEG using target capability, cache
 budget and compression gain. `speed` weighs runtime work: STORE for small
 images, QOI/RLE when compression is strong, and hardware JPEG/JPEG+A8 when
 eligible. `size` compares actual encoded bytes and can use software JPEG.
 JPEG quality defaults to 85; set `quality` (1–100) to change it. For exact
-pixels, use `lossless` or set `image_auto_allow_lossy: false` in the Profile.
+pixels after resizing and conversion to the target pixel format, use `lossless`
+or set `image_auto_allow_lossy: false` in the Profile. RGB565 quantization still applies.
+
+For opaque RGB565 static images already encoded as QOI, GSPC tries native-equivalent
+palette colors and keeps only a smaller stream. This adds compilation work while
+preserving decoded pixels and decoder workspace.
 
 Hardware JPEG needs both dimensions to be at least 64 pixels. For RGB888
 alpha, `auto` and `speed` also require 16-pixel alignment before choosing
@@ -145,6 +152,13 @@ budget with decoded images and in-flight decodes; bitmap decodes reclaim
 vector surfaces first. If the budget or allocator cannot accommodate a
 surface, rendering continues with bounded scratch tiles.
 
+The directory holds up to eight cached vector variants across independent
+resources, with at most four variants of one source. If its allocation fails,
+it retries four entries, then uses bounded scratch tiles. The larger directory
+adds four metadata entries (256 bytes on 32-bit targets) when first allocated.
+More pixel surfaces can remain resident within the same configured byte budget;
+actual RAM use can therefore increase while repeated rasterization decreases.
+
 Use a named image with `fit`, `rotation`, and `scalable` as for raster images. For
 runtime box resizing, author `w` and `h` as bounded dynamic fields with semantic
 properties such as `width` and `height`; GSPC generates typed setters. Box
@@ -156,18 +170,31 @@ sizes, or use the Q16.16 scale setter for fine uniform zoom inside the box.
 
 An optional `tint` color turns a scene image into a monochrome silhouette and
 generates a `set_tint()` setter. Without `tint`, source colors and transparency remain.
-Template SVG images use static colors and dimensions.
+For a scene Image, `image_opacity` is a direct 0..255 image-only opacity. Declare
+`"image_opacity": {"default": 255, "min": 0, "max": 255}` to generate
+`set_image_opacity()`. Literal values below 255 also create this control. The
+existing literal object `opacity` multiplies it; background and border styling
+keep their existing semantics. Alpha scales the completed image once, including
+overlapping paints, and changing it reuses the same vector cache surface.
+Whole-vector opacity requires the matching compiler/runtime with GSB 2.22;
+unchanged opaque vectors retain GSB 2.8. Template vectors still require combined
+opacity 255 and use static colors and dimensions.
 
 The vector importer supports paths, basic shapes, solid fills, fill rules,
-static transforms and strokes expanded at compile time. Prepare artwork as follows:
+static transforms and strokes expanded at compile time. Dash arrays, offsets,
+caps and joins expand into outlines at build time; denser dashes consume more
+outline points and retain the same complexity limits. `symbol/use` and markers
+that normalize to ordinary paths are expanded at build time. Markers needing
+effective clipping remain unsupported; expand them to paths in the editor.
+Non-scaling strokes are diagnosed in attributes, inline styles and stylesheets.
+Prepare artwork as follows:
 
 - Convert text and non-scaling strokes to paths in the source editor.
 - Keep painted bounds, including strokes and inherited transforms, inside the
   SVG viewport. The import diagnostic identifies the element and any overflow.
-- Export artwork that needs embedded images, external references, gradients,
-  filters, active clips/masks or multi-paint group opacity as PNG to preserve
-  those effects. Reference that PNG as a bitmap image.
-- Keep the Image object's `opacity` at 255; use source paint alpha for transparency.
+- For static gradients, clips, masks, patterns, group opacity or supported
+  filters, explicitly choose `svg_mode: "raster"` as described below, or export PNG.
+- Export embedded images and external references as PNG; convert text to paths.
 
 Editor metadata, foreign-namespace content and unused gradient definitions are
 accepted. Single-paint group opacity is folded into paint alpha. A rectangular
@@ -177,6 +204,54 @@ Other unsupported drawing semantics produce a diagnostic, so select a compatible
 
 Raster `codec`, `store_scale` and `cache_policy` options apply to bitmap inputs.
 For vectors, edit source geometry and use the Image size, rotation and scale properties.
+
+#### Explicit static SVG baking
+
+The Image field `svg_mode` defaults to `"vector"`. For fixed artwork that uses
+static effects not supported by runtime curve rendering, set `"svg_mode": "raster"`
+to rasterize the self-contained SVG canvas at the Image's fixed `w/h` during
+compilation. Static linear/radial gradients, clips, masks, patterns, multi-paint
+group opacity and supported static `resvg` filters are baked on the host, along
+with `fit` and `position_x/y`.
+
+```json
+{"type":"image", "name":"decoration", "w":96, "h":96,
+ "image":"decoration.svg", "svg_mode":"raster", "codec":"store"}
+```
+
+Use `svg_element` to bake a named part with inherited transforms, opacity,
+clips, masks and filters. Its content bounds are cropped within the source
+canvas. Selection isolates that part from sibling drawing; select the containing
+group when its effects need several parts together.
+
+In RGB565/RGB888 scenes, the baked image supports bitmap rotation, including
+bounded dynamic rotation, with the same alpha and decoded-cache requirements
+as PNG. Rotation uses the image-box center and clips to that box; preserve
+enough space for the artwork.
+Use a bounded rotation declaration to expose its runtime rotation control.
+See the [SVG bitmap example](../../../examples/usage/widgets/image/raster.json).
+
+Raster mode requires fixed baking dimensions, scale 1 and `store_scale: 1`.
+Use vector mode for morphing, tint, `svg_layout`, bounded runtime `w/h` or
+`image_opacity`, and runtime scaling. Vector mode also rejects `store_scale`
+overrides; choose the baked `w/h` or edit the source geometry to change storage size.
+Text, embedded images, scripts, animation and external resources remain unsupported.
+
+| Limit | Value |
+|---|---|
+| Source SVG size | 2 MiB |
+| Output RGBA/native/encoded resource | 4 MiB each |
+| Normalized nodes / path points | 4,096 nodes / 131,072 points |
+| Nesting depth / filter primitives | 32 group levels / 64 primitives |
+| Estimated layer/filter work | 64 MiB |
+| Generated XML for `svg_element` isolation and stylesheet expansion | 64 MiB |
+
+The layer-work estimate and generated-XML limit bound separate build stages;
+neither is a compiler peak-memory limit. Existing bitmap cache budgets also apply.
+
+`codec: "store"` avoids a decoded-image cache buffer at the cost of Flash size;
+compressed output uses the profile's decoded-image cache. `auto`, `speed`, and
+`size` keep baked SVG lossless unless `codec: "jpeg"` is specified explicitly.
 
 Use `svg_element` to select a source element/group ID without splitting the
 asset into separate files. Inherited transforms are preserved and the result
@@ -205,6 +280,9 @@ options, a morph pair or the final target budget; build the actual scene too.
 A viewport-overflow reason identifies the source file and element (or unnamed
 selection), then reports the viewport, selected bounds, actual painted bounds
 and excess on each side.
+Where a revised viewBox passes the ordinary vector compiler, the diagnostic
+also gives that value. Changing the viewBox changes the canvas mapping; check
+the intended placement after recompiling.
 A selected compatible part can be imported without
 rendering unrelated decoration groups that need unsupported effects.
 
@@ -215,9 +293,11 @@ progress, defaulting to zero. Generated `set_morph()`, `animate_morph()` and
 The runtime interpolates curve points without XML parsing or full-frame
 bitmap sequences. Both states must have identical viewport dimensions,
 paint order/colors, contour structure and segment types. Preserve path start
-points and directions. Duplicate the source and edit node positions to keep
-corresponding points aligned; the compiler checks structural compatibility. Selected elements use a shared union
-of both endpoint bounds, so morphing does not recrop or shift the image.
+points and directions. To align curve degrees, convert the corresponding
+segments in the editor and inspect both states. Duplicate the source and edit
+node positions to keep corresponding points aligned; the compiler checks
+structural compatibility. Selected elements use a shared union of both endpoint
+bounds, so morphing does not recrop or shift the image.
 Use morphing on named scene Images; template images use static geometry.
 
 Vector Image input supports up to 2 MiB, 128 fill/stroke draws and 8192 outline points.
@@ -293,9 +373,15 @@ With dynamic font fallback, each static GFB can contain up to 32768 glyphs.
 UI startup rejects larger packs in this combination. Static-only GFB packs
 can contain up to 65535 glyphs.
 
-Dynamic fonts use additional code, heap, and task stack. Size them from the
-actual character set and measured workload rather than enabling them for text
-that is already known at build time.
+Dynamic fonts use additional code, heap, and task stack. The glyph cache reserves
+`entries × max_px²` bytes of pixel storage, plus metadata, using the effective
+per-instance capacities. Their defaults come from `CONFIG_ESP_GSP_FREETYPE_CACHE_GLYPHS`
+and `CONFIG_ESP_GSP_FREETYPE_GLYPH_MAX_PX`; instance overrides also affect this cost.
+Glyphs larger than the cache slot use one reusable heap workspace and are rasterized
+again on repeated use; the cache dimension is not a maximum renderable font size.
+FreeType working memory and this workspace are additional to the cache. Size these
+from the actual character set and workload. See [font loading](external-assets.md#fonts-on-sd)
+for CFF support, startup diagnostics and the font-buffer lifetime.
 
 ## Dynamic text and scalar state
 
@@ -382,7 +468,9 @@ simultaneous high-water mark, not a sum of category peaks. Borrowed inputs,
 custom cache allocators, decoder-library private memory, animation frames,
 region decode buffers, display buffers, stacks and allocator overhead are
 excluded. It is not a whole-application memory measurement. The existing
-`cache_peak_bytes` semantics are unchanged.
+`esp_gsp_media_stats()` reports `cache_peak_bytes` as the sum of the lifetime
+peaks of live scene caches. That sum is a conservative bound, not a simultaneous
+process-wide high-water mark.
 
 ```c
 esp_gsp_image_memory_stats_t memory;
@@ -674,7 +762,7 @@ GIF/APNG images accept these `animation_codec` policies:
 
 | Value | Compilation behavior |
 |---|---|
-| `lossless` | Force QOI delta patches; also the default for uncalibrated `auto` targets |
+| `lossless` | Force QOI delta patches; the default profile retains this behavior |
 | `jpeg` | Full JPEG frames, even when larger than QOI |
 | `hardware_jpeg` | JPEG when the target profile declares `hardware_jpeg: true`, otherwise QOI |
 
@@ -693,7 +781,7 @@ truncating them. Reports count patch work for each replayed hold entry.
 
 Rebuild external asset packages together with generated headers when long holds add entries.
 
-JPEG mode decodes and redraws complete frames. It trades resource space for access to hardware decoding; sparse UI animations may still benefit more from QOI patches. `animation_frame_budget_bytes` limits decoded-frame storage, not encoded Flash size; inspect resource reports for encoded size. Reports distinguish `anim_qoi`, `anim_jpeg`, and `anim_jpeg_a8`.
+JPEG mode decodes and redraws complete frames. It trades resource space for access to hardware decoding; sparse UI animations may still benefit more from QOI patches. `animation_frame_budget_bytes` limits compiled-animation canvases and optional group workspaces, not encoded Flash size; inspect resource reports for encoded size. Reports distinguish `anim_qoi`, `anim_jpeg`, `anim_jpeg_a8`, and `anim_spans`.
 
 `animation_max_players` is a separate per-scene Profile limit for independent
 compiled animation resources. It defaults to 4 and can be raised in the YAML
@@ -703,29 +791,72 @@ from Bundle requirements; explicit project or instance limits must still cover
 those resources. Hidden animations can pause, but their compiled resources
 still count toward the player limit.
 
-Without `animation_codec`, `size` compares the complete QOI delta and
-JPEG/JPEG+A8 payloads. `auto` and `speed` consider hardware JPEG only when the
-Profile sets `animation_speed_hardware_jpeg: true`, changes cover most of each
-frame, frames are opaque, and dimensions are MCU-aligned. `auto` also requires
+Without `animation_codec`, `auto`, `speed` and `size` first compare QOI with
+native-pixel patches (GRB 1.6). Native patches preserve RGB565/RGB888 and full A8,
+copy directly into the existing canvas without an extra frame buffer, and are
+selected when an animation saves at least 2 KiB (including patch headers and
+tables) and meets `image_auto_min_savings_percent` for `auto`/`speed`.
+
+For embedded opaque RGB565 animations, these automatic policies also consider
+precompiled spans (GRB 1.8). The compiler preserves the selected frame timing and
+damage regions, uses a shared palette where suitable, and plans pixel reuse before playback.
+The player applies that plan to its existing canvas without a second frame
+buffer or per-frame allocations. Selection compares the final deduplicated resources retained by each scene,
+including enabled compression. `auto`/`speed` require each replacement to save
+at least `max(10%, image_auto_min_savings_percent)`; `size` requires a smaller
+payload. The aligned resources must together save at least 8 KiB for the shared
+decoder in that scene. This is a per-scene selection allowance, not a linker size
+measurement or a reserve pooled across scenes. Planning adds compiler work and
+transient memory; measure compile cost as well as device playback.
+Explicit `animation_codec`, the default QOI policy, alpha animations, RGB888 and
+external streaming retain their existing resource encodings. Resource reports identify the
+selected span representation as `anim_spans`.
+
+For smaller embedded animations, enable `CONFIG_ESP_GSP_ENABLE_ANIM_DEFLATE=y`
+and select Profile `image_codec: size` or Image `codec: "size"`. GSPC then groups
+up to four frames into zlib streams: ordinary patches allow at most 32 KiB of
+decoded group data (GRB 1.7), while spans allow at most 64 KiB (GRB 1.8) when savings reach at least 8 KiB and 10% within the scene's
+animation budget. Standalone GSPC also accepts `--animation-deflate` or Profile
+`animation_deflate: true`.
+
+This option defaults to off and leaves explicit `animation_codec`, JPEG, and
+external streaming resources unchanged. Execution reports expose each animation's
+`scratch_bytes`; the player allocates this workspace once and reuses it across
+groups. With PSRAM present, `AUTO` requires that workspace in PSRAM without
+internal-RAM fallback; without PSRAM, include it in the SRAM budget.
+Compression adds decoding work, especially at group boundaries; measure frame
+times with the matching runtime. If a frame exceeds its representation's group
+limit, the compiler retains the uncompressed representation and reports
+`GSPC-ANIMATION-DEFLATE-SKIPPED`. Increasing the animation memory budget alone
+does not change these format limits.
+
+Before span selection and optional group compression, `size` compares the
+QOI/native lossless result with JPEG/JPEG+A8. Only a retained lossless result
+can be replaced by spans. Set Profile `image_auto_allow_lossy: false` when lossless
+color is required. `auto` and `speed` consider hardware JPEG only when the
+Profile sets `animation_speed_hardware_jpeg: true`, lossless patch work after the
+first frame reaches at least 70% of the corresponding full-frame work, frames
+are opaque, and each dimension is at least 128 pixels and 16-pixel aligned.
+`auto` also requires
 at least 20% encoded-size savings; `speed` permits up to 10% growth. The board
 setting defaults to false and should follow a measurement of its display path.
 Set `hardware_jpeg: true` and `animation_speed_hardware_jpeg: true` in a
 measured board Profile to enable this choice.
-Transparent animations keep QOI automatically; use explicit
-`animation_codec: hardware_jpeg` to request JPEG+A8. An explicit
-`animation_codec` always takes precedence.
+`auto` and `speed` retain lossless patches for transparent animations. With
+lossy encoding allowed and JPEG+A8 available, `size` can choose a smaller
+JPEG+A8 result. An explicit `animation_codec` always takes precedence.
 Animations use a separate frame buffer; `cache_policy` and `store_scale` are
 static-image options and are rejected on animations.
 
 Lossless compiled animations keep one native pixel canvas. The first frame is
 fully decoded before publication. Before each later frame's first update, the
-runtime checks every QOI patch without writing pixels. Invalid
+runtime checks the frame's patch or span data without writing pixels. Invalid
 content freezes playback on the last valid frame; its pixels, frame index and
 timeline remain unchanged. Playback visits frames in order, so an in-player
 validation progress marker reuses the results on later loops without allocating
 a heap cache or second pixel canvas. Keep borrowed animation bytes immutable until the player
-is closed. The first traversal adds a syntax scan of compressed patches;
-include this first-use cost when measuring playback latency.
+is closed. The first traversal includes frame validation; include this first-use
+cost when measuring playback latency.
 
 QOI region selection also considers bounded row-span candidates for thin or
 irregular changes. The default retains the original candidate unless stored
@@ -744,11 +875,13 @@ images alike. An explicit value also applies to automatic JPEG selection.
 `hardware_jpeg` falls back to lossless encoding when the Profile lacks hardware JPEG.
 
 For codec selection, compile with `lossless` and `jpeg` and compare the generated
-`*.execution.json`: `resources[].encoded_bytes` reports encoded size,
-`animation.frame_bytes` the full pixel frame, and `animation.patch_ratio` the
-fraction of patch pixels. Small ratios favor keeping patches; near-full updates
-are candidates for hardware JPEG measurement. These reports do not include actual
-SD throughput or total playback time; validate on the target board.
+`*.execution.json`: `resources[].encoded_bytes` reports the complete encoded sequence size,
+`animation.frame_bytes` the persistent pixel canvas, and `animation.patch_ratio`
+the pixel-write work relative to full-frame decoding. Copying and then replacing
+pixels can make this ratio exceed 1. Animation `flash_savings_bytes` and
+`flash_savings_percent` are null because a single canvas is not a full-sequence
+Flash baseline. Compare the actual encoded sizes between builds. These reports
+do not include SD throughput or total playback time; validate on the target board.
 
 The JPEG decoder chooses hardware or software according to platform, dimensions and layout. Small images may use software; non-MCU-aligned dimensions may need scratch storage. Measure frame reads, alpha processing and display submission as well as decode time. Update GSPC and the runtime together before enabling JPEG animations: older runtimes reject the new frame format. Default QOI animations retain their existing format.
 
@@ -758,9 +891,13 @@ For SD fonts, use the [font-file API](external-assets.md#fonts-on-sd) with an ex
 
 ## Transparent rasters, previews and resource budgets
 
-RGB565+A8 and ARGB8888 rasters support `fit`, `rotation` and bounded dynamic rotation,
-including template images. The image box clips transformed content and source alpha
-participates in blending. Object `opacity` must still be 255. Transparent transforms
+In RGB565/RGB888 scenes, RGB565+A8 and ARGB8888 image resources support `fit`,
+`rotation` and bounded dynamic rotation, including template images. The image box
+clips transformed content and source alpha participates in blending. Object
+`opacity` must still be 255. For a fixed, unbound static raster, a literal
+`image_opacity` can instead be baked into source alpha when `codec` is omitted,
+`auto`, or `store`, and `store_scale` is 1; the result uses STORE. This does not
+create a runtime opacity control for the raster. Transparent transforms
 use software sampling. `codec: raw` needs no
 decode cache, while compressed resources require sufficient decoded-image cache space.
 Encoded Flash size is not the runtime pixel-memory budget.

@@ -19,6 +19,8 @@ import webbrowser
 # Importing the sibling helper must not add cache files to managed_components.
 sys.dont_write_bytecode = True
 from build import add_build_arguments, build_project, executable, validate_backend_manifest
+from rpc_client import connect
+import scenario
 
 
 def component_version(component: Path) -> str:
@@ -41,15 +43,21 @@ def simulator_command(override: str | None, version: str | None, component: Path
 
 def dynamic_font_path(value: str | Path | None) -> Path | None:
     """Return a host-safe font path, failing before the simulator is started."""
+    return font_asset_path(value, "Dynamic font")
+
+
+def font_asset_path(value: str | Path | None, label: str) -> Path | None:
     if value is None:
         return None
     path = Path(value).expanduser()
     try:
         path = path.resolve(strict=True)
     except OSError as exc:
-        raise RuntimeError(f"Dynamic font not found: {path}") from exc
+        raise RuntimeError(f"{label} not found: {path}") from exc
     if not path.is_file():
-        raise RuntimeError(f"Dynamic font is not a regular file: {path}")
+        raise RuntimeError(f"{label} is not a regular file: {path}")
+    if path.stat().st_size == 0:
+        raise RuntimeError(f"{label} file is empty: {path}")
     return path
 
 
@@ -89,6 +97,9 @@ def host_command(host: list[str], manifest: dict, args: argparse.Namespace, read
         # sim_host reads this before load_with_config(), which mirrors applying
         # a device font-file configuration before esp_gsp_start().
         command += ["--dynamic-font", str(font)]
+    catalog = font_asset_path(getattr(args, "font_catalog", None), "Font catalog")
+    if catalog is not None:
+        command += ["--font-catalog", str(catalog)]
     if args.headless:
         command.append("--headless")
     return command
@@ -268,11 +279,49 @@ def validate_session(args: argparse.Namespace) -> None:
         raise RuntimeError("--visual-port cannot be used with --headless")
 
 
-def run_backend(args: argparse.Namespace, manifest: dict) -> int:
-    validate_session(args)
-    component = Path(manifest["component_root"])
+def prepare_scenario(args: argparse.Namespace) -> None:
+    if args.scenario is None:
+        if args.report_dir is not None:
+            raise ValueError("--report-dir requires --scenario")
+        return
+    args.scenario_plan = scenario.load(args.scenario)
+    if args.duration or args.input_mode not in (None, "api-exclusive"):
+        raise ValueError("--scenario requires API input ownership and cannot be combined with --duration")
+    if args.report_dir is not None and args.report_dir.exists():
+        raise ValueError("--report-dir must be a new directory; previous reports are preserved")
+    args.api_port = 0 if args.api_port is None else args.api_port
+    args.input_mode = "api-exclusive"
+    args.headless = args.no_browser = True
+
+
+def simulator_state(host: list[str], component: Path):
+    """Identify this invocation's selection without retaining a tool cache."""
+    try:
+        status = Path(host[0]).stat()
+        return (component.resolve(), component_version(component), tuple(host),
+                status.st_dev, status.st_ino, status.st_size, status.st_mtime_ns, status.st_ctime_ns)
+    except OSError:
+        return None
+
+
+def prepare_simulator(args: argparse.Namespace, component: Path, prepared=None):
     host = simulator_command(args.host, args.sim_version, component)
-    contract = simulator_preflight(host, component, args.startup_timeout)
+    state = simulator_state(host, component)
+    if prepared is not None and state is not None and state == prepared[2]:
+        contract = prepared[1]
+    else:
+        print("Checking simulator...", flush=True)
+        contract = simulator_preflight(host, component, args.startup_timeout)
+    plan = getattr(args, "scenario_plan", None)
+    if plan is not None and not contract["version_match"]:
+        raise RuntimeError("scenario acceptance requires matching component and simulator versions")
+    return host, contract, state
+
+
+def run_backend(args: argparse.Namespace, manifest: dict, *, prepared=None) -> int:
+    validate_session(args)
+    host, contract, _ = prepare_simulator(args, Path(manifest["component_root"]), prepared)
+    plan = getattr(args, "scenario_plan", None)
     print("Tool contract: " + json.dumps(contract, sort_keys=True), flush=True)
     sim = backend = None
     info = {}
@@ -293,9 +342,22 @@ def run_backend(args: argparse.Namespace, manifest: dict) -> int:
             session = {"phase": "backend_spawned" if backend else "backend_loaded",
                        "listeners": info, "bundle": manifest["bundle"],
                        "api_json": manifest.get("api_json")}
+            if manifest.get("context"):
+                session["context"] = manifest["context"]
             if backend is not None:
                 session["backend_pid"] = backend.pid
             print("Session: " + json.dumps(session, sort_keys=True), flush=True)
+            if plan is not None:
+                endpoint = info.get("api", "")
+                match = re.fullmatch(r"tcp://127\.0\.0\.1:([0-9]+)", endpoint)
+                if not match:
+                    raise RuntimeError("scenario requires a loopback TCP API endpoint from sim_host")
+                output = scenario.output_directory(manifest, args.report_dir)
+                print(f"Scenario report: {output / 'report.json'}", flush=True)
+                with connect(port=int(match[1])) as peer:
+                    scenario.execute(peer, plan, output, manifest, contract)
+                print(f"Scenario passed: {output / 'report.json'}", flush=True)
+                return 0
             if info.get("api"):
                 print(f"API: {info['api']}", flush=True)
             if info.get("browser"):
@@ -303,11 +365,23 @@ def run_backend(args: argparse.Namespace, manifest: dict) -> int:
                 if not args.no_browser:
                     webbrowser.open(info["browser"])
             if backend is not None:
-                while backend.poll() is None:
-                    if sim.poll() is not None:
-                        raise RuntimeError(f"sim_host exited while the backend was running ({sim.returncode})")
+                while sim.poll() is None:
+                    status = backend.poll()
+                    if status is not None:
+                        if status == 0:
+                            return 0
+                        # A clean simulator shutdown can close the Backend's
+                        # transport before its process has finished exiting.
+                        # Preserve an application failure if the host stays up.
+                        try:
+                            sim.wait(timeout=1)
+                        except subprocess.TimeoutExpired:
+                            return status
+                        break
                     time.sleep(0.05)
-                return backend.returncode
+                if sim.returncode == 0:
+                    print("sim_bridge: simulator closed normally", flush=True)
+                return sim.returncode
             deadline = time.monotonic() + args.duration if args.duration else None
             while sim.poll() is None and (deadline is None or time.monotonic() < deadline):
                 time.sleep(0.05)
@@ -323,8 +397,12 @@ def add_run_arguments(parser: argparse.ArgumentParser) -> None:
                         os.environ.get("GSP_SIM_HOST_EXECUTABLE"))
     parser.add_argument("--sim-version", default=os.environ.get("GSP_SIM_VERSION"),
                         help="Override simulator version; default is the linked ESP-GSP component version")
-    parser.add_argument("--dynamic-font", default=os.environ.get("GSP_SIM_DYNAMIC_FONT"),
-                        help="TrueType/OpenType font loaded by sim_host before UI startup")
+    parser.add_argument("--dynamic-font", default=os.environ.get("GSP_SIM_DYNAMIC_FONT") or None,
+                        help="Optional missing-glyph fallback font with TrueType or CFF outlines "
+                             "(.ttf, .otf, or first face of .ttc), loaded before UI startup; "
+                             "see the host's --capabilities for compiled drivers")
+    parser.add_argument("--font-catalog", default=os.environ.get("GSP_FONT_CATALOG") or None,
+                        help="GSPB catalog from gspc font-link, loaded before UI startup")
     for channel in ("api", "backend", "visual"):
         parser.add_argument(f"--{channel}-port", type=port_number,
                             help=f"Loopback {channel} port; 0 allocates a free port" +
@@ -338,6 +416,10 @@ def add_run_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--duration", type=float, default=0, help="Backend running time in seconds; 0 runs until interrupted")
     parser.add_argument("--startup-timeout", type=float, default=180,
                         help="Seconds for simulator download/startup (default: 180)")
+    parser.add_argument("--scenario", type=Path,
+                        help="Run a bounded headless JSON scenario, then exit; optional checks/check labels track acceptance; steps: " + ", ".join(scenario.ACTIONS))
+    parser.add_argument("--report-dir", type=Path,
+                        help="New directory for scenario report and PNGs; default: a unique directory in the build tree")
 
 
 def main() -> int:
@@ -349,9 +431,18 @@ def main() -> int:
     try:
         # Do this before an often-expensive native build.  host_command()
         # repeats the normalization for callers that use run_backend() directly.
+        prepare_scenario(args)
         validate_session(args)
         args.dynamic_font = dynamic_font_path(args.dynamic_font)
-        return run_backend(args, build_project(args))
+        args.font_catalog = font_asset_path(args.font_catalog, "Font catalog")
+        prepared = None
+
+        def before_build(manifest):
+            nonlocal prepared
+            prepared = prepare_simulator(args, Path(manifest["component_root"]))
+
+        manifest = build_project(args, before_build=before_build)
+        return run_backend(args, manifest, prepared=prepared)
     except KeyboardInterrupt:
         return 130
     except (RuntimeError, OSError, ValueError, subprocess.SubprocessError) as exc:

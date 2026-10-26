@@ -27,6 +27,10 @@ Set `cyclic: true` to allow continuous scrolling between the first and last item
 
 When item content changes at runtime, set `dynamic_items: true`. This keeps the bind, `set_total`, and refresh APIs working regardless of the initial item count.
 
+Cyclic wheels, dynamic items, and fixed item sets larger than the viewport use
+recycled rows and require one binding. A short, non-cyclic fixed set that fits
+the viewport is drawn directly and does not generate a bind helper.
+
 - **Compiled item text:** call the generated bind helper once with `(ui, NULL, NULL)`.
 - **Application-owned data:** use a row callback and declare future characters with `font_charset`.
 

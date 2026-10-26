@@ -25,6 +25,10 @@ These commands compile the example and open it in the ESP-GSP simulator browser 
 
 Each series declares its name, color and initial points. The point count fixes its capacity. Generated set_series functions replace one complete series atomically; append shifts the window and adds one sample. Pass values in the authored min/max range. Updates copy the supplied values before returning.
 
+`set_series` requires exactly the declared capacity; an incorrect count or any
+out-of-range value rejects the update. ESP-IDF success means command admission,
+not that the LCD has already displayed the new series.
+
 If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
 ## Example scene

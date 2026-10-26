@@ -18,7 +18,7 @@
 | 控件 | JSON 类型 | 用途 | 示例 |
 |---|---|---|---|
 | [按钮](./button.md) | `button` | 可触发应用回调或声明式动作的点击内容区域。 | [`button.json`](../../../examples/usage/widgets/button/button.json) |
-| [图片](./image.md) | `image` | 支持 contain、cover 和 stretch 的静态或动态图片。 | [`image.json`](../../../examples/usage/widgets/image/image.json) |
+| [图片](./image.md) | `image` | 支持 contain、cover 和 stretch 的静态位图、位图动画及编译式 SVG 矢量图片。 | [`image.json`](../../../examples/usage/widgets/image/image.json) |
 | [标签](./label.md) | `label` | 支持对齐、溢出和运行时绑定的 UTF-8 文本。 | [`label.json`](../../../examples/usage/widgets/label/label.json) |
 
 ## 数据与选择
@@ -42,7 +42,7 @@
 | [参数特效](./effect.md) | `effect` | 支持自动播放的呼吸、光环、水波进度和扫光。 | [`effect.json`](../../../examples/usage/widgets/effect/effect.json) |
 | [翻转卡片](./flip_card.md) | `flip_card` | 两张静态图片之间的透视翻转，支持中断和反向切换。 | [`flip_card.json`](../../../examples/usage/widgets/flip_card/flip_card.json) |
 | [毛玻璃](./glass.md) | `glass` | 构建期生成静态背景的磨砂裁剪，运行时使用原生图片绘制。 | [`glass.json`](../../../examples/usage/widgets/glass/glass.json) |
-| [指针](./needle.md) | `needle` | 枢轴、角度和尾长可配置的旋转仪表指针。 | [`needle.json`](../../../examples/usage/widgets/needle/needle.json) |
+| [指针](./needle.md) | `needle` | 以中心为枢轴、角度和尾长可配置的旋转仪表指针。 | [`needle.json`](../../../examples/usage/widgets/needle/needle.json) |
 | [矩形](./rect.md) | `rect` | 支持填充、边框、圆角和透明度的轻量矩形图元。 | [`rect.json`](../../../examples/usage/widgets/rect/rect.json) |
 | [形状](./shape.md) | `shape` | 无需图片资源即可绘制矩形、圆角、圆形或线条。 | [`shape.json`](../../../examples/usage/widgets/shape/shape.json) |
 | [加载指示器](./spinner.md) | `spinner` | 用于等待状态的非确定性动画指示器。 | [`spinner.json`](../../../examples/usage/widgets/spinner/spinner.json) |

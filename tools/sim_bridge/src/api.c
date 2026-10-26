@@ -792,3 +792,15 @@ esp_gsp_err_t esp_gsp_set_pointer_observer(esp_gsp_handle_t ui,
     bridge_set_pointer_observer(ui, cb, user_ctx);
     return ESP_GSP_OK;
 }
+
+esp_gsp_err_t esp_gsp_set_input_interceptor(esp_gsp_handle_t ui,
+        esp_gsp_input_interceptor_cb_t cb, void *user_ctx)
+{
+    (void)user_ctx;
+    if (ui == NULL) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    /* Backend notifications arrive after WASM input routing. They cannot
+     * implement a synchronous render-task interception decision. */
+    return cb != NULL ? ESP_GSP_ERR_NOT_SUPPORTED : ESP_GSP_OK;
+}

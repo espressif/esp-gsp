@@ -4,7 +4,7 @@ Static or runtime-bound UTF-8 text with alignment and overflow control.
 
 ## When to use
 
-Use it for the main text, image, or action on a screen.
+Use it for captions, status text and values supplied by the application.
 
 ## Local interactive preview
 
@@ -26,6 +26,8 @@ These commands compile the example and open it in the ESP-GSP simulator browser 
 The content is compiled into the scene. It can receive pointer actions and use bindings or generated runtime setters.
 
 Static text preserves LF, CRLF and blank lines. Font metrics determine the line height. For dynamic multiline text, use `text_align: left`, `overflow: clip`, and a box at least two font line heights tall. Run `gspc diagnose scene.json` before packing: alignment and overflow errors identify the field to change, and height errors report the required pixels.
+
+Text changes within the baked character set need no FreeType engine. Include known runtime vocabulary with `font_charset` or `font_charset_file`. Missing characters need an explicitly supplied dynamic font. A font with CFF outlines baked into GFB does not require runtime CFF support; using that raw font for fallback does. See [font paths and lifetime](../guide/external-assets.md#fonts-on-sd).
 
 If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 

@@ -44,7 +44,7 @@ blocking product work there.
 | Member | Use |
 |---|---|
 | `ownership` | COPY clones the input; BORROW waits for release; TAKE transfers only after successful submission. |
-| `on_release`, `release_ctx` | Required for BORROW; TAKE uses the callback when supplied. |
+| `on_release`, `release_ctx` | Required for BORROW. For TAKE, a supplied callback releases the storage instead of framework `free()`; NULL selects `free(data)`. |
 | `on_complete`, `complete_ctx` | Optional terminal result for an accepted request. |
 | `cache_key` | Nonzero immutable-content identity; change it when bytes change. |
 

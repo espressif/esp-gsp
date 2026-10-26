@@ -96,15 +96,50 @@ below for benchmark results.
 
 - `wall throughput`: engine frames divided by measured case wall time; not an
   optical measurement of panel refresh rate.
-- `active throughput`: frames divided by render-path busy time; excludes UI
-  service and idle time, so it is neither CPU utilization nor achieved FPS.
+- `active throughput`: frames divided by render-path busy time, including
+  buffer and presentation waits; excludes UI service and time outside that
+  path, so it is neither CPU utilization nor achieved FPS.
 - `rndr ms`: average rasterization time per frame.
-- `subm ms`: average cache synchronization and panel submission time per frame.
+- `subm ms`: average non-raster frame time, including buffer acquisition,
+  cache synchronization, panel submission and waits.
 - `svc us`: average queued-command/input service time per render-task iteration;
   excludes application timer callbacks and is not total UI processing time.
 - `qcmd/s`: commands drained from the queue per measured second. Calls made
   inline on the render task are not counted. The raw log field remains
   `commands` for compatibility; this is not total applied update rate.
+
+Native animation phase and dirty-region size can change the work per submitted
+frame. Compare `bench: detail` frame counts with `bench: regions` output pixels,
+and confirm short-window differences with the same fixed case and dwell time.
+
+`bench: ui[case] steps=N step_us=T` records the complete UI-core steps,
+including application timers, physics, and viewport snapshot capture/composition.
+It reuses `esp_gsp_property_stats()` under the existing `GSP_PROFILE_SERVICE`
+instrumentation; reading it adds no timer to the hot path. `aggregate ui`
+sums those per-case totals. `compare_logs.py --details` displays their changes.
+`bench: viewport[case]` records attempted, started, reused and skipped snapshots,
+plus the final active state and fallback reason, using the existing debug counters.
+
+The ordinary render-path `busy_us` already contains raster and submission time;
+do not add those three fields together. UI `step_us` is disjoint from ordinary
+rendering and command/input `service_us`, but contains its inline property-update
+work. Scene-transition preparation before the UI-core body is outside `step_us`.
+These fields are breakdowns, not CPU utilization or a replacement for measured
+wall time. Viewport snapshots increment frame counts while their work is in
+`step_us`; `busy fps` therefore cannot measure their capacity. Unchanged updates
+can produce no frame. Compare interaction counts, latency and work counters too.
+
+Protocol 27 gives each page an unscored preparation step before sampling its
+counter baseline. Tween direction and explicit endpoints restart on entry; the
+one-second waveform is scheduled relative to that page instead of inheriting a
+global timer phase. Grid entry releases contacts, refreshes the endpoint
+generation and returns the live offset to zero, cancelling coasting. Setup UI work and logging finish before the following page's counter baseline.
+This is not a display-completion fence: asynchronous setup transfers may extend
+into the scored interval, and wall time retains their actual cost.
+This makes initial state repeatable; the standard mode still uses real time,
+so slower rendering can change the number of serviced samples. Use fixed-input
+replay for equal-work capacity comparisons. Do not compare protocol 27 scores
+against earlier protocols as an implementation speedup.
 
 The log also records exact frame and microsecond counters, transition paths,
 Canvas publication, media decode backends, and a target configuration
@@ -303,6 +338,46 @@ Use at least 45000 ms on C3, or 36000 ms on other targets, for `P_COMPOSITES`
 to exercise all three tabs; the default
 60000 ms soak window covers them and repeats the cycle. Drawer and transition
 windows finish their in-flight operation before reporting.
+
+### Snapshot repair diagnostic
+
+The ordinary generated scenes stay unchanged. To inspect command-heavy
+PageFlow snapshots, generate a separate fixture using the same generator:
+
+```sh
+python3 scenes/gen_scenes.py --output-dir /absolute/work/repair16 \
+  --snapshot-repair-regions 16 --snapshot-repair-commands 64
+```
+
+`--snapshot-repair-regions` accepts `0`, `1`, `4`, or `16`. It adds that many
+fixed foreground rectangles to `P_FLOW`; their total area is about one eighth
+of the viewport. `--snapshot-repair-commands` adds 1–256 moving rectangles to
+each of its three pages (default 128). Assets resolve to the original source
+files. The option requires a separate output directory and cannot overwrite
+the standard scenes.
+
+Use the selected board's existing build configuration with:
+
+```sh
+-D GSP_BENCH_SCENE_DIR=/absolute/work/repair16 \
+-D GSP_BENCH_SOAK_CASE=P_FLOW -D GSP_BENCH_SOAK_DWELL_MS=60000 \
+-D GSP_BENCH_FULL_REPAINT=OFF
+```
+
+Compare snapshot and live rendering on the same frozen bundle and board.
+`GSP_BENCH_DISABLE_TRANSITION_SNAPSHOTS` alone does not disable the PageFlow
+viewport path. A controlled live replay needs a diagnostic source guard that
+rejects `GSP_VISUAL_SOURCE_VIEWPORT_GROUP` before snapshot allocation. Require
+zero snapshot calls in that live run; keep this guard out of the product build.
+Start with 64 commands and 16 fixed regions; expand to 1 and 4 only when the
+first comparison warrants it. Record the actual repair count, which may shrink
+when bounding rectangles can be coalesced within the pixel budget. Check that
+the enabled run starts snapshots and both runs reach the same pages/offsets.
+A fixed-time/input replay and pixel comparison are stronger controls than two
+wall-time soaks. Include UI `step_us`, ordinary busy time, presented frames,
+and damage counts. The renderer may use a tile index, so command count alone
+does not establish the number of interpreted commands or a performance loss.
+This fixture changes benchmark workload only; it is disabled by default.
 
 ### Manual input diagnostics
 

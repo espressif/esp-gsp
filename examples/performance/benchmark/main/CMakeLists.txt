@@ -62,6 +62,18 @@ else()
     set(bench_alt_scene ../scenes/bench_alt_360.json)
 endif()
 
+set(GSP_BENCH_SCENE_DIR "" CACHE PATH
+    "Optional generated benchmark scene directory for diagnostic workloads")
+if(GSP_BENCH_SCENE_DIR)
+    get_filename_component(bench_scene_name "${bench_scene}" NAME)
+    get_filename_component(bench_alt_name "${bench_alt_scene}" NAME)
+    set(bench_scene "${GSP_BENCH_SCENE_DIR}/${bench_scene_name}")
+    set(bench_alt_scene "${GSP_BENCH_SCENE_DIR}/${bench_alt_name}")
+    if(NOT EXISTS "${bench_scene}" OR NOT EXISTS "${bench_alt_scene}")
+        message(FATAL_ERROR "GSP_BENCH_SCENE_DIR does not contain the selected benchmark scenes")
+    endif()
+endif()
+
 # Keep C and the bundle embed in lockstep with the project option.
 if(GSP_BENCH_RGB888)
     target_compile_definitions(${COMPONENT_LIB} PRIVATE GSP_BENCH_RGB888=1)

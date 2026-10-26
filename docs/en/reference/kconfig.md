@@ -60,8 +60,10 @@ CONFIG_ESP_GSP_LIST_MAX_SLOTS=40
 CONFIG_ESP_GSP_CONTEXT_DEFAULT_INSTANCES=24
 ```
 
-These numbers are an example, not recommended defaults. Size each pool from
-the largest simultaneously active scene rather than the total dataset. Keep
+These numbers are an example, not recommended defaults. Size reusable pools
+from the largest simultaneously active scene. Retained List bindings and dynamic
+text backing storage cover all bundled scenes; neither is sized from dataset
+record count. Keep
 the component defaults until compiler diagnostics or measurements show a
 different requirement.
 
@@ -142,8 +144,8 @@ project bridge -> GSPB requirements -> application overrides -> build caps
 Requirements may raise only schema fields marked AUTO. A non-AUTO capacity is
 validated against the bundle minimum but is not silently raised. Policy,
 dirty-region capacity, and build-capability fields are illegal in a GSPB
-requirements member. A 0.1.x bundle has no versioned requirements member and
-is rejected; rebuild it with the 0.2.0 `gspc`.
+requirements member. Bundles without the versioned requirements member are
+rejected; rebuild them with the matching current `gspc`.
 
 `CONFIG_ESP_GSP_LIST_MAX_SLOTS=0` means AUTO/no extra project restriction.
 `gspc` computes the scene requirement, the runtime allocates at least that
@@ -167,7 +169,7 @@ simultaneous-use question:
 | Slot family | What consumes one | How it is sized |
 |---|---|---|
 | Scene state slot | A dynamic bind, visibility gate, transform value, component property or dynamic theme value | Written into each compiled GSB; no project Kconfig count is required |
-| `TEXT_SLOTS` | One simultaneously shaped non-template dynamic text | AUTO from the maximum active-scene requirement |
+| `TEXT_SLOTS` | One non-template dynamic text target retaining a glyph-run backing slot | AUTO sums the targets across bundled scenes |
 | `LIST_MAX_SLOTS` | One recycled visible List/Wheel row or Grid cell | AUTO from viewport geometry and template `max_instances`; Grid includes every visible column |
 | `LIST_TEXT_SLOTS` | One dynamic text field inside one recycled row/cell | AUTO from the row template; total row text storage scales with rows × text fields |
 | `CONTEXT_DEFAULT_INSTANCES` | One simultaneously live copy of a template, including recycled collection entries | AUTO from the maximum active-scene template demand |
@@ -177,10 +179,10 @@ simultaneous-use question:
 | `CANVAS_SLOTS` | One concurrently bound external frame producer | Firmware policy because a scene cannot infer application-created producers |
 | Timer, widget, animation and component-instance slots | One live application timer, runtime widget handle, active animation or transient gesture/tween behavior | Firmware policy based on measured simultaneous use |
 
-For a multi-scene Bundle, GSPC records the maximum requirement of one active
-scene instead of summing mutually exclusive scenes. List glyph-run storage is
-the exception within a scene: it includes every simultaneously visible row and
-every dynamic text field in those row templates.
+For a multi-scene Bundle, reusable pools use the maximum per-scene requirement.
+List bindings and dynamic-text backing slots remain allocated across scene
+changes, so their requirements are summed. Glyph-run sizing also covers these
+merged pools and the row/text-field multiplication shown above.
 
 The resolver applies the layers in a fixed order:
 
@@ -236,6 +238,7 @@ tuning.
 | Less Flash in a product that never decodes JPEG | `CONFIG_ESP_GSP_ENABLE_JPEG=n` | Link capability, not a runtime switch: the decoder and its hardware/software JPEG dependencies leave the firmware image, authored `codec: "jpeg"` fails the build, `gsp_add_bundle`/`gsp_add_assets` exclude jpeg/jpeg_a8 from an explicit `PROFILE`'s resolved capability instead of rejecting it, and a runtime JPEG submission is accepted but completes with `GSP_ERR_UNSUPPORTED`. See [Media and data](../guide/media-and-data.md) |
 | Less Flash in a product that never publishes PNG at run time | `CONFIG_ESP_GSP_ENABLE_PNG=n` | Link capability: GSPC never emits PNG, so only runtime submissions are affected; they are refused before a slot or cache surface is reserved and complete with `GSP_ERR_UNSUPPORTED`. Probing and the other codecs stay available |
 | Less Flash in a product that never plays EAF files | `CONFIG_ESP_GSP_ENABLE_EAF=n` | Link capability: the EAF player and decoder leave the image and `esp_gsp_play()` returns `ESP_GSP_ERR_NOT_SUPPORTED`. Animations compiled into the bundle are unaffected |
+| Less Flash when no animation uses grouped DEFLATE | `CONFIG_ESP_GSP_ENABLE_ANIM_DEFLATE=n` | Removes the grouped-animation inflater; ungrouped animation formats remain available. Packages requiring the removed provider are rejected |
 | Less Flash once every scene is verified on the kernel renderer | `CONFIG_ESP_GSP_ENABLE_REFERENCE_RENDERER=n` | Link capability: removes the pixel-identical fallback used for kernel capability gaps such as image blits on an ARGB8888 scene. A frame, transition or snapshot that needs it fails with `GSP_ERR_UNSUPPORTED` and the gap is logged once; RGB565 and RGB888 scenes emitted by GSPC do not need it |
 | Less Flash in a product whose scenes use no SVG vector images | `CONFIG_ESP_GSP_ENABLE_VECTOR=n` | Link capability: the vector renderer, and the FreeType outline rasterizer when dynamic fonts do not need it, leave the image. A bundle carrying a vector resource is refused at load with `GSP_ERR_UNSUPPORTED`, and the render task no longer reserves vector stack headroom |
 | Less Flash in a product whose scenes use no procedural widgets | `CONFIG_ESP_GSP_ENABLE_PROCEDURAL=n` | Link capability: spinners, particles, carousels, flip cards, shimmer and the other `DRAW_PROCEDURAL` effects leave the image. A scene that uses one is refused at load with `GSP_ERR_UNSUPPORTED` (`ESP_GSP_ERR_NOT_SUPPORTED` from `esp_gsp_deployable_bundle_open()`) |
@@ -247,6 +250,11 @@ tuning.
 The complete grouped symbol map and memory relationships are in
 [Configuration reference](configuration.md). The help text beside each
 `menuconfig` symbol remains the authoritative per-symbol reference.
+
+Compiled span animations have no separate Kconfig switch. Application
+specialization derives `anim_spans` from registered packages; declare it as a
+dynamic feature for later packages outside that set, together with
+`anim_deflate` if those span frames are grouped and compressed.
 
 ## Validate a configuration change
 

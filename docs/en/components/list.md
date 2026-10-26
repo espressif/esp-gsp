@@ -23,7 +23,11 @@ These commands compile the example and open it in the ESP-GSP simulator browser 
 
 ## Runtime behavior
 
-The scene JSON defines the row layout template. Fixed items work without an application adapter; dynamic data requires an adapter or a backend.
+Short fixed `items` lists that fit the viewport are drawn directly. When fixed
+items exceed the visible row count, GSPC emits a recycled row template: call its
+generated bind helper once with `(ui, NULL, NULL)` to supply the compiled text.
+An explicit `row_template` uses an application row binder. Retain the returned
+handle across scene changes; use `set_total` and `refresh` instead of rebinding.
 
 Generated rows paint at the List's position in scene order. Foreground objects declared later in the scene (such as a Drawer) will cover the rows. If you need an overlay to stay above the List, place its content after the List in the scene.
 

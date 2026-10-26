@@ -43,6 +43,33 @@ def manifest_scene_binds():
 
 
 class BenchmarkSceneCoverageTests(unittest.TestCase):
+    def test_snapshot_repair_fixture_is_bounded_and_opt_in(self):
+        sys.path.insert(0, str(SCENE_DIR))
+        try:
+            import gen_scenes
+            for width, height in ((320, 240), (800, 480)):
+                ordinary = gen_scenes.scene(width, height)
+                self.assertEqual(ordinary, json.loads((SCENE_DIR / f"bench_{width}.json").read_text()))
+                for regions in (0, 1, 4, 16):
+                    fixture = gen_scenes.snapshot_repair_fixture(
+                        gen_scenes.scene(width, height), regions, 64)
+                    objects = fixture["objects"]
+                    moving = [obj for obj in objects if obj.get("name", "").startswith("repair_load_")]
+                    fixed = [obj for obj in objects if obj.get("name", "").startswith("repair_fixed_")]
+                    self.assertEqual(len(moving), 3 * 64)
+                    self.assertEqual(len(fixed), regions)
+                    flow = next(obj for obj in objects if obj.get("name") == "bench_flow")
+                    self.assertLessEqual(sum(obj["w"] * obj["h"] for obj in fixed), flow["w"] * flow["h"] // 4)
+                    for obj in fixed:
+                        self.assertGreaterEqual(obj["x"], flow["x"])
+                        self.assertGreaterEqual(obj["y"], flow["y"])
+                        self.assertLessEqual(obj["x"] + obj["w"], flow["x"] + flow["w"])
+                        self.assertLessEqual(obj["y"] + obj["h"], flow["y"] + flow["h"])
+                        self.assertEqual(obj["opacity"], 190)
+                    self.assertEqual(objects[:len(ordinary["objects"])], ordinary["objects"])
+        finally:
+            sys.path.pop(0)
+
     def test_page_flow_has_no_unpainted_tab_bar(self):
         for path in sorted(SCENE_DIR.glob("bench_*.json")):
             if "_alt_" in path.name:

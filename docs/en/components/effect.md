@@ -4,7 +4,7 @@ Pulse, rotating ring, liquid progress or shimmer with automatic playback.
 
 ## When to use
 
-Use it to show status, a measurement, or motion.
+Use it for bounded procedural loading, progress and highlight effects without an image sequence.
 
 ## Local interactive preview
 
@@ -24,6 +24,8 @@ These commands compile the example and open it in the ESP-GSP simulator browser 
 ## Runtime behavior
 
 The simulator and device runtime use the same compiled geometry. The preview starts with the JSON values; application-driven updates need the simulator backend/API or device code.
+
+`playing` defaults to true and advances the phase automatically while visible. `period_ms` controls a cycle (100–60,000 ms); `phase` is the initial 0–65,535 position. Set `playing: false` for application-driven progress. `runtime_style: true` exposes the supported style controls.
 
 If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 

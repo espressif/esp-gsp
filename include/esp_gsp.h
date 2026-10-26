@@ -105,10 +105,11 @@ typedef struct {
     const gsp_component_directory_t *const *directories;
     uint16_t directory_count;
 
-    /* Dynamic text (chat): optional TTF/OTF blob rasterizing outline
+    /* Dynamic text (chat): optional TTF/OTF/TTC blob rasterizing outline
      * glyphs the baked font packs do not carry. FreeType is enabled by
      * gsp_add_bundle(DYNAMIC_FONT ...) or gsp_enable_freetype(). The blob
-     * must remain valid until esp_gsp_stop() returns. */
+     * must remain valid until esp_gsp_stop() succeeds. TTC uses face 0;
+     * supported outlines depend on the enabled FreeType drivers. */
     const void *ttf;
     size_t ttf_size;
     /* Bundle-specific behavior; runtime policies and capacities use
@@ -323,6 +324,8 @@ typedef bool (*esp_gsp_input_interceptor_cb_t)(
  * Stops a platform-created UI instance. Creation belongs to a platform
  * backend, for example the ESP-IDF LCD backend or the SDL
  * adapter on host.
+ * Release borrowed resources only after ESP_GSP_OK. A timeout leaves the
+ * instance and its borrowed resources alive; retry after pending work completes.
  */
 esp_gsp_err_t esp_gsp_stop(esp_gsp_handle_t gsp);
 
@@ -648,8 +651,8 @@ esp_gsp_err_t esp_gsp_page_flow_is_dragging(esp_gsp_handle_t gsp,
         gsp_component_key_t key,
         bool *out_dragging);
 
-/** In-scene StackView navigation. Push/pop requests are rejected while an
- * animation is active; the root page cannot be popped. */
+/** In-scene StackView navigation. New push/pop requests can interrupt an
+ * active animation; the root page cannot be popped. */
 esp_gsp_err_t esp_gsp_stack_view_push(esp_gsp_handle_t gsp,
                                       gsp_component_key_t key,
                                       uint16_t page, bool animated);
@@ -685,10 +688,11 @@ esp_gsp_err_t esp_gsp_set_image(esp_gsp_handle_t gsp, uint16_t bind,
                                 const void *data, size_t size);
 
 /**
- * Returns a borrowed encoded-image payload to its producer. The callback runs
- * exactly once after the framework no longer references the payload. It may
- * run from the caller (submission failure), render task or decode task and
- * must not block.
+ * Returns an encoded-image payload from an accepted submission to its producer.
+ * The callback runs exactly once after the framework no longer references the
+ * payload. An immediate submission error does not invoke it; the caller retains
+ * ownership. It may run from the caller, render task or decode task and must
+ * not block.
  */
 typedef void (*esp_gsp_image_release_cb_t)(void *release_ctx);
 
@@ -749,14 +753,15 @@ esp_gsp_err_t esp_gsp_set_image_ex(
 /**
  * Borrowing variant of esp_gsp_set_image(). The encoded bytes are never
  * copied; @p data must remain immutable until @p on_release is called.
- * Replacement, cancellation, decode failure and shutdown all release the
- * payload exactly once. @p on_release is required.
+ * For accepted submissions, replacement, cancellation, decode failure and
+ * shutdown release the payload exactly once. @p on_release is required.
  *
  * Note that a published image holds its payload for as long as it is the one
  * on screen, not just until it decodes: the decode cache may drop the pixels
  * under memory pressure and re-decode from these bytes. So a borrowed buffer
- * comes back when the next image for that bind is adopted, or at shutdown —
- * budget for one outstanding buffer per image bind.
+ * may remain held while a replacement is queued or decoded. Budget for the
+ * active image and accepted replacements, including in-flight decode references;
+ * reuse each buffer only after its release callback.
  *
  * This removes only the encoded-input copy. Decode and framebuffer composition
  * still follow the target image/cache policy.

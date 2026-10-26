@@ -77,24 +77,28 @@ Before replacing a package in use, follow the [closing workflow](#closing-update
 ## Codecs and targets
 
 Raster input uses compiler PNG/APNG, JPEG, GIF, BMP and WebP support. Optional
-quality is 1–100 (profile default); max_fps limits imported animation rate.
+quality is 1–100 (profile default); `max_fps` is 0 for uncapped input or 1–120
+to cap the imported animation rate. Export requires an RGB565 or RGB888 Profile.
 
 | Preference | Behavior |
 |---|---|
-| auto (default) | Target policy for still images; QOI animation patches unless a calibrated dense-frame hardware JPEG path wins |
+| auto (default) | Uses the Profile policy; automatic animation policies compare QOI/native patches and eligible JPEG frames |
 | lossless | Lossless QOI retaining alpha |
-| qoi / rle16 / rle16_a8 / rle32 | Explicit existing lossless codecs; RLE requires matching pixels and alpha |
-| speed | Static STORE, QOI/RLE or hardware JPEG as eligible; dense animations use hardware JPEG only with a measured board-profile hint, otherwise QOI patches |
-| size | Smallest eligible static payload; animations compare complete QOI delta and JPEG/JPEG+A8 payloads |
+| qoi / rle16 / rle16_a8 / rle32 | Explicit still-image codecs; RLE requires matching pixels and alpha. Animation input uses lossless QOI patches |
+| speed | Static STORE, QOI/RLE or hardware JPEG as eligible; animations use QOI/native patches, or hardware JPEG for eligible dense frames with a measured board-profile hint |
+| size | Smallest eligible static payload; animations compare complete QOI/native delta and JPEG/JPEG+A8 payloads |
 | hardware_jpeg | JPEG/JPEG+A8 with target hardware capability, otherwise QOI |
 | jpeg | Explicit JPEG/JPEG+A8, including software decoding; lossy color, lossless alpha |
 | raw | Native pixels for still images; lossless animation unless animation_codec overrides it |
 
-Pixel format and native dimensions must match the target; opaque image-fit allows
-different source dimensions. An opaque PNG or JPEG can target a transparent
-placeholder and fills its alpha with 255. Use JPEG+A8 or another transparent
-resource when the asset carries real alpha. Mismatches retain the previous
-picture rather than removing alpha. Static JPEG/JPEG+A8 requires image caching.
+External assets must match the placeholder's encoded pixel format and alpha mode.
+A manifest `target` hint checks this during export; without a hint, runtime
+publication still checks it and preserves the old picture on mismatch. Thus an
+opaque external asset cannot replace a transparent placeholder. Native dimensions
+must also match unless the target supports image-fit. This differs from submitting
+raw PNG/JPEG bytes through [`set_image()`](media-and-data.md#runtime-encoded-images),
+which can fill a transparent target's alpha with 255. Use a matching transparent
+resource for external targets that require alpha. Static JPEG/JPEG+A8 requires image caching.
 Animations have their own frame storage. STORE and supported QOI/RLE still-image
 codecs can work without whole-image caching.
 
@@ -119,9 +123,12 @@ show it again when visible; playback restarts from the beginning.
 
 ## Encoding independent of storage
 
-The same input, geometry, target Profile and codec settings use the same encoding
-policy for embedded and external assets, preserving transparency, frame timing
-and loop information.
+Embedded and external assets share raster preprocessing, native pixel conversion
+and JPEG policy, preserving alpha, the accumulated frame timing and loop information.
+External animations store independently readable frame members: automatic policies
+can use QOI or native-pixel patches, but embedded SPANS and grouped DEFLATE are not
+exported. The same input and Profile can therefore have different encoded sizes
+in an embedded bundle and an external package.
 
 The manifest accepts the Image field `animation_codec`: `lossless`, `jpeg` or
 `hardware_jpeg`, overriding the animation policy implied by `codec`. The default
@@ -200,7 +207,7 @@ esp_gsp_assets_config_t config = { .read_budget_bytes = 512 * 1024 };
 ESP_ERROR_CHECK(gsp_media_open("/sdcard/media.gspb", &config, &assets));
 ```
 
-get_stats(assets, ui, &stats) reports encoded usage/peak/budget, index bytes, UI
+`esp_gsp_assets_get_stats(assets, ui, &stats)` reports encoded usage/peak/budget, index bytes, UI
 decoded memory usage/peak, delivered file bytes, load time and retries. Decoded
 memory includes this service's animation canvases/patch scratch plus the supplied
 UI's scene caches; added peaks are a conservative bound, not simultaneous samples. Encoded
@@ -247,13 +254,30 @@ deploy only after successful builds.
 
 This service uses mounted ESP-IDF filesystems. SD/NAND share the API; raw NAND ECC,
 bad-block and wear management belong to the driver. fseek/ftell limits apply
-(below 2 GiB with 32-bit long); larger libraries can be split. Use this file service through the ESP-IDF API; the PC bridge has no corresponding endpoint.
+(below 2 GiB with 32-bit long). A package also allows at most 65,535 members
+in total, counting each still image and every animation frame entry; split larger
+libraries. Use this file service through the ESP-IDF API; the PC bridge has no
+corresponding endpoint.
 
 examples/usage/external_assets includes SDSPI mounting, board pins, a BSP-managed
 SDMMC/NAND alternative and built-in fallbacks. It never formats on mount failure.
 Select matching tools using the [compatibility contract](../reference/compatibility.md).
 
 ## Fonts on SD
+
+Prefer GSPC-baked GFB glyphs when the expected character set is known. Changing
+text within that set does not require a runtime font or FreeType fallback.
+
+| Requirement | Font path |
+|---|---|
+| Known characters, including changing text | Bake the expected characters into the bundle |
+| Fixed glyphs stored outside firmware | Use `gspc font-link` and load its GFB catalog |
+| Characters outside the compiled set | Explicitly supply a raw font for FreeType missing-glyph fallback |
+
+CFF support allows raw fonts with CFF outlines to supply missing glyphs. When
+GSPC bakes a CFF source into GFB, loading those GFB glyphs needs no runtime CFF
+driver. Enable raw-font fallback for characters outside the baked set, within
+the application's memory budget.
 
 `esp_gsp_font_file.h` loads fonts before UI startup. Dynamic TTF/OTF/TTC files and
 catalogs generated by `gspc font-link` share `open → apply → close`; the signature
@@ -283,6 +307,10 @@ has stopped successfully; retain the handle on stop timeout. Do not reuse the ol
 configuration after closing its font. Applying prepares startup configuration;
 it does not hot-replace a running font. Dynamic font signatures are checked on load;
 FreeType parses them at UI startup; TTC uses its first face. Catalogs are CRC-checked on load.
+A successful file load or UI startup alone does not prove that dynamic fallback is active:
+several FreeType setup failures log a warning and continue with baked glyphs. Check
+`Dynamic text ready` and exercise a character outside the baked set. A missing CFF
+driver is diagnosed separately from other font-data or FreeType errors.
 
 To externalize fixed glyphs, author `"font_link":"external"` and link the bundle:
 
@@ -296,6 +324,38 @@ apply the catalog through the same font-file API. The original unlinked bundle
 still embeds its glyphs. Catalogs set `app.font_catalog`; dynamic fonts set
 `app.ttf/ttf_size`. Two handles can be applied to the same configuration to combine
 fixed glyphs and dynamic fallback. Keep both until UI shutdown.
+
+Font resolution has two stages. At startup, each scene FONT reference selects
+its embedded GFB first, or the catalog's GFB with the same asset/content ID if
+the embedded asset is absent. A missing required asset is a startup error, even
+when a dynamic TTF is supplied: the GFB carries the compiled layout metadata.
+At text shaping time, glyphs in that resolved GFB win; a dynamic font supplies
+missing codepoints at the GFB's authored size. The catalog is not searched by
+codepoint, family name or size. Attaching a catalog to an unlinked bundle does
+not expand its character set or replace an embedded font.
+
+### Simulator and PC bridge
+
+With a simulator build that reports `font_catalog_version: 1` in capabilities:
+
+```sh
+gsp_sim_host --bundle build/linked/app.gspb --font-catalog build/fonts.gspb \
+  --dynamic-font assets/ui.ttf --headless --frames 2
+```
+
+`--font-catalog` takes precedence over `GSP_FONT_CATALOG`. The bridge runner
+accepts the same option/environment variable and forwards it before the host
+creates the UI; the native C simulator also accepts them. Pass a GSPB catalog
+to this option, not to `--dynamic-font`. Catalog contents and CRC are checked
+before startup; the complete file and dynamic font stay in RAM through reset
+and are released after UI destruction. This validates catalog resolution and
+coexistence with a dynamic font, not SD mounting or device heap placement.
+
+The PC Backend receives an already opened UI handle. Its bridge archive does
+not implement `esp_gsp_font_file_open/apply/close`; configure the host at launch
+instead. These options do not hot-replace fonts through RPC. Older released
+simulators without this entry point need an updated host and embedded runtime;
+rebuilding only the Backend does not add it.
 
 Font open closes the file before returning. Storage may then be unmounted if no
 image service or other user still needs it; the UI uses the RAM copy. This differs

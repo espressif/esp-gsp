@@ -1,4 +1,4 @@
-version: 1.7.0
+version: 1.8.0
 targets:
 - esp32c3
 - esp32s3
@@ -21,7 +21,7 @@ dependencies:
     version: ^1.1.2
     registry_url: https://components.espressif.com
   espressif/freetype:
-    version: ^2.14.2
+    version: ^2.14.3
     registry_url: https://components.espressif.com
   espressif/esp_new_jpeg:
     version: 1.*
@@ -46,6 +46,7 @@ files:
   - tools/sim_bridge/build.py
   - tools/sim_bridge/run.py
   - tools/sim_bridge/rpc_client.py
+  - tools/sim_bridge/scenario.py
   - tools/sim_bridge/protocol.h
   - tools/sim_bridge/CMakeLists.txt
   - tools/sim_bridge/README.md

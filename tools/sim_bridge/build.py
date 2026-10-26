@@ -67,7 +67,8 @@ def add_build_arguments(parser: argparse.ArgumentParser) -> None:
                         help="ESP-GSP component used by the PC project (default: this script's component)")
 
 
-def build_project(args: argparse.Namespace) -> dict:
+def build_project(args: argparse.Namespace, *, before_build=None) -> dict:
+    """Configure, validate the selected manifest, then compile under one build lock."""
     project = args.project.resolve()
     if not (project / "CMakeLists.txt").is_file():
         raise RuntimeError(f"No CMakeLists.txt in {project}")
@@ -105,12 +106,15 @@ def build_project(args: argparse.Namespace) -> dict:
             json.loads(manifests[0].read_text(encoding="utf-8")))
         if Path(manifest.get("component_root", "")).resolve() != component:
             raise RuntimeError("PC project uses a different component; honor ESP_GSP_COMPONENT_DIR in its CMakeLists.txt")
+        if before_build is not None:
+            before_build(manifest)
         target = manifests[0].name.removesuffix(f"-{args.config}.json")
         subprocess.run([cmake, "--build", str(build), "--config", args.config,
                         "--target", target, f"{target}_module", "--parallel"], check=True)
         required = ["executable", "backend_library", "bundle"]
-        if "api_json" in manifest:
-            required.append("api_json")
+        for sidecar in ("api_json", "context"):
+            if sidecar in manifest:
+                required.append(sidecar)
         for key in required:
             if not Path(manifest[key]).is_file():
                 raise RuntimeError(f"Build did not produce {key}: {manifest[key]}")

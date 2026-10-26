@@ -4,7 +4,7 @@ Two compiled image faces with an interruptible perspective flip.
 
 ## When to use
 
-Use it for the main text, image, or action on a screen.
+Use it to switch between two prepared image faces with a perspective transition.
 
 ## Local interactive preview
 
@@ -24,6 +24,8 @@ These commands compile the example and open it in the ESP-GSP simulator browser 
 ## Runtime behavior
 
 With `runtime_style: true`, generated setters control depth, opacity and duration at runtime; `flipped` selects the target face. Tap flips by default; `enabled: false` disables taps. The tap callback uses the `value` event and does not signal animation completion. Paths are relative to the scene and accept PNG, JPEG and the supported GSP SVG subset; each source is limited to 2 MiB and is resized to a texture of at most 256 pixels per side. Configure up to three additional skins in `image_sets` and switch with `set_image_set()`; group 0 is the original front/back pair. Images are compiled into the bundle. Arbitrary runtime file imports, template membership and dynamic geometry expressions are unsupported.
+
+SVG faces are rasterized into those textures at build time. Runtime flips transform the compiled bitmap; the card does not expose Image vector morphing or tint controls.
 
 If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 

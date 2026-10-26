@@ -134,9 +134,14 @@ List/Grid 的 Slot 数量与总数据量无关。增加记录数不会增加可�
 | `CONFIG_ESP_GSP_ENABLE_JPEG` | 硬件/软件 JPEG 解码器离开固件；场景中声明 `codec: "jpeg"` 会构建失败，运行时 JPEG 提交最终返回 `GSP_ERR_UNSUPPORTED`。详见[媒体与数据](../guide/media-and-data.md) |
 | `CONFIG_ESP_GSP_ENABLE_PNG` | PNG 解码器离开固件。GSPC 从不生成 PNG，因此只影响运行时提交的图片：在分配 Slot 或缓存之前拒绝，并返回 `GSP_ERR_UNSUPPORTED`。格式探测和其他解码器不受影响 |
 | `CONFIG_ESP_GSP_ENABLE_EAF` | EAF 播放器及其解码器离开固件，`esp_gsp_play()` 返回 `ESP_GSP_ERR_NOT_SUPPORTED`。编译进 Bundle 的动画不受影响 |
+| `CONFIG_ESP_GSP_ENABLE_ANIM_DEFLATE` | 移除分组动画解压器；未分组的动画格式仍可使用，需要该 Provider 的资源包会被拒绝 |
 | `CONFIG_ESP_GSP_ENABLE_REFERENCE_RENDERER` | 移除参考光栅器。它只在内核渲染器报告能力缺口时接管（例如 ARGB8888 场景中的图片绘制）。需要它的帧、过渡或快照返回 `GSP_ERR_UNSUPPORTED`，并只记录一次日志。GSPC 生成的 RGB565 和 RGB888 场景不需要它；关闭前应在目标板上验证所有场景 |
 | `CONFIG_ESP_GSP_ENABLE_VECTOR` | 矢量轮廓渲染器离开固件；动态字体不需要时，FreeType 轮廓光栅器也一并移除。含矢量资源的 Bundle 在加载时返回 `GSP_ERR_UNSUPPORTED`，渲染任务也不再为矢量预留额外栈空间。位图图片和字体不受影响 |
 | `CONFIG_ESP_GSP_ENABLE_PROCEDURAL` | 加载动画、粒子、轮播、翻转卡片、流光等 `DRAW_PROCEDURAL` 程序化效果离开固件。使用这些效果的场景在加载时返回 `GSP_ERR_UNSUPPORTED`（`esp_gsp_deployable_bundle_open()` 返回 `ESP_GSP_ERR_NOT_SUPPORTED`）。不含程序化命令的场景不受影响 |
+
+编译期 span 动画没有独立 Kconfig 开关。应用裁剪会从已注册的包推导 `anim_spans`；
+之后加载编译清单之外的资源包时，应声明该动态能力。若 span 帧还使用分组压缩，
+同时声明 `anim_deflate`。
 
 ## 修改后的验证
 

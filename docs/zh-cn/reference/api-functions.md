@@ -46,7 +46,7 @@ Read-only ESP_GSP_BUILD_CAP_* fields are rejected.
 
 ### `esp_gsp_stop()`
 
-停止并销毁平台创建的 UI 实例。
+停止并销毁平台创建的 UI 实例。仅成功停止后才能释放借用资源；超时后保留资源，待在途工作完成再重试。
 
 - **头文件:** `include/esp_gsp.h`
 - **返回类型:** `esp_gsp_err_t`
@@ -60,6 +60,8 @@ esp_gsp_err_t esp_gsp_stop(esp_gsp_handle_t gsp);
 Stops a platform-created UI instance. Creation belongs to a platform
 backend, for example the ESP-IDF LCD backend or the SDL
 adapter on host.
+Release borrowed resources only after ESP_GSP_OK. A timeout leaves the
+instance and its borrowed resources alive; retry after pending work completes.
 
 </details>
 
@@ -853,8 +855,8 @@ esp_gsp_err_t esp_gsp_stack_view_push(esp_gsp_handle_t gsp, gsp_component_key_t 
 
 <details><summary>完整接口契约（英文）</summary>
 
-In-scene StackView navigation. Push/pop requests are rejected while an
-animation is active; the root page cannot be popped.
+In-scene StackView navigation. New push/pop requests can interrupt an
+active animation; the root page cannot be popped.
 
 </details>
 
@@ -1113,14 +1115,15 @@ esp_gsp_err_t esp_gsp_set_image_borrowed(esp_gsp_handle_t gsp, uint16_t bind, co
 
 Borrowing variant of esp_gsp_set_image(). The encoded bytes are never
 copied; `data` must remain immutable until `on_release` is called.
-Replacement, cancellation, decode failure and shutdown all release the
-payload exactly once. `on_release` is required.
+For accepted submissions, replacement, cancellation, decode failure and
+shutdown release the payload exactly once. `on_release` is required.
 
 Note that a published image holds its payload for as long as it is the one
 on screen, not just until it decodes: the decode cache may drop the pixels
 under memory pressure and re-decode from these bytes. So a borrowed buffer
-comes back when the next image for that bind is adopted, or at shutdown —
-budget for one outstanding buffer per image bind.
+may remain held while a replacement is queued or decoded. Budget for the
+active image and accepted replacements, including in-flight decode references;
+reuse each buffer only after its release callback.
 
 This removes only the encoded-input copy. Decode and framebuffer composition
 still follow the target image/cache policy.
@@ -1472,9 +1475,11 @@ max_bytes is a required, nonzero limit on the file size. Oversized files
 fail before allocation. The entire file stays in RAM (PSRAM preferred on
 ESP-IDF); this is not on-demand glyph IO. Catalogs are CRC-checked; dynamic
 fonts are checked by FreeType when the UI starts. Their signature is checked
-here. TTC uses its first face. Dynamic fonts require gsp_enable_freetype()
-in source and prebuilt builds. With dynamic fallback, each static GFB must
-contain at most 32768 glyphs; UI startup rejects larger packs with NOT_SUPPORTED.
+here. TTC uses its first face. Supported outlines depend on the FreeType
+build's drivers; CFF/CFF2 requires the CFF driver. Dynamic fonts require
+gsp_enable_freetype() in source and prebuilt builds. With dynamic fallback,
+each static GFB must contain at most 32768 glyphs; UI startup rejects larger
+packs with NOT_SUPPORTED.
 Call from an application task: open performs blocking file IO. On failure
 *out_font is NULL. Glyph caches and FreeType working memory are separate.
 
@@ -1497,6 +1502,8 @@ Applies a loaded font to an initialized configuration before UI startup.
 Sets ttf/ttf_size for a dynamic font, or font_catalog for a linked catalog;
 the other font source is preserved. No ownership is transferred. Keep the
 handle alive until every UI using this configuration has stopped successfully.
+A catalog resolves missing GFB assets by ID, not missing codepoints. Embedded
+GFBs take priority; dynamic fonts supply glyphs absent from the resolved GFB.
 Changing this configuration does not replace a font in a running UI.
 
 </details>
@@ -2991,6 +2998,11 @@ Quiesce the active GSP render task without destroying its UI state.
 On success no new GSP frame can be submitted until
 esp_gsp_esp_lcd_resume_paused() is called. The function also waits for the
 shared presenter transfer/present fences to retire.
+ESP_ERR_NOT_FINISHED means pause rollback could not restore the original
+app: *out_pause contains a valid token for retry with resume_paused(). This
+does not certify quiescence; do not hand the display to another producer.
+Other failures do not transfer a pause token. A non-NULL out_pause is cleared
+before argument validation; any previously stored token is not freed.
 
 </details>
 
@@ -3010,6 +3022,8 @@ esp_err_t esp_gsp_esp_lcd_resume_paused(esp_gsp_esp_lcd_pause_t *pause, esp_gsp_
 Resume the exact UI paused by esp_gsp_esp_lcd_pause(), including a temporary
 app running on a retained hub session. The pause token is consumed on
 success and the first resumed frame is forced to redraw in full.
+On failure the token retains the original app for another resume attempt;
+do not free its borrowed resources or discard the token.
 
 </details>
 
@@ -3028,6 +3042,10 @@ esp_err_t esp_gsp_esp_lcd_suspend(esp_gsp_handle_t hub, esp_gsp_esp_lcd_session_
 
 Pause a UI while retaining its scenes and component state. Its render task
 and LCD host remain resident; decoded image surfaces are released.
+ESP_ERR_NOT_FINISHED means rollback to the hub also failed: *out_session
+contains a valid session with no temporary app. Retain it and retry with
+esp_gsp_esp_lcd_resume(session, NULL, ...) or destroy it. Other failures do
+not transfer a session to the caller.
 
 </details>
 
@@ -3045,8 +3063,14 @@ esp_err_t esp_gsp_esp_lcd_start_on_session(esp_gsp_esp_lcd_session_t *session, c
 <details><summary>完整接口契约（英文）</summary>
 
 Start an app bundle on a suspended hub's LCD host. The bundle must match
-the display width, height and pixel format. A startup failure resumes the
-hub and consumes the session.
+the display width, height and pixel format. A startup failure attempts to
+resume the hub. Successful recovery consumes the session and returns the
+startup error; ESP_ERR_NOT_FINISHED means recovery also failed and the
+session remains owned by the caller with no temporary app. Retry with
+esp_gsp_esp_lcd_resume(session, NULL, ...) or destroy the session.
+ESP_ERR_INVALID_SIZE means the resident task stack cannot accommodate the
+new app; create a larger session. Calls rejected by initial argument or
+session-state validation do not consume the session.
 
 </details>
 
@@ -3066,6 +3090,7 @@ esp_err_t esp_gsp_esp_lcd_start_on_session_prepared(esp_gsp_esp_lcd_session_t *s
 Start an app and invoke `prepare` on the resident render task before the
 first frame. This is intended for installing generic runtime contributors,
 event handlers and timers without racing the initial render.
+Session ownership and failure recovery follow start_on_session().
 
 </details>
 
@@ -3084,8 +3109,10 @@ esp_err_t esp_gsp_esp_lcd_replace_on_session_prepared(esp_gsp_esp_lcd_session_t 
 
 Replace the active temporary app while retaining the suspended hub.
 Unlike esp_gsp_esp_lcd_resume(), this never reactivates or presents the
-hub between the two Apps. On startup failure the hub is resumed and the
-session is consumed.
+hub between the two Apps. Startup failure follows start_on_session():
+successful hub recovery consumes the session; ESP_ERR_NOT_FINISHED retains
+an empty session for resume(session, NULL, ...) or destruction. Failure to
+suspend the current app leaves that app and session intact.
 
 </details>
 
@@ -3103,7 +3130,11 @@ esp_err_t esp_gsp_esp_lcd_resume(esp_gsp_esp_lcd_session_t *session, esp_gsp_han
 <details><summary>完整接口契约（英文）</summary>
 
 Stop the temporary app, then resume the retained hub and force its first
-frame to redraw. The session is consumed on success.
+frame to redraw. The session is consumed only on success. Pass NULL for app
+when no temporary app is active, including recovery after
+ESP_ERR_NOT_FINISHED. A pause failure leaves the temporary app alive and
+returns that error. ESP_ERR_NOT_FINISHED means the temporary app is gone
+but hub recovery failed; retain the session and retry with app=NULL.
 
 </details>
 
@@ -3121,6 +3152,9 @@ esp_err_t esp_gsp_esp_lcd_session_destroy(esp_gsp_esp_lcd_session_t *session);
 <details><summary>完整接口契约（英文）</summary>
 
 Destroy a suspended hub and its LCD host when no temporary app is active.
+Failure retains the session and its resources for destruction retry;
+after requesting destruction, do not start or resume an app on it.
+Release borrowed bundle/font/display data only after ESP_OK.
 
 </details>
 
@@ -3370,7 +3404,7 @@ Monotonic count of rendered non-idle frames since startup.
 
 ### `esp_gsp_render_stats()`
 
-读取累计渲染帧数和忙碌时间。
+读取累计渲染帧数和渲染路径耗时；耗时不含 UI 步进中的快照合成。
 
 - **头文件:** `include/esp_gsp_debug.h`
 - **返回类型:** `void`
@@ -3381,7 +3415,10 @@ void esp_gsp_render_stats(esp_gsp_handle_t gsp, uint32_t *out_frames, uint64_t *
 
 <details><summary>完整接口契约（英文）</summary>
 
-Read rendered frames and cumulative time spent producing frames.
+Read rendered frames and cumulative render-path busy time.
+On ESP LCD, the frame count includes viewport snapshots, but busy time
+excludes their UI-step composition and idle time. Their ratio is not
+total rendering capacity or CPU utilization.
 
 </details>
 
@@ -3427,7 +3464,7 @@ void esp_gsp_region_stats(esp_gsp_handle_t gsp, esp_gsp_region_stats_t *out_stat
 
 ### `esp_gsp_render_phases()`
 
-读取累计光栅化和显示提交时间。
+读取普通渲染路径的光栅化和显示提交时间；提交时间包含硬件同步等待。
 
 - **头文件:** `include/esp_gsp_debug.h`
 - **返回类型:** `void`
@@ -3438,7 +3475,9 @@ void esp_gsp_render_phases(esp_gsp_handle_t gsp, uint64_t *out_render_us, uint64
 
 <details><summary>完整接口契约（英文）</summary>
 
-Cumulative rasterization and presentation time.
+Cumulative rasterization and submission time in the ordinary render path.
+UI-step viewport snapshots bypass these timers. Submission time includes
+hardware synchronization waits.
 
 </details>
 

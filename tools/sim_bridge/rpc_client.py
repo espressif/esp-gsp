@@ -11,6 +11,7 @@ import json
 import queue
 import socket
 import threading
+import time
 
 def read_frame(stream):
     length = None
@@ -49,14 +50,23 @@ class Peer:
         self.receiver = threading.Thread(target=receive, daemon=True)
         self.receiver.start()
 
-    def call(self, method, params=None):
+    def _receive_before(self, deadline):
+        if deadline is None:
+            return self.inbox.get()
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise queue.Empty()
+        return self.inbox.get(timeout=remaining)
+
+    def call(self, method, params=None, *, timeout=8):
+        deadline = None if timeout is None else time.monotonic() + timeout
         self.next_id += 1
         payload = json.dumps({"jsonrpc": "2.0", "id": self.next_id,
                               "method": method, "params": params or {}}).encode()
         self.writer.write(f"Content-Length: {len(payload)}\r\n\r\n".encode() + payload)
         self.writer.flush()
         while True:
-            reply = self.inbox.get(timeout=8)
+            reply = self._receive_before(deadline)
             if isinstance(reply, BaseException):
                 raise reply
             if reply.get("id") == self.next_id:
@@ -65,17 +75,27 @@ class Peer:
                 self.notifications.append(reply)
 
     def notification(self, method=None, timeout=8):
+        deadline = None if timeout is None else time.monotonic() + timeout
         for index, value in enumerate(self.notifications):
             if method is None or value.get("method") == method:
                 message = self.notifications.pop(index)
                 return message if method is None else message["params"]
         while True:
-            reply = self.inbox.get(timeout=timeout)
+            reply = self.inbox.get_nowait() if timeout == 0 else self._receive_before(deadline)
             if isinstance(reply, BaseException):
                 raise reply
             if "method" in reply and (method is None or reply["method"] == method):
                 return reply if method is None else reply["params"]
             self.notifications.append(reply)
+
+    def take_notifications(self):
+        """Take buffered notifications without waiting or consuming replies.
+
+        A completed frame wait is a barrier: the host publishes that frame's
+        callbacks and overflow logs before its wait response.
+        """
+        notifications, self.notifications = self.notifications, []
+        return notifications
 
     def binary(self, headers, payload):
         self.next_id += 1
@@ -96,9 +116,9 @@ class Peer:
 
 
 @contextmanager
-def connect(host="127.0.0.1", port=8266):
+def connect(host="127.0.0.1", port=8266, *, timeout=8):
     """Connect over TCP; own the socket, buffered streams and receiver lifetime."""
-    with socket.create_connection((host, port), timeout=8) as sock:
+    with socket.create_connection((host, port), timeout=timeout) as sock:
         sock.settimeout(None)
         with sock.makefile("rb") as reader, sock.makefile("wb") as writer:
             peer = Peer(reader, writer)

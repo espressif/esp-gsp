@@ -1,10 +1,10 @@
 # Image (`gsp_image`)
 
-Static or animated raster asset with contain, cover and stretch fitting.
+Static or animated raster assets and compiled SVG vectors, with contain, cover and stretch fitting.
 
 ## When to use
 
-Use it for the main text, image, or action on a screen.
+Use it for icons, photographs, compiled animations and SVG artwork. Use Canvas for continuously produced camera or video frames.
 
 ## Local interactive preview
 
@@ -24,6 +24,8 @@ These commands compile the example and open it in the ESP-GSP simulator browser 
 ## Runtime behavior
 
 The content is compiled into the scene. It can receive pointer actions and use bindings or generated runtime setters.
+
+Compiled SVG retains curves for scaling, rotation and morphing. `svg_mode: "raster"` bakes supported static SVG effects into a bitmap. For runtime bitmap replacement, declare a resource `bind`; a name alone does not create a replacement target. Transformed compressed rasters need the decoded-image cache. See [media contracts](../guide/media-and-data.md).
 
 If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
@@ -153,7 +155,8 @@ These signatures come from the actual compiler output for this JSON.
 | `dynamic_color` | `bool` | — | — | — | template member exposes a per-instance color slot |
 | `dynamic_image` | `bool` | — | — | — | template image exposes a per-instance resource slot |
 | `canvas` | `enum` | — | `draw`, `push` | — | Canvas producer: draw callback or borrowed frames; creates an independent resource view |
-| `image_opacity` | `int` | — | default 255; 0…255 | — | image-only opacity; fixed raster transforms may bake alpha at compile time |
+| `svg_mode` | `enum` | — | `vector`, `raster` | — | SVG import: vector curves (default) or explicitly baked static pixels at fixed w/h |
+| `image_opacity` | `int` | — | default 255; 0…255 | scene: SVG; template: — | image-only opacity 0..255; scene SVG supports direct bounded runtime control, fixed rasters may bake alpha at compile time |
 
 </details>
 

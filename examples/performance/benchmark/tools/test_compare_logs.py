@@ -214,6 +214,47 @@ bench: legacy dwell-weighted busy score 50.0 fps
                 with self.assertRaisesRegex(ValueError, "latency window"):
                     compare_logs.parse_log(path)
 
+    def test_protocol_27_ui_timing_and_reset(self):
+        content = """
+I (1) app_init: App version: lifecycle-test
+bench: run mode=soak case=P_RECT1 name="rect x1" category=primitives dwell_ms=4000
+bench: config protocol=27 pressure=native pressure_ms=1 touch=disabled queue_metric=drained hud=results-only bundle_crc=1234abcd logical=240x240 reset=page ui_timing=step
+bench: warm-up lap done, measuring
+bench: pressure[rect x1] mode=native period_ms=1 ticks=200 requests=0 accepted=0 rejected=0 errors=0
+bench: detail[rect x1] frames=100 elapsed_us=4000000 busy_us=2000000 render_us=500000 submit_us=1500000 service_steps=200 service_us=10000 commands=0 busy=20.000ms internal_peak=0 psram_peak=0
+bench: ui[rect x1] steps=200 step_us=500000
+bench: viewport[rect x1] attempts=0 started=0 reused=0 skipped=0 active=0 reason=0 error=0
+bench: ---- summary ----
+bench: rect x1 25.0 50.0 5.0 15.0 50.0 0.0 4
+bench: aggregate wall throughput 25.0 fps
+bench: aggregate active throughput 50.0 fps
+bench: aggregate raw frames=100 wall_us=4000000 busy_us=2000000
+bench: aggregate ui step_us=500000
+bench: codecs qoi=0/0 rle16=0/0 png=0/0 failed=0 scale_hw=0 scale_sw=0
+bench: dynamic image request=0 queued=0 published=0 failed=0 cancelled=0 probe=0us
+bench: measurement end
+"""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "monitor.log"
+            path.write_text(content)
+            run = compare_logs.parse_log(path)
+            self.assertEqual(run.ui_pages["rect x1"].step_us, 500000)
+            self.assertEqual(run.raw_ui_step_us, 500000)
+            for broken in (content.replace("reset=page", "reset=none"),
+                           content.replace("ui_timing=step", "ui_timing=none"),
+                           content.replace("bench: ui[rect x1] steps=200 step_us=500000\n", ""),
+                           content.replace("steps=200 step_us=500000", "steps=0 step_us=500000"),
+                           content.replace("aggregate ui step_us=500000", "aggregate ui step_us=500001"),
+                           content.replace("attempts=0 started=0", "attempts=0 started=1")):
+                path.write_text(broken)
+                with self.assertRaises(ValueError):
+                    compare_logs.parse_log(path)
+            old = content.replace("protocol=27", "protocol=26")
+            old = "\n".join(line for line in old.splitlines()
+                            if not line.startswith(("bench: ui[", "bench: aggregate ui")))
+            path.write_text(old)
+            self.assertEqual(compare_logs.parse_log(path).ui_pages, {})
+
     def test_protocol_18_requires_consistent_pressure_evidence(self):
         content = """
 I (1) app_init: App version: pressure-test
@@ -322,6 +363,33 @@ bench: aggregate active throughput 20.0 fps
             path.write_text(content)
             with self.assertRaisesRegex(ValueError, "invalid runtime sample"):
                 compare_logs.parse_log(path)
+
+    def test_stack_and_glyph_faults_cannot_be_hidden_by_a_later_summary(self):
+        recovered = """
+I (1) app_init: App version: recovered
+bench: ---- summary ----
+bench: labels 10.0 20.0 2.0 8.0 5
+bench: aggregate active throughput 20.0 fps
+"""
+        faults = (
+            "***ERROR*** A stack overflow in task esp_gsp has been detected.",
+            "Guru Meditation: Stack protection fault",
+            "Stack canary watchpoint triggered (esp_gsp)",
+            "E (2) gsp_renderer: Glyph run failed: command=23 error=-13",
+            "E (2) gsp_frame_loop: render area 1 failed: -13",
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "monitor.log"
+            path.write_text(recovered)
+            self.assertEqual(compare_logs.parse_log(path).score_fps, 20.0)
+            path.write_text("I (0) freertos: stack overflow checks enabled\n" + recovered)
+            self.assertEqual(compare_logs.parse_log(path).score_fps, 20.0)
+            for fault in faults:
+                for prefix in ("", recovered):
+                    with self.subTest(fault=fault, previous_summary=bool(prefix)):
+                        path.write_text(prefix + fault + "\nrst:0xc (SW_CPU_RESET)\n" + recovered)
+                        with self.assertRaisesRegex(ValueError, "invalid runtime sample"):
+                            compare_logs.parse_log(path)
 
     def test_repeater_capacity_failure_is_rejected(self):
         content = """

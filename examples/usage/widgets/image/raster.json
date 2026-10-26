@@ -1,0 +1,10 @@
+{
+  "screen": "svg_bitmap", "w": 240, "h": 160, "screen_bg": "#151b24",
+  "objects": [
+    {"type": "image", "name": "artwork", "x": 16, "y": 32, "w": 96, "h": 96,
+     "image": "raster.svg", "svg_mode": "raster", "codec": "store"},
+    {"type": "image", "name": "badge", "x": 128, "y": 40, "w": 80, "h": 80,
+     "image": "raster.svg", "svg_mode": "raster", "svg_element": "badge",
+     "codec": "store", "rotation": {"property": "rotation", "default": 17, "min": 0, "max": 359}}
+  ]
+}

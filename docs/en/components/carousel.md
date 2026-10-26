@@ -23,7 +23,11 @@ These commands compile the example and open it in the ESP-GSP simulator browser 
 
 ## Runtime behavior
 
-The scene defines the item layout. Fixed items work without an application adapter; dynamic data needs an adapter or backend.
+`icons` supplies 3–12 image resources compiled into the carousel. The public
+controls change selection and effect properties; Carousel does not use the
+List/Grid data-source adapter. Its callback runs after selection is committed:
+read the selected index with the generated getter. `event->arg` remains the
+authored callback argument, not the selected index.
 
 If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 

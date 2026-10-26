@@ -23,7 +23,7 @@ These commands compile the example and open it in the ESP-GSP simulator browser 
 
 ## Runtime behavior
 
-Clicking or dragging updates the retained value. Application code can update the same value through the generated setter.
+With `interactive: true` (the default), clicking or dragging updates the retained value. Set `interactive: false` for a display-only arc. Application code can update the value through the generated setter.
 
 `start_angle` is measured clockwise from the top: right is 90°, bottom 180°, left 270°. `sweep` is a clockwise span of 1–360°; increasing value from min to max fills in that direction.
 

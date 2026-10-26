@@ -236,14 +236,16 @@ config ESP_GSP_FREETYPE_CACHE_GLYPHS
         Pixel storage is entries * glyph_max_px * glyph_max_px bytes.
 
 config ESP_GSP_FREETYPE_GLYPH_MAX_PX
-    int "Default maximum FreeType glyph width and height"
+    int "Default maximum cached FreeType glyph width and height"
     default 40
     range 8 256
     help
         Default maximum cached glyph dimension. Override one UI instance with
         esp_gsp_config_set() and ESP_GSP_FIELD_FREETYPE_GLYPH_MAX_PX.
-        Memory grows quadratically; glyphs larger than this bound cannot be
-        cached by the dynamic-font fallback.
+        Cache memory grows quadratically. Larger glyphs are still rendered
+        through one reusable heap workspace but are not cached; repeated
+        rendering rasterizes them again. FreeType working memory and this
+        workspace are additional to the configured cache storage.
 
 endmenu
 
@@ -252,6 +254,17 @@ endmenu
 menu "Linked features"
 
 comment "Link capabilities: disabling one removes its code from the firmware"
+
+config ESP_GSP_ENABLE_ANIM_DEFLATE
+    bool "Link grouped DEFLATE animation decoding"
+    default n
+    help
+        Allow the size policy to compress embedded lossless animations after
+        checking resource savings and the animation memory budget. Other
+        policies and external streaming animations keep their usual encoding.
+        gsp_add_bundle() passes this capability to GSPC. Each player needs a
+        bounded group buffer and decoder state; AUTO uses PSRAM when present.
+        Requires a compiler/runtime pair supporting GRB 1.7.
 
 config ESP_GSP_ENABLE_PNG
     bool "Link the PNG decoder"
@@ -348,9 +361,9 @@ config ESP_GSP_ACCEL_SYNC_TIMEOUT_MS
     default 500
     range 1 10000
     help
-        Maximum wait for an asynchronous accelerator operation to complete.
-        A timeout reports a backend failure instead of blocking the render
-        task indefinitely.
+        Time before reporting a stalled asynchronous copy and disabling new
+        copies on that engine. In-flight buffers remain owned until actual
+        completion; a permanently stalled engine blocks rendering until reset.
 
 config ESP_GSP_ACCEL_MIN_BLIT_PIXELS
     int "Minimum pixels for accelerated copy"
@@ -488,7 +501,7 @@ config ESP_GSP_RENDER_TASK_STACK_PSRAM
     select FREERTOS_TASK_CREATE_ALLOW_EXT_MEM
     help
         Moves the render task stack to PSRAM, saving 12 KiB of internal SRAM
-        by default, or 24 KiB with FreeType. Runtime startup fails if the
+        by default, or 32 KiB with FreeType. Runtime startup fails if the
         configured stack cannot be allocated from PSRAM. PSRAM stacks cannot
         be used while the flash cache is disabled. Keep the default if render
         callbacks may access flash, NVS or filesystems.
@@ -506,10 +519,15 @@ config ESP_GSP_RENDER_TASK_STACK_SIZE
 
 config ESP_GSP_RENDER_TASK_STACK_SIZE_FREETYPE
     int "Render task stack size with FreeType in bytes"
-    default 24576
+    default 32768
     range 8192 65536
     help
-        Default render stack when a runtime TTF/OTF face is attached.
+        Default render stack when a dynamic font is initialized.
+        FreeType's grayscale rasterizer uses a 16 KiB local render pool in
+        addition to the GSP render call chain and outline-processing stack.
+        Runtime raises smaller requests to the linked render pool plus
+        16 KiB, shared with compiled vectors. Larger settings are preserved.
+        Measure callbacks and the largest, most complex glyphs before tuning.
 
 config ESP_GSP_RENDER_TASK_PRIORITY
     int "Default render task priority"
@@ -575,9 +593,10 @@ choice ESP_GSP_ANIM_FRAME_MEMORY
     prompt "Animation frame memory preference"
     default ESP_GSP_ANIM_FRAME_MEMORY_AUTO
     help
-        Chooses the preferred heap for decoded runtime animation frames. AUTO
+        Chooses the preferred heap for decoded canvases and EAF scratch. AUTO
         uses ESP_GSP_ANIM_INTERNAL_FRAME_MAX_BYTES; every mode falls back to
-        the other reachable heap when the preferred allocation fails.
+        the other reachable heap when the preferred allocation fails. Optional
+        DEFLATE workspaces in AUTO use PSRAM when present without SRAM fallback.
 
 config ESP_GSP_ANIM_FRAME_MEMORY_AUTO
     bool "Automatic by frame size"
@@ -595,9 +614,10 @@ config ESP_GSP_ANIM_MAX_FRAME_BYTES
     default 16777216
     range 1024 67108864
     help
-        Safety and functional limit checked before allocating runtime-supplied
-        animation frame buffers and decode scratch. Compiled animation assets
-        remain bounded by their validated resource metadata and reachable heap.
+        Compiled playback bounds its canvas plus optional group workspace.
+        An oversized compiled player is skipped with a warning. EAF bounds each
+        frame and block scratch separately; double buffering can use more
+        memory in total.
 
 config ESP_GSP_ANIM_INTERNAL_FRAME_MAX_BYTES
     int "Maximum animation frame preferred in SRAM"
@@ -605,9 +625,9 @@ config ESP_GSP_ANIM_INTERNAL_FRAME_MAX_BYTES
     range 0 16777216
     depends on ESP_GSP_ANIM_FRAME_MEMORY_AUTO
     help
-        AUTO mode prefers SRAM at or below this size and PSRAM above it.
-        Zero sends every non-empty animation surface to PSRAM first. Every
-        mode falls back to the other heap when the preferred heap is full.
+        AUTO mode prefers SRAM for pixel canvases and EAF scratch at or below
+        this size, and PSRAM above it. Zero prefers PSRAM for every non-empty
+        allocation; the other heap is tried if the preferred heap is full.
 
 endmenu
 

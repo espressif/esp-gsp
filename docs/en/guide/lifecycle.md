@@ -52,8 +52,9 @@ The runtime also accepts a zero `struct_size` from aggregate-zero initialized
 configurations. A nonzero size must match the public structure used by the
 current component.
 
-The bundle bytes, generated component directories and optional TTF bytes must
-remain valid until `esp_gsp_stop()` succeeds.
+The bundle bytes, generated component directories, optional outline-font bytes
+and any borrowed font catalog must remain valid until `esp_gsp_stop()` succeeds.
+Keep the catalog's backing font data alive for the same period.
 
 Treat compiled bundle bytes as immutable. Startup may reuse successful CRC
 checks for scenes and shared embedded images and fonts within that load; structure and
@@ -105,12 +106,16 @@ ESP_ERROR_CHECK(esp_gsp_flush(ui, 250));
 ```
 
 Do not put `esp_gsp_flush()` in an animation or telemetry loop. It preserves
-the asynchronous setter model and is invalid from render-task callbacks.
+the asynchronous setter model and is invalid from render- or decode-task callbacks.
 Portable apps without an asynchronous platform adapter already apply commands
 directly, so the fence completes immediately. Render failures remain available
 through `esp_gsp_render_error_stats()`; the fence reports synchronization
 status, not the render result. A timeout does not cancel a fence that was
 already accepted by the command queue.
+
+A background image replacement can still be decoding when the fence completes.
+Wait for its image-completion callback to report `GSP_OK` before using a flush
+to synchronize a capture of that replacement.
 
 ## Callback contexts
 
@@ -127,8 +132,9 @@ Generated setters may be called from these callbacks; the render task applies
 them directly. Canvas direct-draw callbacks are the exception: they run inside
 an active renderer frame, so APIs that change GSP state return
 `ESP_GSP_ERR_INVALID_STATE`. Do not wait for `esp_gsp_flush()` or call
-`esp_gsp_stop()` from any render-task callback. Defer state changes, shutdown
-and blocking work to an application task.
+`esp_gsp_stop()` from render- or decode-task callbacks. Defer shutdown and
+blocking work to an application task; direct-draw state changes must also be
+deferred until the draw callback has returned.
 
 Image decode completion may also run on the decode task. Completion and
 release callbacks must not assume application-task context.
@@ -149,8 +155,10 @@ release callbacks must not assume application-task context.
 A borrowed or taken payload is held while its image is the one on screen, not
 merely until it decodes: under memory pressure the cache may drop the decoded
 pixels and decode again from the encoded bytes. The release therefore lands
-when the next image for that bind is adopted, or at shutdown — so budget one
-outstanding payload per image bind, not one per submission.
+when the next image for that bind is adopted, or at shutdown. Budget for that
+published payload plus accepted replacements still queued, decoding or awaiting
+publication. Cancellation can also retain a payload until an in-flight decode
+releases it. Reuse each borrowed buffer only after its own release callback.
 
 A bind keeps showing its current image for the whole time a replacement is
 decoding, and keeps it if that decode fails. An update is visible in one step
@@ -173,7 +181,7 @@ reactivates them when it becomes visible again.
 
 Do not call `esp_gsp_list_bind_component()` from every scene-ready event.
 Repeated binding allocates another entry from the configured list pool
-(`CONFIG_ESP_GSP_MAX_LISTS`, default 5) and eventually returns
+(`CONFIG_ESP_GSP_MAX_LISTS`, default 0/AUTO from bundled bindings) and eventually returns
 `ESP_GSP_LIST_NONE`. Use `esp_gsp_list_set_total()` when the item count changes
 and `esp_gsp_list_refresh()` when visible row data changes. The current API has
 no unbind operation; all bindings are released by `esp_gsp_stop()`.
@@ -187,6 +195,20 @@ the application and shutdown may be retried.
 
 After `esp_gsp_stop()` succeeds, the handle and every framework-owned callback
 registration are invalid.
+
+## Pause and resume the same application
+
+`esp_gsp_esp_lcd_pause()` pauses the active UI and waits for the presenter
+fences without destroying the application. Keep its pause token and resume
+that exact app with `esp_gsp_esp_lcd_resume_paused()`; this also applies to a
+temporary app on a retained hub session.
+
+If pause returns `ESP_ERR_NOT_FINISHED`, rollback failed and `out_pause`
+contains a valid token for retrying `resume_paused()`. This is not a successful
+display handoff: transfer/present fences may still be outstanding, so do not
+give the display to another producer. Other pause failures do not transfer a
+token. A failed resume keeps the token and original app alive for retry;
+successful resume consumes it. Keep borrowed resources alive throughout.
 
 ## Suspend and temporary applications
 
@@ -203,15 +225,42 @@ runtime, scene and component state remain owned by the returned session, while
 decoded image surfaces are released. Do not submit work through the suspended
 hub handle.
 
+If suspend returns `ESP_ERR_NOT_FINISHED`, its rollback could not restore the
+hub and `out_session` still receives a valid session with no temporary app.
+Retain that token and retry `esp_gsp_esp_lcd_resume(session, NULL, &hub)`, or
+destroy the session. Other suspend errors do not transfer a session.
+
 `esp_gsp_esp_lcd_start_on_session()` requires a bundle with the same logical
 width, height and pixel format as the retained display. On success it returns
-the temporary app handle. If app creation or compatibility validation fails,
-the adapter resumes the hub and consumes the session as part of recovery.
+the temporary app handle. App creation, compatibility or activation failure
+attempts to restore the hub. Successful recovery consumes the session and
+returns the original startup error. `ESP_ERR_NOT_FINISHED` means hub recovery
+also failed: the session remains valid with no temporary app, for resume with
+`app = NULL` or destruction, and `out_gsp` is NULL. Initial pointer/session-state validation errors
+leave the session unchanged.
+
+The resident render task keeps its original stack allocation. An app requiring
+more stack is rejected with `ESP_ERR_INVALID_SIZE`; size the hub's
+`task_stack_size` for the most demanding temporary app before creating the
+session. Dynamic fonts and vectors can require at least 32 KiB in standard
+builds. Changing a temporary app's configuration cannot enlarge the retained
+task; see [stack budgets](../reference/configuration.md#adjusting-memory-use).
 
 Pass that exact temporary app handle to `esp_gsp_esp_lcd_resume()`. The call
 stops the temporary app, resumes the retained hub, schedules a full first
 frame and consumes the session on success.
+Use the session resume/replace APIs for the temporary app;
+`esp_gsp_stop()` rejects that handle because it shares the hub's runtime.
+
+A resume failure while pausing the temporary app leaves that app alive. If it
+was destroyed but hub recovery failed, resume returns `ESP_ERR_NOT_FINISHED`;
+`out_hub` is NULL. Retry with `app = NULL`, not the destroyed handle. Replacement startup follows
+the same recovery and token rules as `start_on_session()`.
 
 If no temporary app is active, `esp_gsp_esp_lcd_session_destroy()` destroys
 the suspended hub and display host instead of resuming them. A session with an
 active temporary app cannot be destroyed.
+Destroy consumes the session only on success. A failure retains its resources
+for another destroy attempt; once destruction has been requested, do not start
+or resume an app on that session. Keep borrowed assets and display resources
+alive until destruction succeeds.

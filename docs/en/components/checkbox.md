@@ -23,7 +23,7 @@ These commands compile the example and open it in the ESP-GSP simulator browser 
 
 ## Runtime behavior
 
-Clicking updates the retained checked or selected state. Pressed and disabled styles are rendered by the runtime.
+Clicking updates the retained `checked` state. Pressed and disabled styles are rendered by the runtime.
 
 If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 

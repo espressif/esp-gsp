@@ -85,7 +85,7 @@ static const esp_gsp_project_config_t s_project_config = {
 #ifdef CONFIG_ESP_GSP_RENDER_TASK_STACK_SIZE_FREETYPE
         .render_task_stack_size_freetype = CONFIG_ESP_GSP_RENDER_TASK_STACK_SIZE_FREETYPE,
 #else
-        .render_task_stack_size_freetype = 24576,
+        .render_task_stack_size_freetype = 32768,
 #endif
 #ifdef CONFIG_ESP_GSP_RENDER_TASK_PRIORITY
         .render_task_priority = CONFIG_ESP_GSP_RENDER_TASK_PRIORITY,

@@ -17,9 +17,11 @@ typedef struct esp_gsp_font_file esp_gsp_font_file_t;
  * fail before allocation. The entire file stays in RAM (PSRAM preferred on
  * ESP-IDF); this is not on-demand glyph IO. Catalogs are CRC-checked; dynamic
  * fonts are checked by FreeType when the UI starts. Their signature is checked
- * here. TTC uses its first face. Dynamic fonts require gsp_enable_freetype()
- * in source and prebuilt builds. With dynamic fallback, each static GFB must
- * contain at most 32768 glyphs; UI startup rejects larger packs with NOT_SUPPORTED.
+ * here. TTC uses its first face. Supported outlines depend on the FreeType
+ * build's drivers; CFF/CFF2 requires the CFF driver. Dynamic fonts require
+ * gsp_enable_freetype() in source and prebuilt builds. With dynamic fallback,
+ * each static GFB must contain at most 32768 glyphs; UI startup rejects larger
+ * packs with NOT_SUPPORTED.
  * Call from an application task: open performs blocking file IO. On failure
  * *out_font is NULL. Glyph caches and FreeType working memory are separate.
  */
@@ -30,6 +32,8 @@ esp_gsp_err_t esp_gsp_font_file_open(const char *path, size_t max_bytes,
  * Sets ttf/ttf_size for a dynamic font, or font_catalog for a linked catalog;
  * the other font source is preserved. No ownership is transferred. Keep the
  * handle alive until every UI using this configuration has stopped successfully.
+ * A catalog resolves missing GFB assets by ID, not missing codepoints. Embedded
+ * GFBs take priority; dynamic fonts supply glyphs absent from the resolved GFB.
  * Changing this configuration does not replace a font in a running UI.
  */
 esp_gsp_err_t esp_gsp_font_file_apply(const esp_gsp_font_file_t *font,

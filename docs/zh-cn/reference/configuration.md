@@ -74,7 +74,8 @@ Override 在调用时校验字段归属和范围。库布局字段是只读能�
 
 `CONTEXT_DEFAULT_INSTANCES` 统计同时存活的模板实例，包括可见 List/Grid
 条目以及应用创建的 Widget。GSPC 已把 JSON 中的 `max_instances` 和可见集合需求
-写入 Bundle；只有完全由应用代码额外创建的峰值才需要 Override。
+写入 Bundle；应用代码额外创建对象时，Override 应填写包含编译需求在内的总容量，
+不能只填写新增数量。
 
 八个以上的单实例 Override 使用调用者持有的只读扩展表：
 
@@ -97,6 +98,11 @@ assert(esp_gsp_config_override_bind_external(
 
 `esp_gsp_esp_lcd_config_t` 把 UI 连接到显示目标和可选触摸设备。
 
+任务栈和优先级字段为零时使用解析后的实例／工程策略，下表列出的是默认策略值。
+活动动态字体使用 `task_stack_size_freetype`，并继续受已链接字体／矢量路径的栈下限约束。
+`task_stack_psram=false` 不能覆盖工程中已启用的 PSRAM 栈策略；需要内部栈时，
+应通过实例配置关闭对应策略。
+
 | 字段 | 默认行为 | 何时设置 |
 |---|---|---|
 | `struct_size` | `ESP_GSP_ESP_LCD_CONFIG_INIT()` 填写 | 不要手工改写 |
@@ -106,8 +112,8 @@ assert(esp_gsp_config_override_bind_external(
 | `touch_input_mode` | 有中断则使用中断，否则轮询 | 强制轮询或必须使用中断时设置 |
 | `touch_wake_from_isr` | 不通知应用 | 应用需要从相同触摸中断唤醒自身任务时设置 |
 | `touch_wake_user_ctx` | 空上下文 | Wake 回调需要应用上下文时设置 |
-| `task_stack_size` | 12288；使用动态 TTF 时为 24576 | 根据栈高水位测量调整 |
-| `task_stack_size_freetype` | 动态 TTF 路径为 24576 | 根据 FreeType 路径的栈使用量调整 |
+| `task_stack_size` | 12288；动态文本启用时为 32768 | 根据栈高水位测量调整 |
+| `task_stack_size_freetype` | 动态文本启用时为 32768 | 根据 FreeType 路径的栈使用量调整 |
 | `task_priority` | 4 | 根据应用调度需求调整 |
 | `task_stack_psram` | 跟随工程渲染栈配置 | 回调满足 PSRAM 栈的 Flash/Cache 约束时设置 |
 | `perf_log` | 关闭 | 测量时需要每五秒输出 FPS 时启用 |
@@ -116,6 +122,10 @@ assert(esp_gsp_config_override_bind_external(
 AUTO 触摸模式在中断注册不可用时记录警告并回退轮询。强制 INTERRUPT 模式则
 要求有效 INT，并在注册失败时明确失败。ISR 回调只能做 ISR-safe 通知，不能访问
 I2C 或调用 ESP-GSP API。
+
+`CONFIG_ESP_GSP_ACCEL_SYNC_TIMEOUT_MS` 指报告拷贝超时并禁用该引擎后续拷贝的等待时间。
+缓冲区会保留到硬件实际完成；永久停滞会阻塞渲染，直到复位。
+调大此值不能修复完成通知丢失。
 
 ## 内存吃紧时如何调整
 
@@ -155,10 +165,37 @@ if (esp_gsp_heap_stats(&heap)) {
 `LIMIT_EXCEEDED` 都解释成整机堆耗尽。读取媒体计数时沿用其 UI 序列化要求。
 
 任务栈开关位于 `ESP-GSP → Advanced settings (optional) → Project runtime defaults
-→ Runtime tasks`。默认渲染栈为 12 KiB，动态 FreeType 为 24 KiB；后台解码栈为
+→ Runtime tasks`。默认渲染栈为 12 KiB，动态 FreeType 为 32 KiB；后台解码栈为
 4 KiB。启用 PSRAM 栈前核对任务及回调中的 Flash、NVS、文件系统操作，必要时
 转交内部栈任务或 Flash dispatcher。初始化仍使用调用者栈，修改渲染栈不改变
 `app_main()` 栈。缩栈前必须测量所有启用路径的历史最低剩余空间。
+
+标准 FreeType 灰度光栅器自身包含 16 KiB 局部渲染池。动态字体与编译矢量共用
+“链接库渲染池 + 16 KiB”的栈下限，标准构建为 32 KiB。运行时会提高过小的请求，
+保留更大的显式设置。可选字体初始化失败时仍保留静态字形，也不选择较大的字体栈。
+提高字形缓存上限不会增加任务栈。
+
+编译字符集内的文本变化使用 GFB，无需原始字体回退。仅加载 GFB 目录不会启用
+动态字体缓存或 ID 映射。
+
+超过 32768 个源字形的字体 face 在动态文本中使用稳定 ID 映射，使较大的
+FreeType 字形索引仍可使用而无需改变字形运行格式。同一 face 的多个字号共享
+该映射，按需增长（每个 face 最多映射 32768 个不同字形，上限约 192 KiB，优先使用
+PSRAM 并支持回退内部内存）。该元数据不计入位图缓存预算，在 UI 停止时释放；
+扩容时会短暂同时保留旧、新条目。重置位图缓存不会使现有 ID 失效。
+
+驻留会话的任务栈不会随应用切换扩大。新应用的最低需求超过预算时，在切换前返回
+`ESP_ERR_INVALID_SIZE`；创建会话时应覆盖最耗栈的应用，或另建会话。
+用户回调可能需要额外栈空间，应测量完整调用路径。
+
+启用 IDF 栈水位支持时，渲染任务最多每五秒检查一次历史最低剩余栈，低于 2 KiB
+时告警一次并输出已分配与剩余字节数。
+
+FreeType 字形缓存像素存储约为 `FREETYPE_CACHE_GLYPHS * FREETYPE_GLYPH_MAX_PX^2`
+字节，宽、高分别受缓存上限约束。超限动态字形仍可绘制，使用一个可复用的堆工作区，
+容量随请求的最大非缓存位图增长，并在缓存重置或 UI 销毁时释放；后续解析会重新光栅化。
+该工作区与 FreeType 自身工作内存均不计入缓存预算。提高缓存上限可减少重复光栅化，
+缓存内存则按上限的平方增长。
 
 启动日志的 `memory` 来自实际栈地址，因此也反映 IDF 全局外部栈配置及其回退。
 创建失败时只报告 `requested_memory`，因为此时不存在可检查的栈。
@@ -172,6 +209,7 @@ gsp_add_bundle(<component-target>
     [PIXEL_FORMAT rgb565|rgb888]
     [IMAGE_CACHE_BYTES <bytes>]
     [DYNAMIC_FONT <font.ttf>]
+    [COMPONENTS_DIR <directory>]
     [SYMBOL <c_identifier>]
     [PROFILE <expert-profile.yaml>]
     [DEPLOYABLE])
@@ -183,12 +221,17 @@ gsp_add_bundle(<component-target>
 | `PIXEL_FORMAT` | 选择 `rgb565` 或 `rgb888`；未提供 Profile 时默认 `rgb565` |
 | `IMAGE_CACHE_BYTES` | 同时设置编译期和运行时解码图片预算 |
 | `DYNAMIC_FONT` | 嵌入运行时 TTF/OTF Blob 并启用 FreeType 路径 |
+| `COMPONENTS_DIR` | 加载共享项目组件，目录相对调用处的 `CMakeLists.txt`；修改、增删定义时重建 Bundle |
 | `SYMBOL` | 设置 Bundle 和生成头文件使用的 C 标识符 |
 | `PROFILE` | 高级编译 Profile；普通工程优先使用目标默认能力 |
 | `DEPLOYABLE` | 增加自描述 GMD 元数据，使 Bundle 可脱离生成目录加载 |
 
 没有 `SCENES` 时，工程必须至少包含一个 `scenes/*.json`。不同 Bundle 必须使用
 不同 `SYMBOL`。`DEPLOYABLE` 不负责分区、传输、升级、回滚或签名策略。
+
+`COMPONENTS_DIR` 是可选项，场景内组件仍然可用。命名、参数和配套 PC 构建选项见
+[可复用项目组件](../guide/scenes.md#定义组件)。未知参数和缺少值的 `COMPONENTS_DIR` 会在配置时
+直接报错。
 
 无 PSRAM 且未设置 `IMAGE_CACHE_BYTES` 时，默认关闭解码图片缓存。此时普通编码图片
 入口接受与占位图尺寸一致的 QOI；已准备的资源入口还支持 STORE/RLE。PNG/JPEG
@@ -209,8 +252,9 @@ Profile 时还需设置 `image_cache_enabled: true`。移除
 预算应容纳可见图片的解码工作集。容纳不下时，启动日志会报告
 `Visible scene images exceed cache budget`；已准备的可见图片保持驻留，跳过的图片走
 占位和按需解码路径。需要首帧完整就绪时，应增大 `image_cache_bytes` 或减小图片解码
-尺寸。动画转场还要求新旧场景同时驻留；峰值预算不足时使用
-`ESP_GSP_NO_TRANSITION`。
+尺寸。动画转场还要求新旧场景工作集同时驻留，其他保留场景也可能在缓存压力出现前
+继续占用解码内存。`ESP_GSP_NO_TRANSITION` 避免转场必需的双场景峰值，
+但不会主动清空全部非活动缓存。
 
 关闭 `ESP_GSP_FIELD_ENABLE_IMAGE_CACHE` 后，QOI/RLE 等资源按区域解码；运行时
 发布的 PNG/JPEG 需要解码图片缓存，在关闭状态下会被拒绝。

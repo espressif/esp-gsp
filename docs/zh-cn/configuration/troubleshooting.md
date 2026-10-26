@@ -139,9 +139,10 @@ Getter 读取已提交状态。另一个任务发出的 Setter 仍可能排队�
 
 ### 停止超时或缓冲区仍被占用
 
-从应用任务调用 `esp_gsp_stop()`，不要从框架回调调用。Canvas Stop 是异步的，释放其
-上下文和已接受的借用帧前先 Flush。运行时图片按 COPY/BORROW/TAKE 模式等待对应释放
-回调。停止超时后 Handle 仍归应用所有，可以重试。
+从应用任务调用 `esp_gsp_stop()`，不要从框架回调调用。成功提交 Canvas Stop 并成功
+Flush 后才能释放绘制回调上下文；已接受的借用帧必须等各自释放回调后才能复用。
+BORROW/TAKE 图片也须等待输入释放；COPY 不需要调用方缓冲区的释放回调。
+Flush 不会等待所有后台图片解码完成。停止超时后 Handle 仍归应用所有，可以重试。
 
 ## 输入
 
@@ -161,7 +162,9 @@ AUTO 输入模式在中断不可用时回退轮询；显式 Interrupt 模式保�
 
 Pinch 由应用处理。注册 `esp_gsp_on_pinch()`，在 `ESP_GSP_PINCH_BEGIN` 返回 `true`
 捕获手势，再把 `relative_scale_q16` 应用到生成的 Image Scale 函数。ESP-GSP 只报告
-手势，不自动缩放或平移控件；`MAX_TOUCH_POINTS=1` 会禁用第二触点和 Pinch。
+手势，不自动缩放或平移控件。当前只读构建能力固定为两个触点，没有
+`MAX_TOUCH_POINTS=1` 产品配置。应检查触控控制器／适配器是否提供两个触点，
+以及 BEGIN 回调是否接受手势。
 
 ## List、Grid 与运行时媒体
 

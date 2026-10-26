@@ -108,7 +108,10 @@ The runner loads `api_json` from the build manifest to enable named queries,
 inputs and callbacks. GSPC generates the sidecar with its Bundle, and the host
 checks their identity. Manifests without the optional field use numeric APIs.
 
-After building the Backend, the runner queries simulator `--capabilities`.
+After CMake confirms the selected component, the runner queries simulator
+`--capabilities` before compiling the Backend. An unchanged startup selection
+needs only one capability query.
+`build.py` remains build-only and does not require the simulator.
 Invalid responses and timeouts stop startup. Version differences are reported
 while allowing explicit tool overrides. The `Tool contract:` JSON log contains
 the component version, simulator capabilities and `version_match` result.
@@ -120,6 +123,222 @@ state or callback before capturing a screenshot. Use the application's render
 fence to synchronize completed updates; a frame wait advances simulation time.
 For bounded runs, `--duration <seconds>` waits for Backend completion and cleans
 up the host process tree.
+
+### Repeatable application checks
+
+Pass `--scenario pc/check.json` to build and run one headless acceptance sequence:
+
+```sh
+python managed_components/espressif__esp-gsp/tools/sim_bridge/run.py \
+  --project pc --scenario pc/check.json
+```
+
+For an application whose `increment` callback raises `level.value` from 0 to 10,
+`pc/check.json` can contain:
+
+```json
+{
+  "schema_version": 1,
+  "timeout_seconds": 30,
+  "steps": [
+    {"action": "wait_property", "name": "level", "property": "value", "value": 0, "max_frames": 120},
+    {"action": "screenshot", "file": "before.png"},
+    {"action": "tap", "name": "increment", "callbacks": ["increment"]},
+    {"action": "wait_property", "name": "level", "property": "value", "value": 10, "max_frames": 120},
+    {"action": "screenshot", "file": "after.png"}
+  ]
+}
+```
+
+Choose names, property keys and expected values from your application's matching
+`api_json`. Supported actions are `tap` by name or coordinates, coordinate `drag` with
+`x1/y1/x2/y2`, `expect_property` for an immediate typed scalar assertion,
+`wait_property`, `expect_visible` and `wait_visible` (to assert an object's
+runtime `effective_visible` state across parent visibility, Drawer/PageFlow/StackView
+viewports, and dynamic bounds when `effective_visible_version: 1`),
+`wait_keyboard_text`, `wait_component`, `wait_scene`, `wait_callback`, and `screenshot`. Property values support
+integer, boolean and native color scalars. A named tap uses runtime input
+geometry when the matching host and sidecar support it; older artifacts can
+fall back to compiled initial bounds. Inspect `target_verified` in the input
+result, then verify its callback and resulting application state.
+Current hosts try the initial input candidates first, then propose points from
+observed runtime clip boundaries. `query_geometry.search` reports the point
+count, up to 64 additional point probes and 64 boundary queries, and whether a
+budget was exhausted. Every candidate still needs runtime hit verification;
+`no_verified_point` does not establish that the entire object is covered.
+
+`wait_callback` observes callbacks after the most recent scenario `tap` or
+`drag`, including callbacks received before that input's response. Before each
+input, a frame barrier drains earlier callbacks; the report records them in
+`callback_boundary` (or `callbacks.before` for an exact tap probe). With no prior
+input, the wait observes callbacks since subscription. This is a time boundary:
+concurrent application timers can still emit the same callback. Pair the event
+with the expected application state, or use a tap's exact `callbacks` assertion.
+
+For component motion that must emit a new event after an input, add
+`"require_new_event": true` to its `wait_component` step:
+
+```json
+{"action":"wait_component","name":"panel","value":1,"require_new_event":true,"max_frames":120}
+```
+
+Place it after the relevant `tap` or `drag` and before the next input. The runner
+captures that component's existing event cursor immediately before the input,
+then waits for both a newer matching event and the requested settled state.
+This preserves synchronous events that arrive during input dispatch. An unchanged
+initial value, an expired cursor, reset or scene change cannot satisfy the new
+event requirement. It requires `component_event_cursor_version: 1`; without the
+option, existing state-only waits remain valid. The report distinguishes
+`observation.kind: "state_match"` from `"state_and_new_event"` and records the
+input step and prior observation. These are temporal observations; concurrent
+application work can also emit component events.
+The component must exist in the scene before that input. A navigation tap cannot
+capture the destination component's cursor: first use `wait_scene`, then operate
+on that scene's component and verify its new event. A scene change between the
+capture and wait cancels the observation.
+
+For a form, `{"action":"wait_keyboard_text","text":"你好A","max_frames":120}`
+waits for the attached keyboard's complete text. Empty text is valid; comparison
+is exact UTF-8 text, without trimming or normalization. Each attempt advances a
+frame before reading, so queued input can take effect. It uses the existing
+read-only `keyboard_text` RPC and requires `bridge_keyboard_text_version: 1`
+before any scenario input. A timeout keeps the last text, expected text and frame
+count in the report. Nonzero result codes, including a truncated read, fail.
+Attachment and writes remain in application C. This observes the keyboard edit
+buffer; it does not read arbitrary labels or prove that Confirm saved the value.
+Pair it with application state checks for confirm, cancel and return behavior.
+
+To track intended acceptance checks, optionally declare them in the same file
+and associate assertions with `check`:
+
+```json
+{
+  "schema_version": 1,
+  "checks": ["increment updates state"],
+  "steps": [
+    {"action":"tap","name":"increment","callbacks":["increment"]},
+    {"action":"wait_property","name":"level","property":"value","value":10,
+     "check":"increment updates state"}
+  ]
+}
+```
+
+Choose checks from the requested behavior and affected states. Names are unique,
+nonempty strings of up to 160 characters; 1–64 checks are supported. A check passes
+only when every associated assertion passes. The report's `check_coverage` lists
+`pass`, `fail`, `not_run` (assertions not completed) and `unplanned` (no assertions
+associated), with step indices and `unverified` names. An unverified declared
+check makes the run fail even when all executed steps passed. An earlier error
+or interruption also retains the remaining checks. Adding a cancellation check
+without testing it therefore cannot silently report full acceptance.
+
+Only assertions can carry `check`: property/text/component/scene/callback checks,
+taps with exact `callbacks`, or screenshots with a `reference`. Input submission
+and plain image capture alone do not establish acceptance. Declare only checks
+that this run can verify; review aesthetic and device requirements separately.
+These labels track declared assertions, not inferred requirements or exhaustive
+product coverage. No labels are required for existing scenarios, and they add
+no runtime observations. Older runners reject unsupported fields before building;
+inspect the selected runner's help/reference before using them.
+
+For overlap and click-through checks, tap the actual point and verify the
+complete callback sequence:
+
+```json
+{"action":"tap","x":60,"y":40,"callbacks":["front"],"max_frames":6}
+```
+
+`callbacks: []` checks that no CALL event occurs in the observation window.
+Each expectation can also match event fields, for example
+`{"callback":"choose","arg":2,"item":5}`. Names are nonempty strings;
+`arg`, `scene_id`, `list` and `item` are unsigned 32-bit integers. The observed
+sequence must have exactly the expected length and order. Unexpected,
+duplicate or unnamed callbacks fail the step. Without `callbacks`, existing
+tap behavior is retained; `max_frames` on a tap requires `callbacks`.
+
+A frame barrier separates earlier queued callbacks, which are retained as
+`callbacks.before`. The check then observes the full `max_frames` window
+(default 6, range 1–36000), even after an expected callback arrives. Up to 64
+expectations/events are supported; event loss or overflow fails verification.
+The report records the input, expected/observed callbacks and original event
+fields. Runtime timers can also produce callbacks during this window.
+
+Use screenshots and geometry to choose overlap centers, exposed edges, modal
+backgrounds and clipped areas. After a real show/hide, move or close action,
+test the changed points again. Read application properties and active scene as
+well: a control can change state through declarative actions without a CALL.
+These bounded observations do not prove the absence of arbitrarily delayed
+application work. Coordinate taps with an empty callback expectation also work
+without named objects. Named callback expectations require a matching API sidecar.
+
+Scenario mode selects API-exclusive input, headless rendering and an available
+API port. It observes state written by the real C Backend. Tool versions and
+required capabilities must match before input is accepted. Invalid action names,
+fields and screenshot paths fail before the build. Scenarios contain 1–64 steps;
+`timeout_seconds` bounds the complete execution after connection (default 30,
+maximum 300), while `--startup-timeout` still covers tool startup. Property waits
+accept `max_frames` from 1 to 36000. `--duration` cannot be combined with a scenario.
+
+After input that navigates, use `{"action":"wait_scene","scene":1}` before
+resolving destination controls. This step advances frames and observes the
+runtime's active scene; it never changes scenes itself. Its optional `max_frames`
+defaults to 300 (1–36000), and a timeout retains the last observed scene ID.
+With `runtime_input_query_version: 1`, it also waits for `capabilities.input_ready`,
+so a destination is not reported ready while a transition owns input. Older
+modules without this capability confirm the scene ID alone.
+For Drawer/PageFlow motion, use
+`{"action":"wait_component","name":"panel","value":1,"max_frames":120}`.
+It advances an input barrier frame, then uses the existing read-only motion wait;
+success requires an idle component and, when supplied, the expected value.
+Values are integers in 0–65535. `value` is optional for an idle-only check;
+after input, specify the intended value as well. The host must advertise
+`wait_component_version: 1`; timeout/scene-change errors retain runtime evidence.
+`wait_scene` is a scenario step, not an RPC method. Custom clients can observe
+`scene_changed` or `capabilities.current_scene`, then check `capabilities.input_ready`. `run.py --help` lists supported
+scenario steps for the selected component.
+Scene waits, coordinate drags and screenshots also work for scenes containing
+only anonymous objects; add names only when the application or a named step needs them.
+
+For a local design edit, a screenshot can optionally compare against a known-good
+opaque PNG from the same profile, scene and application state:
+
+```json
+{"action":"screenshot","file":"after.png","reference":"baseline.png",
+ "allow_changes":[{"x":16,"y":80,"w":208,"h":20}]}
+```
+
+Reference paths are relative to the scenario file. Regions come from the intended
+edit or explicitly excluded dynamic areas, rather than the observed differences.
+Outside those regions, pixels must match exactly; omitting regions checks the
+whole image. The host advertises `screenshot_compare_version: 1` and uses its
+existing PNG codec, without a Python imaging dependency. The report includes
+changed/unexpected pixel counts, unexpected bounds, the reference hash and a
+`after.diff.png` image: green means allowed changes, red means unexpected changes.
+Both images come from one captured frame. Unexpected changes fail the scenario.
+The reference is preserved and comparison outputs must be new. Inputs are limited
+to static opaque PNGs of matching dimensions, at most 32 MiB and 4,194,304 pixels;
+up to 32 in-bounds regions are supported, and a mask covering the whole image is
+rejected.
+
+Each run prints its `report.json` path under a unique `scenario-runs` directory
+in the build tree. The report records the tool contract, generated context and
+Bundle identity when present, actual step results and screenshot hashes. A
+failed assertion stops the sequence, preserves observed values/RPC errors, writes
+a failing report and exits nonzero. Ctrl-C records an interrupted execution.
+Build/startup errors use the runner's usual diagnostics; execution reports begin
+once the API session connects. Use `--report-dir <new-directory>` to select a
+location explicitly; existing reports and screenshots are preserved. Screenshot
+filenames must be unique PNG basenames. A pass establishes the recorded host
+behavior; visual quality and device acceptance remain separate checks.
+
+After an execution failure, `failure_evidence` records a best-effort screenshot,
+current scene and named-object metadata before the session closes. These
+read-only RPCs share an additional two-second budget and do not request frame
+steps or inputs. Timers may continue while evidence is collected. Screenshot
+names are allocated uniquely, including when the plan already uses `failure.png`.
+An unavailable host or capture error is recorded without replacing the original
+failure or nonzero exit. Object bounds remain compiled-layout metadata. Ctrl-C
+skips this capture and proceeds to shutdown.
 
 ### Keyboard text readback
 
@@ -133,14 +352,17 @@ simulator returns `ESP_GSP_ERR_NOT_SUPPORTED` through the bridge.
 
 ### Dynamic font at startup
 
-When portable UI text needs a font supplied at run time, pass the host a font
-before the UI exists. This is the bridge equivalent of loading a font with
-`esp_gsp_font_file_open()` and applying it to `esp_gsp_config_t` before
-`esp_gsp_start()` on a device:
+Changing text within the compiled character set uses GFB glyphs. Supply a raw
+font only when additional characters need FreeType fallback; a CFF source
+already baked into GFB does not require runtime CFF support for those glyphs.
+
+Pass the font to the host before UI creation. On devices, load it with
+`esp_gsp_font_file_open()` and apply it to `esp_gsp_config_t` before
+`esp_gsp_start()`:
 
 ```sh
 python managed_components/espressif__esp-gsp/tools/sim_bridge/run.py \
-  --project pc --dynamic-font assets/NotoSansSC-Regular.otf
+  --project pc --dynamic-font assets/NotoSansSC-Regular.ttf
 ```
 
 `--dynamic-font` takes precedence over `GSP_SIM_DYNAMIC_FONT`. The runner
@@ -150,11 +372,35 @@ therefore installed while sim_host loads the bundle, before the native Backend
 gets its initialization callback. This option is intentionally a launch-time
 configuration: it cannot replace a font in an already running bridge UI.
 
+Use a scalable TrueType or CFF font in a `.ttf` or `.otf` container, or as the
+first face of a `.ttc` collection. Empty files are rejected before the native
+build and checked again by sim_host before runtime startup. The 1.8.0 WASI
+runtime includes CFF; CLI/RPC `font_outline_drivers` reports registered TrueType/CFF drivers.
+Older runtimes may lack CFF or report `null` when driver introspection is
+unavailable. The extension alone does not identify the outline type. Face setup
+failures report the detected container and FreeType error code; a missing
+CFF driver is reported explicitly. Failed optional font setup leaves compiled
+GFB glyphs available and disables the dynamic fallback.
+
+For a `gspc font-link` catalog, pass `--font-catalog /path/to/fonts.gspb` or
+set `GSP_FONT_CATALOG`; the CLI option wins. It is independent of
+`--dynamic-font`, so both may be supplied. The runner validates the path before
+building and the host checks the catalog and CRC before creating the UI.
+Use a host whose capabilities report `font_catalog_version: 1`; rebuilding
+the Backend alone does not update its embedded simulator runtime. Catalogs
+resolve missing GFB assets by ID. They do not add codepoint fallback to an
+unlinked bundle; resolved GFB glyphs take priority over dynamic outline-font fallback.
+The Backend's UI is already open, so `esp_gsp_font_file_open/apply/close` are
+not bridge APIs. Configure both font sources at host startup instead.
+
 The runner compiles a deployable bundle and its C headers together, builds the
 shared library plus Socket executable, and starts sim_host with the library by
 default. Pass `--socket-backend` to start the executable and connect it to the
 host's loopback endpoint instead. It opens the preview URL unless `--headless`
-or `--no-browser` is used. Ctrl-C, Backend exit, host failure or startup timeout
+or `--no-browser` is used. A normal simulator exit (including API `quit`) ends
+the Socket session successfully and cleans up its Backend. Application failures
+while the simulator remains running and nonzero simulator exits still fail.
+Ctrl-C, Backend exit, host failure or startup timeout
 stops the processes it owns, including the manager's simulator child. POSIX
 termination permits application cleanup; Windows process termination may be
 immediate. Cleanup callbacks are not guaranteed after a crash or forced stop.
@@ -203,10 +449,22 @@ headers are on the target include path. `gsp_add_backend` always packs with
 `--deployable`: sim_host needs the component directories inside the bundle,
 not just the headers compiled into your Backend.
 
+For shared project components, add `COMPONENTS_DIR ../ui/components` to the call
+and use the same directory in the device's `gsp_add_bundle()`. Paths resolve
+relative to the calling `CMakeLists.txt`; `Card.json` defines the component
+`Card`. Definition edits and directory membership changes rebuild the Bundle,
+and its generated compilation context retains these inputs. Scene-level inline
+definitions remain available. See [reusable project components](../../docs/en/guide/scenes.md#reusable-project-components)
+for substitution, naming and asset-path rules.
+
 Only one application-facing bundle header is generated per target. Reuse
 that same generation for all its business sources; do not mix old device
-headers with a freshly compiled PC bundle. Packing runs on every build to
-pick up referenced asset changes as well as JSON changes.
+headers with a freshly compiled PC bundle. Incremental builds track JSON,
+Profile and referenced assets, regenerate missing required headers, and reuse
+unchanged outputs.
+With Ninja, ordinary color, text and layout edits rebuild the Bundle without
+rerunning project configuration. Scene renames still refresh generated-header
+rules. Other generators retain their existing configure dependencies.
 
 Implement the PC lifecycle adapter:
 
@@ -346,6 +604,7 @@ advance frames as soon as the Backend connects.
 | Press-feedback policy and generated effective-visibility queries | Supported with `bridge_api_version: 2`; visibility descriptors are copied over the Backend boundary |
 | Events and timer create/delete | Native callback/context storage and event loop |
 | Scene navigation, swipe policy, keyboard attach/cursor, Drawer, PageFlow set/read/drag-state | Existing RPC methods and scalar bridge queries |
+| Input interceptor | Non-null registration returns `ESP_GSP_ERR_NOT_SUPPORTED`; `bridge_input_interceptor_version: 0` |
 | Pointer observer | Receives host pointer samples during `gsp_sim_bridge_poll()`; see the callback timing note below |
 | Dynamic List/Grid binders and row text/value/color | Native callbacks, asynchronous host row requests and token-checked publication; requires media version 1 |
 | Bind/component/row/Grid encoded images | COPY upload of PNG/JPEG/QOI; requires media version 1 |
@@ -396,6 +655,25 @@ Ordinary RPC calls have a 5-second reply deadline, a 1 MiB incoming JSON limit, 
 256-event queue. Overflow is fatal rather than silently dropping UI events.
 No automatic reconnect/reset replay is provided; restart the runner to
 recreate native state and the matching simulator session.
+
+For named observation from an automation client, load the manifest's
+`api_json` and check the host's `named_property_read_version` and
+`wait_property_version`. `get_property` reads committed scalar state;
+`wait_property` waits for the expected value after a frame step. Both remain
+available when the Backend owns writes. Use actual input and application C
+callbacks to produce behavior, then read/wait and capture the resulting view.
+Named properties use authored ranges and boolean values rather than internal
+state rails. Current API sidecars carry their conversion codec. Older sidecars
+can use the deployable runtime's property directory; if an ordinary Bundle's
+encoding is ambiguous, regenerate its sidecar with the selected current GSPC.
+
+With a compiler advertising `compiler_features.compile_context: 1`, the build
+manifest and runner Session also report `context`. This generated snapshot
+records the selected scenes, effective Profile and capacities; reuse it with
+`gspc diagnose --context <path>`. The owning CMake build tracks scene, Profile,
+font and image dependencies through GSPC's depfile, so unchanged builds reuse
+the Bundle and generated headers. Compatible older tools omit the optional
+context field.
 
 ### Dynamic data and images
 
@@ -669,6 +947,16 @@ also test navigation, buffer lifetimes and clean shutdown. Use the published
 screenshot assertions. Validate on each deployment host platform; native
 preview is not a substitute for device timing and hardware validation.
 
+Input interception is not supported by the PC bridge. Registering a non-null
+`esp_gsp_set_input_interceptor` callback returns `ESP_GSP_ERR_NOT_SUPPORTED`;
+it does not install an observer or suppress samples. Its capabilities report
+`bridge_input_interceptor_version: 0`. Pointer observers are asynchronous
+notifications after routing. The simulator's control API injects input directly
+into the portable core and does not exercise the platform interceptor/observer
+path. The host separately forwards injected primary-pointer samples to Backend
+observers; receiving these notifications does not prove platform interception.
+Validate interception with a source platform adapter or on device.
+
 ## Python protocol client and regression checks
 
 [rpc_client.py](rpc_client.py) is a small sequential client shared by the
@@ -686,10 +974,18 @@ From the repository root:
 
 ```sh
 python3 -m unittest discover -s tools/sim_bridge/tests -p test_rpc_client.py -v
+python3 tools/sim_bridge/tests/font_catalog_integration.py \
+  --host /absolute/path/to/gsp_sim_host --gspc /absolute/path/to/gspc
 python3 tools/sim_bridge/tests/visibility_integration.py \
   --host /absolute/path/to/gsp_sim_host --gspc /absolute/path/to/gspc
+BRIDGE_TEST_GSPC=/absolute/path/to/gspc \
+BRIDGE_TEST_SIM=/absolute/path/to/gsp_sim_host \
+  python3 -m unittest discover -s tools/sim_bridge/tests -p 'test_*.py'
 ```
 
 The visibility check compiles a temporary hello scene and tests real WASI
 visible/offscreen/wrong-scene/error results, plus API and Browser rejection both
 with and without Backend enabled. It leaves the public protocol unchanged.
+The live runner suite covers Library and Socket Backends, including UTF-8 input,
+deletion, byte limits, confirm/cancel/return state and missing acceptance checks.
+Without the two tool variables, live cases are explicitly skipped.

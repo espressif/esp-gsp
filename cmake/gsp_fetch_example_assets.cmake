@@ -4,8 +4,11 @@
 
 cmake_minimum_required(VERSION 3.20)
 
-foreach(required IN ITEMS ASSET_URL ASSET_SHA256 ASSET_ARCHIVE
-        ASSET_DESTINATION ASSET_SENTINEL ASSET_STAMP ASSET_CACHE_ROOT)
+set(required_arguments ASSET_URL ASSET_SHA256 ASSET_ARCHIVE ASSET_CACHE_ROOT)
+if(NOT ASSET_DOWNLOAD_ONLY)
+    list(APPEND required_arguments ASSET_DESTINATION ASSET_SENTINEL ASSET_STAMP)
+endif()
+foreach(required IN LISTS required_arguments)
     if(NOT DEFINED ${required} OR "${${required}}" STREQUAL "")
         message(FATAL_ERROR "Missing -D${required} for example asset fetch")
     endif()
@@ -15,13 +18,14 @@ if(NOT DEFINED ASSET_OFFLINE OR "${ASSET_OFFLINE}" STREQUAL "")
     set(ASSET_OFFLINE OFF)
 endif()
 
+string(TOLOWER "${ASSET_SHA256}" expected_sha256)
 file(MAKE_DIRECTORY "${ASSET_CACHE_ROOT}")
 set(download_part "${ASSET_ARCHIVE}.part")
 
 set(archive_valid OFF)
 if(EXISTS "${ASSET_ARCHIVE}")
     file(SHA256 "${ASSET_ARCHIVE}" existing_sha256)
-    if(existing_sha256 STREQUAL ASSET_SHA256)
+    if(existing_sha256 STREQUAL expected_sha256)
         set(archive_valid ON)
     else()
         file(REMOVE "${ASSET_ARCHIVE}")
@@ -34,20 +38,40 @@ if(NOT archive_valid)
             "Example asset archive is not cached and offline mode is enabled: "
             "${ASSET_ARCHIVE}")
     endif()
-    file(DOWNLOAD "${ASSET_URL}" "${download_part}"
-        EXPECTED_HASH "SHA256=${ASSET_SHA256}"
-        TLS_VERIFY ON
-        TIMEOUT 120
-        INACTIVITY_TIMEOUT 30
-        STATUS download_status)
-    list(GET download_status 0 download_code)
-    if(NOT download_code EQUAL 0)
+    foreach(attempt RANGE 1 3)
+        file(DOWNLOAD "${ASSET_URL}" "${download_part}"
+            TLS_VERIFY ON
+            TIMEOUT 120
+            INACTIVITY_TIMEOUT 30
+            STATUS download_status)
+        list(GET download_status 0 download_code)
+        if(download_code EQUAL 0)
+            break()
+        endif()
+        file(REMOVE "${download_part}")
         list(GET download_status 1 download_message)
+        if(attempt LESS 3)
+            message(STATUS "Example asset download attempt ${attempt}/3 failed: ${download_message}; retrying")
+            execute_process(COMMAND "${CMAKE_COMMAND}" -E sleep 2)
+        endif()
+    endforeach()
+    if(NOT download_code EQUAL 0)
         message(FATAL_ERROR
             "Cannot download example assets from ${ASSET_URL}: "
             "${download_message}")
     endif()
+    file(SHA256 "${download_part}" downloaded_sha256)
+    if(NOT downloaded_sha256 STREQUAL expected_sha256)
+        file(REMOVE "${download_part}")
+        message(FATAL_ERROR
+            "Example asset SHA256 mismatch: expected ${ASSET_SHA256}, "
+            "got ${downloaded_sha256}")
+    endif()
     file(RENAME "${download_part}" "${ASSET_ARCHIVE}")
+endif()
+
+if(ASSET_DOWNLOAD_ONLY)
+    return()
 endif()
 
 if(EXISTS "${ASSET_STAMP}" AND EXISTS "${ASSET_SENTINEL}")

@@ -8,8 +8,8 @@ Current GSPC registry coverage.
 |---|---:|
 | Registered widgets | 28 |
 | Compile-time composites | 6 |
-| Total field definitions | 2569 |
-| Dynamic capability fields | 236 |
+| Total field definitions | 2570 |
+| Dynamic capability fields | 237 |
 
 ## Components
 
@@ -18,7 +18,7 @@ Current GSPC registry coverage.
 | `container` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 97 | yes |
 | `label` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 96 | yes |
 | `button` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `text`, `background_opacity`, `border`, `border_side`, `image`, `boolean`, `interaction`, `template` | 105 | yes |
-| `image` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `image`, `text`, `interaction`, `template` | 98 | yes |
+| `image` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `image`, `text`, `interaction`, `template` | 99 | yes |
 | `rect` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 96 | yes |
 | `shape` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `shape`, `interaction`, `template` | 96 | yes |
 | `progress` | `Widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `interaction`, `template` | 98 | yes |
@@ -466,7 +466,8 @@ Current GSPC registry coverage.
 | `dynamic_color` | `bool` | no | no | — | template member exposes a per-instance color slot |
 | `dynamic_image` | `bool` | no | no | — | template image exposes a per-instance resource slot |
 | `canvas` | `enum` | no | no | — | Canvas producer: draw callback or borrowed frames; creates an independent resource view |
-| `image_opacity` | `int` | no | no | `255` | image-only opacity; fixed raster transforms may bake alpha at compile time |
+| `svg_mode` | `enum` | no | no | — | SVG import: vector curves (default) or explicitly baked static pixels at fixed w/h |
+| `image_opacity` | `int` | no | yes | `255` | image-only opacity 0..255; scene SVG supports direct bounded runtime control, fixed rasters may bake alpha at compile time |
 
 ### `rect`
 

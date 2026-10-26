@@ -12,12 +12,16 @@ ESP-GSP 消费 `esp_display_present_target_config_t`，不会猜测面板时序�
 
 | 面板类别 | 帧内存 | AUTO 行为 |
 |---|---|---|
-| RGB / MIPI-DSI | 面板持续扫描 Host Framebuffer | 三个 Buffer 时三缓冲局部渲染；否则双缓冲 Direct 回退 |
+| RGB / MIPI-DSI | 面板持续扫描 Host Framebuffer | 三缓冲局部渲染，要求三块 Framebuffer |
 | 带 TE 的 SPI / QSPI | 面板内部 GRAM | 脏区传输与 TE 同步 |
 | 不带 TE 的 SPI / QSPI | 面板内部 GRAM | 自由运行的脏区传输 |
 
 应用应准确描述硬件并让 Presenter 选择策略。不能根据 SoC 推断面板接口，同一个 SoC
 可以搭配多种显示链路。
+
+当前 `esp_display_present` 的 AUTO 模式不会在 Framebuffer 不足时自动退回双缓冲。
+只有两块 Framebuffer 的开发板，应显式选择兼容的 `DOUBLE_PARTIAL` 或无旋转的
+`DOUBLE_DIRECT` 模式，并提供对应数量的缓冲区。
 
 ## 像素格式与分辨率
 
@@ -38,8 +42,10 @@ gsp_add_bundle(${COMPONENT_LIB}
 ## 内存受限的 GRAM 面板
 
 分区渲染通过 `target.drawbuf` 共用一个 Draw Buffer Pool。`lines` 控制条带高度，零值
-从 32 KiB 默认预算推导；`buffers` 对自由运行 GRAM 默认两个，对 TE 同步和 Framebuffer
-修复路径默认一个。产品需要不同内存上限时显式设置 `lines`，只有传输链路能消费
+从 32 KiB 默认预算推导。自由运行 GRAM 默认两个 Buffer；TE 同步和 Framebuffer
+修复路径在多核目标及内存检查允许时也可能选择两个，否则为一个，自动选择的第二块
+分配失败时可以回退。需要固定单缓冲时显式设置 `buffers = 1`。
+产品需要不同内存上限时显式设置 `lines`，只有传输链路能消费
 PSRAM 时才设置 `in_psram`。条带高度超过逻辑屏幕或 Buffer 数超过两个会被拒绝。
 
 RGB/MIPI-DSI 使用 Framebuffer；`target.drawbuf` 只影响其可选修复路径分区缓冲区。
@@ -48,6 +54,10 @@ RGB/MIPI-DSI 使用 Framebuffer；`target.drawbuf` 只影响其可选修复路�
 
 场景始终使用逻辑坐标。Presenter 根据目标旋转把逻辑脏区和像素映射到物理面板。
 场景分辨率必须匹配旋转后的逻辑方向；非方形屏幕旋转 90°/270° 时宽高需要交换。
+
+当前 Presenter 的自由运行 GRAM 和 `DOUBLE_DIRECT` 路径不支持逻辑旋转。
+需要 Presenter 旋转时，使用兼容的 TE 合成或 Framebuffer full/partial 模式；
+这与 BSP 已在面板驱动中配置的物理方向不同。
 
 ## 提交与硬件加速
 

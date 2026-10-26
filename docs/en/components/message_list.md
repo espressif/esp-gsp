@@ -23,7 +23,10 @@ These commands compile the example and open it in the ESP-GSP simulator browser 
 
 ## Runtime behavior
 
-GSPC compiles the Message List into native drawing primitives. Give any object that your application code needs to control a stable `name`.
+GSPC compiles the bubble/row layout. Bind the named Message List once with an
+`esp_gsp_message_source_t` providing `count` and `get` callbacks; keep its context
+alive for the UI lifetime. Notify changes through the generated `changed` helper
+instead of rebinding. Source callbacks run on the render task and must not block.
 
 Generated rows, bubbles, and their runtime controls paint at the Message List's position in scene order. Foreground objects declared later (such as a Drawer) will cover them. Place overlays that must stay on top after the Message List in the scene.
 

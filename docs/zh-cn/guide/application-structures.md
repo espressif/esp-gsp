@@ -34,7 +34,7 @@ ESP_ERROR_CHECK(esp_gsp_esp_lcd_start(&app, &lcd, &ui));
 | `esp_gsp_pinch_event_t` | 两触点与手势状态 | 仅在 pinch 回调期间借用 |
 | `esp_gsp_row_t` / `esp_gsp_grid_cell_t` | 当前复用行/单元 | 仅在绑定回调期间有效 |
 | `esp_gsp_canvas_surface_t` | 像素地址、Stride、格式、脏区 | 按 Canvas 所有权约定有效 |
-| `esp_gsp_image_options_t` | 格式、所有权与解码选项 | 调用时读取，缓冲区按 COPY/BORROW/TAKE 管理 |
+| `esp_gsp_image_options_t` | 所有权、回调和缓存键 | 选项按值复制，缓冲区按 COPY/BORROW/TAKE 管理 |
 
 应用不得保存这些临时视图中的内部指针后异步使用。需要跨任务处理时复制必要的标量和
 产品数据，不复制框架内部对象。
@@ -46,7 +46,7 @@ ESP_ERROR_CHECK(esp_gsp_esp_lcd_start(&app, &lcd, &ui));
 | 字段 | 规则 |
 |---|---|
 | `ownership` | COPY 复制输入；BORROW 借用到释放回调；TAKE 只在成功提交后转移所有权 |
-| `on_release`、`release_ctx` | BORROW 必须提供；TAKE 可在释放时获得通知 |
+| `on_release`、`release_ctx` | BORROW 必须提供；TAKE 提供时由该回调释放存储，否则框架调用 `free(data)` |
 | `on_complete`、`complete_ctx` | 可选，用于接收已接受请求的最终结果 |
 | `cache_key` | 非零值标识内容不变的资源；字节变化时必须更换 |
 

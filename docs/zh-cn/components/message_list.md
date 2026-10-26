@@ -23,7 +23,10 @@ gsp_sim_host \
 
 ## 运行机制
 
-GSPC 会把 Message List 编译为底层原生图元。如果你需要从应用代码控制某个对象，给它设置一个稳定的 `name`。
+GSPC 编译气泡和行布局。为控件命名后，用提供 `count`、`get` 回调的
+`esp_gsp_message_source_t` 绑定一次，并在 UI 生命周期内保留数据源上下文。
+通过生成的 `changed` Helper 通知数据变化，不要重复绑定。数据源回调在渲染任务执行，
+不能阻塞。
 
 生成的行和气泡按 Message List 在场景中的位置绘制。后面声明的前景对象（如 Drawer）会覆盖在气泡上方。需要保持在 Message List 上方的覆盖层，应放在场景中 Message List 之后。
 

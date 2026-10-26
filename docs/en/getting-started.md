@@ -9,7 +9,7 @@ maintained example:
 
 <!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.7.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.8.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -21,7 +21,8 @@ existing application.
 
 ## Prerequisites
 
-- **ESP-IDF 6.0** or later, exported in the current shell.
+- **ESP-IDF 6.0** or later, exported in the current shell; use 6.1 or later
+  for ESP32-S31.
 - Either `esp-gsp-tools` installed for automatic resolution, or a compatible
   GSPC release available for explicit `GSPC_EXECUTABLE` selection.
 - A BSP or application layer that can initialize an `esp_lcd` panel and fill
@@ -53,7 +54,7 @@ From the ESP-IDF project root:
 
 <!-- gsp-version:dependency-command -->
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.7.0"
+idf.py add-dependency "espressif/esp-gsp^1.8.0"
 ```
 <!-- /gsp-version:dependency-command -->
 
@@ -62,7 +63,7 @@ The equivalent component manifest entry is:
 <!-- gsp-version:dependency-manifest -->
 ```yaml
 dependencies:
-  espressif/esp-gsp: "^1.7.0"
+  espressif/esp-gsp: "^1.8.0"
 ```
 <!-- /gsp-version:dependency-manifest -->
 
@@ -88,7 +89,7 @@ root — the project marker takes precedence over the component marker:
 
 <!-- gsp-version:compiler-pin -->
 ```sh
-echo '0.8.0' > .gspc_version
+echo '0.9.0' > .gspc_version
 idf.py build
 ```
 <!-- /gsp-version:compiler-pin -->
@@ -276,6 +277,9 @@ Select the real target and build:
 idf.py set-target <target>
 idf.py build
 ```
+
+For preview targets such as ESP32-H4 and ESP32-S31, use
+`idf.py --preview set-target <target>` before building.
 
 If the scene, an asset, a Kconfig capacity, or a bundle option is invalid,
 generation fails as part of this build. After a successful build, use editor

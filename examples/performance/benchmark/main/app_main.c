@@ -39,7 +39,7 @@
 #define GSP_BENCH_RGB888 0
 #endif
 
-#define BENCH_PROTOCOL_VERSION 26U
+#define BENCH_PROTOCOL_VERSION 27U
 #define BENCH_RESULT_ROWS ((BENCH_W >= 600 || BENCH_H >= 600) ? 6U : 3U)
 #define BENCH_RESULT_PAGE_MS 3000U
 #define BENCH_PRESSURE_PERIOD_MS 1U
@@ -118,19 +118,20 @@ typedef struct {
     uint16_t bind;
     uint32_t dwell_ms;
     float wall_fps;   /*!< frames over the page dwell (activity rate) */
-    float busy_fps;   /*!< frames over time spent rendering (engine
-                           throughput; the weighted score) */
+    float busy_fps;   /*!< frames over render-path busy time; excludes UI snapshots */
     float render_ms;  /*!< avg rasterize ms per frame */
     float submit_ms;  /*!< avg submit ms per frame */
     float service_us; /*!< avg control-plane time per service iteration */
     float commands_s; /*!< queue commands drained per second; excludes inline calls */
     uint32_t frames;  /*!< submitted frames in the measured interval */
-    float busy_ms;    /*!< complete engine time per submitted frame */
-    uint64_t busy_us; /*!< exact total engine time in the interval */
+    float busy_ms;    /*!< render-path busy time per submitted frame */
+    uint64_t busy_us; /*!< accumulated render-path busy time in the interval */
     uint64_t elapsed_us; /*!< exact wall time in the measured interval */
     uint64_t render_us;
     uint64_t submit_us;
     uint64_t service_us_total;
+    uint64_t ui_step_us;
+    uint32_t ui_steps;
     uint32_t service_iterations;
     uint32_t service_commands;
     uint32_t internal_peak_bytes;
@@ -167,6 +168,10 @@ static uint32_t s_dropdown_errors;
 static int64_t s_dropdown_ready_us;
 static bool s_scale_dynamic_decode = true;
 static int64_t s_page_start_us;
+static int64_t s_next_tween_us;
+static bool s_page_preparing;
+static esp_gsp_property_stats_t s_page_start_properties;
+static esp_gsp_drag_snapshot_stats_t s_page_start_viewports;
 static uint32_t s_page_start_frames;
 static uint64_t s_page_start_busy_us;
 static uint64_t s_page_start_render_us;
@@ -800,6 +805,8 @@ static void activate_page(esp_gsp_handle_t ui, uint8_t page)
     s_pages[page].transition_total_us = 0;
     s_pages[page].transition_max_us = 0;
     s_pages[page].transition_sample_count = 0;
+    s_page_preparing = true;
+    bench_workload_reset_tweens(&s_bench_workload);
     s_frame_tick = 0;
     s_pressure_ticks = 0;
     s_pressure_requests = 0;
@@ -978,8 +985,10 @@ static void activate_page(esp_gsp_handle_t ui, uint8_t page)
             if (s_grid == ESP_GSP_GRID_NONE) {
                 ++s_grid_errors;
             }
-        } else if (gsp_bench_bench_grid_refresh(ui, s_grid) !=
-                   ESP_GSP_OK) {
+        }
+        if (s_grid != ESP_GSP_GRID_NONE &&
+                (esp_gsp_inject_touch(ui, 0, 0, false) != ESP_GSP_OK ||
+                 bench_workload_reset_grid(ui, s_grid) != ESP_GSP_OK)) {
             ++s_grid_errors;
         }
     }
@@ -1070,7 +1079,19 @@ static void activate_page(esp_gsp_handle_t ui, uint8_t page)
     printf("bench: case id=%s category=%s dwell_ms=%lu\n",
            s_pages[page].id, s_pages[page].category,
            (unsigned long)benchmark_page_dwell_ms(page));
+    /* Complete the setup UI profiling span before sampling the next step. */
+}
+
+static void start_page_measurement(esp_gsp_handle_t ui)
+{
+    s_page_preparing = false;
     s_page_start_us = esp_timer_get_time();
+    s_next_tween_us = s_page_start_us + 1000000;
+    ESP_ERROR_CHECK(esp_gsp_property_stats(ui, &s_page_start_properties,
+                                           sizeof(s_page_start_properties)) &&
+                    s_page_start_properties.timing_available
+                    ? ESP_OK : ESP_ERR_INVALID_STATE);
+    esp_gsp_drag_snapshot_stats(ui, &s_page_start_viewports);
     esp_gsp_region_stats(ui, &s_page_region_start);
     esp_gsp_render_stats(ui, &s_page_start_frames,
                          &s_page_start_busy_us);
@@ -1088,6 +1109,8 @@ static void activate_page(esp_gsp_handle_t ui, uint8_t page)
                              MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
     s_page_internal_min = s_page_internal_start;
     s_page_psram_min = s_page_psram_start;
+    /* Explicit endpoints replace any tween left by an earlier lap. */
+    bench_workload_drive_tweens(ui, &s_bench_workload);
 }
 
 static void deactivate_page(esp_gsp_handle_t ui)
@@ -1177,6 +1200,7 @@ static void print_summary(esp_gsp_handle_t ui)
     uint64_t total_frames = 0;
     uint64_t total_busy_us = 0;
     uint64_t total_wall_us = 0;
+    uint64_t total_ui_step_us = 0;
     printf("bench: ---- summary ----\n");
     printf("bench: %-20s %9s %9s %7s %7s %7s %7s %5s\n", "page",
            "wall fps", "busy fps", "rndr ms", "subm ms", "svc us",
@@ -1198,6 +1222,7 @@ static void print_summary(esp_gsp_handle_t ui)
         total_frames += s_pages[index].frames;
         total_busy_us += s_pages[index].busy_us;
         total_wall_us += s_pages[index].elapsed_us;
+        total_ui_step_us += s_pages[index].ui_step_us;
     }
     printf("bench: aggregate wall throughput %.1f fps"
            " (observed)\n",
@@ -1219,6 +1244,8 @@ static void print_summary(esp_gsp_handle_t ui)
            total_wall_us != 0
            ? (double)total_busy_us * 100.0 / (double)total_wall_us
            : 0.0);
+    printf("bench: aggregate ui step_us=%llu\n",
+           (unsigned long long)total_ui_step_us);
     printf("bench: legacy dwell-weighted busy score %.1f fps"
            "\n",
            total_ms != 0
@@ -1493,6 +1520,10 @@ static void page_scheduler(esp_gsp_handle_t ui, void *user_ctx)
         activate_page(ui, s_pending_page);
         return;
     }
+    if (s_page_preparing) {
+        start_page_measurement(ui);
+        return;
+    }
     int64_t now_us = esp_timer_get_time();
     int64_t elapsed_us = now_us - s_page_start_us;
     if (elapsed_us < (int64_t)benchmark_page_dwell_ms(s_page) * 1000) {
@@ -1568,6 +1599,17 @@ static void page_scheduler(esp_gsp_handle_t ui, void *user_ctx)
     s_pages[s_page].commands_s = (float)(
                                      (double)s_pages[s_page].service_commands * 1e6 /
                                      (double)elapsed_us);
+    esp_gsp_property_stats_t properties;
+    ESP_ERROR_CHECK(esp_gsp_property_stats(ui, &properties, sizeof(properties)) &&
+                    properties.timing_available ? ESP_OK : ESP_ERR_INVALID_STATE);
+    s_pages[s_page].ui_steps = properties.steps - s_page_start_properties.steps;
+    s_pages[s_page].ui_step_us = properties.step_us - s_page_start_properties.step_us;
+    esp_gsp_drag_snapshot_stats_t viewports;
+    esp_gsp_drag_snapshot_stats(ui, &viewports);
+    uint32_t viewport_skipped = 0;
+    for (unsigned reason = 0; reason < ESP_GSP_SNAPSHOT_REASON_COUNT; ++reason) {
+        viewport_skipped += viewports.skipped[reason] - s_page_start_viewports.skipped[reason];
+    }
     /* Snapshot the interval before serial output perturbs its timing. */
     printf("bench: pressure[%s] mode=%s period_ms=%u ticks=%lu"
            " requests=%lu accepted=%lu rejected=%lu errors=%lu\n",
@@ -1619,6 +1661,16 @@ static void page_scheduler(esp_gsp_handle_t ui, void *user_ctx)
            (double)s_pages[s_page].busy_ms,
            (unsigned long)s_pages[s_page].internal_peak_bytes,
            (unsigned long)s_pages[s_page].psram_peak_bytes);
+    printf("bench: viewport[%s] attempts=%lu started=%lu reused=%lu skipped=%lu active=%u reason=%u error=%ld\n",
+           s_pages[s_page].name,
+           (unsigned long)(viewports.attempts - s_page_start_viewports.attempts),
+           (unsigned long)(viewports.started - s_page_start_viewports.started),
+           (unsigned long)(viewports.reused - s_page_start_viewports.reused),
+           (unsigned long)viewport_skipped, viewports.active ? 1U : 0U,
+           (unsigned)viewports.last_reason, (long)viewports.last_backend_error);
+    printf("bench: ui[%s] steps=%lu step_us=%llu\n",
+           s_pages[s_page].name, (unsigned long)s_pages[s_page].ui_steps,
+           (unsigned long long)s_pages[s_page].ui_step_us);
     if (benchmark_transition_page(s_pages[s_page].bind)) {
         const bench_page_t *result = &s_pages[s_page];
         esp_gsp_transition_stats_t paths;
@@ -1837,20 +1889,6 @@ static void page_scheduler(esp_gsp_handle_t ui, void *user_ctx)
         next = s_run_first;
     }
     show_page(ui, next);
-}
-
-/* Slow (1 s) retriggered tweens: the pages whose motion IS a value or
- * color ramp. */
-static void drive_tweens(esp_gsp_handle_t ui, void *user_ctx)
-{
-    (void)user_ctx;
-    if (s_results_active) {
-        return;
-    }
-    if (s_page_waiting_for_scene) {
-        return;
-    }
-    bench_workload_drive_tweens(ui, &s_bench_workload);
 }
 
 /* High-rate effects run from the 4 ms saturation driver. Gesture sampling
@@ -2569,7 +2607,7 @@ static void drive_text(esp_gsp_handle_t ui, void *user_ctx)
                                      GSP_BIND_T2, GSP_BIND_T3
                                     };
     (void)user_ctx;
-    if (s_page_waiting_for_scene || s_results_active) {
+    if (s_page_waiting_for_scene || s_results_active || s_page_preparing) {
         return;
     }
     ++s_text_frame;
@@ -2595,7 +2633,7 @@ static void drive_scroll(esp_gsp_handle_t ui, void *user_ctx)
         GSP_BIND_S4, GSP_BIND_S5, GSP_BIND_S6, GSP_BIND_S7,
     };
     (void)user_ctx;
-    if (s_page_waiting_for_scene || s_results_active) {
+    if (s_page_waiting_for_scene || s_results_active || s_page_preparing) {
         return;
     }
     ++s_scroll_offset;
@@ -2708,7 +2746,7 @@ static void drive_drawer(esp_gsp_handle_t ui)
 static void drive_frame(esp_gsp_handle_t ui, void *user_ctx)
 {
     (void)user_ctx;
-    if (s_results_active) {
+    if (s_results_active || s_page_preparing) {
         return;
     }
     uint16_t page = s_pages[s_page].bind;
@@ -2787,8 +2825,16 @@ static void drive_frame(esp_gsp_handle_t ui, void *user_ctx)
 static void drive_stress(esp_gsp_handle_t ui, void *user_ctx)
 {
     (void)user_ctx;
-    if (s_results_active) {
+    if (s_results_active || s_page_preparing || s_page_waiting_for_scene) {
         return;
+    }
+    int64_t now = esp_timer_get_time();
+    if (now >= s_next_tween_us) {
+        /* Keep the waveform relative to this page, without timer drift. */
+        uint32_t cycle = (uint32_t)((now - s_page_start_us) / 1000000);
+        s_bench_workload.tween_tick = cycle;
+        bench_workload_drive_tweens(ui, &s_bench_workload);
+        s_next_tween_us = s_page_start_us + ((int64_t)cycle + 1) * 1000000;
     }
     drive_fx(ui, NULL);
     drive_text(ui, NULL);
@@ -2837,7 +2883,7 @@ static void drive_messages(esp_gsp_handle_t ui)
 static void drive_pressure(esp_gsp_handle_t ui, void *user_ctx)
 {
     (void)user_ctx;
-    if (s_page_waiting_for_scene || s_results_active) {
+    if (s_page_waiting_for_scene || s_results_active || s_page_preparing) {
         return;
     }
     if (s_pages[s_page].bind == GSP_BIND_P_MESSAGES) {
@@ -2869,7 +2915,7 @@ static void drive_pressure(esp_gsp_handle_t ui, void *user_ctx)
 static void drive_eyes(esp_gsp_handle_t ui, void *user)
 {
     (void)user;
-    if (!s_page_waiting_for_scene) {
+    if (!s_page_waiting_for_scene && !s_page_preparing) {
         bench_workload_drive_eyes(ui, &s_bench_workload);
     }
 }
@@ -2881,7 +2927,6 @@ static void benchmark_start(esp_gsp_handle_t ui)
         uint32_t period_ms;
         esp_gsp_timer_cb_t callback;
     } timers[] = {
-        {1000, drive_tweens},
         {100, drive_eyes},
         {BENCH_STRESS_PERIOD_MS, drive_stress},
         {BENCH_PRESSURE_PERIOD_MS, drive_pressure},
@@ -2955,7 +3000,7 @@ void app_main(void)
            " pixel=%s panel=%u mode=%u fb=%u rotation=%u te=%u"
            " drawbuf=%u/%u/%u tebuf=%u"
            " transition_snapshots=%s pressure=%s pressure_ms=%u"
-           " touch=%s queue_metric=drained hud=results-only bundle_crc=%08lx\n",
+           " touch=%s queue_metric=drained hud=results-only reset=page ui_timing=step bundle_crc=%08lx\n",
            BENCH_PROTOCOL_VERSION, BENCH_FRAME_PERIOD_MS,
            BENCH_FRAME_TARGET_HZ, BENCH_STRESS_PERIOD_MS,
            BENCH_STRESS_TARGET_HZ, BENCH_KEYBOARD_EVENT_MS,

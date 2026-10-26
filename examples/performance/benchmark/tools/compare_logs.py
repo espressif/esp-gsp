@@ -33,9 +33,11 @@ RESOLVED_CONFIG_RE = re.compile(
 INVALID_RUNTIME_RE = re.compile(
     r"(?:lcd\.rgb: LCD underrun|Guru Meditation Error|"
     r"Task watchdog got triggered|Interrupt wdt timeout|"
+    r"(?i:stack overflow in task|stack protection fault|stack canary watchpoint triggered)|"
     r"bench: physical input detected|bench: unexpected scene change|"
     r"bench: page visibility mismatch|"
     r"gsp_update: Unknown bind ID|Display render failed:|"
+    r"gsp_renderer: Glyph run failed:|gsp_frame_loop: render area \d+ failed:|"
     r"assert failed:|abort\(\) was called|"
     r"gsp_repeater: Repeater slots insufficient|"
     r"gsp_repeater: Repeater window exceeds slots|"
@@ -98,6 +100,12 @@ DETAIL_RE = re.compile(
     r"\s+submit_us=(?P<submit>\d+)\s+service_steps=(?P<steps>\d+)"
     r"\s+service_us=(?P<service>\d+)\s+commands=(?P<commands>\d+)"
 )
+UI_RE = re.compile(r"^bench: ui\[(?P<name>.+)\] steps=(?P<steps>\d+) step_us=(?P<step_us>\d+)$")
+VIEWPORT_RE = re.compile(
+    r"^bench: viewport\[(?P<name>.+)\] attempts=(?P<attempts>\d+) started=(?P<started>\d+)"
+    r" reused=(?P<reused>\d+) skipped=(?P<skipped>\d+) active=(?P<active>[01])"
+    r" reason=(?P<reason>\d+) error=(?P<error>-?\d+)$")
+AGGREGATE_UI_RE = re.compile(r"^bench: aggregate ui step_us=(?P<step_us>\d+)$")
 ERROR_COUNTER_RE = re.compile(
     r"^bench: (?:components commands=\d+|dynamic qoi accepted=\d+|"
     r"image scale updates=\d+ commands=\d+|"
@@ -166,6 +174,12 @@ class RawPage:
 
 
 @dataclasses.dataclass(frozen=True)
+class UiPage:
+    steps: int
+    step_us: int
+
+
+@dataclasses.dataclass(frozen=True)
 class Transition:
     count: int
     errors: int
@@ -197,6 +211,9 @@ class Run:
     raw_frames: int | None
     raw_wall_us: int | None
     raw_busy_us: int | None
+    ui_pages: dict[str, UiPage] = dataclasses.field(default_factory=dict)
+    raw_ui_step_us: int | None = None
+    viewport_pages: dict[str, dict[str, int]] = dataclasses.field(default_factory=dict)
 
     @property
     def weighted_fps(self) -> float:
@@ -251,10 +268,21 @@ def parse_log(path: Path) -> Run:
     vector_results = {}
     storm_result: tuple[int, int, int, int | None] | None = None
     raw_pages: dict[str, RawPage] = {}
+    ui_pages: dict[str, UiPage] = {}
+    raw_ui_step_us = None
+    viewport_pages = {}
     pressure_results = {}
     capacity_results = {}
     dropdown_result = None
     for line in transition_text.splitlines():
+        match = VIEWPORT_RE.match(line)
+        if match:
+            viewport_pages[match["name"]] = {key: int(value) for key, value in match.groupdict().items() if key != "name"}
+            continue
+        match = UI_RE.match(line)
+        if match:
+            ui_pages[match["name"]] = UiPage(int(match["steps"]), int(match["step_us"]))
+            continue
         match = PAGE_FLOW_RE.match(line)
         if match:
             page_flow_result = tuple(int(match[key]) for key in ("completed", "pages_mask", "errors"))
@@ -395,6 +423,10 @@ def parse_log(path: Path) -> Run:
                     config_values[f"resolved_{key}"] = value
     config = tuple(sorted(config_values.items())) if config_values else None
     for line in summary.splitlines():
+        match = AGGREGATE_UI_RE.match(line)
+        if match:
+            raw_ui_step_us = int(match["step_us"])
+            continue
         match = ROW_RE.match(line)
         if match:
             values = match.groupdict()
@@ -485,6 +517,17 @@ def parse_log(path: Path) -> Run:
                     raise ValueError(f"{path}: missing repaint load on {name!r}")
             elif requests:
                 raise ValueError(f"{path}: unexpected repaint load on {name!r}")
+    if protocol >= 27:
+        if config_map.get("reset") != "page" or config_map.get("ui_timing") != "step":
+            raise ValueError(f"{path}: missing deterministic page reset or UI timing configuration")
+        if set(ui_pages) != set(pages) or any(item.steps == 0 or item.step_us == 0
+                                              for item in ui_pages.values()):
+            raise ValueError(f"{path}: missing per-page UI-step timing")
+        if set(viewport_pages) != set(pages) or any(item["started"] > item["attempts"]
+                                                   for item in viewport_pages.values()):
+            raise ValueError(f"{path}: missing or invalid viewport snapshot counters")
+        if raw_ui_step_us is None or sum(item.step_us for item in ui_pages.values()) != raw_ui_step_us:
+            raise ValueError(f"{path}: UI-step aggregate does not equal page totals")
     if protocol >= 26 and "page flow" in pages:
         if page_flow_result is None or page_flow_result[0] < 3 or \
                 page_flow_result[1] != 7 or page_flow_result[2] != 0:
@@ -709,7 +752,7 @@ def parse_log(path: Path) -> Run:
     if active_fps is not None:
         return Run(versions[-1], active_fps, "aggregate_active_fps",
                    wall_fps, legacy_fps, pages, transitions, config, raw_frames,
-                   raw_wall_us, raw_busy_us)
+                   raw_wall_us, raw_busy_us, ui_pages, raw_ui_step_us, viewport_pages)
     return Run(versions[-1], legacy_fps, "legacy_weighted_busy_score",
                None, legacy_fps, pages, transitions, config, None, None, None)
 
@@ -804,6 +847,14 @@ def main() -> int:
                     f"| {name} | {old.busy_fps:.1f} | {new.busy_fps:.1f} | "
                     f"{delta:+.1f}% | {service} |"
                 )
+            if baseline.ui_pages and current.ui_pages:
+                print(f"\n#### {device} UI-step work (includes viewport snapshots)\n")
+                print("| Page | Baseline step us | Current step us | Delta | Baseline steps | Current steps |")
+                print("|---|---:|---:|---:|---:|---:|")
+                for name, old in baseline.ui_pages.items():
+                    new = current.ui_pages[name]
+                    delta = percent(new.step_us, old.step_us)
+                    print(f"| {name} | {old.step_us} | {new.step_us} | {delta:+.1f}% | {old.steps} | {new.steps} |")
             if baseline.transitions:
                 print(f"\n#### {device} transition latency\n")
                 print("| Transition | Count/errors | Baseline p95 us | "

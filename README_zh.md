@@ -26,7 +26,7 @@ ESP-GSP 适合这样的产品：界面结构在编译时就已确定，但文字
 
 ## 使用条件
 
-- **ESP-IDF 6.0** 或更高版本。
+- **ESP-IDF 6.0** 或更高版本；ESP32-S31 使用 6.1 或更高版本。
 - **Python 3.10** 或更高版本，用于运行 `esp-gsp-tools` 工具链管理器。
 - 应用或 BSP 能够初始化一个 `esp_lcd` 显示目标。
 
@@ -36,7 +36,7 @@ ESP-GSP 适合这样的产品：界面结构在编译时就已确定，但文字
 
 <!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.7.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.8.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -60,7 +60,7 @@ python -m pip install -U esp-gsp-tools
 
 <!-- gsp-version:dependency-command -->
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.7.0"
+idf.py add-dependency "espressif/esp-gsp^1.8.0"
 python -m pip install -U esp-gsp-tools
 ```
 <!-- /gsp-version:dependency-command -->

@@ -18,7 +18,7 @@
 | [容器](../components/container.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 97 | 是 |
 | [标签](../components/label.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 96 | 是 |
 | [按钮](../components/button.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `text`, `background_opacity`, `border`, `border_side`, `image`, `boolean`, `interaction`, `template` | 105 | 是 |
-| [图片](../components/image.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `image`, `text`, `interaction`, `template` | 98 | 是 |
+| [图片](../components/image.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `image`, `text`, `interaction`, `template` | 99 | 是 |
 | [矩形](../components/rect.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 96 | 是 |
 | [形状](../components/shape.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `shape`, `interaction`, `template` | 96 | 是 |
 | [进度条](../components/progress.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `interaction`, `template` | 98 | 是 |
@@ -466,7 +466,8 @@
 | `dynamic_color` | `bool` | — | — | — | 模板成员公开每实例独立颜色槽 |
 | `dynamic_image` | `bool` | — | — | — | 模板图片公开每实例独立资源槽 |
 | `canvas` | `enum` | — | `draw`, `push` | — | Canvas 生产方式：绘制回调或借用帧；生成独立资源视图 |
-| `image_opacity` | `int` | — | 默认 255; 0…255 | — | 仅图片透明度；固定栅格图片的变换可在编译期烘焙 alpha |
+| `svg_mode` | `enum` | — | `vector`, `raster` | — | SVG 导入：默认保留曲线，或按固定宽高显式烘焙静态像素 |
+| `image_opacity` | `int` | — | 默认 255; 0…255 | 场景: SVG; 模板: 不支持 | 仅图片透明度 0..255；场景 SVG 支持直接有界运行时控制，固定栅格图片可在编译期烘焙 alpha |
 
 ### 矩形（`rect`）
 

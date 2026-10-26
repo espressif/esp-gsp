@@ -2,14 +2,16 @@
 # SPDX-License-Identifier: LicenseRef-Espressif-Modified-MIT
 
 include_guard(GLOBAL)
+include("${CMAKE_CURRENT_LIST_DIR}/gsp_features.cmake")
 
 # Project-wide opt-in. All gsp_add_bundle()/gsp_add_assets() outputs contribute
 # requirements, regardless of component/call order. Undeclared dynamic inputs
 # preserve every enabled feature; NONE explicitly closes those extra inputs.
 function(gsp_specialize_runtime)
+    _esp_gsp_register_feature_report()
     cmake_parse_arguments(PARSE_ARGV 0 ARG "" "" "DYNAMIC_FEATURES;EXTRA_BUNDLES")
     if(ARG_UNPARSED_ARGUMENTS OR ARG_KEYWORDS_MISSING_VALUES)
-        message(FATAL_ERROR "gsp_specialize_runtime: use DYNAMIC_FEATURES AUTO|ALL|NONE|jpeg png eaf reference vector procedural and optional EXTRA_BUNDLES paths")
+        message(FATAL_ERROR "gsp_specialize_runtime: use DYNAMIC_FEATURES AUTO|ALL|NONE|jpeg png eaf reference vector procedural anim_deflate anim_spans and optional EXTRA_BUNDLES paths")
     endif()
     if(CMAKE_VERSION VERSION_LESS 3.19)
         message(FATAL_ERROR "gsp_specialize_runtime requires CMake 3.19 or newer")
@@ -27,7 +29,7 @@ function(gsp_specialize_runtime)
     set(features "")
     foreach(feature IN LISTS ARG_DYNAMIC_FEATURES)
         string(TOLOWER "${feature}" feature)
-        if(NOT feature MATCHES "^(auto|all|none|jpeg|png|eaf|reference|vector|procedural)$")
+        if(NOT feature MATCHES "^(auto|all|none|jpeg|png|eaf|reference|vector|procedural|anim_deflate|anim_spans)$")
             message(FATAL_ERROR "gsp_specialize_runtime: unknown dynamic feature '${feature}'")
         endif()
         list(APPEND features "${feature}")

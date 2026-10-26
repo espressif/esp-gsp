@@ -7,7 +7,7 @@
 
 <!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.7.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.8.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -20,10 +20,9 @@ python -m pip install -U esp-gsp-tools
 
 请确认以下条件：
 
-- 当前终端已导出 **ESP-IDF 6.0** 或更高版本；
+- 当前终端已导出 **ESP-IDF 6.0** 或更高版本，ESP32-S31 使用 6.1 或更高版本；
 - 板级支持层（BSP）能够创建 `esp_display_present_target_config_t`；
-- 已获取 ESP-GSP 托管组件；
-- 已安装 `esp-gsp-tools`（它会根据组件中的 `.gspc_version` 自动下载并缓存 GSPC）；
+- 已安装 `esp-gsp-tools`，或准备好兼容的 GSPC 可执行文件，通过 `GSPC_EXECUTABLE` 指定；
 - （可选）独立模拟器，用于在没有硬件时预览 Bundle。
 
 ## 首次启动前：任务栈与 CRC 校验
@@ -48,7 +47,7 @@ Bundle 创建和资源校验运行在启动 ESP-GSP 的那个任务上。新工�
 <!-- gsp-version:dependency-command -->
 ```sh
 cd /path/to/your/esp-idf-project
-idf.py add-dependency "espressif/esp-gsp^1.7.0"
+idf.py add-dependency "espressif/esp-gsp^1.8.0"
 ```
 <!-- /gsp-version:dependency-command -->
 
@@ -57,7 +56,7 @@ idf.py add-dependency "espressif/esp-gsp^1.7.0"
 <!-- gsp-version:dependency-manifest -->
 ```yaml
 dependencies:
-  espressif/esp-gsp: "^1.7.0"
+  espressif/esp-gsp: "^1.8.0"
 ```
 <!-- /gsp-version:dependency-manifest -->
 
@@ -67,7 +66,7 @@ dependencies:
 ```yaml
 dependencies:
   espressif/esp-gsp:
-    version: "^1.7.0"
+    version: "^1.8.0"
     override_path: /absolute/path/to/esp-gsp
 ```
 <!-- /gsp-version:local-override -->
@@ -89,7 +88,7 @@ python -m pip install -U esp-gsp-tools
 
 <!-- gsp-version:compiler-pin -->
 ```sh
-echo '0.8.0' > .gspc_version
+echo '0.9.0' > .gspc_version
 idf.py build
 ```
 <!-- /gsp-version:compiler-pin -->
@@ -303,6 +302,9 @@ ESP-GSP API。完整的显示配置请参考维护例程。
 idf.py set-target esp32p4
 idf.py build
 ```
+
+ESP32-H4、ESP32-S31 等预览目标使用
+`idf.py --preview set-target <target>` 选择芯片后再构建。
 
 ### 烧录与日志
 

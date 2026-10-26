@@ -57,8 +57,8 @@ gsp_sim_host: browser preview listening at http://127.0.0.1:3222/
 | 场景导航 | 上一场景（◀）、下一场景（▶）、重置（↺）按钮 |
 | 日志面板 | 分标签显示回调事件、宿主日志和运行时诊断 |
 
-启用 Backend 时，场景导航按钮和应用状态写操作会被服务端拒绝，报
-`backend_exclusive` 错误。当 `--input-mode` 为 `api-exclusive` 时，鼠标点击被
+启用 Backend 时，场景导航按钮会被服务端以 `backend_exclusive` 拒绝。
+Browser 的应用状态写操作始终被以 `not_allowed` 拒绝。当 `--input-mode` 为 `api-exclusive` 时，鼠标点击被
 拒绝并报 `input_busy` 错误。这些情况都会在日志面板中显示。
 
 Browser 仍可发送点击、拖拽等输入并接收实时帧。支持多个浏览器同时连接，每个连接
@@ -71,14 +71,47 @@ Browser 仍可发送点击、拖拽等输入并接收实时帧。支持多个浏
 
 运行 `gsp_sim_host --help` 可获取最新的内置帮助。
 
+bundle 的预编译 GFB 字形能覆盖所需文本时，可直接使用，包括运行时修改的文本。
+`--dynamic-font` 是可选的缺字回退；GFB 目录同样使用预编译字形，无需原始字体。
+
 ### 场景与时序
 
 | 参数 | 说明 |
 |---|---|
-| `--bundle <PATH>` | 场景包文件（`.gspb`），必需 |
-| `--dynamic-font <PATH>` | 可选的 TrueType 字体文件 |
+| `--bundle <PATH>` | 场景包文件（`.gspb`）；能力或内嵌运行时信息查询以外必需 |
+| `--dynamic-font <PATH>` | 可选的缺字回退字体，使用 TrueType 或 CFF 可缩放轮廓（`.ttf`、`.otf` 或 `.ttc` 的首个 face）；使用 `--capabilities` 查询编入的 driver |
+| `--font-catalog <PATH>` | 启动前加载的 GSPB 字体目录（`gspc font-link`） |
+| `--record-input <PATH>` | 将实际消费的触摸样本录制到新 JSONL 文件；已有文件会被拒绝 |
+| `--replay-input <PATH>` | 回放匹配的 JSONL；与录制及 CLI tap/drag/wait 互斥 |
 | `--fps <N>` | 模拟帧率，默认 `60` |
-| `--frames <N>` | 运行帧数上限，默认 `0`；`0` = 无限制；收到 `quit`、脚本/回放结束或进程终止时退出 |
+| `--frames <N>` | 运行帧数上限，默认 `0` 无限制；脚本及回放退出规则见下文 |
+
+1.8.0 的 WASI 运行时包含 TrueType 和 CFF driver。CLI/RPC capabilities 的
+`font_outline_drivers` 报告注册的 TrueType/CFF driver，例如 `["truetype", "cff"]`；
+`null` 表示旧运行时没有该查询或探测失败，`[]` 表示未启用这两类 driver。
+旧版模拟器可能不含 CFF。CFF driver 可读取 CFF/CFF2 轮廓，但该接口不提供
+可变字体轴控制。扩展名不能判断轮廓类型。原生源码构建报告所链接 FreeType
+实际启用的 driver。
+集合字体（`.ttc`）使用 face 0，适用相同的 driver 限制；在集合头部可解析时，
+诊断会标明首个 face 的轮廓签名。空字体文件会在运行时启动前被拒绝。
+仅含位图的字体会在初始化时被拒绝，动态回退需要可缩放轮廓。
+
+可选字体初始化失败时，预编译 GFB 字形仍然可用，动态回退被关闭。字体解析失败的
+警告会包含检测到的字体容器、字节数和 FreeType 错误码；缺少 CFF driver 时会明确
+提示不支持 CFF/CFF2。其他解析失败不能直接证明字体文件损坏，需结合错误码与
+该 FreeType 构建启用的 driver 判断。
+字号初始化失败会报告具体 FreeType 操作、场景/字体索引、请求的像素字号与
+FreeType 错误码。
+
+字形缓存尺寸是缓存上限，不是可绘制字号上限。超限回退位图使用一个可复用的堆
+工作区，后续解析会重新光栅化。模拟器直接驱动可移植运行时，不创建 FreeRTOS
+渲染任务；设备任务栈配置不会调整模拟器的 WASM 栈。
+
+`gspc font-link` 的目录使用 `--font-catalog fonts.gspb` 或 `GSP_FONT_CATALOG`，
+显式 CLI 路径优先，可与 `--dynamic-font` 同时传入。目录在 UI 启动前校验 CRC，
+reset 时保留。CLI/RPC capabilities 的 `font_catalog_version: 1` 表示内嵌运行时
+支持该入口，旧发行版需更新。目录按 ID 补齐缺失 GFB 资产，不按码点提供缺字回退。
+解析优先级及 PC bridge 边界见[外置字体](../guide/external-assets.md#模拟器与-pc-bridge)。
 
 ### 预览与输入
 
@@ -95,10 +128,24 @@ Browser 仍可发送点击、拖拽等输入并接收实时帧。支持多个浏
 |---|---|
 | `--tap <X> <Y>` | 在坐标 (X, Y) 点按，可重复 |
 | `--drag <X1> <Y1> <X2> <Y2>` | 从 (X1, Y1) 拖拽到 (X2, Y2)，可重复 |
-| `--wait <FRAMES>` | 在下一个脚本动作前等待 N 帧，可重复 |
+| `--wait <FRAMES>` | 在下一个脚本动作前等待 N 帧（N > 0），可重复 |
 
-脚本操作按在命令行中出现的顺序依次执行。同样的输入命令也可在运行时通过 API 通道
-发送。
+脚本操作按在命令行中出现的顺序依次执行。未启用 API 通道时，脚本完成会退出；
+启用 API 后应使用 `quit` 或帧数上限结束。同样的输入命令也可在运行时通过 API 通道发送。
+
+### 触摸录制与回放
+
+```sh
+gsp_sim_host --bundle app.gspb --record-input touch.jsonl --frames 600
+gsp_sim_host --bundle app.gspb --headless --replay-input touch.jsonl \
+    --dump replay.png --dump-format png
+```
+
+录制保存实际消费的 pointer/touch 样本，包括 tap/drag 展开的样本。回放使用模拟时间，
+必须匹配轨迹头中的 bundle、尺寸、帧步长以及可选动态字体/字体目录 hash。
+到达结束记录时自动退出；帧数上限或 `quit` 提前截断会报错。录制/回放期间拒绝 reset，
+回放期间拒绝现场输入。轨迹不包含属性写入、业务状态或 Backend 的 `pointer` 通知；
+依赖这些输入的应用需另外重现它们。使用新的录制文件名；截断文件不能作为完整回放。
 
 ### 输出与连接
 
@@ -109,19 +156,21 @@ Browser 仍可发送点击、拖拽等输入并接收实时帧。支持多个浏
 | `--api-enable` | 启用 API 控制通道（默认 stdio） |
 | `--api-listen <URL>` | API 端点；隐含 `--api-enable` |
 | `--api-json <PATH>` | 加载 GSPC `*.api.json`，支持按名点按/设值/检查包围盒并补全回调名 |
-| `--backend-enable` | 在随机本地端口启用应用后端 |
+| `--backend-enable` | 在自动选择的本地端口启用应用后端 |
 | `--backend-listen <URL>` | 应用后端端点；隐含 `--backend-enable` |
 | `--backend-library <PATH>` | 加载本机 Backend 动态库；与 Socket Backend 参数互斥 |
 | `--backend-required` | 在后端连接之前暂停帧推进 |
-| `--backend-idle-timeout <SECS>` | 等待后端连接的超时秒数（`0` = 无限等待） |
-| `--log-level <LEVEL>` | `trace` / `debug` / `info`（默认）/ `warn` / `error` |
-| `--log-file <PATH>` | 将日志写入文件而非 stderr |
+| `--backend-idle-timeout <SECS>` | 配合 `--backend-required` 限制首次连接或重新连接的等待；默认 `0` 无限等待 |
+| `--ready-file <PATH>` | 启动后写入监听端点与进程身份；使用新路径，退出后由调用方清理 |
+| `--log-level <LEVEL>` | `trace` / `debug` / `info`（默认）/ `warn` / `error`；有效的 `RUST_LOG` 优先 |
+| `--log-file <PATH>` | 将宿主 tracing 日志追加到文件；WASI stderr 和预览 URL 仍输出到 stderr |
 
 ### 诊断
 
 | 参数 | 说明 |
 |---|---|
-| `--capabilities` | 输出模拟器支持的功能集并退出 |
+| `--capabilities` | 无需 bundle，输出模拟器支持的功能集并退出 |
+| `--print-wasm-info` | 隐藏诊断参数；无需 bundle，输出内嵌 WASM 的 `staged`、`bytes`、`sha256`、`source` 后退出 |
 
 ### 高级调优
 
@@ -173,7 +222,7 @@ gsp_sim_host --bundle build/app.gspb --api-json build/app_gsp.api.json \
 
 `capabilities.named_api` 用于确认映射已启用。sidecar 必须与 bundle 来自同一次
 编译——schema、字节数或 CRC 不匹配时宿主会拒绝启动。按名包围盒表示编译初始布局，
-运行时移动或动画后应通过截图或坐标输入复核。
+`query_geometry` 和 `inspect_object.runtime_geometry` 用于查询当前输入几何。
 
 ### 方法
 
@@ -182,7 +231,7 @@ gsp_sim_host --bundle build/app.gspb --api-json build/app_gsp.api.json \
 | 方法 | 参数 | 说明 |
 |---|---|---|
 | `tap` | `{ "x": N, "y": N }` | 模拟点按 |
-| `tap_object` | `{ "name": "...", "scene": N }` | 点按命名对象的编译中心；`scene` 可省略 |
+| `tap_object` | `{ "name": "...", "scene": N }` | 点击已核验的运行时输入点；`require_verified` 可拒绝旧版回退 |
 | `drag` | `{ "x1": N, "y1": N, "x2": N, "y2": N }` | 模拟拖拽手势 |
 | `feed_pointer` | `{ "x": N, "y": N, "pressed": bool }` | 低级指针输入 |
 | `feed_touch` | `{ "id": N, "x": N, "y": N, "pressed": bool }` | 低级多点触控输入 |
@@ -194,15 +243,17 @@ gsp_sim_host --bundle build/app.gspb --api-json build/app_gsp.api.json \
 | `goto_scene` | `{ "scene": N, "transition": N }` | 切换到 0-based 索引的场景；`transition` 可省略 |
 | `reset` | — | 重新加载场景包 |
 | `set_property` | `{ "name": "...", "property": "...", "value": ... }` | 按 sidecar 类型和范围设置命名属性 |
+| `get_property` | `{ "name": "...", "property": "...", "scene": N }` | 从已提交的运行时状态读取当前场景的命名标量属性 |
+| `wait_property` | `{ "name": "...", "property": "...", "value": ..., "max_frames": N }` | 在帧推进后等待属性达到指定类型和值 |
 | `set_value` | `{ "bind_id": N, "value": N }` | 设置绑定的整数值 |
 | `set_text` | `{ "bind_id": N, "text": "..." }` | 设置文本绑定 |
-| `set_color` | `{ "bind_id": N, "color": N }` | 设置颜色绑定 |
+| `set_color` | `{ "bind_id": N, "color": N }` | 按原生像素格式设置颜色绑定 |
 | `set_visible` | `{ "bind_id": N, "visible": bool }` | 设置组件可见性 |
 | `set_component_i32` | `{ "component_key": N, "property_key": N, "value": N }` | 通过键设置组件属性 |
 | `keyboard_attach` | `{ "action_id": N, "text_bind": N }` | 关联虚拟键盘 |
 | `keyboard_attach_ex` | `{ "action_id": N, "text_bind": N, "max_bytes": N }` | 按指定 UTF-8 字节容量关联虚拟键盘；`max_bytes` 不含结尾 NUL |
-| `keyboard_text_size` | — | 读取当前键盘文字所需容量（含结尾 NUL）；Backend/Browser 只读 |
-| `keyboard_text` | `{ "capacity": N }`（可选） | 读取当前键盘文字；容量不足返回 `ESP_GSP_ERR_INVALID_SIZE` 和完整 UTF-8 前缀；Backend/Browser 只读 |
+| `keyboard_text_size` | — | 读取当前键盘文字所需容量（含结尾 NUL）；API/Backend/Browser 只读 |
+| `keyboard_text` | `{ "capacity": N }`（可选） | 读取当前键盘文字；容量不足返回 `ESP_GSP_ERR_INVALID_SIZE` 和完整 UTF-8 前缀；API/Backend/Browser 只读 |
 | `set_cursor` | `{ "bind_id": N }` | 显示/隐藏文本光标；`65535` 隐藏 |
 | `set_swipe_transition` | `{ "transition": N }` | 设置滑动切页视觉效果 |
 | `set_swipe_fade_black_point` | `{ "drag_percent": N }` | 设置滑动淡黑阈值（1..99） |
@@ -216,6 +267,11 @@ gsp_sim_host --bundle build/app.gspb --api-json build/app_gsp.api.json \
 | `set_swipe_enabled` | `{ "enabled": bool }` | 启用或禁用滑动切页 |
 | `fling_messages` | `{ "velocity_px_s": N }` | 模拟列表快速滑动 |
 
+`set_property` 接收布尔值和声明范围内的数值。有组件目录时，属性转换与 C API
+一致，包括 `enabled`、Toggle 的 `checked` 和 Slider/Arc/Progress 的自定义范围。
+不带组件目录的普通 bundle 仍兼容对应绑定转换。`set_value` 继续直接写入整数绑定，
+不转换语义属性值。
+
 #### 辅助
 
 | 方法 | 参数 | 说明 |
@@ -224,7 +280,9 @@ gsp_sim_host --bundle build/app.gspb --api-json build/app_gsp.api.json \
 | `capabilities` | — | 查询画面尺寸、场景数、运行时 ABI 和 `named_api` |
 | `list_objects` | `{ "scene": N }` | 列出命名对象；`scene` 可省略 |
 | `inspect_object` | `{ "name": "...", "scene": N }` | 查看命名操作、属性和编译包围盒 |
-| `hit_test` | `{ "x": N, "y": N, "scene": N }` | 返回该点最小的命名编译包围盒 |
+| `hit_test` | `{ "x": N, "y": N, "scene": N }` | 查询实际运行时命中；旧模块返回编译包围盒 |
+| `query_geometry` | `{ "name": "...", "scene": N, "instance": N }` | 当前输入包围盒、裁剪区域与已核验的点击点 |
+| `resource_memory` | `{ "scene": N }` | 按需读取模拟器内存归因 |
 | `frame_info` | — | 获取最近一帧的提交信息 |
 | `wait` | `{ "frames": N }` | 延迟 N 帧后响应 |
 | `component_get_motion` | `{ "name": "...", "scene": N }` | 查询 PageFlow/Drawer 状态；也可用 `component_key`；`scene` 可选 |
@@ -235,8 +293,49 @@ gsp_sim_host --bundle build/app.gspb --api-json build/app_gsp.api.json \
 | `unsubscribe` | `{ "events": [...] }` | 取消订阅 |
 | `quit` | — | 请求模拟器退出 |
 
+`capabilities.input_ready` 为 true 表示转场、自定义拦截器、活动触点、按下的指针和手势均未占用输入；场景编号改变不代表已经可点击。
+
+`runtime_input_query_version: 1` 配合匹配的新 sidecar，支持按当前变换、裁剪和启用状态
+查询输入区域，并通过真实命中与 Drawer 路由核验候选点。`no_verified_point` 表示采样点
+均未核验通过，不等于对象完全被遮挡。转场占用输入或存在自定义拦截器时拒绝确认；
+已有触点或活动手势时返回 `input_busy`，拒绝操作会保留原触点；没有交互行为的对象返回 `no_input_target`。
+
+初始候选点未命中时，查询会利用已观察到的遮挡边界寻找狭窄可见区域。每次请求最多追加
+64 次点命中检查和 64 次边界查询，所有候选点仍须通过真实命中验证。可选的 `search`
+字段记录实际查询次数及 `budget_exhausted`，用于识别搜索预算耗尽的情况。
+
+`tap_object` 核验后返回 `target_verified: true`，业务结果仍需通过回调、属性和截图确认。
+建议自动操作传入 `require_verified: true`。旧模块或旧 sidecar 的兼容回退使用编译中心，
+返回 `target_verified: false`；已知被遮挡、禁用等目标不会回退。
+
+列表行从 `hit_test` 取得 `instance`、`runtime_epoch`、`list`、`item`，点击时将四者与
+列表名称一并传给 `tap_object`。行重新绑定时实例代次可能不变，因此还需校验所属列表和
+业务索引；reset 后旧轮次失效，避免误点复用后的另一行。
+
+`resource_memory_version: 1` 支持按需查询图片缓冲的同时峰值，以及缓存、动画和宿主
+转场缓冲的当前占用。缓存与已解码图片统计重叠，不能相加各项峰值。响应列明统计排除项，
+完整应用峰值保持未知；Host 数值不能证明设备堆或 DMA 可用空间。
+`observed_at` 将读数关联到已验证的 Bundle 身份、当前场景及内容 ID、帧序号、运行轮次与
+版本、显示尺寸。没有通过验证的 sidecar 时 Bundle 身份为 null，目标 Profile 仍保持未知。
+比较资源或交互前后占用时，应核对对应产物和状态。
+
 API 通道保持仅 JSON-RPC。应用 Backend 还提供下文说明的异步动态数据与二进制媒体
 扩展；Browser 不会获得这些数据源请求或二进制上传权限。
+
+### 命名标量属性
+
+按名观察标量属性需要 `named_api`，以及
+`capabilities.named_property_read_version: 1` / `wait_property_version: 1`。
+它通过已匹配 API sidecar 中的类型化 bind 读取状态，支持普通和 deployable Bundle，
+结果标明 `source: "runtime"`；该标量接口不读取文本。Backend 拥有状态写权限时，
+API 仍可读取或等待属性。getter 不推进帧；wait 至少在一次成功帧推进后检查条件，
+即使当前值已经匹配，也会给前一次状态更新留下绘制机会，再供后续截图使用。
+`max_frames` 默认为 300，范围为 1–36000；预期值必须符合属性类型和声明范围。
+超时和运行时查询失败返回 JSON-RPC 错误，reset 和场景切换取消尚未完成的等待。
+值匹配证明观察到的状态，实际输入、回调和截图共同用于验证交互与画面。
+`set_property` 颜色写入接受 RGB888；读取和等待使用当前像素格式的原生色值，例如
+RGB565 红色为 `0xF800`。检查实际颜色时，宜使用对应像素格式的截图基线。有组件目录时，标量写入
+会校验运行时属性键和类型，包括颜色与显隐；无效元数据不能退回原始绑定写入。
 
 ### 组件运动状态与条件等待
 
@@ -254,18 +353,24 @@ API 通道保持仅 JSON-RPC。应用 Backend 还提供下文说明的异步动�
 
 查询失败时 `state` 可能为 `null`，务必检查 `result_code`。
 
-**等待组件静止：** `wait_component` 接受相同的目标标识，以及两个可选字段：
+**等待组件静止：** `wait_component` 接受相同的目标标识，以及以下可选字段：
 
 - `value` — 期望的最终值（省略则仅等待静止）。
 - `max_frames` — 帧预算，默认 300，范围 1–36,000。
+- `after_event` — 操作前从 `component_get_motion.event_cursor` 取得的游标。
 
 当组件停止运动且值匹配时，返回 `status: "settled"`、最终 `state` 和
 `frames_waited`。帧预算按成功推进的模拟帧计数，而非实际时间。超时返回错误
 `-32020`，`data.reason: "timeout"` 附带最后观测到的状态。场景切换或 `reset`
 会取消正在进行的等待。即使 Backend 独占状态写入，这些观察方法仍然可用。
 
+要求新操作证据时，先检查 `component_event_cursor_version: 1`，在操作前读取游标，
+再传入 `after_event` 等待。成功同时要求组件出现游标之后的新事件、期望值匹配及静止，
+返回 `event_observed: true`；初始值本来相同不会通过。reset 或事件历史不足时返回
+`event_cursor_expired`。并发业务写入仍需应用层校验；省略该字段保留普通条件等待语义。
+
 **组件事件通知：** 订阅 `component_event` 后，每个 UI step 会收到包含
-`component_key`、`scene_id`、`kind`、`flags` 和 `state` 的通知。`flags` 为
+`component_key`、`scene_id`、`kind`、`flags`、`state` 和 `event_cursor` 的通知。`flags` 为
 位掩码：值变化 (`1`)、已静止 (`2`)、运动变化 (`4`)。通知按 UI step 合并，不记录
 每次中间请求。
 
@@ -303,7 +408,7 @@ API 通道默认不订阅任何事件。
 | `-32602` | Invalid Params | 参数缺失或类型错误 |
 | `-32603` | Internal Error | 宿主内部错误 |
 | `-32010` | Input Busy | `--input-mode` 阻止了当前通道发送输入 |
-| `-32020` | Component wait failed | 检查 `data.reason`：超时、取消、不支持或查询失败 |
+| `-32020` | Observation / verified input failed | 检查 `data.reason`：如超时、取消、游标过期、不支持或目标无法核验 |
 
 `not_allowed` 与 `backend_exclusive` 是文档中的分类名，错误码均为 `-32601`。
 消息分别为 `method not allowed for this channel: ...` 和
@@ -342,12 +447,12 @@ with connect(port=8266) as api:
 - 应用状态写操作以及 `goto_scene`、`reset` 变为 Backend 专属方法。API 调用收到
   `backend_exclusive`。Browser 普通状态写入收到 `not_allowed`；`goto_scene` 和
   `reset` 在 Backend 启用时收到 `backend_exclusive`。
-- 后端自动订阅 `callback`、`scene_changed`、`list_bind`、`list_bind_overflow`、
+- 后端自动订阅 `callback`、`scene_changed`、`pointer`、`list_bind`、`list_bind_overflow`、
   `binary_result`、`image_complete` 和 `image_release`。
 - 同一时间只允许一个后端连接。
 
 使用 `--backend-required` 可在后端连接前暂停帧推进；
-`--backend-idle-timeout <SECS>` 设置等待超时。
+配合 `--backend-idle-timeout <SECS>` 限制首次连接或断开后的等待（默认 `0`，无限等待）。
 
 Backend 可调用上方列出的状态和应用逻辑方法，包括光标/滑动策略、Drawer、PageFlow
 和固定条目 List/Wheel。还可用 `list_bind_remote` / `grid_bind_remote` 绑定动态
@@ -529,8 +634,8 @@ GSPC 版本由 `.gspc_version` 决定；模拟器版本由组件的 `idf_compone
 ### 就绪文件
 
 启动器向模拟器传递 `--ready-file <PATH>`，模拟器会写入包含 `version`、`pid`、
-`backend_mode`、`backend`、`backend_library`、`browser`、`bridge_version` 和
-`dynamic_backend_abi_version` 的 JSON 文件。未启用的端点显示为 `null`。PID 属于
+`backend_mode`、`backend`、`backend_library`、`api`、`browser`、`bridge_version` 和
+`dynamic_backend_abi_version` 的 JSON 文件。未启用的端点及 stdio API 的 `api` 字段显示为 `null`。PID 属于
 模拟器进程，而非 Python 管理器父进程。
 
 调用方应：

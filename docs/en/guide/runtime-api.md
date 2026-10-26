@@ -23,6 +23,12 @@ GSPC generates operations only when the Widget and authored dynamic properties s
 
 Setters are asynchronous in ESP-IDF. Success confirms queue admission; the render task commits changes and schedules redraws. Use `esp_gsp_flush()` for deterministic tests, captures and explicit synchronization boundaries.
 
+A transaction that repeats only current numeric or color values is still
+validated and may avoid a redraw. When callback-backed Canvas pixels change,
+request a repaint with `esp_gsp_canvas_invalidate()` or
+`esp_gsp_canvas_invalidate_dirty()`. Text and image updates continue to publish
+content when a backing handle is reused; see [media and data](media-and-data.md).
+
 Slider and draggable Arc controls support `value → call` and `release → call` events
 for value changes and release commits. Cast `event->arg` to `int32_t` to read the
 value in authored `min/max` units; unchanged values do not notify again. A bare
@@ -122,7 +128,9 @@ disabled; a hidden Drawer does not steal edge scrolls or block underlying taps.
 
 Closing an enabled Drawer intentionally leaves edge reopening available. To
 disable that entrance, disable the Drawer; hiding it is no longer needed merely
-to suppress edge pulls. This does not cancel an already owned gesture.
+to suppress edge pulls. Disabling or hiding a PageFlow/Drawer that already owns
+the contact cancels that gesture when input state is reconciled. The remaining
+held contact is consumed until release; re-enabling it does not start a new press.
 Ordinary hit actions retain nearest-authored enabled inheritance (an explicitly
 enabled child can override its parent). Structural gestures use the component's
 own enabled property; do not rely on a parent's setting to gate them.
@@ -159,7 +167,7 @@ Generated setters and `esp_gsp_*` return the existing `esp_gsp_err_t`. Do not in
 
 | Macro | Value | Meaning |
 |---|---|---|
-| `ESP_GSP_OK` | `0` | Accepted (queued, not rendered) |
+| `ESP_GSP_OK` | `0` | Accepted/succeeded; asynchronous setter success does not certify presentation |
 | `ESP_GSP_FAIL` | `-1` | Unclassified failure |
 | `ESP_GSP_ERR_NO_MEM` | `0x101` | Allocation failed |
 | `ESP_GSP_ERR_INVALID_ARG` | `0x102` | Invalid argument |
@@ -167,7 +175,7 @@ Generated setters and `esp_gsp_*` return the existing `esp_gsp_err_t`. Do not in
 | `ESP_GSP_ERR_INVALID_SIZE` | `0x104` | Buffer or capacity is too small |
 | `ESP_GSP_ERR_NOT_FOUND` | `0x105` | Object, bind, or resource does not exist |
 | `ESP_GSP_ERR_NOT_SUPPORTED` | `0x106` | The widget or configuration does not support this operation |
-| `ESP_GSP_ERR_TIMEOUT` | `0x107` | Queue or stop timed out; the handle remains valid and can retry |
+| `ESP_GSP_ERR_TIMEOUT` | `0x107` | Queue admission, flush or stop timed out; a timed-out stop retains the handle for retry |
 
 
 ## Colors and press feedback

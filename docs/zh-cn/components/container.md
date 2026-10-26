@@ -71,7 +71,7 @@ gsp_sim_host \
       "x": 0,
       "y": 0,
       "w": 326,
-      "h": 50,
+      "h": 54,
       "text": "Containers group content and layout. clip_children keeps child pixels and input inside the card.",
       "font_size": 15,
       "fg_color": "#9FB0C7"

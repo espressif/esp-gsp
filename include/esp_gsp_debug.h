@@ -126,7 +126,10 @@ bool esp_gsp_update_error_stats(esp_gsp_handle_t gsp,
 /** Monotonic count of rendered non-idle frames since startup. */
 uint32_t esp_gsp_frame_count(esp_gsp_handle_t gsp);
 
-/** Read rendered frames and cumulative time spent producing frames. */
+/** Read rendered frames and cumulative render-path busy time.
+ * On ESP LCD, the frame count includes viewport snapshots, but busy time
+ * excludes their UI-step composition and idle time. Their ratio is not
+ * total rendering capacity or CPU utilization. */
 void esp_gsp_render_stats(esp_gsp_handle_t gsp, uint32_t *out_frames,
                           uint64_t *out_busy_us);
 
@@ -184,7 +187,9 @@ typedef struct {
 void esp_gsp_region_stats(esp_gsp_handle_t gsp,
                           esp_gsp_region_stats_t *out_stats);
 
-/** Cumulative rasterization and presentation time. */
+/** Cumulative rasterization and submission time in the ordinary render path.
+ * UI-step viewport snapshots bypass these timers. Submission time includes
+ * hardware synchronization waits. */
 void esp_gsp_render_phases(esp_gsp_handle_t gsp,
                            uint64_t *out_render_us,
                            uint64_t *out_submit_us);
@@ -244,9 +249,10 @@ void esp_gsp_service_stats(esp_gsp_handle_t gsp,
  *     apply_us spans, and is disjoint from the render_us/submit_us of
  *     esp_gsp_render_phases().
  *
- *  Neither coalescing nor no-op suppression exists on this path, and the
- *  update transaction does not report whether a committed value differed
- *  from the previous one, so no coalesced or no-op count is offered.
+ *  Queued batches are processed individually. Applied counts include validated
+ *  numeric/color transactions whose values are unchanged; these leave damage
+ *  and revisions unchanged. Text, resource and visibility updates retain
+ *  their publication semantics.
  */
 typedef struct {
     /** Bytes of this structure the library filled; always the first field. */

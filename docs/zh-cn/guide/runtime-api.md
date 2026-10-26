@@ -23,6 +23,11 @@ ESP_ERROR_CHECK(esp_gsp_esp_lcd_start(&app, &lcd, &ui));
 ESP-IDF 中 setter 是异步的。成功表示命令已入队；渲染任务随后提交状态，并按变更安排刷新。
 `esp_gsp_flush()` 用于确定性测试、截图或明确的同步边界。
 
+整批更新都重复当前数值或颜色时，框架仍执行校验，并可能省略重绘。
+回调 Canvas 的像素内容变化后，使用 `esp_gsp_canvas_invalidate()` 或
+`esp_gsp_canvas_invalidate_dirty()` 请求重绘。文字和图片即使复用同一底层句柄，
+仍会发布更新；具体用法见[媒体与数据](media-and-data.md)。
+
 Slider 和启用拖动的 Arc 可在 `events` 中声明 `value → call` 和 `release → call`，
 分别接收数值变化和释放提交。`event->arg` 转为 `int32_t` 后使用声明的 `min/max` 单位；
 重复值不重复通知。只声明 `callback` 时默认在释放时通知。Arc 通过数值
@@ -103,7 +108,9 @@ stop 或 session 生命周期接口。
 仍保留模态点击阻挡；hidden Drawer 不再抢边缘滚动或吞底层点击。
 
 关闭但启用的 Drawer 仍可从边缘拉开，这是保留行为。禁止该入口只需禁用 Drawer，
-不必为此同时隐藏；这不会取消已经获得所有权的手势。普通 hit 仍按最近显式 enabled
+不必为此同时隐藏。已拥有接触的 PageFlow/Drawer 被禁用或隐藏后，输入状态协调会取消
+该手势，并继续消费这次接触直到抬起；重新启用不会把仍按住的接触视为新的按下。
+普通 hit 仍按最近显式 enabled
 声明继承，子组件显式启用可覆盖父组件；结构手势检查自身 enabled，不应依赖父属性禁用。
 
 `block_scene_swipe` 仍只控制场景导航，绘制遮罩也不自动拦截全部手势。业务模态层显示
@@ -139,7 +146,7 @@ BORROW 缓冲区收到释放回调后才能释放或复用；停止生产者本�
 
 | 宏 | 值 | 含义 |
 |---|---|---|
-| `ESP_GSP_OK` | `0` | 已接受（异步入队成功，不是渲染完成） |
+| `ESP_GSP_OK` | `0` | 操作已接受／成功；异步 setter 成功不代表已呈现 |
 | `ESP_GSP_FAIL` | `-1` | 未分类失败 |
 | `ESP_GSP_ERR_NO_MEM` | `0x101` | 分配失败 |
 | `ESP_GSP_ERR_INVALID_ARG` | `0x102` | 参数无效 |
@@ -147,7 +154,7 @@ BORROW 缓冲区收到释放回调后才能释放或复用；停止生产者本�
 | `ESP_GSP_ERR_INVALID_SIZE` | `0x104` | 缓冲区或容量不足 |
 | `ESP_GSP_ERR_NOT_FOUND` | `0x105` | 对象、绑定或资源不存在 |
 | `ESP_GSP_ERR_NOT_SUPPORTED` | `0x106` | 当前控件或配置不支持该操作 |
-| `ESP_GSP_ERR_TIMEOUT` | `0x107` | 等待队列或停止超时；句柄仍有效，可重试 |
+| `ESP_GSP_ERR_TIMEOUT` | `0x107` | 等待队列、flush 或停止超时；停止超时保留句柄供重试 |
 
 
 ## 颜色与按下反馈

@@ -52,25 +52,42 @@ ESP_ERROR_CHECK(gsp_gallery_cover_set_asset(ui, assets, gsp_media_cover, false))
 gspc assets assets/assets.json --platform-soc esp32s31 --psram --hardware-jpeg --symbol media -o output/media.gspb
 ```
 
+## 获取二进制资源包
+
+`gsp_add_assets()` 会随 `idf.py build` 生成资源包。完成项目配置后，也可单独重建资源：
+
+```sh
+cmake --build build --target gsp_assets_media
+```
+
+目标后缀来自 `SYMBOL`。`main` 组件的 `SYMBOL media` 默认输出到
+`build/esp-idf/main/gsp_assets_media/media.gspb`；其他目录以构建日志为准。
+复制 `.gspb` 到设备挂载路径即可；`.h` 用于编译固件，`.deps.json` 和 `.d` 用于构建依赖。
+资源 `.gspb` 不是固件 `.bin` 或文件系统镜像，`idf.py flash` 不会将它复制到 SD 卡。
+替换正在使用的包前，先按下文关闭流程停止文件访问。
+
 ## 编码与目标兼容
 
 栅格导入沿用编译器的 PNG/APNG、JPEG、GIF、BMP 和 WebP 能力。
-`quality` 为 1–100，默认跟随 Profile；`max_fps` 限制导入动画帧率。
+`quality` 为 1–100，默认跟随 Profile；`max_fps: 0` 不限速，1–120 限制导入
+动画帧率。导出要求 RGB565 或 RGB888 Profile。
 
 | `codec` | 行为 |
 |---|---|
-| `auto`（默认） | 静态图片沿用目标自动策略；动画默认 QOI 差分，已校准目标的密集帧可选硬件 JPEG |
-| `speed` | 静态图片按解码与体积选择 STORE、QOI/RLE 或硬件 JPEG；动画仅在 Profile 有板级实测提示且帧变化密集时考虑硬件 JPEG，否则用 QOI 差分 |
-| `size` | 静态图片取可用格式中体积更小者；动画比较 QOI 差分与 JPEG/JPEG+A8 整段大小 |
+| `auto`（默认） | 使用 Profile 策略；自动动画策略比较 QOI／原生补丁与符合条件的 JPEG 帧 |
+| `speed` | 静态图片选择 STORE、QOI/RLE 或硬件 JPEG；动画使用 QOI／原生补丁，符合条件的密集帧且 Profile 有板级实测提示时可选硬件 JPEG |
+| `size` | 静态图片取可用格式中体积更小者；动画比较 QOI／原生差分与 JPEG/JPEG+A8 整段大小 |
 | `lossless` | 无损 QOI，保留透明度 |
-| `qoi` / `rle16` / `rle16_a8` / `rle32` | 显式选择已有无损编码；RLE 须匹配像素格式与透明度 |
+| `qoi` / `rle16` / `rle16_a8` / `rle32` | 显式选择静态无损编码，RLE 须匹配像素格式与透明度；动画输入使用无损 QOI 补丁 |
 | `hardware_jpeg` | 目标具有相应硬件能力时使用 JPEG/JPEG+A8，否则使用无损 QOI |
 | `jpeg` | 显式 JPEG/JPEG+A8，也允许软件解码；颜色有损、透明度无损 |
 | `raw` | 静态图片使用原生像素；动画沿用无损策略，可用 `animation_codec` 覆盖 |
 
-目标的像素格式和原生尺寸必须匹配。不透明 Image-fit 允许改变源尺寸。不透明 PNG
-或 JPEG 可以写入透明占位图（alpha 填为 255）。素材本身需要透明度时使用 JPEG+A8
-或其他透明资源。契约不匹配会保留旧图，不会丢弃透明度。
+外部资源的编码像素格式和 alpha 模式必须与占位图完全相同。清单带 `target` 提示时
+在导出阶段检查；省略提示后，运行时发布仍会检查，不匹配时保留旧图。因此不透明外部
+资源不能替换透明占位图。原生尺寸也必须匹配，支持 Image-fit 的目标可接纳不同源尺寸。
+这与通过 [`set_image()`](media-and-data.md#运行时图片) 提交原始 PNG/JPEG 字节不同：
+后者可向透明目标填入 alpha 255。外部目标需要透明度时，使用模式匹配的透明资源。
 
 静态 JPEG/JPEG+A8 需要图片缓存；动画可以使用独立帧缓冲。原生 STORE 和已支持的
 QOI/RLE 静态图片区域解码路径可以不使用整图缓存。
@@ -98,8 +115,10 @@ Row 使用 binder 提供的令牌，槽位使用生成常量。读取结束后�
 
 ## 编码与存储分离
 
-相同素材、尺寸、目标 Profile 和编码配置下，Flash 与外部资源使用相同的编码策略。
-导出保留透明度、帧时长和循环信息。
+内嵌与外部资源共用栅格预处理、原生像素转换和 JPEG 策略，保留透明度、累计帧时长与
+循环信息。外部动画拆成可独立读取的帧成员：自动策略可使用 QOI 或原生像素补丁，
+但不会导出内嵌动画的 SPANS 与分组 DEFLATE。因此相同输入及 Profile 的内嵌 Bundle
+和外部包可能有不同编码大小。
 
 清单支持与场景 Image 相同的 `animation_codec`：`lossless`、`jpeg`、
 `hardware_jpeg`，优先于 `codec` 的动画策略。`auto` 或未指定编码时在未校准目标上
@@ -117,7 +136,9 @@ Row 使用 binder 提供的令牌，槽位使用生成常量。读取结束后�
 
 ## 状态与内存诊断
 
-`esp_gsp_assets_get_status()` 返回请求编号、处理阶段、错误和 `pending` 状态：
+`esp_gsp_assets_show()` 及生成的资源 setter 返回成功只表示请求已接纳，不代表文件
+已加载或图片已解码。在应用任务调用 `esp_gsp_assets_get_status()`，获取请求编号、
+处理阶段、错误和 `pending` 状态：
 
 | 阶段 | 含义 |
 |---|---|
@@ -210,13 +231,27 @@ if (ret == ESP_GSP_OK) {
 
 当前接入 ESP-IDF 已挂载的文件系统，SD/NAND 共用接口。裸 NAND 的 ECC、坏块和
 磨损管理由存储驱动负责。文件大小受平台 `fseek/ftell` 范围限制（32 位 `long` 下
-需小于 2 GiB），可拆包。该文件服务通过 ESP-IDF API 使用，PC 桥接没有对应端点。
+需小于 2 GiB）。每包还限制为最多 65,535 个成员，所有静态图片及动画帧表项合计；
+更大的素材库需拆包。该文件服务通过 ESP-IDF API 使用，PC 桥接没有对应端点。
 
 `examples/usage/external_assets` 提供 SDSPI 挂载、板级引脚配置、BSP 已挂载
 SDMMC/NAND 入口及内置占位图。挂载失败不会格式化存储。工具配套关系见
 [兼容性契约](../reference/compatibility.md)。
 
 ## SD 字体
+
+字符集已知时，优先由 GSPC 烘焙为 GFB 字形。运行时修改文本，只要字符仍在该
+字符集内，就不需要原始字体或 FreeType 动态回退。
+
+| 需求 | 字体路径 |
+|---|---|
+| 字符已知，包括运行时变化的文本 | 将所需字符烘焙进 bundle |
+| 固定字形不进入固件镜像 | 使用 `gspc font-link`，加载其 GFB 目录 |
+| 需要编译字符集之外的字符 | 显式提供原始字体，由 FreeType 补齐缺字 |
+
+CFF 支持用于从含 CFF 轮廓的原始字体补字。GSPC 已将 CFF 源字体烘焙成 GFB 时，
+加载这些 GFB 字形无需运行时 CFF driver。应根据字符覆盖和资源预算选择动态回退，
+无需仅因文本会变化或源字体是 OTF 就启用它。
 
 `esp_gsp_font_file.h` 提供启动前的字体文件加载。动态 TTF/OTF/TTC 与
 `gspc font-link` 生成的字体目录包共用 `open → apply → close` 流程，按文件签名
@@ -244,8 +279,10 @@ if (esp_gsp_font_file_open("/sdcard/ui.ttf", 8 * 1024 * 1024, &font) == ESP_GSP_
 加载失败时可保留固件内字体继续启动。启动失败，或所有引用该字体的 UI 停止成功后，
 调用 `esp_gsp_font_file_close(font)`。停止超时时保留句柄继续等待。释放后的旧配置
 不可直接复用。`apply()` 只准备启动配置，不热替换运行中的字体。动态字体在此检查
-签名，完整字体解析由 UI 启动时的 FreeType 完成，TTC 使用第一个字面。目录包在
-加载时校验 CRC。
+签名，完整字体解析由 UI 启动时的 FreeType 完成，TTC 使用第一个字体面。目录包在
+加载时校验 CRC。文件加载或 UI 启动成功不等于动态补字已启用：部分 FreeType 初始化
+失败会记录警告，并继续使用烘焙字形。应检查 `Dynamic text ready`，再用烘焙字符集
+之外的字符验证。缺少 CFF driver 会与其他字体数据或 FreeType 错误分别诊断。
 
 ### 外置固定字形
 
@@ -261,6 +298,31 @@ gspc font-link build/app.gspb --output-dir build/linked --catalog build/fonts.gs
 
 目录包设置 `app.font_catalog`，动态字体设置 `app.ttf`/`ttf_size`。可以分别加载
 两个句柄并依次应用，共同提供固定字形和动态补字。两类句柄都需保持到 UI 停止。
+
+字体解析分为两步：启动时，场景的每个 FONT 引用优先选择内嵌 GFB；缺少内嵌资产时，
+才按相同的资产/content ID 从目录取得 GFB。必需资产缺失会导致启动失败，即使同时
+提供动态 TTF 也不能替代，因为 GFB 还提供编译期布局元数据。排版时优先使用这份
+已解析 GFB 中的字形，再由动态字体按其编译字号补齐缺字。目录不会按码点、字体名称
+或字号搜索，因此给未链接 bundle 挂目录不会扩大字符集，也不会覆盖内嵌字体。
+
+### 模拟器与 PC bridge
+
+使用 capabilities 报告 `font_catalog_version: 1` 的模拟器构建：
+
+```sh
+gsp_sim_host --bundle build/linked/app.gspb --font-catalog build/fonts.gspb \
+  --dynamic-font assets/ui.ttf --headless --frames 2
+```
+
+`--font-catalog` 优先于 `GSP_FONT_CATALOG` 环境变量。bridge runner 接收相同选项
+和环境变量，在 host 创建 UI 前传入；原生 C 模拟器也支持两者。GSPB 字体目录应传给
+这个选项，不能传给 `--dynamic-font`。目录内容与 CRC 在启动前校验；整个目录文件和
+动态字体在 reset 期间保持驻留 RAM，UI 销毁后释放。此路径验证目录解析及其与动态字体
+的共存，不验证 SD 挂载或设备堆分配位置。
+
+PC Backend 接收的 UI handle 已经打开，bridge archive 不实现
+`esp_gsp_font_file_open/apply/close`，应在启动 host 时配置字体。RPC 不热替换字体。
+缺少此入口的旧发行版需要更新 host 及其内嵌运行时，仅重编 Backend 不会增加该能力。
 
 > 字体 `open()` 返回时文件已经关闭。如果没有图片资源服务等其他使用者，随后可以
 > 卸载 SD；UI 继续使用 RAM 中的字体。这与图片/动画的逐帧文件读取生命周期不同。

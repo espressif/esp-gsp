@@ -37,7 +37,7 @@
 | `CONFIG_ESP_GSP_TEXT_SLOTS` | 动态文字容量（0 = 自动） | `0` | `int` / `0..65533` | 可配置 | 是 |
 | `CONFIG_ESP_GSP_DEFAULT_DYNAMIC_IMAGE_SLOTS` | 动态图片容量（0 = 自动） | `0` | `int` / `0..32767` | 可配置 | 是 |
 | `CONFIG_ESP_GSP_FREETYPE_CACHE_GLYPHS` | 默认 FreeType 字形缓存条目数 | `32` | `int` / `1..512` | 可配置 | 否 |
-| `CONFIG_ESP_GSP_FREETYPE_GLYPH_MAX_PX` | 默认 FreeType 字形最大宽高 | `40` | `int` / `8..256` | 可配置 | 否 |
+| `CONFIG_ESP_GSP_FREETYPE_GLYPH_MAX_PX` | 默认 FreeType 缓存字形最大宽高 | `40` | `int` / `8..256` | 可配置 | 否 |
 ## 高级设置（可选） / 工程运行时默认值 / 渲染加速
 
 | 配置或能力 | 作用 | 默认值 | 类型 / 范围 | 预编译组件 | JSON 自适应 |
@@ -69,7 +69,7 @@
 |---|---|---:|---|---|---|
 | `CONFIG_ESP_GSP_RENDER_TASK_STACK_PSRAM` | 把渲染任务栈分配到 PSRAM | `false` | `bool` / `布尔值` | 可配置 | 否 |
 | `CONFIG_ESP_GSP_RENDER_TASK_STACK_SIZE` | 渲染任务栈大小（字节） | `12288` | `int` / `4096..65536` | 可配置 | 否 |
-| `CONFIG_ESP_GSP_RENDER_TASK_STACK_SIZE_FREETYPE` | 启用 FreeType 时的渲染任务栈大小（字节） | `24576` | `int` / `8192..65536` | 可配置 | 否 |
+| `CONFIG_ESP_GSP_RENDER_TASK_STACK_SIZE_FREETYPE` | 启用 FreeType 时的渲染任务栈大小（字节） | `32768` | `int` / `8192..65536` | 可配置 | 否 |
 | `CONFIG_ESP_GSP_RENDER_TASK_PRIORITY` | 渲染任务默认优先级 | `4` | `int` / `1..24` | 可配置 | 否 |
 ## 高级设置（可选） / 工程运行时默认值 / 运行时任务 / 后台解码任务
 

@@ -159,9 +159,11 @@ when a deterministic read-after-write boundary is required.
 ### Shutdown times out or a buffer is still owned
 
 Call `esp_gsp_stop()` from an application task, never from a framework
-callback. Canvas stop is asynchronous; flush before freeing Canvas callback
-context or accepted borrowed frames. For runtime images, wait for the release
-callback defined by the selected COPY/BORROW/TAKE ownership model.
+callback. After successfully submitting Canvas stop, successfully flush before
+freeing its draw-callback context. Reuse accepted borrowed frames only after
+their release callbacks. BORROW/TAKE runtime images likewise retain their inputs
+until release; COPY needs no caller-buffer release callback. A flush does not
+wait for all background image decoding to finish.
 
 ## Input
 
@@ -184,8 +186,10 @@ Explicit interrupt mode remains strict.
 Pinch is application-owned. Register `esp_gsp_on_pinch()`, return `true` from
 `ESP_GSP_PINCH_BEGIN` to capture the gesture, and apply the reported relative
 scale through the generated image scale helper. ESP-GSP reports the gesture;
-it does not automatically zoom or pan a control. `MAX_TOUCH_POINTS=1` disables
-the second contact and pinch handling.
+it does not automatically zoom or pan a control. The build capability is fixed
+at two touch points; there is no `MAX_TOUCH_POINTS=1` product setting. Verify that
+the touch controller/adapter supplies two contacts and the BEGIN callback
+accepts the gesture.
 
 ## Lists, grids, and runtime media
 

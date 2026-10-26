@@ -76,14 +76,55 @@ keyframe state and subscriptions.
 
 Run `gsp_sim_host --help` for the built-in help.
 
+Use the bundle's compiled GFB glyphs when they cover the required text, including
+text changed at runtime. `--dynamic-font` is an optional missing-glyph fallback;
+GFB catalogs also use compiled glyphs and do not require a raw font.
+
 ### Scene and timing
 
 | Parameter | Description |
 |---|---|
-| `--bundle <PATH>` | Scene bundle file (`.gspb`), required |
-| `--dynamic-font <PATH>` | Optional TrueType font file |
+| `--bundle <PATH>` | Scene bundle file (`.gspb`); required except for capability or embedded-runtime information queries |
+| `--dynamic-font <PATH>` | Optional missing-glyph fallback using a scalable TrueType or CFF font (`.ttf`, `.otf`, or first face of `.ttc`); query `--capabilities` for compiled drivers |
+| `--font-catalog <PATH>` | GSPB font catalog from `gspc font-link`, loaded before UI startup |
+| `--record-input <PATH>` | Record consumed touch samples to a new JSONL file; existing files are rejected |
+| `--replay-input <PATH>` | Replay a matching JSONL trace; conflicts with recording and CLI tap/drag/wait |
 | `--fps <N>` | Simulated frame rate, default `60` |
-| `--frames <N>` | Frame limit; default `0` = no frame limit; exits on `quit`, script/replay completion or termination |
+| `--frames <N>` | Frame limit; default `0` = no limit; script/replay exit rules are described below |
+
+The 1.8.0 WASI runtime includes TrueType and CFF drivers. CLI/RPC capabilities
+report registered TrueType/CFF drivers in `font_outline_drivers`, such as
+`["truetype", "cff"]`; `null` means the
+embedded runtime predates the query or the probe could not run, and `[]` means
+neither TrueType nor CFF is enabled. Older simulator releases may lack CFF.
+The CFF driver handles CFF/CFF2 outlines, but this API does not expose variable
+font axes. The extension alone does not identify the outline type.
+Native source builds report the drivers in their linked FreeType.
+Collections (`.ttc`) use face 0, with the same driver restrictions; diagnostics
+identify that face's outline signature when the collection header allows it.
+An empty font file is rejected before the runtime starts.
+Bitmap-only faces are rejected during setup; dynamic fallback requires scalable outlines.
+
+If optional font setup fails, compiled GFB glyphs remain available and the
+dynamic fallback is disabled. Face setup warnings include the detected font
+container, byte count and FreeType error code; a missing CFF driver is reported
+explicitly. Other parse failures do not by themselves prove that a font is
+damaged: inspect the error code and the drivers enabled in that FreeType build.
+Size setup failures report the FreeType operation, scene/font index, requested
+pixel size and FreeType error code.
+
+The glyph-cache dimension is a caching bound, not a rendered font-size limit.
+Larger fallback bitmaps use one reusable heap workspace and are rasterized
+again on later resolves. The simulator drives the portable runtime without
+FreeRTOS render tasks; device task-stack settings do not size its WASM stack.
+
+Use `--font-catalog fonts.gspb` (or `GSP_FONT_CATALOG`) for a catalog from
+`gspc font-link`; an explicit CLI path wins. Both this option and `--dynamic-font`
+may be supplied. The catalog is CRC-checked before UI startup and preserved on
+reset. `font_catalog_version: 1` in CLI/RPC capabilities identifies support in
+the embedded runtime; older simulator releases need an update. Catalogs resolve
+missing GFB assets by ID, not missing codepoints. See [external fonts](../guide/external-assets.md#simulator-and-pc-bridge)
+for resolution priority and PC bridge limits.
 
 ### Preview and input
 
@@ -100,10 +141,28 @@ Run `gsp_sim_host --help` for the built-in help.
 |---|---|
 | `--tap <X> <Y>` | Tap at coordinates (X, Y); repeatable |
 | `--drag <X1> <Y1> <X2> <Y2>` | Drag from (X1, Y1) to (X2, Y2); repeatable |
-| `--wait <FRAMES>` | Wait N frames before the next scripted action; repeatable |
+| `--wait <FRAMES>` | Wait N frames before the next scripted action (N > 0); repeatable |
 
-Scripted actions execute in command-line order. The same input commands are
-also available through the API channel at runtime.
+Scripted actions execute in command-line order. A completed script exits when
+no API channel is enabled; with an API channel, use `quit` or a frame limit.
+The same input commands are also available through the API channel at runtime.
+
+### Touch recording and replay
+
+```sh
+gsp_sim_host --bundle app.gspb --record-input touch.jsonl --frames 600
+gsp_sim_host --bundle app.gspb --headless --replay-input touch.jsonl \
+    --dump replay.png --dump-format png
+```
+
+Recording captures consumed pointer/touch samples, including expanded tap/drag
+samples. Replay uses simulation time and must match the bundle, dimensions,
+frame step, and optional dynamic-font/catalog hashes in the trace. It exits at
+the end record; a frame limit or `quit` that cuts it short returns an error.
+Reset is rejected during recording or replay, and replay rejects live input.
+The trace contains touch input, not property writes, business state or Backend
+`pointer` notifications. Reproduce those separately when the application needs
+them. Use a fresh recording filename; a truncated trace is not a valid replay.
 
 ### Output and connections
 
@@ -114,19 +173,21 @@ also available through the API channel at runtime.
 | `--api-enable` | Enable API control channel (defaults to stdio) |
 | `--api-listen <URL>` | API endpoint; implies `--api-enable` |
 | `--api-json <PATH>` | Load a GSPC `*.api.json` for named tap/set, inspect/hit_test, and callback names |
-| `--backend-enable` | Enable application backend on a random local port |
+| `--backend-enable` | Enable application backend on an automatically selected local port |
 | `--backend-listen <URL>` | Backend endpoint; implies `--backend-enable` |
 | `--backend-library <PATH>` | Load a native Backend shared library; mutually exclusive with Socket Backend options |
 | `--backend-required` | Pause frame progression until backend connects |
-| `--backend-idle-timeout <SECS>` | Backend connection wait timeout (`0` = no limit) |
-| `--log-level <LEVEL>` | `trace` / `debug` / `info` (default) / `warn` / `error` |
-| `--log-file <PATH>` | Write logs to file instead of stderr |
+| `--backend-idle-timeout <SECS>` | With `--backend-required`, timeout for initial connection or reconnection; default `0` = no limit |
+| `--ready-file <PATH>` | Write listener addresses and process identity after startup; use a fresh path and remove it after exit |
+| `--log-level <LEVEL>` | `trace` / `debug` / `info` (default) / `warn` / `error`; a valid `RUST_LOG` takes precedence |
+| `--log-file <PATH>` | Append host tracing logs to a file; WASI stderr and the preview URL remain on stderr |
 
 ### Diagnostics
 
 | Parameter | Description |
 |---|---|
-| `--capabilities` | Print the simulator capability set and exit |
+| `--capabilities` | Print the simulator capability set and exit without requiring a bundle |
+| `--print-wasm-info` | Hidden diagnostic option: print embedded WASM `staged`, `bytes`, `sha256` and `source`, then exit without a bundle |
 
 ### Advanced tuning
 
@@ -181,8 +242,8 @@ gsp_sim_host --bundle build/app.gspb --api-json build/app_gsp.api.json \
 
 `capabilities.named_api` confirms that the map is active. The sidecar must come
 from the same compile as the bundle; mismatched schema, byte length, or CRC is
-rejected at startup. Named bounds describe the compiled initial layout, so use
-screenshots or coordinate input after runtime movement and animation.
+rejected at startup. Named `bounds` describe the compiled initial layout;
+`query_geometry` and `inspect_object.runtime_geometry` inspect current input geometry.
 
 ### Methods
 
@@ -191,7 +252,7 @@ screenshots or coordinate input after runtime movement and animation.
 | Method | Parameters | Description |
 |---|---|---|
 | `tap` | `{ "x": N, "y": N }` | Simulate a tap |
-| `tap_object` | `{ "name": "...", "scene": N }` | Tap a named object's compiled center; `scene` is optional |
+| `tap_object` | `{ "name": "...", "scene": N }` | Tap a verified runtime input point; optional `require_verified` rejects legacy fallback |
 | `drag` | `{ "x1": N, "y1": N, "x2": N, "y2": N }` | Simulate a drag gesture |
 | `feed_pointer` | `{ "x": N, "y": N, "pressed": bool }` | Low-level pointer input |
 | `feed_touch` | `{ "id": N, "x": N, "y": N, "pressed": bool }` | Low-level multi-touch input |
@@ -203,15 +264,17 @@ screenshots or coordinate input after runtime movement and animation.
 | `goto_scene` | `{ "scene": N, "transition": N }` | Switch to a 0-based scene; `transition` is optional |
 | `reset` | — | Reload the scene bundle |
 | `set_property` | `{ "name": "...", "property": "...", "value": ... }` | Set a named property using sidecar type/range metadata |
+| `get_property` | `{ "name": "...", "property": "...", "scene": N }` | Read the active scene's named scalar property from committed runtime state |
+| `wait_property` | `{ "name": "...", "property": "...", "value": ..., "max_frames": N }` | Wait for the typed expected value after a frame step |
 | `set_value` | `{ "bind_id": N, "value": N }` | Set an integer binding |
 | `set_text` | `{ "bind_id": N, "text": "..." }` | Set a text binding |
-| `set_color` | `{ "bind_id": N, "color": N }` | Set a color binding |
+| `set_color` | `{ "bind_id": N, "color": N }` | Set a native-format color binding |
 | `set_visible` | `{ "bind_id": N, "visible": bool }` | Toggle component visibility |
 | `set_component_i32` | `{ "component_key": N, "property_key": N, "value": N }` | Set component property by key |
 | `keyboard_attach` | `{ "action_id": N, "text_bind": N }` | Attach virtual keyboard |
 | `keyboard_attach_ex` | `{ "action_id": N, "text_bind": N, "max_bytes": N }` | Attach a virtual keyboard with an explicit UTF-8 byte limit; `max_bytes` excludes the trailing NUL |
-| `keyboard_text_size` | — | Read the required keyboard-text capacity, including the trailing NUL; Backend/Browser read-only |
-| `keyboard_text` | `{ "capacity": N }` (optional) | Read current keyboard text; insufficient capacity returns `ESP_GSP_ERR_INVALID_SIZE` with a valid UTF-8 prefix; Backend/Browser read-only |
+| `keyboard_text_size` | — | Read the required keyboard-text capacity, including the trailing NUL; API/Backend/Browser read-only |
+| `keyboard_text` | `{ "capacity": N }` (optional) | Read current keyboard text; insufficient capacity returns `ESP_GSP_ERR_INVALID_SIZE` with a valid UTF-8 prefix; API/Backend/Browser read-only |
 | `set_cursor` | `{ "bind_id": N }` | Show/hide text cursor; `65535` hides it |
 | `set_swipe_transition` | `{ "transition": N }` | Select swipe transition visual |
 | `set_swipe_fade_black_point` | `{ "drag_percent": N }` | Set swipe fade black point (1..99) |
@@ -225,6 +288,15 @@ screenshots or coordinate input after runtime movement and animation.
 | `set_swipe_enabled` | `{ "enabled": bool }` | Enable or disable swipe navigation |
 | `fling_messages` | `{ "velocity_px_s": N }` | Simulate list fling gesture |
 
+`set_property` accepts booleans and numbers in their authored units. Retained
+components use the same property codecs as the C API, including `enabled`,
+Toggle `checked`, and custom Slider/Arc/Progress ranges. Plain bundles without a
+component directory retain the corresponding binding conversions. `set_value`
+continues to write the raw integer binding; it does not convert semantic values.
+With a retained directory, scalar writes validate the runtime property key and
+type, including color and visibility. Invalid metadata cannot fall back to a
+raw binding write.
+
 #### Utility
 
 | Method | Parameters | Description |
@@ -233,7 +305,9 @@ screenshots or coordinate input after runtime movement and animation.
 | `capabilities` | — | Query display size, scene count, runtime ABI, and `named_api` |
 | `list_objects` | `{ "scene": N }` | List named objects; `scene` is optional |
 | `inspect_object` | `{ "name": "...", "scene": N }` | Inspect named operations, properties, and compiled bounds |
-| `hit_test` | `{ "x": N, "y": N, "scene": N }` | Find the smallest named compiled bound at a point |
+| `hit_test` | `{ "x": N, "y": N, "scene": N }` | Query actual runtime input routing; older modules return compiled bounds |
+| `query_geometry` | `{ "name": "...", "scene": N, "instance": N }` | Current input bounds, clipped regions and a verified tap point |
+| `resource_memory` | `{ "scene": N }` | On-demand simulator allocation attribution |
 | `frame_info` | — | Get latest frame commit info |
 | `wait` | `{ "frames": N }` | Respond after N frames |
 | `component_get_motion` | `{ "name": "...", "scene": N }` | Query PageFlow/Drawer state; alternatively use `component_key`; `scene` is optional |
@@ -244,9 +318,68 @@ screenshots or coordinate input after runtime movement and animation.
 | `unsubscribe` | `{ "events": [...] }` | Unsubscribe from notifications |
 | `quit` | — | Request simulator exit |
 
+`capabilities.input_ready` is true when no transition, custom interceptor, active
+contact, pressed pointer or gesture owns input. A changed scene ID alone does not
+mean the scene is ready for a tap.
+
+With `runtime_input_query_version: 1` and a matching new sidecar, `query_geometry`
+resolves current transforms, clips and enabled state. Candidate points are checked
+through runtime hit routing and Drawer gating. `no_verified_point` means no sampled
+point was verified; it does not prove the object is completely occluded. Queries
+refuse transition-owned input and custom interceptors. Existing contacts or an
+active gesture return `input_busy`; rejection preserves the existing contacts.
+Non-interactive objects have no input target.
+
+After the initial points for each hit region, the query uses observed occluder
+boundaries to find narrow exposed areas. Each request allows up to 64 additional
+point checks and 64 boundary queries; every point still requires a runtime hit
+match. The optional `search` object reports these counts and `budget_exhausted`.
+
+`tap_object` uses this query and returns `target_verified: true` when it verifies
+the target before dispatch. It does not verify application results: inspect callbacks,
+state and screenshots afterward. Pass `require_verified: true` to reject older
+modules/sidecars, whose compatible fallback is the compiled center with
+`target_verified: false`. A known blocked target never falls back.
+
+For a list row, obtain `instance`, `runtime_epoch`, `list` and `item` from `hit_test`
+and pass all four to `tap_object` with the list name. Instance generations alone
+cannot detect a row rebound to another item. The host checks owner, item, generation
+and runtime epoch again before dispatch; reset invalidates saved row identities.
+
+With `resource_memory_version: 1`, `resource_memory` reports simultaneous tracked
+image-payload peaks and current cache, animation and host-presentation allocations.
+Cache bytes overlap decoded payloads; individual peaks must not be summed. The
+response states exclusions and leaves the complete application peak unknown.
+These host readings do not establish device heap or DMA availability.
+`observed_at` associates the reading with the validated Bundle identity, active
+scene/content ID, frame sequence, runtime epoch/version and display size. Bundle
+identity is null without a validated sidecar; the target Profile remains unknown.
+Compare readings from the intended artifact and state before attributing a change
+to an asset or interaction.
+
 The API channel remains JSON-only. The application backend additionally has
 asynchronous dynamic-data and binary-media extensions described below; the
 Browser never receives their data-source requests or binary-upload access.
+
+### Named scalar properties
+
+Named scalar observation requires `named_api`, plus
+`capabilities.named_property_read_version: 1` / `wait_property_version: 1`.
+It uses the matching API sidecar's typed binds and supports ordinary and
+deployable Bundles. Results report `source: "runtime"`; text properties are
+outside this scalar API. Reads/waits are available while a Backend owns state
+writes. A getter does not advance frames. A wait evaluates after at least one
+successful frame step, even if the value already matches, so a preceding write
+can be painted before a subsequent screenshot. `max_frames` defaults to 300
+and accepts 1–36000. The expected value must match the declared type and range.
+Timeouts and runtime query failures are JSON-RPC errors; reset and scene change
+cancel pending waits. A matched value proves the observed state, while actual
+input/callback and screenshot checks establish interaction and visual behavior.
+`set_property` color writes accept RGB888; color reads/waits use the active pixel format's
+native values, such as `0xF800` for red in RGB565. Use screenshot comparisons
+with a baseline for the same pixel format when checking rendered colors. When a
+component directory is present, scalar writes validate runtime property keys and
+types, including color and visibility; invalid metadata cannot fall back to raw bind writes.
 
 ### Component motion and conditional waiting
 
@@ -278,9 +411,17 @@ observed state. A scene change or `reset` cancels any pending wait.
 These observation methods remain available even when Backend owns
 state writes.
 
+To require evidence of a new action, check `component_event_cursor_version: 1`,
+read `component_get_motion.event_cursor` **before** the action, then pass it as
+`wait_component.after_event`. Success requires a newer event for that component
+(and expected value) as well as settled state, returning `event_observed: true`.
+An unchanged initial state cannot pass. Reset or exhausted event history returns
+`event_cursor_expired`; concurrent writes still require application-level checks.
+Omitting `after_event` preserves ordinary predicate-wait semantics.
+
 **Component event notifications.**
 Subscribe to `component_event` to receive per-step notifications with
-`component_key`, `scene_id`, `kind`, `flags`, and `state`. The `flags`
+`component_key`, `scene_id`, `kind`, `flags`, `state`, and `event_cursor`. The `flags`
 field is a bitmask: value changed (`1`), settled (`2`), motion
 changed (`4`). Events are coalesced per UI step and do not record every
 intermediate request. For deterministic assertions, use the control API
@@ -318,7 +459,7 @@ Events are delivered as JSON-RPC notifications (no `id`). Register with
 | `-32602` | Invalid Params | Missing or wrong parameter type |
 | `-32603` | Internal Error | Host internal error |
 | `-32010` | Input Busy | `--input-mode` blocked input from this channel |
-| `-32020` | Component wait failed | Inspect `data.reason` for timeout, cancellation, unsupported capability or query failure |
+| `-32020` | Observation / verified input failed | Inspect `data.reason`, including timeout, cancellation, expired cursor, unsupported capability or unverified target |
 
 `not_allowed` and `backend_exclusive` are documentation labels, both with code
 `-32601`. Their messages are `method not allowed for this channel: ...` and
@@ -359,11 +500,11 @@ When the backend endpoint is enabled:
   controls) plus `goto_scene` and `reset` become backend-exclusive. API calls
   receive `backend_exclusive`. Browser state writes return `not_allowed`, while
   `goto_scene` and `reset` return `backend_exclusive` when Backend is enabled.
-- The backend automatically subscribes to `callback`, `scene_changed`, `list_bind`, `list_bind_overflow`, `binary_result`, `image_complete`, and `image_release`.
+- The backend automatically subscribes to `callback`, `scene_changed`, `pointer`, `list_bind`, `list_bind_overflow`, `binary_result`, `image_complete`, and `image_release`.
 - Only one backend connection is allowed at a time.
 
 Use `--backend-required` to pause frame progression until the backend
-connects. Use `--backend-idle-timeout <SECS>` to set a connection timeout.
+connects. Use `--backend-idle-timeout <SECS>` with it to limit initial connection or reconnect waits (default `0`, unlimited).
 
 The backend may call the state and application-logic methods listed above,
 including cursor/swipe policy, Drawer and PageFlow controls, and fixed-item
@@ -595,8 +736,8 @@ instead of attempting to load a native shared library.
 
 The runner passes `--ready-file <PATH>` to the simulator, which writes
 a JSON file containing `version`, `pid`, `backend_mode`, `backend`,
-`backend_library`, `browser`, `bridge_version`, and
-`dynamic_backend_abi_version`. Disabled endpoints appear as `null`.
+`backend_library`, `api`, `browser`, `bridge_version`, and
+`dynamic_backend_abi_version`. Disabled endpoints and the `api` field for stdio API appear as `null`.
 The PID belongs to the simulator process, not its Python tool-manager
 parent.
 

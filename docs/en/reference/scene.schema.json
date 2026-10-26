@@ -137,9 +137,9 @@
     "authoring",
     "canvas_resource_views"
   ],
-  "compiler_version": "0.8.0",
+  "compiler_version": "0.9.0",
   "protocol_version": 1,
-  "registry_hash": "crc32:87217e36",
+  "registry_hash": "crc32:268d3fcc",
   "schema_version": 2,
   "widgets": {
     "arc": {
@@ -7394,7 +7394,15 @@
         },
         "image_opacity": {
           "default": 255,
-          "doc": "image-only opacity; fixed raster transforms may bake alpha at compile time",
+          "doc": "image-only opacity 0..255; scene SVG supports direct bounded runtime control, fixed rasters may bake alpha at compile time",
+          "dynamic": true,
+          "dynamic_expression": {
+            "max": 255,
+            "min": 0,
+            "scene": "svg",
+            "template": "unsupported",
+            "template_property": "field_name"
+          },
           "maximum": 255,
           "minimum": 0,
           "type": "int"
@@ -7724,6 +7732,14 @@
             "canvas"
           ],
           "doc": "SVG part placement: cropped content or original canvas",
+          "type": "enum"
+        },
+        "svg_mode": {
+          "choices": [
+            "vector",
+            "raster"
+          ],
+          "doc": "SVG import: vector curves (default) or explicitly baked static pixels at fixed w/h",
           "type": "enum"
         },
         "template": {

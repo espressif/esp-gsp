@@ -11,7 +11,7 @@ The location of frame memory determines the presentation strategy:
 
 | Panel class | Frame memory | AUTO behavior |
 |---|---|---|
-| RGB / MIPI-DSI | Host framebuffer continuously scanned by the panel | Triple-buffered partial rendering when three buffers are available; double-buffered direct rendering otherwise |
+| RGB / MIPI-DSI | Host framebuffer continuously scanned by the panel | Triple-buffered partial rendering; three framebuffers are required |
 | SPI / QSPI with TE | GRAM inside the panel | Dirty-area transfers synchronized to the TE signal |
 | SPI / QSPI without TE | GRAM inside the panel | Free-running dirty-area transfers |
 
@@ -32,9 +32,11 @@ lcd.display = display;
 lcd.touch = touch; /* optional */
 ```
 
-For RGB and MIPI-DSI targets, expose every framebuffer owned by the panel
-driver. Three buffers allow rendering to continue without waiting for the
-currently scanned frame; two buffers use the direct fallback.
+For RGB and MIPI-DSI targets, the current `esp_display_present` AUTO mode requires
+three framebuffers; it does not automatically fall back when fewer are available.
+A two-buffer board must explicitly select a compatible two-buffer mode, such as
+`ESP_DISPLAY_PRESENT_MODE_DOUBLE_PARTIAL` or unrotated `DOUBLE_DIRECT`, and
+provide the matching framebuffer count.
 
 For SPI and QSPI targets, provide TE configuration only when the signal is
 wired and usable. A zeroed TE configuration means that TE synchronization is
@@ -45,8 +47,10 @@ disabled; GPIO 0 remains valid when TE is explicitly enabled.
 Partition rendering modes share one draw-buffer pool configured through
 `target.drawbuf`. `target.drawbuf.lines` controls the height of each
 presenter-owned draw stripe. Zero selects a stripe height derived from a
-32 KiB default; `target.drawbuf.buffers` defaults to two for free-running
-GRAM panels and to one for TE-synchronized and framebuffer-repair paths. Set
+32 KiB default. Free-running GRAM defaults to two draw buffers. TE-synchronized
+and framebuffer-repair paths can also select two on multicore targets when
+their memory checks allow it, otherwise one; their automatic second buffer is
+optional if allocation fails. Set `buffers = 1` to require a single draw buffer. Set
 `lines` explicitly when the product needs a different memory bound, and use
 `target.drawbuf.in_psram` only when the panel transfer path can consume that
 memory. Values greater than the logical height and buffer counts greater
@@ -63,6 +67,11 @@ Applications must compile a scene resolution matching the logical orientation;
 90° and 270° therefore use transposed width and height for non-square panels.
 The bundle `RGB565` or `RGB888` pixel format must also match the display
 target; rotation does not convert between pixel formats.
+
+The current presenter rejects logical rotation on free-running GRAM output
+and on `DOUBLE_DIRECT`. Use a compatible TE-composition or framebuffer
+full/partial mode when presenter rotation is required. This is separate from
+rotation already configured in the panel driver by the BSP.
 
 ## Transitions
 

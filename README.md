@@ -29,7 +29,7 @@ products that need predictable memory use and reviewable UI sources.
 
 ## Requirements
 
-- ESP-IDF 6.0 or later.
+- ESP-IDF 6.0 or later; use 6.1 or later for ESP32-S31.
 - Python 3.10 or later for the `esp-gsp-tools` toolchain manager.
 - An application or BSP that initializes an `esp_lcd` display target.
 
@@ -39,7 +39,7 @@ Create the smallest complete example directly from the ESP Component Registry:
 
 <!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.7.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.8.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -66,7 +66,7 @@ From the ESP-IDF project root:
 
 <!-- gsp-version:dependency-command -->
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.7.0"
+idf.py add-dependency "espressif/esp-gsp^1.8.0"
 python -m pip install -U esp-gsp-tools
 ```
 <!-- /gsp-version:dependency-command -->

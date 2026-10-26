@@ -5,6 +5,8 @@ cmake_minimum_required(VERSION 3.20)
 project(gsp_sim_bridge LANGUAGES C)
 include("${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/gsp_toolchain.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/gsp_compatibility.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/gsp_context.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/gsp_generated.cmake")
 
 add_library(gsp_sim_bridge STATIC src/transport.c src/api.c src/media.c src/images.c src/assets.c)
 add_library(esp_gsp::sim_bridge ALIAS gsp_sim_bridge)
@@ -49,15 +51,26 @@ if(GSP_SIM_BRIDGE_BUILD_TESTS)
         "${CMAKE_CURRENT_BINARY_DIR}/asset-publication.gspb")
     add_test(NAME bridge_rpc_client
         COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_rpc_client.py")
+    add_test(NAME bridge_scenario
+        COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_scenario.py")
+    add_test(NAME bridge_interaction
+        COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_interaction.py")
 endif()
 
 # Compile scenes and generated headers together using the component's tool
 # selection contract (explicit override, otherwise esp-gsp-tools).
 function(gsp_add_backend target)
-    cmake_parse_arguments(ARG "" "PROFILE" "SOURCES;INCLUDE_DIRECTORIES;SCENES" ${ARGN})
+    cmake_parse_arguments(ARG "" "PROFILE;COMPONENTS_DIR" "SOURCES;INCLUDE_DIRECTORIES;SCENES" ${ARGN})
+    if(ARG_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR "gsp_add_backend: unknown arguments: ${ARG_UNPARSED_ARGUMENTS}")
+    endif()
+    if("COMPONENTS_DIR" IN_LIST ARG_KEYWORDS_MISSING_VALUES)
+        message(FATAL_ERROR "gsp_add_backend: missing values for: COMPONENTS_DIR")
+    endif()
     if(NOT ARG_SOURCES OR NOT ARG_SCENES)
         message(FATAL_ERROR "gsp_add_backend requires SOURCES and SCENES")
     endif()
+    esp_gsp_component_inputs(component_args component_deps "${ARG_COMPONENTS_DIR}")
     get_filename_component(component_root "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../.." ABSOLUTE)
     include("${component_root}/cmake/gsp_example_assets.cmake")
     gsp_example_assets_prepare("${component_root}" gsp_example_assets_target)
@@ -77,17 +90,38 @@ function(gsp_add_backend target)
         list(APPEND scenes "${scene}")
     endforeach()
     set(generated "${CMAKE_CURRENT_BINARY_DIR}/${target}_assets")
-    # Run on every build: scene JSON may reference images/fonts/imports outside
-    # the JSON directory. This avoids silently stale bundle/header pairs.
-    add_custom_target(${target}_bundle
+    set(context_outputs "")
+    set(context_manifest "")
+    get_property(context_schema GLOBAL PROPERTY ESP_GSPC_CONTEXT_SCHEMA)
+    if(context_schema STREQUAL "1")
+        set(context_outputs "${generated}/bundle_gsp.context.json")
+        set(context_manifest ",\"context\":\"${context_outputs}\"")
+        esp_gsp_register_context("${context_outputs}")
+    endif()
+    if(gspc_command STREQUAL "${component_root}/ci/gspc-dev")
+        file(GLOB_RECURSE compiler_sources CONFIGURE_DEPENDS
+            "${component_root}/tools/gspc/*.rs" "${component_root}/tools/gspc/*/Cargo.toml")
+        list(APPEND gspc_dependencies ${compiler_sources}
+            "${component_root}/tools/gspc/Cargo.toml" "${component_root}/tools/gspc/Cargo.lock"
+            "${component_root}/formats/gsp_format.yaml" "${component_root}/config/esp_gsp_config_schema.yml")
+    endif()
+    esp_gsp_scene_outputs(scene_headers scene_byproducts "${generated}" TRUE NINJA_NAMES_ONLY ${scenes})
+    set(depfile "${generated}/app.d")
+    # GSPC's depfile includes referenced fonts, images and component inputs.
+    add_custom_command(OUTPUT "${generated}/app.gspb" "${generated}/bundle_gsp.h"
+                              "${generated}/bundle_gsp.api.json" ${context_outputs} ${scene_headers}
+        BYPRODUCTS ${scene_byproducts}
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${generated}"
         COMMAND ${gspc_command} pack ${scenes} --deployable
-            --profile "${profile}" --gen-dir "${generated}"
+            ${component_args} --profile "${profile}" --gen-dir "${generated}"
+            --depfile "${depfile}"
             --api-header "${generated}/bundle_gsp.h" --symbol bridge_bundle
             -o "${generated}/app.gspb"
-        DEPENDS ${gsp_example_assets_target}
-        BYPRODUCTS "${generated}/bundle_gsp.h" "${generated}/bundle_gsp.api.json" "${generated}/app.gspb"
+        DEPENDS ${scenes} ${component_deps} "${profile}" ${gspc_dependencies} ${gsp_example_assets_target}
+        DEPFILE "${depfile}"
         VERBATIM)
+    add_custom_target(${target}_bundle DEPENDS "${generated}/app.gspb" "${generated}/bundle_gsp.h"
+                                             "${generated}/bundle_gsp.api.json" ${context_outputs} ${scene_headers})
     add_executable(${target} ${ARG_SOURCES}
         "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/src/main.c")
     add_library(${target}_module SHARED ${ARG_SOURCES}
@@ -104,5 +138,5 @@ function(gsp_add_backend target)
         VISIBILITY_INLINES_HIDDEN YES)
     # Generator expressions handle Ninja/Makefiles and Visual Studio/Xcode.
     file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/${target}-$<CONFIG>.json"
-        CONTENT "{\"version\":2,\"component_root\":\"${component_root}\",\"executable\":\"$<TARGET_FILE:${target}>\",\"backend_library\":\"$<TARGET_FILE:${target}_module>\",\"bundle\":\"${generated}/app.gspb\",\"api_json\":\"${generated}/bundle_gsp.api.json\"}\n")
+        CONTENT "{\"version\":2,\"component_root\":\"${component_root}\",\"executable\":\"$<TARGET_FILE:${target}>\",\"backend_library\":\"$<TARGET_FILE:${target}_module>\",\"bundle\":\"${generated}/app.gspb\",\"api_json\":\"${generated}/bundle_gsp.api.json\"${context_manifest}}\n")
 endfunction()

@@ -1,10 +1,10 @@
 # 图片（`gsp_image`）
 
-支持 contain、cover 和 stretch 的静态或动态图片。
+支持 contain、cover 和 stretch 的静态位图、位图动画及编译式 SVG 矢量图片。
 
 ## 适用场景
 
-适合承载页面中的主要文字、图片或操作。
+用于图标、照片、编译动画和 SVG 素材。持续生成的相机或视频帧使用 Canvas。
 
 ## 本地交互预览
 
@@ -24,6 +24,8 @@ gsp_sim_host \
 ## 运行方式
 
 内容会编译进场景，可接收指针操作，也可使用绑定或生成的运行时 setter。
+
+编译式 SVG 保留曲线，可缩放、旋转和形变；`svg_mode: "raster"` 将支持的静态 SVG 效果烘焙为位图。运行时替换位图需声明资源 `bind`，仅命名不会建立替换目标。变换后的压缩位图需要解码图片缓存。详见[媒体契约](../guide/media-and-data.md)。
 
 如果应用代码需要读写某个对象，请为它设置稳定的 `name`。GSPC 会为命名对象生成下方列出的类型化函数。
 
@@ -153,7 +155,8 @@ size_t gsp_image_docs_dynamic_image_slots(void)
 | `dynamic_color` | `bool` | — | — | — | 模板成员公开每实例独立颜色槽 |
 | `dynamic_image` | `bool` | — | — | — | 模板图片公开每实例独立资源槽 |
 | `canvas` | `enum` | — | `draw`, `push` | — | Canvas 生产方式：绘制回调或借用帧；生成独立资源视图 |
-| `image_opacity` | `int` | — | 默认 255; 0…255 | — | 仅图片透明度；固定栅格图片的变换可在编译期烘焙 alpha |
+| `svg_mode` | `enum` | — | `vector`, `raster` | — | SVG 导入：默认保留曲线，或按固定宽高显式烘焙静态像素 |
+| `image_opacity` | `int` | — | 默认 255; 0…255 | 场景: SVG; 模板: 不支持 | 仅图片透明度 0..255；场景 SVG 支持直接有界运行时控制，固定栅格图片可在编译期烘焙 alpha |
 
 </details>
 

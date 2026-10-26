@@ -91,7 +91,8 @@ gspc docs -o authoring-reference.md
 
 这些机器可读产物让编辑器、脚本和 AI 助手都跟随同一编译器注册表。
 优先用 `gspc cards` 查看单个控件；需要字段范围、版本或完整注册表时再导出 Schema、docs 或 inventory。
-编译或打包还会在头文件旁写出 `*.api.json`，用于按对象名对照生成 API 与模拟器映射。
+编译或打包传入 `--api-header` 后，还会在头文件旁写出 `*.api.json`，用于按对象名对照
+生成 API 与模拟器映射。
 
 ## Agent 辅助编写
 
@@ -148,7 +149,8 @@ Slider/Arc 可在 `events` 中声明 `value -> call` 和 `release -> call`，分
 值；控件将声明范围划分为 100 个间隔，选择色相范围时应考虑这一精度。
 
 Wheel 的生成绑定默认开启行吸附；高级 List 可用 `esp_gsp_list_snap()` 显式开启。
-`cyclic: true` 会在编译期拒绝；`snap_to_item: false` 可关闭吸附，生成头与自描述包行为一致。通过行回调处理选项选择，行吸附控制滚动停止位置。
+Wheel 设置 `cyclic: true` 可在首尾项之间循环滚动；`snap_to_item: false` 可关闭吸附，
+生成头与自描述包行为一致。通过行回调处理选项选择，行吸附控制滚动停止位置。
 
 ## 动画与转场
 
@@ -217,3 +219,34 @@ getter 可能仍读到本次输入提交前的值。ESP-IDF 下 setter 成功表
 
 多场景链接共用一组 `(font, size)` 字体包。`--max-font-packs` 默认 32，与 ESP-GSP
 字体容量一致；使用自定义运行时时可指定对应上限。共享字体超限按 Bundle 报告一次。
+
+## 检查可选链接模块
+
+通过 `gsp_add_bundle()` 或 `gsp_add_assets()` 注册资源后，执行：
+
+```sh
+idf.py gsp_feature_report
+```
+
+只读报告直接分析最终 GSPB 字节，包含隐藏场景、模板和外部素材，列出 JPEG、PNG、
+EAF、参考渲染器、矢量、程序化效果和动画 Span、动画 DEFLATE 可选模块的需求及原因。
+它不修改 sdkconfig、资源编码或链接根，也不预测 Flash 收益。
+禁用能力会在组件构建前与最终资源核对，输入不变时复用检查结果。
+
+注册资源之外的需求未知时，保留已启用模块。只有覆盖直接 API、下载和 OTA 资源后，
+才通过已有的 `gsp_specialize_runtime(DYNAMIC_FEATURES ...)` 声明需求；`NONE` 表示
+没有这些额外输入，额外包放入 `EXTRA_BUNDLES`。报告保留已启用的参考渲染器回退。
+`AUTO` 和 `ALL` 尊重已禁用的链接能力；具有配置项的动态能力需要在项目配置中启用。
+Span 解码器没有独立的 menuconfig 选项，由最终资源和 runtime-link 声明决定是否保留。
+有配置项的候选通过 menuconfig 应用，再对比目标板 APP 大小、功能、帧时和内存。
+
+也可以直接检查资源包，不需要构建侧报告或 sidecar：
+
+```sh
+gspc features app.gspb assets.gspb --sdkconfig build/config/sdkconfig.json
+gspc features app.gspb --sdkconfig build/config/sdkconfig.json --runtime png,jpeg --format json
+```
+
+需要提供全部应用和外部素材包。`--runtime auto` 为默认值；需求明确时可选 `none`、
+`all` 或完整的逗号分隔列表。`--check` 只检查需求，不打印裁剪建议。
+此入口要求所选 GSPC 声明 `compiler_features.link_feature_report: 2`。

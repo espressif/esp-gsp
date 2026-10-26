@@ -23,7 +23,11 @@ These commands compile the example and open it in the ESP-GSP simulator browser 
 
 ## Runtime behavior
 
-The scene JSON defines the cell layout template. Fixed items work without an application adapter; dynamic data requires an adapter or a backend.
+Use `cell_template` for a virtualized Grid and bind it once with a non-null
+application cell callback, even when the data set is fixed. `item_count` supplies
+the initial total; the binder supplies each recycled cell's content. Retain the
+Grid handle and update it with `set_total`/`refresh`. Without `cell_template`,
+the compiler emits static colored cells rather than a data-bound virtualized Grid.
 
 Generated cells paint at the Grid's position in scene order. Foreground objects declared later in the scene (such as a Drawer) will cover the cells. If you need an overlay to stay above the Grid, place its content after the Grid in the scene.
 
