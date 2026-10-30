@@ -1,6 +1,6 @@
 # ESP-GSP Authoring Reference
 
-GSPC version: 0.9.0.
+GSPC version: 0.10.0.
 
 Declare runtime-update fields using the dynamic forms listed in the tables. See [dynamic property scope](../guide/scenes.md#dynamic-property-scope) for declaration forms and object-versus-subtree behavior.
 
@@ -132,14 +132,21 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -236,14 +243,21 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -339,14 +353,21 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -440,14 +461,21 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -557,14 +585,21 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -658,14 +693,21 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -761,14 +803,21 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -866,14 +915,21 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -973,14 +1029,21 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -1007,6 +1070,8 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `max_instances` | int | — | maximum simultaneously live template instances; included in the automatic pool requirement [1..65535] |
 | `dynamic_color` | bool | — | template member exposes a per-instance color slot |
 | `dynamic_image` | bool | — | template image exposes a per-instance resource slot |
+| `track_inset` | int | — | track end inset; omitted preserves the legacy thumb-radius inset [0..32767] |
+| `track_radius` | int | — | track corner radius; omitted uses half its thickness [0..32767] |
 
 ### `arc`
 
@@ -1081,14 +1146,21 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -1190,14 +1262,21 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -1294,14 +1373,21 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -1555,14 +1641,21 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -1573,7 +1666,7 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `max_scale` | number | `4` | maximum runtime image scale |
 | `checked` | bool | `false` | initial on/off state *(dynamic)* |
 | `knob_color` | color | `"#FFFFFF"` | slider/toggle knob color |
-| `track_size` | int | `0` | track thickness [0..4096] |
+| `track_size` | int | `0` | centered track thickness; 0 preserves the legacy inset [0..4096] |
 | `knob` | bool | `true` | knob enabled |
 | `enabled` | bool | — | initial interaction state; when present, exposes a runtime enabled property inherited by descendant controls |
 | `disabled_color` | color | `"#808080"` | disabled-state overlay color |
@@ -1586,6 +1679,7 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `max_instances` | int | — | maximum simultaneously live template instances; included in the automatic pool requirement [1..65535] |
 | `dynamic_color` | bool | — | template member exposes a per-instance color slot |
 | `dynamic_image` | bool | — | template image exposes a per-instance resource slot |
+| `knob_size` | int | `0` | thumb diameter; 0 uses the track thickness [0..4096] |
 
 ### `checkbox`
 
@@ -1660,14 +1754,21 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -1762,14 +1863,21 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -1866,14 +1974,21 @@ A named clock generates `gsp_<scene>_<name>_set_time()`; the helper validates a 
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -1977,14 +2092,21 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -2093,14 +2215,21 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -2202,14 +2331,21 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -2307,14 +2443,21 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -2410,14 +2553,21 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -2520,14 +2670,21 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -2631,14 +2788,21 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `morph` | int | — | SVG shape interpolation progress (percent); generates a runtime setter [0..100] |
 | `svg_element` | string | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | color | — | SVG silhouette color; generates a runtime color setter |
-| `image` | path | — | image file path (raster or compiled SVG) *(dynamic)* |
+| `image` | path | — | image, animated image, video (optional FFmpeg), or compiled SVG file path *(dynamic)* |
+| `video_start_ms` | int | — | video clip start in milliseconds [0..4294967295] |
+| `video_duration_ms` | int | — | video clip duration in milliseconds; omitted imports to the end [1..4294967295] |
+| `video_fit` | enum(`contain`/`cover`/`stretch`) | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | int | — | video playback count (default 1; 0 loops forever) [0..65535] |
+| `video_max_decoded_bytes` | int | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) [1..9223372036854775807] |
+| `video_max_frames` | int | — | maximum decoded video frames (default 4096) [1..65535] |
 | `codec` | enum(`raw`/`lossless`/`jpeg`/`auto`/`speed`/`size`/`store`/`qoi`/`rle16`/`rle16_a8`/`rle32`/`default`/`hardware_jpeg`) | — | image codec |
+| `dither` | bool | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | int | — | JPEG quality 1-100 (omitted = profile default) [1..100] |
 | `jpeg_quality` | int | — | legacy JPEG quality alias [1..100] |
 | `compress` | bool | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | enum(`mmap_direct`/`mmap`/`decode_lru`/`lru`/`preload`) | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | number | — | pre-scale factor applied when encoding |
-| `max_fps` | int | — | GIF/animation frame-rate cap (0 = uncapped) [0..120] |
+| `max_fps` | int | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps [0..120] |
 | `fit` | enum(`stretch`/`fill`/`contain`/`cover`) | `"stretch"` | image fit mode |
 | `position_x` | number | `0.5` | image fit horizontal alignment |
 | `position_y` | number | `0.5` | image fit vertical alignment |
@@ -2720,6 +2884,8 @@ These objects expand into base widget types before scene validation.
 | `font` | path | — | per-object TTF/OTF override |
 | `font_size` | int | — | per-object font pixel size [1..255] |
 | `options` | string_list | **required** | option labels |
+| `dynamic_options` | bool | `false` | allow atomic runtime option-label replacement |
+| `option_text_max_bytes` | int | `128` | maximum UTF-8 bytes per dynamic option, excluding NUL [1..65535] |
 | `items` | string_list | — | normalized dropdown option labels |
 | `item_height` | int | — | item row height [0..65535] |
 | `open_direction` | enum(`down`/`up`) | `"down"` | direction in which the option panel opens |

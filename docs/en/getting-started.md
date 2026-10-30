@@ -9,7 +9,7 @@ maintained example:
 
 <!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.8.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.9.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -54,7 +54,7 @@ From the ESP-IDF project root:
 
 <!-- gsp-version:dependency-command -->
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.8.0"
+idf.py add-dependency "espressif/esp-gsp^1.9.0"
 ```
 <!-- /gsp-version:dependency-command -->
 
@@ -63,7 +63,7 @@ The equivalent component manifest entry is:
 <!-- gsp-version:dependency-manifest -->
 ```yaml
 dependencies:
-  espressif/esp-gsp: "^1.8.0"
+  espressif/esp-gsp: "^1.9.0"
 ```
 <!-- /gsp-version:dependency-manifest -->
 
@@ -89,10 +89,17 @@ root — the project marker takes precedence over the component marker:
 
 <!-- gsp-version:compiler-pin -->
 ```sh
-echo '0.9.0' > .gspc_version
+echo '0.10.0' > .gspc_version
 idf.py build
 ```
 <!-- /gsp-version:compiler-pin -->
+
+GSPC 0.10.0 adds dynamic Dropdown captions and control geometry used by
+ESP-GSP 1.9.0. If an older project pins 0.9.0, update that project marker to use
+these features; upgrading the component does not rewrite project pins. The
+default resolver skips older PATH tools and rejects a managed binary whose
+reported version differs from the requested pin. Older versioned caches stay
+available to their existing projects.
 
 > [!TIP]
 >

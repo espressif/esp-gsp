@@ -101,8 +101,9 @@ typedef struct {
 } esp_gsp_update_error_stats_t;
 
 /** Snapshot set_many/set_properties failures and wrappers routed through them
- * (including set_position), including asynchronous apply/drop errors. Legacy
- * bind setters and other API families are not included.
+ * (including set_position), plus Dropdown option-text apply/drop errors.
+ * Dropdown errors identify the component; property=0 denotes the option group.
+ * Legacy bind setters and other API families are not included.
  * Available in ordinary builds without profiling. Successful setters do not
  * clear the last error. A property absent from the compiled runtime directory
  * cannot be distinguished from an unsupported property: consult the compiler's
@@ -346,7 +347,7 @@ typedef struct {
     uint64_t codec_decode_us;
     uint64_t probe_us;
     uint64_t scale_us;
-    uint32_t render_deferred;
+    uint32_t render_deferred;     /*!< render-cache lock contentions, not skipped frames */
     uint32_t jpeg_hw_decodes;
     uint64_t jpeg_hw_us;
     uint32_t jpeg_sw_decodes;

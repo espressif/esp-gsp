@@ -29,6 +29,55 @@ GSPC lowers the group to native primitives. Give an object a stable `name` when 
 
 If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
 
+## Runtime option text
+
+For language switching, opt in with `dynamic_options: true`. `option_text_max_bytes`
+defaults to 128 UTF-8 bytes per label, excluding NUL (range 1–65535).
+This authoring feature requires GSPC 0.10.0 and ESP-GSP 1.9.0 or later.
+
+```json
+{"type":"dropdown", "name":"sleep", "x":20, "y":20, "w":180, "h":32,
+ "options":["10 sec", "Never"], "dynamic_options":true, "option_text_max_bytes":32}
+```
+
+Configure a font covering the translations and add their characters at the scene
+root through `font_charset` (for example `"10 秒永不"`) or `font_charset_file`,
+or configure a runtime font provider. Readback confirms text, not glyph coverage.
+After entering this scene, use the generated API (shown for a scene named `settings`):
+
+```c
+const char *const zh[] = {"10 秒", "永不"};
+ESP_ERROR_CHECK(gsp_settings_sleep_set_options_text(ui, zh, 2));
+```
+
+Replace the complete label array; its count and order stay fixed. Selection,
+callback indices and application values stay unchanged. The SDK copies strings
+before returning and prepares all row and closed-label glyph runs before publishing.
+Invalid UTF-8, excessive length, allocation failure or a stale queued scene visit
+preserves the previous labels. `ESP_OK` means accepted; queued apply/drop failures
+are available through `esp_gsp_update_error_stats()` (`component` identifies the
+Dropdown, `property=0` identifies the label group).
+
+Opted-in controls also generate `get_option_count` and `get_option_text`. The latter
+accepts `NULL, 0, &required` to query bytes including NUL; an insufficient output
+buffer returns `ESP_ERR_INVALID_SIZE` without changing it. Readback observes
+committed text and requires the UI task or caller serialization with rendering and
+destruction. Overrides survive leaving and returning to a scene for the app's
+lifetime. This mechanism adds no persistence policy.
+
+Row geometry remains fixed; ordinary text clipping/ellipsis rules apply.
+Each opted-in row adds a text binding to the compiler's slot requirements.
+After replacement the runtime retains UTF-8 text plus row and closed-label glyph
+runs per option; staging temporarily keeps both old and new sets. Static controls
+allocate no option-text controller. Choose the byte budget for the actual translations.
+Without the opt-in, generated configuration and selection behavior remain static,
+and replacement returns `ESP_ERR_NOT_SUPPORTED`.
+
+Rebuild resources with the matching compiler and SDK. Dynamic metadata requires
+GMD 1.4; older runtimes reject its required sections. The PC C Backend uses the
+same generated APIs, and simulator clients can read committed labels through
+`dropdown_get_option_count` / `dropdown_get_option_text`.
+
 ## Example scene
 
 ```json
@@ -82,6 +131,8 @@ These signatures come from the actual compiler output for this JSON.
 |---|---|---:|---|---:|---|
 | `grow` | `int` | — | default 0; 0…100 | — | auto-layout grow weight |
 | `font` | `path` | — | — | — | per-object TTF/OTF override |
+| `dynamic_options` | `bool` | — | default `false` | — | allow atomic runtime option-label replacement |
+| `option_text_max_bytes` | `int` | — | default 128; 1…65535 | — | maximum UTF-8 bytes per dynamic option, excluding NUL |
 | `items` | `string_list` | — | — | — | normalized dropdown option labels |
 | `item_height` | `int` | — | 0…65535 | — | item row height |
 | `callback` | `identifier` | — | — | — | selection callback |

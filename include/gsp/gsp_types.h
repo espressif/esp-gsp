@@ -48,6 +48,7 @@ typedef enum {
     GSP_ERR_INVALID_STATE = -15,
     GSP_ERR_NOT_FOUND = -16,
     GSP_ERR_CANCELLED = -17,
+    GSP_ERR_TIMEOUT = -18,
 } gsp_err_t;
 
 #ifdef __cplusplus

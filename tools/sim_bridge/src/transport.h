@@ -14,7 +14,10 @@ char *bridge_rpc(esp_gsp_handle_t ui, const char *method, const char *params);
 char *bridge_json_quote(const char *text);
 int64_t bridge_json_number(const char *json, const char *key, int64_t fallback);
 bool bridge_json_hex(const char *json, const char *key, char *out, size_t capacity);
+bool bridge_json_hex_bytes(const char *json, const char *key, uint8_t *out, size_t size);
+bool bridge_json_token(const char *json, const char *key, char *out, size_t capacity);
 bool bridge_keyboard_text_enabled(esp_gsp_handle_t ui);
+bool bridge_dropdown_text_enabled(esp_gsp_handle_t ui);
 esp_gsp_err_t bridge_command(esp_gsp_handle_t ui, const char *method, const char *params);
 esp_gsp_err_t bridge_scalar(esp_gsp_handle_t ui, unsigned op, const uint32_t args[8], uint32_t out[8]);
 
@@ -56,3 +59,9 @@ void bridge_payloads_shutdown(esp_gsp_handle_t ui);
 esp_gsp_err_t bridge_open_inproc(const gsp_sim_host_api_v1_t *host,
                                  esp_gsp_handle_t *out);
 bool bridge_inproc_closed(esp_gsp_handle_t ui);
+
+struct esp_gsp_update_receipt;
+struct esp_gsp_update_receipt **bridge_updates_slot(esp_gsp_handle_t ui);
+bool bridge_updates_enabled(esp_gsp_handle_t ui);
+void bridge_updates_poll(esp_gsp_handle_t ui);
+void bridge_updates_close(esp_gsp_handle_t ui);

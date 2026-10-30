@@ -26,6 +26,8 @@ and look up fields and APIs in the reference pages.
 | Load preprocessed images and animations from SD/NAND | [External assets](guide/external-assets.md) |
 | Use scenes, viewports, drawers, and retained navigation | [Navigation and viewports](guide/navigation.md) |
 | Start, update, synchronize, suspend, and stop safely | [Lifecycle and threading](guide/lifecycle.md) |
+| Observe required updates through a matching target frame | [Update receipts](guide/update-receipts.md) |
+| Export archive-bound stack frames and unresolved call paths | [Stack evidence](guide/stack-usage.md) |
 | Customize drawing, input and business callbacks | [Application customization](guide/customization.md) |
 | Understand public structures and ownership | [Application structures](guide/application-structures.md) |
 | Integrate RGB, MIPI-DSI, SPI, or QSPI presentation | [Display presentation](guide/display.md) |

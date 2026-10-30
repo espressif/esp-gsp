@@ -221,6 +221,183 @@ esp_gsp_err_t esp_gsp_component_set_text(esp_gsp_handle_t ui, gsp_component_key_
     return text_command(ui, "component_set_text", "component_key", key, text);
 }
 
+/* Reject malformed wire text before sending JSON. The SDK validates again in
+ * the WASI/device runtime; invalid native bytes must not become RPC timeouts. */
+static bool dropdown_valid_utf8(const char *text, size_t size)
+{
+    const uint8_t *bytes = (const uint8_t *)text;
+    for (size_t at = 0; at < size;) {
+        uint8_t lead = bytes[at++];
+        if (lead < 0x80) {
+            continue;
+        }
+        unsigned tail = lead >= 0xc2 && lead <= 0xdf ? 1 :
+                        lead >= 0xe0 && lead <= 0xef ? 2 :
+                        lead >= 0xf0 && lead <= 0xf4 ? 3 : 0;
+        if (tail == 0 || tail > size - at) {
+            return false;
+        }
+        uint8_t first = bytes[at];
+        if ((lead == 0xe0 && first < 0xa0) || (lead == 0xed && first > 0x9f) ||
+                (lead == 0xf0 && first < 0x90) || (lead == 0xf4 && first > 0x8f)) {
+            return false;
+        }
+        for (unsigned i = 0; i < tail; ++i) {
+            if ((bytes[at++] & 0xc0) != 0x80) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+esp_gsp_err_t esp_gsp_dropdown_set_options_text(esp_gsp_handle_t ui,
+        gsp_component_key_t key, const char *const *options, size_t count)
+{
+    if (ui == NULL) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    if (!bridge_dropdown_text_enabled(ui)) {
+        return ESP_GSP_ERR_NOT_SUPPORTED;
+    }
+    if (options == NULL || count == 0 || count >= UINT16_MAX) {
+        return ESP_GSP_ERR_INVALID_SIZE;
+    }
+    char **quoted = calloc(count, sizeof(*quoted));
+    if (quoted == NULL) {
+        return ESP_GSP_ERR_NO_MEM;
+    }
+    esp_gsp_err_t result = ESP_GSP_OK;
+    size_t bytes = 96;
+    for (size_t i = 0; i < count; ++i) {
+        if (options[i] == NULL) {
+            result = ESP_GSP_ERR_INVALID_ARG;
+            break;
+        }
+        size_t length = 0;
+        while (length <= UINT16_MAX && options[i][length] != '\0') {
+            ++length;
+        }
+        if (length > UINT16_MAX) {
+            result = ESP_GSP_ERR_INVALID_SIZE;
+            break;
+        }
+        if (!dropdown_valid_utf8(options[i], length)) {
+            result = ESP_GSP_ERR_INVALID_ARG;
+            break;
+        }
+        quoted[i] = bridge_json_quote(options[i]);
+        if (quoted[i] == NULL) {
+            result = ESP_GSP_ERR_NO_MEM;
+            break;
+        }
+        size_t size = strlen(quoted[i]) + 1U;
+        if (size > SIZE_MAX - bytes) {
+            result = ESP_GSP_ERR_INVALID_SIZE;
+            break;
+        }
+        bytes += size;
+    }
+    char *params = result == ESP_GSP_OK ? malloc(bytes) : NULL;
+    if (result == ESP_GSP_OK && params == NULL) {
+        result = ESP_GSP_ERR_NO_MEM;
+    }
+    if (result == ESP_GSP_OK) {
+        size_t at = (size_t)snprintf(params, bytes, "{\"component_key\":%" PRIu32 ",\"options\":[", key);
+        for (size_t i = 0; i < count; ++i) {
+            if (i != 0) {
+                params[at++] = ',';
+            }
+            size_t size = strlen(quoted[i]); memcpy(params + at, quoted[i], size); at += size;
+        }
+        memcpy(params + at, "]}", 3);
+    }
+    for (size_t i = 0; i < count; ++i) {
+        free(quoted[i]);
+    }
+    free(quoted);
+    if (result == ESP_GSP_OK) {
+        result = bridge_command(ui, "dropdown_set_options_text", params);
+    }
+    free(params);
+    return result;
+}
+
+esp_gsp_err_t esp_gsp_dropdown_get_option_count(esp_gsp_handle_t ui,
+        gsp_component_key_t key, size_t *out_count)
+{
+    if (ui == NULL || out_count == NULL) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    if (!bridge_dropdown_text_enabled(ui)) {
+        return ESP_GSP_ERR_NOT_SUPPORTED;
+    }
+    char params[64]; snprintf(params, sizeof(params), "{\"component_key\":%" PRIu32 "}", key);
+    char *reply = bridge_rpc(ui, "dropdown_get_option_count", params);
+    if (reply == NULL) {
+        return ESP_GSP_FAIL;
+    }
+    esp_gsp_err_t result = (esp_gsp_err_t)bridge_json_number(reply, "result_code", ESP_GSP_FAIL);
+    int64_t count = bridge_json_number(reply, "count", -1); free(reply);
+    if (result == ESP_GSP_OK) {
+        if (count < 0 || count > UINT16_MAX) {
+            return ESP_GSP_FAIL;
+        }
+        *out_count = (size_t)count;
+    }
+    return result;
+}
+
+esp_gsp_err_t esp_gsp_dropdown_get_option_text(esp_gsp_handle_t ui,
+        gsp_component_key_t key, uint16_t index, char *out_text, size_t capacity, size_t *out_size)
+{
+    if (ui == NULL || (out_text == NULL && (capacity != 0 || out_size == NULL))) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    if (!bridge_dropdown_text_enabled(ui)) {
+        return ESP_GSP_ERR_NOT_SUPPORTED;
+    }
+    char params[128];
+    if (out_text == NULL) {
+        snprintf(params, sizeof(params), "{\"component_key\":%" PRIu32 ",\"index\":%u}", key, index);
+    } else {
+        snprintf(params, sizeof(params), "{\"component_key\":%" PRIu32 ",\"index\":%u,\"capacity\":%zu}",
+                 key, index, capacity > UINT32_MAX ? (size_t)UINT32_MAX : capacity);
+    }
+    char *reply = bridge_rpc(ui, "dropdown_get_option_text", params);
+    if (reply == NULL) {
+        return ESP_GSP_FAIL;
+    }
+    esp_gsp_err_t result = (esp_gsp_err_t)bridge_json_number(reply, "result_code", ESP_GSP_FAIL);
+    int64_t size = bridge_json_number(reply, "size", 0);
+    if (result == ESP_GSP_OK || result == ESP_GSP_ERR_INVALID_SIZE) {
+        if (size <= 0 || size > 65536) {
+            free(reply);
+            return ESP_GSP_FAIL;
+        }
+        if (out_size != NULL) {
+            *out_size = (size_t)size;
+        }
+        if (result == ESP_GSP_OK && out_text != NULL) {
+            if ((uint64_t)size > capacity) {
+                result = ESP_GSP_ERR_INVALID_SIZE;
+            } else {
+                char *text = malloc((size_t)size);
+                if (text == NULL) {
+                    result = ESP_GSP_ERR_NO_MEM;
+                } else if (!bridge_json_hex(reply, "utf8_hex", text, (size_t)size) || strlen(text) + 1U != (size_t)size) {
+                    result = ESP_GSP_FAIL;
+                } else {
+                    memcpy(out_text, text, (size_t)size);
+                }
+                free(text);
+            }
+        }
+    }
+    free(reply);
+    return result;
+}
+
 #define GETTER(name, type, op) \
 esp_gsp_err_t name(esp_gsp_handle_t ui, uint16_t key, type *out) { \
     if (!out) return ESP_GSP_ERR_INVALID_ARG; \

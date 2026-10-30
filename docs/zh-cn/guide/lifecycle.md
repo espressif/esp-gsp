@@ -83,6 +83,9 @@ Getter 读取当前场景已经提交的状态；另一个任务刚调用 Setter
 普通渲染任务回调可以使用 setter，状态可直接应用；Canvas Direct Draw 正处于绘制过程，
 不能调用修改 GSP 状态的 API。不要从渲染或解码任务回调中调用 flush 或 stop。
 
+替换临时应用或恢复 Hub 时，框架会等该应用的在途解码与源释放完成后再销毁应用。
+这些回调应快速返回；等待期间不会持有渲染任务的缓存锁。
+
 ## 媒体所有权
 
 | 模式 | 调用后缓冲区责任 |
@@ -145,6 +148,18 @@ Hub → suspend → Session → 启动临时应用 → 停止临时应用并恢�
 从应用任务调用 `esp_gsp_esp_lcd_suspend()`。成功后 Session 持有 Hub 的运行时、
 场景和组件状态，已解码图片 Surface 会释放，挂起期间不得再通过 Hub Handle 提交工作。
 
+若临时应用需要较大的连续内存，可以在成功 suspend 后、调用
+`esp_gsp_esp_lcd_start_on_session*()` 之前显式调用
+`esp_gsp_esp_lcd_trim_session(session, timeout_ms, &released_bytes)`，归还闲置的
+viewport 快照 atlas。对 Pause Token 使用 `esp_gsp_esp_lcd_trim_paused()`。
+这只回收可重建 atlas，不释放组件状态、字体、借用源或显示缓冲；不调用时仍按原策略复用。
+返回字节数为 atlas 负载，不含分配器开销，也不保证其他模块能获得同样大小的连续块。
+
+回收在暂停的渲染任务中执行，等待 Presenter 与加速器栅栏；失败不释放 atlas，也不消费
+Session/Pause Token，可以重试或恢复。`ESP_ERR_NOT_FINISHED` 表示未能确认加速器读取已结束。
+`timeout_ms` 限制 Presenter 等待，任务派发和加速器同步可能更久。调用方应从应用任务
+串行执行该 UI 的生命周期操作。恢复仍走原来的 resume 接口，强制完整首帧；后续手势按需重新捕获。
+
 若 suspend 返回 `ESP_ERR_NOT_FINISHED`，表示回滚也未能恢复 Hub，`out_session` 仍会
 返回一个没有临时应用的有效 Session。保留它，通过
 `esp_gsp_esp_lcd_resume(session, NULL, &hub)` 重试，或销毁 Session。
@@ -161,6 +176,25 @@ Hub → suspend → Session → 启动临时应用 → 停止临时应用并恢�
 临时应用应通过 Session 的 resume/replace 接口停止；共享 Hub 运行时的临时 Handle
 不能使用 `esp_gsp_stop()`。
 
+错误路径推荐使用 Session 的 `_ex` 接口。旧 `replace_on_session_prepared()` 在“暂停旧
+App 失败”和“启动新 App 失败但已恢复 Hub”时，可能返回同一个错误及 NULL 新 App 输出，
+但旧 App 和 Token 的生命周期不同，不能仅按最终错误码判断。
+
+用 `ESP_GSP_ESP_LCD_SESSION_RESULT_INIT()` 初始化结果，并传入所持有 Session 指针的
+地址。SDK 消费 Token 时会将该指针置 NULL。`result.outcome` 明确区分输入未变、旧 App
+仍保留、新 App 已启动、保留空 Session 和 Hub 已恢复；`app`/`hub` 返回相应 Handle。
+UNCHANGED 表示输入生命周期未变，不能把此时 NULL 输出 Handle 当成旧 App 已销毁。
+
+APP_RETAINED 时保留旧 App 的回调上下文。replace 达到 APP_STARTED、EMPTY 或 HUB_RESUMED
+时，传入的旧临时 GSP App 已销毁；APP_STARTED 仍须保留新 App 上下文。空 Session 用
+`esp_gsp_esp_lcd_resume_ex(&session, NULL, &hub, &result)` 重试。Hub 恢复时 Token 虽已消费，
+Hub 及其借用源仍在正常存活，不能随 Token 一起释放。
+
+`stage`/`operation_error` 记录主操作失败，`recovery_error` 保留 start/replace 自动恢复
+Hub 的原始错误，未尝试恢复时为 ESP_OK。结果描述生命周期和运行时激活，不是屏幕已显示
+的回执。生命周期仍需应用串行调用。结果 `struct_size` 不匹配时无副作用、结果保持原样；
+使用初始化函数，不能在尺寸拒绝后把旧结果当作本次结果。
+
 临时应用的创建、兼容性或激活失败后，适配器尝试恢复 Hub。恢复成功会消费 Session，
 并返回原启动错误；`ESP_ERR_NOT_FINISHED` 表示 Hub 恢复也失败，Session 仍有效且没有
 临时应用，`out_gsp` 为 NULL，可使用 `app = NULL` 重试 resume 或销毁。入口指针／会话状态校验拒绝则
@@ -172,3 +206,8 @@ Session 仅在恢复或销毁成功时消费。销毁失败后只继续重试销
 借用的素材和显示资源必须保留到销毁成功。
 
 完整函数签名见[函数级 API 参考](../reference/api-functions.md)。
+
+## 目标帧完成
+
+用[目标帧更新回执](update-receipts.md)区分已接受、已应用、已渲染、已传输和硬件确认。
+应用自有任务的静态栈核算见[编译器栈证据](stack-usage.md)。

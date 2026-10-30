@@ -24,7 +24,13 @@ static void probe(esp_gsp_handle_t ui, void *context)
     } else if (step % 4 == 3) {
         result = esp_gsp_page_flow_set_page(ui, GSP_COFFEE_OBJ_KEY_JOURNEY, 0, true);
     } else {
-        result = gsp_coffee_drink_carousel_set_selected(ui, step % 3);
+        /* Exercise the catalog through the same input and application path
+         * as a customer; never change only its visual selection. */
+        int16_t x = (int16_t)(148 + (step % 3) * 252);
+        result = esp_gsp_inject_touch(ui, x, 270, true);
+        if (result == ESP_GSP_OK) {
+            result = esp_gsp_inject_touch(ui, x, 270, false);
+        }
     }
     ESP_LOGI("coffee_probe", "step=%u result=%d", step, result);
     if (++step == 12) {

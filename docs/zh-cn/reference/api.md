@@ -8,6 +8,7 @@
 |---|---|---|
 | 生成 Bundle | `<symbol>_gsp.h` | 启动配置和普通类型化应用接口 |
 | 应用 Facade | `esp_gsp.h` | 动态媒体、列表、导航、定时器和数据驱动集成 |
+| 目标帧回执 | `esp_gsp_updates.h` | 必需更新组、状态／帧确认和取消 |
 | ESP-LCD 生命周期 | `esp_gsp_esp_lcd.h` | 启动、暂停、临时应用交接、恢复和会话销毁 |
 | 诊断 | `esp_gsp_debug.h` | 计数、时序、媒体遥测和测试输入注入 |
 | 框架集成 | `esp_gsp_advanced.h` | 访问底层渲染上下文；不是普通应用路径 |
@@ -69,6 +70,11 @@ ESP_ERROR_CHECK(gsp_settings_display_mode_set_selected(ui, saved_mode));
 
 Setter 会拒绝超出 `options` 的索引，并同步保留态选择与显示文字。用户选择回调也使用同一个从零开始的索引；应用应持久化该参数，使用生成的选项接口可同步更新选择状态与显示文字。
 
+运行时切换语言需显式设置 `dynamic_options: true` 和每项的 `option_text_max_bytes`
+预算，随后使用生成的 `set_options_text`、`get_option_count`、`get_option_text`。
+选项索引保持不变，所有权、回读与兼容规则见
+[下拉选择的运行时选项文字](../components/dropdown.md#运行时选项文字)。
+
 只有高级数据驱动集成确实需要 Raw bind/action/object/property/template ID 时，才在包含生成头文件前定义 `GSP_BUNDLE_ENABLE_RAW_IDS`。
 
 ## 键盘流程
@@ -100,3 +106,5 @@ ESP_ERROR_CHECK(esp_gsp_keyboard_attach(
 ```
 
 只有 x 动态时，使用生成的 `set_x()`。未知、不支持的属性和字面量静态属性都没有运行时入口；可参考控件 schema，或通过 `esp_gsp_component_get_property_info_at()` 枚举现有运行时属性。成功更新不会清除最近失败，判断新错误时应比较前后 `failures`。并发访问不等待：查询遇忙返回 false 且不修改输出，`details_dropped` 统计未能保留详情的失败次数。
+
+完成阶段和所有权见[目标帧更新回执](../guide/update-receipts.md)。

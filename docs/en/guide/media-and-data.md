@@ -35,6 +35,19 @@ its budget automatically. Pass `IMAGE_CACHE_BYTES` when both budgets must match.
 Automatic sizing also depends on available heap and its largest free block.
 Check firmware size separately from decoded-image memory.
 
+The runtime value applies to each scene's cache and also sets the aggregate
+scene-retention target. Current and incoming scenes are exempt from eviction
+while the incoming scene is prepared, so their combined pixels can temporarily
+exceed that target. Reducing the budget can lower retained memory and increase
+repeat decoding without reducing the scene-switch peak by the same amount.
+Display buffers, task stacks and decoder workspace are separate costs.
+
+RGB/DSI examples expose `CONFIG_EXAMPLE_LCD_FRAME_BUFFERS` (2 or 3, default 3).
+The helper pairs two driver buffers with `DOUBLE_PARTIAL`; three keeps `AUTO`.
+Two saves one `width * height * native-color-bytes` buffer but can increase
+buffer waits. Validate the workload before selecting it. SPI/QSPI panel GRAM
+is unaffected, and these buffers are outside `IMAGE_CACHE_BYTES`.
+
 With image caching enabled, the runtime synchronously prepares the scene's
 currently visible compiled compressed images before its first frame, then uses remaining cache space to prefetch hidden images. An
 incomplete hidden-image prefetch is normal and only appears in debug diagnostics.
@@ -77,6 +90,46 @@ JPEG quality defaults to 85; set `quality` (1–100) to change it. For exact
 pixels after resizing and conversion to the target pixel format, use `lossless`
 or set `image_auto_allow_lossy: false` in the Profile. RGB565 quantization still applies.
 
+### RGB565 gradient banding
+
+Set `"dither": true` on an image or compiled animation to reduce banding introduced by
+RGB565 quantization. The default is off. Profile `image_dither: true` enables it in bulk;
+per-image `dither: false` opts out. The 4×4 ordered pattern applies only to smooth,
+opaque regions; flat fills, sharp edges, transparent pixels and native RGB565 colors
+receive no added noise. RGB888/ARGB8888 bypass this processing.
+
+The final encoding determines where processing occurs, regardless of whether the source
+is PNG or JPEG. Native pixels, lossless codecs and compiled animations are processed
+offline after resizing. Opaque static JPEGs are dithered after decoding and target-size
+processing, before RGB565 quantization. Decoded-cache hits reuse the result without
+repeating this work every frame.
+
+Use `"codec": "size"` to compare actual encoded sizes. When cache and target capabilities
+allow it, JPEG can stay compressed and be dithered during decoding. `auto` and `speed`
+conservatively retain offline processing to avoid automatically adding decode work.
+Explicit `"codec": "jpeg"` with `dither: true` also supports opaque static images.
+Check `dither_stage`, final resource bytes and decode memory in the execution report.
+Offline dithering can enlarge compressed assets; decode dithering adds time and temporary
+memory on initial decoding and after cache eviction. RAW size stays unchanged, and the
+offline path adds no device dithering computation. Reported decode memory excludes some
+backend scratch buffers; the actual peak also depends on the target and cache configuration.
+
+GIF/APNG/WebP and imported video frames are composed and resized before offline processing. A fixed smooth-region
+mask and dither coordinates apply to the whole clip, so equal input pixels at the same
+position stay equal when their neighbors change. Frame differences are computed afterward.
+Positions that become partially transparent retain their original pixels throughout the clip
+to avoid switching the pattern during fades. Timing, loop count, alpha, animation compression
+and memory budgets retain their existing semantics.
+
+JPEG decode dithering uses GRB 1.9 and requires ESP-GSP/simulator 1.9.0; older runtimes
+reject these resources. `compiler_features.image_dither >= 3` in `gspc compatibility`
+indicates compiler support. Alpha images use offline processing. Do not explicitly combine
+dithering with JPEG+A8, JPEG animation frames or `store_scale < 1`. The Profile switch skips
+these combinations and vectors; explicit per-image requests receive a diagnostic.
+External image and animation asset manifests also accept `dither`. Dithering cannot restore
+colors already lost in the source; alpha blending, runtime scaling and the panel can still
+affect visible banding.
+
 For opaque RGB565 static images already encoded as QOI, GSPC tries native-equivalent
 palette colors and keeps only a smaller stream. This adds compilation work while
 preserving decoded pixels and decoder workspace.
@@ -104,12 +157,64 @@ omit those settings for STORE.
 `hardware_jpeg` retains its compatibility behavior: JPEG with a hardware
 decoder, lossless encoding otherwise. It is not an alias for explicit `jpeg`.
 
+### Select caching and input ownership by workload
+
+`cache_key` reuses decoded pixels. With image caching disabled, QOI/RLE still
+region-decode during rendering; a zero whole-frame decode counter does not mean
+no decoding work. COPY copies each encoded input even on a decoded-cache hit.
+For immutable data that remains valid throughout its use, such as linked Flash
+constants, BORROW with its required `on_release` avoids that copy. A temporary
+receive buffer cannot simply be changed to BORROW.
+
+A C3 low-memory bundle commonly disables image caching. Frequent tint updates or
+a small reused image set can benefit from an explicit override after the generated
+configuration helper. Size its budget using decoded dimensions, simultaneous
+in-flight images and the largest free block. This 48 KiB example was measured for
+a workload with 96x96 vectors and 80x60 images; it is not a default for every C3 app:
+
+```c
+esp_gsp_config_t config = gsp_bundle_config();
+ESP_ERROR_CHECK(esp_gsp_config_set(&config, ESP_GSP_FIELD_ENABLE_IMAGE_CACHE, 1)
+                == ESP_GSP_CONFIG_SET_OK ? ESP_OK : ESP_ERR_INVALID_ARG);
+config.image_cache_bytes = 48U * 1024U;
+```
+
+Caching can add a decode task and cache-entry metadata as well as retained pixels.
+Tracked image payload is not the total RAM increase. One-off new
+images can be slower because of queueing, publication and full-frame allocation.
+After reducing a budget, check first requests, P95, P99/maxima, re-decodes, page
+visibility changes, full repaint and release after stop. Hot-loop P95 alone can
+hide new misses. Compiled placeholders can be shared by several controls;
+replacing one dynamic target must leave their eviction to the cache budget and
+scene lifecycle.
+
 ### Reading scene resource budgets
+
+The compiler process separately caches encoded images: up to 128 request keys
+and 32 MiB of unique retained payload by default. Use the global
+`--encoding-cache-bytes` flag or `GSPC_IMAGE_CACHE_BYTES` for a different host
+budget; zero disables retention while compilation still succeeds. The daemon's
+`cache/imageStats` and `cache/configureImages` expose usage and immediate budget
+changes. These settings affect compiler reuse, while the target Profile's
+`image_cache_budget_bytes` controls device decoded-image memory. A host budget
+below the working set can increase repeated encoding.
+These controls require `compiler_features.image_encoding_cache: 1` in the
+compiler's compatibility or doctor report; older tools can compile without them.
 
 The current `*.execution.json` contract is schema version 2. It reflects the
 resource reachability and nullable decode-size fields emitted by the current
 GSPC; consumers should select the schema by `schema_version` rather than by
 the GSPC product version.
+
+The strict schema accepts all four Profile policies: `default`, `auto`, `speed`
+and `size`, plus the `animation_speed_hardware_jpeg` flag. Resource rows and
+source variants carry `uses` with nullable authored object indices/names,
+requested codecs and initial visibility. Unknown procedural selection is
+counted by `image_usage.initial_visibility_unknown_images`. Span animations
+report `persistent_span_decode`, cache-disabled images report `region_decode`,
+and animation `scratch_bytes`, when present, is workspace in addition to the
+persistent `frame_bytes`. These are capability and budget descriptions;
+device measurements are required before making performance claims.
 
 Each `*.execution.json` includes a `resource_budget` summary. `resource_blob_bytes`
 counts this scene's resource blobs, including their headers; `image_payload_bytes`
@@ -756,9 +861,60 @@ the existing `esp_gsp_message_list_changed()` behavior.
 For exact callback and shutdown behavior, see
 [Application lifecycle](lifecycle.md).
 
+## Video import
+
+Local MP4, AVI, MOV, WebM and MKV files can be imported through the same `image`
+field. GSPC uses optional host tools `ffmpeg` and `ffprobe`; install FFmpeg or
+set `GSPC_FFMPEG` and `GSPC_FFPROBE` to their executable paths. Ordinary images
+and GIF/APNG/WebP animations do not need either tool. FFmpeg 4.4 or newer is
+required; actual container/codec support depends on that FFmpeg build.
+Check `compiler_features.video_import: 1` in `gspc compatibility` when using a
+separately installed compiler.
+
+```json
+{"type":"image","name":"intro","x":0,"y":0,"w":240,"h":240,
+ "image":"assets/intro.mp4","video_start_ms":1000,"video_duration_ms":3000}
+```
+
+Videos are decoded at build time to ordinary GSP animation resources. Audio,
+subtitles and cover art are excluded. Device playback uses the existing frame
+codec and player; the device does not need FFmpeg or an MP4/AVI decoder. Source
+video compression is not retained, so a small MP4 can produce a large bundle.
+The existing `codec`, `animation_codec`, `quality` and target Profile policies
+still select the compiled representation; video input does not force JPEG.
+`dither: true` uses the existing lossless-animation RGB565 processing; an explicit
+JPEG-frame request with dithering produces a compile-time diagnostic.
+
+| Field | Video behavior |
+|---|---|
+| `max_fps` | Omitted: normalize to at most 30 fps without raising the nominal source rate. Positive: use that cap. Explicit `0`: keep source presentation timestamps, including VFR. |
+| `video_start_ms` / `video_duration_ms` | Start at 0 by default; omitted duration imports to the end. An empty/out-of-range clip fails. |
+| `video_fit` | `contain` (default, opaque black padding), `cover` (center crop), or `stretch`. Inherits an explicitly authored Image `fit` unless overridden. Baked at the authored width/height, before runtime transforms. |
+| `video_loop_count` | `1` by default; `0` repeats forever. Existing animated-image loop defaults are unchanged. |
+| `video_max_decoded_bytes` | Retained host RGBA pixels, default 268435456 bytes (256 MiB). |
+| `video_max_frames` | Decoded frames before identical-frame merging, default 4096; maximum 65535. |
+
+Rotation metadata and sample aspect ratio are applied before fitting. Cumulative
+timestamps are rounded to milliseconds, preserving fractional-rate timing without
+rounding every frame period separately. HDR (PQ/HLG) must first be converted to
+SDR explicitly; unsupported/corrupt inputs fail with FFmpeg diagnostics.
+
+Known durations are checked against the import budget before decoding; actual
+output is checked as it streams. Limits and the 120-second timeout per tool fail
+with suggestions instead of silently truncating the clip. The RGBA budget is not
+a total process-memory limit: decoder buffers, RGB565 normalization and encoded
+candidates add memory. Device frame/decoder/display memory remains separate and
+must fit the target Profile and runtime configuration.
+
+The same fields work in [external asset manifests](external-assets.md). Videos
+and resolved tool executables are included in build dependencies. Reconfigure
+CMake after changing tool selection through environment variables or `PATH`.
+Measure target playback separately; an import frame rate is not a device FPS
+promise. These options apply only to video inputs.
+
 ## JPEG animation frames
 
-GIF/APNG images accept these `animation_codec` policies:
+Animated images and imported videos accept these `animation_codec` policies:
 
 | Value | Compilation behavior |
 |---|---|

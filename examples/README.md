@@ -43,11 +43,11 @@ the controls, build commands and simulator preview.
 
 ## Example asset retrieval
 
-Benchmark, effects, external-assets and widget media are included in the source
-tree and component package. The pinned archive contains only scenario previews
-and `scenes/assets` media under `examples/scenarios/`. Scenario builds fetch it
-before GSPC runs when the local assets are absent. The archive is verified by
-SHA256 and cached under the build directory. Set
+The component includes compact vector artwork and one shared default font.
+Scenario bitmaps, showcase previews, Ubuntu fonts and benchmark bitmaps are
+restored from a pinned archive before GSPC runs. Each extracted example gets
+its own media and required fonts; bundled default fonts are copied locally.
+The archive is verified by SHA256 and cached under the build directory. Set
 `ESP_GSP_EXAMPLE_ASSETS_OFFLINE=ON` to require a cached copy.
 `ESP_GSP_EXAMPLE_ASSETS_FETCH=ON` enables the fetch target even when its sentinel
 exists; use a fresh cache to replace incomplete local media.
@@ -62,14 +62,17 @@ For offline recovery, copy the verified `assets-<SHA256>.tar.gz` from the old
 cache into the fresh cache before building with
 `-D ESP_GSP_EXAMPLE_ASSETS_OFFLINE=ON`; do not copy the old stamp.
 
-The fetch target restores the original `examples/scenarios/` paths, so scene
-JSON files do not need rewriting. Extracted scenario packages restore their own
-subtree into the example directory.
+The source checkout retains its authored assets and shared fonts. The fetch
+target restores missing archived media into their original paths. Extracted
+packages restore their own subtree and fonts into the example directory.
+Design originals and image-preparation tools remain source-only; they are
+excluded from the component and compiled firmware.
 
 The archive is build-time input only. It is never requested by the firmware at
 runtime and no account password is used by CMake. Maintainers should publish a
 new immutable archive and update the URL/SHA256 pair in
 cmake/gsp_example_assets.cmake when the example asset set changes.
+
 
 
 ## Hardware and preview

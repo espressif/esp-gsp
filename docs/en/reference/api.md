@@ -11,6 +11,7 @@ derived from the authored JSON.
 |---|---|---|
 | Generated bundle | `<symbol>_gsp.h` | startup configuration and the normal typed application API |
 | Application facade | `esp_gsp.h` | dynamic media, lists, navigation, timers and data-driven integration |
+| Target-frame receipts | `esp_gsp_updates.h` | required update groups, state/frame confirmation and cancellation |
 | ESP-LCD lifecycle | `esp_gsp_esp_lcd.h` | start, suspend, temporary-app handoff, resume and session destruction |
 | Diagnostics | `esp_gsp_debug.h` | counters, timing, media telemetry and injected test input |
 | Framework integration | `esp_gsp_advanced.h` | access to the low-level rendering context; not an ordinary application path |
@@ -88,6 +89,12 @@ selection and the displayed option text. A user selection reports the same
 zero-based index in the Dropdown callback argument; persist that argument.
 Do not overlay another label or access compiler-generated `__...` objects.
 
+For runtime language changes, explicitly author `dynamic_options: true` and a
+per-label `option_text_max_bytes` budget. This generates `set_options_text`,
+`get_option_count` and `get_option_text` while preserving option indices. See
+[Dropdown runtime option text](../components/dropdown.md#runtime-option-text)
+for ownership, readback and compatibility rules.
+
 Define `GSP_BUNDLE_ENABLE_RAW_IDS` before including the generated header only
 when an advanced integration needs raw bind, action, object, property or
 template identifiers. Generated typed functions remain the preferred path.
@@ -141,3 +148,5 @@ available runtime properties. The diagnostic preserves the last failure across
 successful updates, so compare `failures` with the previous snapshot. Concurrent
 access is non-blocking: a busy query returns false without changing its output,
 and `details_dropped` counts failures whose details could not be retained.
+
+See [Target-frame Update Receipts](../guide/update-receipts.md) for completion stages and ownership.

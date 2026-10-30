@@ -14,6 +14,8 @@ Bundle registration, names, target, assets and build conventions.
 - **Create or modify a screen:** inspect the affected scenes and callers, query
   the relevant widget cards/examples, edit JSON and validate through the selected
   compile or owning build. Inspect changed visuals and interactions in preview.
+- **Reconstruct a reference design:** read [design reconstruction](references/design-reconstruction.md)
+  for assets/fonts, native controls, independent visual references and settled-state checks.
 - **Connect live data, events, collections or Canvas:** read
   [application integration](references/application-integration.md), then the
   selected component's relevant public API guide and generated headers.

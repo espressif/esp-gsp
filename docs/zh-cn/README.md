@@ -26,6 +26,8 @@
 | 从 SD/NAND 加载预处理图片与动画 | [外部资源](guide/external-assets.md) |
 | 使用页面、堆栈、抽屉与滚动视口 | [导航与手势](guide/navigation.md) |
 | 管理启动、异步更新、回调和停止 | [生命周期与线程](guide/lifecycle.md) |
+| 确认一组更新及其对应帧的完成状态 | [目标帧回执](guide/update-receipts.md) |
+| 导出绑定库身份的栈帧和未解析调用 | [栈证据](guide/stack-usage.md) |
 | 自定义绘制、输入与业务回调 | [应用自定义扩展](guide/customization.md) |
 | 理解公共结构、临时视图与资源所有权 | [应用结构与所有权](guide/application-structures.md) |
 | 配置 RGB、MIPI-DSI、SPI、QSPI 显示链路 | [显示集成](guide/display.md) |

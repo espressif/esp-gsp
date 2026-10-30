@@ -6,12 +6,13 @@
 
 typedef struct {
     void *timer, *model_timer;
-    unsigned seconds, page;
+    unsigned seconds, page, pending_samples;
     int target, draft, pressure;
     int history[INDUSTRIAL_TREND_SAMPLES];
     unsigned selected_sample;
     bool alarm, acknowledged, editing, drawer_seen_open;
     bool alerts_active, alerts_open, alerts_dragging;
+    bool model_dirty;
     esp_gsp_err_t last_error;
 } industrial_ui_t;
 esp_gsp_err_t industrial_ui_init(esp_gsp_handle_t ui, industrial_ui_t *state);

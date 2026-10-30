@@ -5,7 +5,7 @@
 | 内容类型 | 推荐路径 | 典型场景 |
 |---|---|---|
 | 固定图片与字体 | 场景相对资源 | 图标、背景、固定文案 |
-| GIF/APNG 动画素材 | 构建期导入 | 加载动画、状态指示、装饰动效 |
+| GIF/APNG 动画、本地 MP4/AVI 片段 | 构建期导入 | 加载动画、状态指示、装饰动效 |
 | 偶尔变化的编码图片 | 命名 Image setter | 头像、下载图片、缩略图 |
 | 相机、视频、连续像素 | Canvas | 应用持续拥有像素生产节奏 |
 | 大型一维数据 | List/Wheel/Message List | 按可见行复用模板 |
@@ -43,6 +43,42 @@ Profile 中设置 `image_cache_enabled: false`，或在 Bundle 编译时使用
 单独设置 Profile 的 `image_cache_budget_bytes` 只约束编译选择，运行时仍自动推导
 预算。需要两端一致时传入 `IMAGE_CACHE_BYTES`。运行时自动预算还取决于可用堆及最大
 连续空闲块。固件 Flash 体积与图片解码内存应分别检查。
+
+运行时值既用于各场景缓存，也作为场景缓存的总保留目标。准备目标场景时，当前与
+目标场景暂不参与淘汰，因此两者像素可能暂时超过该目标。收紧预算可减少常驻缓存，
+但可能增加重复解码，且切页峰值不会必然同比下降。显示缓冲、任务栈和解码工作区
+仍需单独预算。
+
+RGB/DSI 示例提供 `CONFIG_EXAMPLE_LCD_FRAME_BUFFERS`（2 或 3，默认 3）。辅助层会
+将两个 driver 缓冲与 `DOUBLE_PARTIAL` 配套，三个缓冲则保留 `AUTO`。两个缓冲可少占
+一份 `宽 × 高 × 原生色深字节数`，但可能增加缓冲等待，应按工作负载验证后选择。
+SPI/QSPI 面板的 GRAM 不受影响；这些缓冲不计入 `IMAGE_CACHE_BYTES`。
+
+### 按工作负载选择缓存与输入所有权
+
+`cache_key` 复用的是解码结果。图片缓存关闭时，QOI/RLE 仍按渲染区域解码；
+完整帧解码计数为 0 不表示没有解码工作。COPY 即使命中解码缓存，也会复制本次编码
+输入。对整个使用期都有效的 Flash 常量等不可变资源，可以使用 BORROW 配合必需的
+`on_release`，避免输入复制；不能把临时接收缓冲直接改为 BORROW。
+
+C3 的低内存 Bundle 配置通常关闭图片缓存。需要频繁 tint 或重复使用少量压缩图片时，
+可在生成的配置函数之后显式启用，并按实际解码尺寸、同时在途图片和最大连续空闲块
+确定预算。例如，下面的 48 KiB 是一组 96×96 矢量、80×60 图片工作负载的已测配置，
+不是所有 C3 应用的默认值：
+
+```c
+esp_gsp_config_t config = gsp_bundle_config();
+ESP_ERROR_CHECK(esp_gsp_config_set(&config, ESP_GSP_FIELD_ENABLE_IMAGE_CACHE, 1)
+                == ESP_GSP_CONFIG_SET_OK ? ESP_OK : ESP_ERR_INVALID_ARG);
+config.image_cache_bytes = 48U * 1024U;
+```
+
+缓存可以减少重复解码，也可能增加解码任务及缓存条目元数据。图片追踪载荷峰值
+不能代替总 RAM 增量。一次性新图片可能因队列、发布和
+完整帧分配而更慢。减少预算后应同时检查首个请求、P95、P99/最大值、缓存重新解码、
+页面显隐与全刷，以及停止后的释放，不能只比较热循环 P95。编译占位资源可能被多个
+控件共享；替换一个动态目标不应主动淘汰这类编译资源，其释放仍由缓存预算与场景
+生命周期管理。
 
 ### 启动时的图片准备
 
@@ -101,6 +137,35 @@ JPEG 质量默认 85，可用 `quality`（1–100）调整。要求保留缩放�
 像素时用 `lossless`，或在 Profile 设置 `image_auto_allow_lossy: false`；RGB565
 量化仍然存在。
 
+### RGB565 渐变色阶
+
+图片和编译动图可设置 `"dither": true`，减轻 RGB888 转 RGB565 时产生的可见色阶。
+默认关闭；Profile 的 `image_dither: true` 可批量开启，单张图片的 `dither: false`
+可关闭。使用 4×4 有序抖动，只处理平滑的不透明区域；纯色、锐利边缘、透明像素和
+已有 RGB565 精度的颜色不额外加噪。RGB888/ARGB8888 跳过此处理。
+
+处理位置由最终编码决定，与源文件是 PNG 还是 JPEG 无关：原生像素、无损编码和编译动图
+在缩放后离线处理；不透明静态 JPEG 在解码、目标尺寸处理后，再抖动量化到 RGB565。
+解码缓存命中时直接复用处理结果，无需每帧重做。
+
+希望控制体积时可用 `"codec": "size"`。它比较可用编码的实际大小；缓存和目标能力允许时，
+可保留 JPEG，在设备解码时抖动。`auto` 和 `speed` 保守选择离线方案，避免自动增加
+解码计算。也可显式使用 `"codec": "jpeg"` 配合 `dither: true` 处理不透明静态图片。
+检查执行报告中的 `dither_stage`、最终资源字节数和解码内存：离线抖动可能增大压缩素材，
+解码抖动增加首次解码或缓存淘汰后的耗时及临时内存。RAW 大小不变，离线方案不增加设备抖动计算。
+报告中的解码内存不包含所有后端临时缓冲，实际峰值还受目标和缓存配置影响。
+
+GIF/APNG/WebP 和导入视频在帧合成、缩放后离线处理。整段动画共用固定的平滑区域和抖动坐标，
+相同位置的相同输入像素不会因邻近内容变化而产生额外跳动，再计算差分帧。
+动画中出现过半透明的坐标保持原处理，避免淡入淡出时切换抖动纹理。
+帧时长、循环次数和透明度保持原语义，继续使用既有动画压缩与内存预算。
+
+JPEG 解码抖动使用 GRB 1.9，需配套 ESP-GSP/模拟器 1.9.0；旧 runtime 会拒绝新资源。
+`gspc compatibility` 的 `compiler_features.image_dither >= 3` 表示编译器支持此路径。
+透明图片使用离线方案。不要同时显式请求抖动与 JPEG+A8、JPEG 动画帧或 `store_scale < 1`；
+Profile 开关跳过这些组合及矢量，逐图显式请求时会得到诊断。外部图片和动画资源清单也支持 `dither`。
+此选项不能恢复源图已经丢失的颜色；透明混合、运行时缩放和面板也可能影响最终色阶。
+
 对已选用 QOI 的不透明 RGB565 静态图片，GSPC 尝试用等价颜色缩小码流，只保留更小的结果。
 这会增加编译计算，解码像素和工作区保持不变。
 
@@ -136,9 +201,26 @@ scratch 与转换时间，硬件 JPEG 解码计数的耗时包含转换。
 
 ### 阅读场景资源预算
 
+编译器进程另有编码缓存，默认最多保留 128 个请求键和 32 MiB 唯一载荷。可用全局
+`--encoding-cache-bytes` 参数或 `GSPC_IMAGE_CACHE_BYTES` 设置宿主预算；设为 0 时
+关闭缓存持有，编译仍正常完成。daemon 的 `cache/imageStats` 和
+`cache/configureImages` 可查询占用并立即调整预算。这些设置影响编译复用，目标
+Profile 的 `image_cache_budget_bytes` 则控制设备解码缓存。宿主预算小于工作集时，
+可能增加重复编码，应结合命中、未命中和淘汰计数调整。
+这些控制要求编译器的 compatibility 或 doctor 报告声明
+`compiler_features.image_encoding_cache: 1`；旧工具可继续编译，无需使用这些选项。
+
 当前 `*.execution.json` 合同为 schema version 2，包含当前 GSPC 输出的资源可达性
 和可为空的解码大小字段。消费者应根据 `schema_version` 选择 schema，而不要根据
-GSPC 产品版本猜测报告格式。
+GSPC 的产品版本选择。
+
+严格 Schema 接受 Profile 的 `default`、`auto`、`speed`、`size` 四种策略和
+`animation_speed_hardware_jpeg` 开关。资源和来源变体的 `uses` 包含可为空的创作对象
+索引、名称、编码请求及初始可见性；程序化图片的初始选择无法确定时，由
+`image_usage.initial_visibility_unknown_images` 计数。跨度动画报告
+`persistent_span_decode`，禁用缓存的图片报告 `region_decode`。动画的可选
+`scratch_bytes` 是持久 `frame_bytes` 之外的工作区。这些字段说明能力和预算，
+性能结论仍需设备实测。
 
 `*.execution.json` 的 `resource_budget` 汇总场景资源：
 
@@ -511,9 +593,50 @@ revision 标志不负责同步后台生产者。返回的文本须至少保持�
 完整函数、回调和停止边界见 [函数级 API 参考](../reference/api-functions.md) 与
 [生命周期](lifecycle.md)。
 
+## 视频导入
+
+本地 MP4、AVI、MOV、WebM 和 MKV 可直接使用同一个 `image` 字段。独立安装编译器时，先检查
+`gspc compatibility` 中的 `compiler_features.video_import: 1`。GSPC 按需调用
+主机端 `ffmpeg` 和 `ffprobe`；安装 FFmpeg，或通过 `GSPC_FFMPEG` 和
+`GSPC_FFPROBE` 指定可执行文件路径。普通图片和 GIF/APNG/WebP 动图无需这些工具。
+要求 FFmpeg 4.4 或更新版本，实际容器及视频编码兼容范围取决于所用 FFmpeg 构建。
+
+```json
+{"type":"image","name":"intro","x":0,"y":0,"w":240,"h":240,
+ "image":"assets/intro.mp4","video_start_ms":1000,"video_duration_ms":3000}
+```
+
+视频在构建时转换为普通 GSP 动画资源，只导入视频画面，排除音频、字幕及封面。
+设备复用现有帧编码和播放器，无需 FFmpeg 或 MP4/AVI 解码器。源视频压缩不会保留，
+所以小 MP4 也可能生成较大的 Bundle。现有 `codec`、`animation_codec`、`quality`
+和目标 Profile 仍决定输出编码，不会因输入是视频就强制 JPEG。
+`dither: true` 沿用无损动画的 RGB565 离线处理；显式同时请求 JPEG 动画帧会在编译时报错。
+
+| 字段 | 视频行为 |
+|---|---|
+| `max_fps` | 省略时规范化到最多 30 fps，不提高源标称帧率；正数指定上限；显式 `0` 保留源显示时间戳，包括可变帧率。 |
+| `video_start_ms` / `video_duration_ms` | 默认从 0 开始；省略时长则导入到结尾。空片段或起点越界会报错。 |
+| `video_fit` | 默认 `contain`，以不透明黑色补边；`cover` 居中裁剪；`stretch` 拉伸。未覆盖时继承 Image 显式设置的 `fit`。先烘焙到控件宽高，再应用运行时变换。 |
+| `video_loop_count` | 默认 `1`，播放一遍；`0` 无限循环。不改变已有动图的循环默认值。 |
+| `video_max_decoded_bytes` | 主机保留的 RGBA 像素预算，默认 268435456 字节（256 MiB）。 |
+| `video_max_frames` | 合并相同帧之前的解码帧数上限，默认 4096，最大 65535。 |
+
+导入会处理旋转元数据和非方形像素，再执行尺寸适配。累计时间戳统一量化到毫秒，
+避免逐帧取整造成非整数帧率的时长漂移。HDR（PQ/HLG）需要先显式转为 SDR；不支持
+或损坏的输入会返回 FFmpeg 诊断。
+
+已知时长会在解码前检查导入预算，实际输出在流式读取时再次检查。超过预算或单次
+工具调用超过 120 秒会报错并提示调整方法，不会静默截短片段。RGBA 预算不是主机
+进程总内存上限：解码器、RGB565 规范化和编码候选还会占用内存。设备画布、解码及
+显示缓冲需要另行计算，并满足目标 Profile 和运行时配置。
+
+[外部资源清单](external-assets.md) 使用相同字段。构建依赖包含视频和实际使用的
+工具可执行文件；通过环境变量或 `PATH` 改换工具后应重新配置 CMake。导入帧率不
+代表设备播放 FPS，播放性能需要在目标设备上测量。这些选项仅适用于视频输入。
+
 ## JPEG 动画帧
 
-GIF/APNG 的 `animation_codec` 可以选择：
+动图与导入视频的 `animation_codec` 可以选择：
 
 | 值 | 编译行为 |
 |---|---|

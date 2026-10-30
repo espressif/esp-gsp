@@ -559,6 +559,18 @@ from independent paint; otherwise it renders live transforms (List's
 Animated jumps longer than one page
 extent land immediately when snapshots are unavailable.
 
+An opaque rectangular Drawer can use a stationary background capture even when
+the underlying page has gradients or independent transform groups. A parent clip
+that cuts into a Drawer or StackView viewport requires live rendering. PageFlow
+can retain clipping perpendicular to its motion; clipping the motion axis also
+requires live rendering. These choices preserve drawing order and input behavior
+without additional application configuration.
+
+During Drawer, PageFlow and StackView snapshots, automatic procedural effects and
+media playback pause. An explicit update affecting captured pixels ends the
+snapshot and resumes live rendering; unrelated offscreen property updates can
+preserve it. Playback resumes after the snapshot ends.
+
 For application-drawn overlays, register `esp_gsp_set_overlay_contributor()`. It draws
 rounded rectangles and caller-owned A8 glyph bitmaps, and rebuilds them against the
 active scene after a scene switch. Handle custom overlay input through the top-level

@@ -23,6 +23,13 @@ These commands compile the example and open it in the ESP-GSP simulator browser 
 
 ## Runtime behavior
 
+`track_size` explicitly sets the centered rail thickness, while `knob_size`
+sets a smaller centered thumb. Zero/omitted values preserve legacy geometry.
+`knob: false` hides the thumb while retaining state and interaction. The rail
+must fit the widget and the thumb must fit the rail. The `checked` state can
+change before the thumb animation finishes; wait for numeric `value` 0/100 when
+capturing a settled state.
+
 Clicking updates the retained `checked` state. Pressed and disabled styles are rendered by the runtime.
 
 If application code must read or update an object, give it a stable `name`. GSPC then generates the typed functions listed below.
@@ -76,7 +83,7 @@ These signatures come from the actual compiler output for this JSON.
 | `bg_color` | `color` | — | default #3f3f46 | yes | background/fill color (#RRGGBB or #RRGGBBAA) |
 | `checked` | `bool` | — | default `false` | yes | initial on/off state |
 | `knob_color` | `color` | — | default #FFFFFF | — | slider/toggle knob color |
-| `track_size` | `int` | — | default 0; 0…4096 | — | track thickness |
+| `track_size` | `int` | — | default 0; 0…4096 | — | centered track thickness; 0 preserves the legacy inset |
 
 <details>
 <summary>Show other fields supported by this Widget</summary>
@@ -140,14 +147,21 @@ These signatures come from the actual compiler output for this JSON.
 | `morph` | `int` | — | 0…100 | — | SVG shape interpolation progress (percent); generates a runtime setter |
 | `svg_element` | `string` | — | — | — | SVG element id; imports its painted bounds as an independent image |
 | `tint` | `color` | — | — | — | SVG silhouette color; generates a runtime color setter |
-| `image` | `path` | — | — | yes | image file path (raster or compiled SVG) |
+| `image` | `path` | — | — | yes | image, animated image, video (optional FFmpeg), or compiled SVG file path |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | video clip start in milliseconds |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | video clip duration in milliseconds; omitted imports to the end |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | build-time video aspect fit; contain pads with black |
+| `video_loop_count` | `int` | — | 0…65535 | — | video playback count (default 1; 0 loops forever) |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | host retained RGBA pixel budget (default 256 MiB; not total process RSS) |
+| `video_max_frames` | `int` | — | 1…65535 | — | maximum decoded video frames (default 4096) |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | image codec |
+| `dither` | `bool` | — | — | — | reduce RGB565 banding in images and animations; overrides profile image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG quality 1-100 (omitted = profile default) |
 | `jpeg_quality` | `int` | — | 1…100 | — | legacy JPEG quality alias |
 | `compress` | `bool` | — | — | — | image compression toggle (legacy; prefer codec) |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | image cache policy: mmap_direct, decode_lru or preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | pre-scale factor applied when encoding |
-| `max_fps` | `int` | — | 0…120 | — | GIF/animation frame-rate cap (0 = uncapped) |
+| `max_fps` | `int` | — | 0…120 | — | animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps |
 | `fit` | `enum` | — | default stretch; `stretch`, `fill`, `contain`, `cover` | — | image fit mode |
 | `position_x` | `number` | — | default 0.5; 0.0…1.0 | — | image fit horizontal alignment |
 | `position_y` | `number` | — | default 0.5; 0.0…1.0 | — | image fit vertical alignment |
@@ -168,6 +182,7 @@ These signatures come from the actual compiler output for this JSON.
 | `max_instances` | `int` | — | 1…65535 | — | maximum simultaneously live template instances; included in the automatic pool requirement |
 | `dynamic_color` | `bool` | — | — | — | template member exposes a per-instance color slot |
 | `dynamic_image` | `bool` | — | — | — | template image exposes a per-instance resource slot |
+| `knob_size` | `int` | — | default 0; 0…4096 | — | thumb diameter; 0 uses the track thickness |
 
 </details>
 

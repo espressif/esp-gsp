@@ -1,15 +1,15 @@
 # Industrial process panel / 1024×600
 
-![Production overview](preview.png)
+![Current native simulator screen](showcase/home.png)
 
-![Pressure history inspector](preview_trend.png)
-![Pull-down process alerts](preview_alerts.png)
 
 A P4 MIPI-DSI touch panel using RGB565, PSRAM and rotation 0. Four full-screen
 PageFlow pages present production, the pneumatic circuit, maintenance and a
 read-only pressure Trend inspector.
-Photography and a baked glass material accompany native telemetry; the retained
-vector circuit uses flow shimmers and an animated scanner.
+An expanded production image and a bounded baked-glass caption accompany
+the primary pressure readout. Six type sizes and explicit numeric glyph sets
+keep telemetry legible without embedding the body alphabet at large sizes. The retained
+vector circuit and connection status remain still while live telemetry changes.
 
 ## Controls
 
@@ -35,8 +35,17 @@ vector circuit uses flow shimmers and an animated scanner.
 
 Telemetry and alerts are simulated and reset on restart. The chart retains
 30 one-second samples and starts at 6.2 bar. Page observation uses a separate
-50 ms timer. The animated scanner and flow effects stop when their page is
-hidden or covered by the setpoint Drawer.
+50 ms timer.
+
+Opaque drawers use a shared pair of RGB565 viewport snapshots (about 2.34 MiB
+at 1024×600), retained while their content and other transforms remain unchanged.
+Telemetry and history continue during drawer motion; routine visual updates
+coalesce until the drag or settle ends. Alarm transitions still publish immediately.
+Guarded handoff also retains the already presented endpoint after a short
+cancelled pull, avoiding a redundant full repaint. Changed content and explicit
+full repaint requests still use the live renderer.
+The fixed Overview illustration is compiled at its displayed 450×300 size,
+avoiding repeated runtime resampling while keeping its centered placement.
 
 ## Build
 
@@ -66,4 +75,7 @@ python3 tools/sim_bridge/run.py --project examples/scenarios/industrial_panel/pc
 The PC backend shares the application controller with the device.
 
 
-Artwork sources are listed in [assets](scenes/assets/README.md).
+The overview pairs a transparent equipment illustration with a high-contrast
+pressure instrument. Typography uses baked Ubuntu Regular/Light subsets.
+Artwork sources are listed in [artwork](scenes/artwork/README.md) and
+[assets](scenes/assets/README.md).

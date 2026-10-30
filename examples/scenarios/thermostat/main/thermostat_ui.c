@@ -28,9 +28,10 @@ static esp_gsp_err_t refresh(esp_gsp_handle_t ui, thermostat_ui_t *s)
     CHECK(gsp_thermostat_hours_set_text(ui, value));
     CHECK(gsp_thermostat_timer_hint_set_text(ui, s->hours ? "HOURS · AUTO OFF" : "HOURS · DISABLED"));
     CHECK(gsp_thermostat_ring_set_value(ui, (s->half_degrees - 32) * 100 / 28));
-    CHECK(gsp_thermostat_warmth_set_playing(ui, s->page == 0 && s->mode != 2));
-    CHECK(gsp_thermostat_warmth_set_fg_color_rgb888(ui, s->mode == 1 ? 0x7BC7DD : 0xE8BA73));
     CHECK(gsp_thermostat_preset_name_set_text(ui, presets[s->preset].name));
+    CHECK(gsp_thermostat_preset_home_set_visible(ui, s->preset == 0));
+    CHECK(gsp_thermostat_preset_away_set_visible(ui, s->preset == 1));
+    CHECK(gsp_thermostat_preset_night_set_visible(ui, s->preset == 2));
     snprintf(status, sizeof(status), "%d C / PRESS TO APPLY", presets[s->preset].half_degrees / 2);
     CHECK(gsp_thermostat_preset_hint_set_text(ui, status));
     CHECK(gsp_thermostat_preset_ring_set_value(ui, (presets[s->preset].half_degrees - 32) * 100 / 28));

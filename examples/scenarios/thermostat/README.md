@@ -1,11 +1,13 @@
-# Thermostat / 240×240
+# AURA climate control / 240×240
 
-![Thermostat](preview.png)
+![Current native simulator screen](showcase/home.png)
 
 A rotary climate controller for ESP32-C3-LCDkit with the GC9A01 round SPI
-screen, RGB565, no PSRAM and rotation 0. A vector dial and climate icons frame
-native temperature readouts. Four PageFlow pages contain temperature, mode,
-sleep timer and quick presets; a small warmth pulse indicates active climate control.
+screen, RGB565, no PSRAM and rotation 0. A quiet native arc and climate icons frame
+a 72-pixel temperature readout. Five font sizes and per-control English/numeric
+glyph sets keep large numerals separate from the body alphabet. Four PageFlow pages contain temperature, mode,
+sleep timer and quick presets. Setpoint and mode are explicit; the idle dial
+remains still.
 
 ## Controls
 
@@ -25,11 +27,6 @@ GPIO6 (B) and GPIO9 (press), configurable under **Thermostat encoder**.
 GPIO9 is a boot strap and must be released during reset. Debounced actions pass
 through a bounded queue to the UI. Page observation and the sleep timer run on
 separate timers.
-
-![Climate mode](preview_mode.png)
-![Sleep timer](preview_timer.png)
-![Heating preset selection](preview_preset.png)
-![Native simulator held drag](preview_drag.png)
 
 ## Build
 
@@ -52,3 +49,7 @@ The PC backend shares the application controller with the device.
 
 
 Artwork sources are listed in [assets](scenes/assets/README.md).
+
+The AURA face uses Ubuntu Light numerals, Ubuntu Regular captions and the
+retained vector scale in `scenes/artwork/aura-scale.svg`. Font licenses are
+retained with the shared fonts and copied into the packaged example.

@@ -5,6 +5,9 @@
 cmake_minimum_required(VERSION 3.16)
 
 set(EXTRA_COMPONENT_DIRS "components")
+set(ESP_GSP_EXAMPLE_ASSETS_SUBTREE "usage/hello_world")
+set(ESP_GSP_EXAMPLE_ASSETS_SENTINEL "fonts/DejaVuSans.ttf")
+set(ESP_GSP_EXAMPLE_ASSETS_FONTS "DejaVuSans.ttf")
 set(SUPPORTED_TARGETS esp32c3 esp32s3 esp32p4 esp32s31)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)

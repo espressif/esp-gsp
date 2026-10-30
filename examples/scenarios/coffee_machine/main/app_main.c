@@ -10,6 +10,11 @@ static const char *TAG = "coffee";
 static void initialize_controller(esp_gsp_handle_t ui, void *ctx)
 {
     *(esp_gsp_err_t *)ctx = coffee_ui_init(ui, &state);
+#if !HW_USE_TOUCH && !defined(COFFEE_DEMO_PROBE)
+    if (*(esp_gsp_err_t *)ctx == ESP_GSP_OK) {
+        coffee_ui_set_showcase(&state, true);
+    }
+#endif
 #ifdef COFFEE_DEMO_PROBE
     if (*(esp_gsp_err_t *)ctx == ESP_GSP_OK) {
         extern void coffee_probe_start(esp_gsp_handle_t ui);
@@ -36,7 +41,7 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_gsp_esp_lcd_start_prepared(
                         &config, &panel, initialize_controller, &initialized, &ui));
     ESP_ERROR_CHECK(initialized);
-    ESP_LOGI(TAG, "AURA coffee: 800x480 %s, touch=%s, simulated appliance",
+    ESP_LOGI(TAG, "ATELIER coffee: 800x480 %s, touch=%s, simulated appliance",
 #if CONFIG_EXAMPLE_LCD_INTERFACE_RGB24
              "RGB888",
 #else

@@ -24,8 +24,9 @@ if(NOT EXISTS "${ESP_GSP_COMPONENT_DIR}/tools/sim_bridge/CMakeLists.txt")
     message(FATAL_ERROR "Install espressif/esp-gsp first, or set ESP_GSP_COMPONENT_DIR to its component directory")
 endif()
 set(ESP_GSP_EXAMPLE_ASSETS_SUBTREE "scenarios/coffee_machine")
-set(ESP_GSP_EXAMPLE_ASSETS_SENTINEL "scenes/assets/coffee_hero.png")
+set(ESP_GSP_EXAMPLE_ASSETS_SENTINEL "scenes/assets/coffee_brew.png")
 set(ESP_GSP_EXAMPLE_ASSETS_DESTINATION "${CMAKE_CURRENT_LIST_DIR}/..")
+set(ESP_GSP_EXAMPLE_ASSETS_FONTS "Ubuntu-L.ttf;Ubuntu-R.ttf")
 add_subdirectory("${ESP_GSP_COMPONENT_DIR}/tools/sim_bridge" sim_bridge)
 gsp_add_backend(coffee_backend
     SOURCES ../main/coffee_ui.c platform_pc.c

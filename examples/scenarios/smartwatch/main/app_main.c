@@ -4,10 +4,15 @@
 #include "hw_init.h"
 #include "bundle_gsp.h"
 #include "watch_ui.h"
+#include "esp_timer.h"
 static watch_ui_t state;
+static uint64_t clock_ms(void)
+{
+    return (uint64_t)esp_timer_get_time() / 1000;
+}
 static void prepare(esp_gsp_handle_t ui, void *ctx)
 {
-    *(esp_gsp_err_t *)ctx = watch_ui_init(ui, &state);
+    *(esp_gsp_err_t *)ctx = watch_ui_init(ui, &state, clock_ms);
 }
 void app_main(void)
 {

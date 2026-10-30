@@ -8,5 +8,8 @@ uses compiled local resources and does not download artwork at runtime.
 
 `ridge.png` was generated using the built-in image-generation tool on 2026-09-20:
 an alpine dawn ridge with a hiking trail, mist, pines and warm sunrise.
-Original source is retained. GSPC `store_scale: 0.15` and `fit: cover` compile
-the detail photograph for its 240 × 110 viewport.
+Original source is retained in the asset archive. The current route selector
+and detail views use the shared vector maps documented in
+[`../artwork/README.md`](../artwork/README.md); this photograph is no longer
+referenced by the scene and does not consume firmware Flash or decoded-image
+memory.

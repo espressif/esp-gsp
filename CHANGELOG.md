@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.9.0
+
+Use with GSPC 0.10.0, simulator 1.9.0 and esp_display_present ^1.2.0.
+
+- Fix Drawer takeover, reversal, snapshot reuse and lifecycle handling.
+- Add Session ownership results, opt-in paused snapshot trimming and safe decoder teardown.
+- Add atomic Dropdown captions and readback while preserving selection and callbacks.
+- Add grouped frame receipts, cancellation, failure recovery and named Backend queries.
+- Replace flush/decode tick polling with event/lock waits; share image caches and prequery P4 alignment.
+- Bound compiler encoding caches, align reports and export archive-bound stack evidence.
+- Add opt-in RGB565 offline and JPEG decode dithering; preserve default pixels and codecs.
+- Import MP4/AVI/MOV/WebM as compiled animations and accelerate C3 half-black fills.
+- Add an optional two-framebuffer budget; keep the three-buffer default.
+- Refine five showcases, externalize media, and add control geometry and design checks.
+
+Existing setters and static resources remain compatible. Regenerate resources for
+dynamic Dropdowns (GMD 1.4). Optional hardware confirmation can delay later frames.
+
 ## 1.8.0
 
 Use with GSPC 0.9.0 and simulator 1.8.0.

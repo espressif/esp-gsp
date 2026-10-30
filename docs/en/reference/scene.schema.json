@@ -137,9 +137,9 @@
     "authoring",
     "canvas_resource_views"
   ],
-  "compiler_version": "0.9.0",
+  "compiler_version": "0.10.0",
   "protocol_version": 1,
-  "registry_hash": "crc32:268d3fcc",
+  "registry_hash": "crc32:a650fc18",
   "schema_version": 2,
   "widgets": {
     "arc": {
@@ -273,6 +273,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -389,7 +393,7 @@
           "type": "bool"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -462,7 +466,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -822,6 +826,45 @@
           "doc": "vertical orientation",
           "type": "bool"
         },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
+        },
         "w": {
           "doc": "width in px",
           "dynamic": false,
@@ -1039,6 +1082,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -1155,7 +1202,7 @@
           "type": "bool"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -1216,7 +1263,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -1556,6 +1603,45 @@
           "doc": "widget type",
           "required": true,
           "type": "string"
+        },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
         },
         "w": {
           "doc": "width in px",
@@ -2214,6 +2300,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -2337,7 +2427,7 @@
           "type": "bool"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -2403,7 +2493,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -2738,6 +2828,45 @@
           "required": true,
           "type": "string"
         },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
+        },
         "w": {
           "doc": "width in px",
           "dynamic": false,
@@ -2924,6 +3053,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -3041,7 +3174,7 @@
           "type": "bool"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -3102,7 +3235,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -3417,6 +3550,45 @@
           "required": true,
           "type": "string"
         },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
+        },
         "w": {
           "doc": "width in px",
           "dynamic": false,
@@ -3597,6 +3769,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -3731,7 +3907,7 @@
           "type": "color"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -3792,7 +3968,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -4133,6 +4309,45 @@
           "required": true,
           "type": "string"
         },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
+        },
         "w": {
           "doc": "width in px",
           "dynamic": false,
@@ -4340,6 +4555,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -4456,7 +4675,7 @@
           "type": "bool"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -4517,7 +4736,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -4832,6 +5051,45 @@
           "required": true,
           "type": "string"
         },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
+        },
         "w": {
           "doc": "width in px",
           "dynamic": true,
@@ -5034,6 +5292,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -5161,7 +5423,7 @@
           "type": "bool"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -5222,7 +5484,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -5542,6 +5804,45 @@
           "required": true,
           "type": "string"
         },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
+        },
         "w": {
           "doc": "width in px",
           "dynamic": true,
@@ -5632,6 +5933,11 @@
           "minimum": 0,
           "type": "int"
         },
+        "dynamic_options": {
+          "default": false,
+          "doc": "allow atomic runtime option-label replacement",
+          "type": "bool"
+        },
         "enabled": {
           "doc": "initial interaction state; when present, exposes a runtime enabled property inherited by descendant controls",
           "type": "bool"
@@ -5694,6 +6000,13 @@
           "default": "down",
           "doc": "direction in which the option panel opens",
           "type": "enum"
+        },
+        "option_text_max_bytes": {
+          "default": 128,
+          "doc": "maximum UTF-8 bytes per dynamic option, excluding NUL",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
         },
         "options": {
           "doc": "option labels",
@@ -6551,6 +6864,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -6667,7 +6984,7 @@
           "type": "bool"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -6735,7 +7052,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -7062,6 +7379,45 @@
           "required": true,
           "type": "string"
         },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
+        },
         "w": {
           "doc": "width in px",
           "dynamic": false,
@@ -7272,6 +7628,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -7388,7 +7748,7 @@
           "type": "bool"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -7464,7 +7824,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -7786,6 +8146,45 @@
           "doc": "widget type",
           "required": true,
           "type": "string"
+        },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
         },
         "w": {
           "doc": "width in px",
@@ -8209,6 +8608,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -8326,7 +8729,7 @@
           "type": "bool"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -8387,7 +8790,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -8701,6 +9104,45 @@
           "doc": "widget type",
           "required": true,
           "type": "string"
+        },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
         },
         "w": {
           "doc": "width in px",
@@ -8914,6 +9356,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -9030,7 +9476,7 @@
           "type": "bool"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -9091,7 +9537,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -9406,6 +9852,45 @@
           "required": true,
           "type": "string"
         },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
+        },
         "w": {
           "doc": "width in px",
           "dynamic": true,
@@ -9586,6 +10071,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -9702,7 +10191,7 @@
           "type": "bool"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -9787,7 +10276,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -10123,6 +10612,45 @@
           "doc": "widget type",
           "required": true,
           "type": "string"
+        },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
         },
         "visible_rows": {
           "default": 0,
@@ -10688,6 +11216,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -10804,7 +11336,7 @@
           "type": "bool"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -10865,7 +11397,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -11194,6 +11726,45 @@
           "required": true,
           "type": "string"
         },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
+        },
         "w": {
           "doc": "width in px",
           "dynamic": false,
@@ -11417,6 +11988,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -11533,7 +12108,7 @@
           "type": "bool"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -11612,7 +12187,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -11962,6 +12537,45 @@
           "required": true,
           "type": "string"
         },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
+        },
         "visible_rows": {
           "default": 0,
           "doc": "visible row count (alt to item_height)",
@@ -12149,6 +12763,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -12265,7 +12883,7 @@
           "type": "bool"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -12333,7 +12951,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -12665,6 +13283,45 @@
           "doc": "vertical orientation",
           "type": "bool"
         },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
+        },
         "w": {
           "doc": "width in px",
           "dynamic": false,
@@ -12851,6 +13508,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -12968,7 +13629,7 @@
           "type": "bool"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -13029,7 +13690,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -13343,6 +14004,45 @@
           "doc": "widget type",
           "required": true,
           "type": "string"
+        },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
         },
         "w": {
           "doc": "width in px",
@@ -13546,6 +14246,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -13662,7 +14366,7 @@
           "type": "bool"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -13723,7 +14427,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -14038,6 +14742,45 @@
           "required": true,
           "type": "string"
         },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
+        },
         "w": {
           "doc": "width in px",
           "dynamic": true,
@@ -14218,6 +14961,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -14334,7 +15081,7 @@
           "type": "bool"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -14406,7 +15153,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -14733,6 +15480,45 @@
           "required": true,
           "type": "string"
         },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
+        },
         "w": {
           "doc": "width in px",
           "dynamic": false,
@@ -14914,6 +15700,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -15030,7 +15820,7 @@
           "type": "bool"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -15108,7 +15898,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -15425,6 +16215,18 @@
           "doc": "SVG silhouette color; generates a runtime color setter",
           "type": "color"
         },
+        "track_inset": {
+          "doc": "track end inset; omitted preserves the legacy thumb-radius inset",
+          "maximum": 32767,
+          "minimum": 0,
+          "type": "int"
+        },
+        "track_radius": {
+          "doc": "track corner radius; omitted uses half its thickness",
+          "maximum": 32767,
+          "minimum": 0,
+          "type": "int"
+        },
         "track_size": {
           "default": 0,
           "doc": "track thickness",
@@ -15446,6 +16248,45 @@
           "default": false,
           "doc": "vertical orientation",
           "type": "bool"
+        },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
         },
         "w": {
           "doc": "width in px",
@@ -15627,6 +16468,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -15743,7 +16588,7 @@
           "type": "bool"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -15804,7 +16649,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -16133,6 +16978,45 @@
           "required": true,
           "type": "string"
         },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
+        },
         "w": {
           "doc": "width in px",
           "dynamic": false,
@@ -16351,6 +17235,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -16467,7 +17355,7 @@
           "type": "bool"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -16535,7 +17423,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -16872,6 +17760,45 @@
           "doc": "widget type",
           "required": true,
           "type": "string"
+        },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
         },
         "w": {
           "doc": "width in px",
@@ -17419,6 +18346,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -17536,7 +18467,7 @@
           "type": "bool"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -17560,6 +18491,13 @@
           "default": "#FFFFFF",
           "doc": "slider/toggle knob color",
           "type": "color"
+        },
+        "knob_size": {
+          "default": 0,
+          "doc": "thumb diameter; 0 uses the track thickness",
+          "maximum": 4096,
+          "minimum": 0,
+          "type": "int"
         },
         "layout": {
           "choices": [
@@ -17607,7 +18545,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -17919,7 +18857,7 @@
         },
         "track_size": {
           "default": 0,
-          "doc": "track thickness",
+          "doc": "centered track thickness; 0 preserves the legacy inset",
           "maximum": 4096,
           "minimum": 0,
           "type": "int"
@@ -17928,6 +18866,45 @@
           "doc": "widget type",
           "required": true,
           "type": "string"
+        },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
         },
         "w": {
           "doc": "width in px",
@@ -18114,6 +19091,10 @@
           "minimum": 0,
           "type": "int"
         },
+        "dither": {
+          "doc": "reduce RGB565 banding in images and animations; overrides profile image_dither",
+          "type": "bool"
+        },
         "dynamic_color": {
           "doc": "template member exposes a per-instance color slot",
           "type": "bool"
@@ -18235,7 +19216,7 @@
           "type": "bool"
         },
         "image": {
-          "doc": "image file path (raster or compiled SVG)",
+          "doc": "image, animated image, video (optional FFmpeg), or compiled SVG file path",
           "dynamic": true,
           "type": "path"
         },
@@ -18320,7 +19301,7 @@
           "type": "int"
         },
         "max_fps": {
-          "doc": "GIF/animation frame-rate cap (0 = uncapped)",
+          "doc": "animation import frame-rate cap; video defaults to 30, explicit 0 preserves source timestamps",
           "maximum": 120,
           "minimum": 0,
           "type": "int"
@@ -18651,6 +19632,45 @@
           "doc": "widget type",
           "required": true,
           "type": "string"
+        },
+        "video_duration_ms": {
+          "doc": "video clip duration in milliseconds; omitted imports to the end",
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_fit": {
+          "choices": [
+            "contain",
+            "cover",
+            "stretch"
+          ],
+          "doc": "build-time video aspect fit; contain pads with black",
+          "type": "enum"
+        },
+        "video_loop_count": {
+          "doc": "video playback count (default 1; 0 loops forever)",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "int"
+        },
+        "video_max_decoded_bytes": {
+          "doc": "host retained RGBA pixel budget (default 256 MiB; not total process RSS)",
+          "maximum": 9223372036854775807,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_max_frames": {
+          "doc": "maximum decoded video frames (default 4096)",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "int"
+        },
+        "video_start_ms": {
+          "doc": "video clip start in milliseconds",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "int"
         },
         "visible_rows": {
           "default": 0,

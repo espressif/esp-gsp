@@ -8,6 +8,7 @@
 
 #if CONFIG_EXAMPLE_LCD_INTERFACE_MIPI_DSI
 
+#include "hw_lcd_frame_buffers.h"
 #include "esp_check.h"
 #include "esp_lcd_ek79007.h"
 #include "esp_lcd_mipi_dsi.h"
@@ -32,7 +33,7 @@ esp_err_t hw_lcd_init_mipi(
                         "MIPI input depth must be 16 or 24 bpp");
     ESP_LOGI(TAG, "Initialize MIPI-DSI panel (%dx%d, %u bpp, %u fbs)",
              HW_LCD_H_RES, HW_LCD_V_RES, (unsigned)bits_per_pixel,
-             3U);
+             (unsigned)HW_LCD_FRAME_BUFFERS);
     esp_ldo_channel_handle_t ldo_mipi_phy = NULL;
     esp_ldo_channel_config_t ldo_config = {
         .chan_id = LDO_MIPI_CHAN,
@@ -61,7 +62,7 @@ esp_err_t hw_lcd_init_mipi(
         .dpi_clock_freq_mhz = 52,
         .in_color_format = bits_per_pixel == 24 ?
         LCD_COLOR_FMT_RGB888 : LCD_COLOR_FMT_RGB565,
-        .num_fbs = 3,
+        .num_fbs = HW_LCD_FRAME_BUFFERS,
         .video_timing = {
             .h_size = HW_LCD_H_RES,
             .v_size = HW_LCD_V_RES,
@@ -101,7 +102,7 @@ esp_err_t hw_lcd_init_mipi(
             .rotation = HW_DISPLAY_ROTATION,
         },
         .fb = {
-            .mode = ESP_DISPLAY_PRESENT_MODE_AUTO,
+            .mode = HW_LCD_FRAME_BUFFER_MODE,
         },
     };
     return ESP_OK;

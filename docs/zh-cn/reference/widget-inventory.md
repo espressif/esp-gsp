@@ -15,39 +15,39 @@
 
 | 控件 | 类型 | Facet | 字段数 | 输入事件 |
 |---|---|---|---:|---|
-| [容器](../components/container.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 97 | 是 |
-| [标签](../components/label.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 96 | 是 |
-| [按钮](../components/button.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `text`, `background_opacity`, `border`, `border_side`, `image`, `boolean`, `interaction`, `template` | 105 | 是 |
-| [图片](../components/image.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `image`, `text`, `interaction`, `template` | 99 | 是 |
-| [矩形](../components/rect.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 96 | 是 |
-| [形状](../components/shape.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `shape`, `interaction`, `template` | 96 | 是 |
-| [进度条](../components/progress.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `interaction`, `template` | 98 | 是 |
-| [图表](../components/chart.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `stroke`, `interaction`, `template` | 100 | 是 |
-| [滑块](../components/slider.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `slider`, `interaction`, `template` | 101 | 是 |
-| [圆弧](../components/arc.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `arc`, `interaction`, `template` | 102 | 是 |
-| [指针](../components/needle.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `needle`, `stroke`, `interaction`, `template` | 97 | 是 |
-| [加载指示器](../components/spinner.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `spinner`, `stroke`, `interaction`, `template` | 96 | 是 |
+| [容器](../components/container.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 104 | 是 |
+| [标签](../components/label.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 103 | 是 |
+| [按钮](../components/button.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `text`, `background_opacity`, `border`, `border_side`, `image`, `boolean`, `interaction`, `template` | 112 | 是 |
+| [图片](../components/image.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `image`, `text`, `interaction`, `template` | 106 | 是 |
+| [矩形](../components/rect.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 103 | 是 |
+| [形状](../components/shape.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `shape`, `interaction`, `template` | 103 | 是 |
+| [进度条](../components/progress.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `interaction`, `template` | 105 | 是 |
+| [图表](../components/chart.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `stroke`, `interaction`, `template` | 107 | 是 |
+| [滑块](../components/slider.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `slider`, `interaction`, `template` | 110 | 是 |
+| [圆弧](../components/arc.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `value`, `arc`, `interaction`, `template` | 109 | 是 |
+| [指针](../components/needle.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `needle`, `stroke`, `interaction`, `template` | 104 | 是 |
+| [加载指示器](../components/spinner.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `spinner`, `stroke`, `interaction`, `template` | 103 | 是 |
 | [参数特效](../components/effect.md) | `widget` | `core`, `visibility`, `interaction` | 29 | 是 |
 | [充电球](../components/charging_orb.md) | `widget` | `core`, `visibility`, `interaction` | 30 | 是 |
 | [立体图标轮盘](../components/carousel.md) | `widget` | `core`, `visibility`, `interaction` | 26 | 是 |
 | [翻转卡片](../components/flip_card.md) | `widget` | `core`, `visibility`, `interaction` | 25 | 是 |
 | [毛玻璃](../components/glass.md) | `widget` | `core`, `visibility` | 15 | 否 |
-| [开关](../components/toggle.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `slider`, `interaction`, `template` | 98 | 是 |
-| [复选框](../components/checkbox.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 95 | 是 |
-| [单选框](../components/radio.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 95 | 是 |
-| [时钟](../components/clock.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 102 | 是 |
-| [页面流](../components/page_flow.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `data`, `interaction`, `template` | 109 | 是 |
-| [堆栈视图](../components/stackview.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 102 | 是 |
-| [抽屉](../components/drawer.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 98 | 是 |
-| [图层](../components/layer.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 98 | 是 |
+| [开关](../components/toggle.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `slider`, `interaction`, `template` | 106 | 是 |
+| [复选框](../components/checkbox.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 102 | 是 |
+| [单选框](../components/radio.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `boolean`, `interaction`, `template` | 102 | 是 |
+| [时钟](../components/clock.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `interaction`, `template` | 109 | 是 |
+| [页面流](../components/page_flow.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `data`, `interaction`, `template` | 116 | 是 |
+| [堆栈视图](../components/stackview.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 109 | 是 |
+| [抽屉](../components/drawer.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 105 | 是 |
+| [图层](../components/layer.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `background_opacity`, `border`, `border_side`, `text`, `image`, `interaction`, `template` | 105 | 是 |
 | [选项卡视图](../components/tabview.md) | `composite` | `core` | 25 | 是 |
-| [下拉选择](../components/dropdown.md) | `composite` | `core` | 26 | 是 |
+| [下拉选择](../components/dropdown.md) | `composite` | `core` | 28 | 是 |
 | [消息框](../components/msgbox.md) | `composite` | `composite_core` | 21 | 是 |
 | [表格](../components/table.md) | `composite` | `core` | 19 | 是 |
 | [键盘](../components/keyboard.md) | `composite` | `core` | 36 | 是 |
-| [列表](../components/list.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `list_data`, `scroll_snapshot`, `interaction`, `template` | 103 | 是 |
-| [滚轮选择器](../components/wheel.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `wheel_behavior`, `data`, `list_data`, `interaction`, `template` | 104 | 是 |
-| [网格](../components/grid.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `grid_data`, `scroll_snapshot`, `interaction`, `template` | 100 | 是 |
+| [列表](../components/list.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `data`, `list_data`, `scroll_snapshot`, `interaction`, `template` | 110 | 是 |
+| [滚轮选择器](../components/wheel.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `wheel_behavior`, `data`, `list_data`, `interaction`, `template` | 111 | 是 |
+| [网格](../components/grid.md) | `widget` | `core`, `layout`, `visibility`, `appearance`, `fill`, `border`, `text`, `image`, `grid_data`, `scroll_snapshot`, `interaction`, `template` | 107 | 是 |
 | [消息列表](../components/message_list.md) | `composite` | `core`, `visibility`, `row_template`, `message_list` | 31 | 是 |
 
 ## 按控件列出字段
@@ -125,14 +125,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -227,14 +234,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -328,14 +342,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -427,14 +448,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -542,14 +570,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -641,14 +676,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -742,14 +784,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -845,14 +894,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -950,14 +1006,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -984,6 +1047,8 @@
 | `max_instances` | `int` | — | 1…65535 | — | 同时存活模板实例的最大数量；计入自动推导的资源池需求 |
 | `dynamic_color` | `bool` | — | — | — | 模板成员公开每实例独立颜色槽 |
 | `dynamic_image` | `bool` | — | — | — | 模板图片公开每实例独立资源槽 |
+| `track_inset` | `int` | — | 0…32767 | — | 轨道两端内缩；省略时保留原有滑块半径内缩 |
+| `track_radius` | `int` | — | 0…32767 | — | 轨道圆角半径；省略时使用轨道厚度的一半 |
 
 ### 圆弧（`arc`）
 
@@ -1056,14 +1121,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -1163,14 +1235,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -1265,14 +1344,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -1516,14 +1602,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -1534,7 +1627,7 @@
 | `max_scale` | `number` | — | 默认 4.0; 0.0625…16.0 | — | 运行时图片最大缩放比例 |
 | `checked` | `bool` | — | 默认 `false` | 是 | 初始开关状态 |
 | `knob_color` | `color` | — | 默认 #FFFFFF | — | 滑块/开关旋钮颜色 |
-| `track_size` | `int` | — | 默认 0; 0…4096 | — | 轨道粗细 |
+| `track_size` | `int` | — | 默认 0; 0…4096 | — | 居中的轨道厚度；0 保留原有内缩 |
 | `knob` | `bool` | — | 默认 `true` | — | 是否显示旋钮 |
 | `enabled` | `bool` | — | — | — | 初始交互状态；设置后会公开可由后代控件继承的运行时 enabled 属性 |
 | `disabled_color` | `color` | — | 默认 #808080 | — | 禁用态覆盖颜色 |
@@ -1547,6 +1640,7 @@
 | `max_instances` | `int` | — | 1…65535 | — | 同时存活模板实例的最大数量；计入自动推导的资源池需求 |
 | `dynamic_color` | `bool` | — | — | — | 模板成员公开每实例独立颜色槽 |
 | `dynamic_image` | `bool` | — | — | — | 模板图片公开每实例独立资源槽 |
+| `knob_size` | `int` | — | 默认 0; 0…4096 | — | 滑块直径；0 使用轨道厚度 |
 
 ### 复选框（`checkbox`）
 
@@ -1619,14 +1713,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -1719,14 +1820,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -1819,14 +1927,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -1928,14 +2043,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -2042,14 +2164,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -2149,14 +2278,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -2252,14 +2388,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -2333,6 +2476,8 @@
 | `font` | `path` | — | — | — | 单个对象的 TTF/OTF 字体覆盖路径 |
 | `font_size` | `int` | — | 1…255 | — | 单个对象的字体像素尺寸 |
 | `options` | `string_list` | 是 | — | — | 选项标签 |
+| `dynamic_options` | `bool` | — | 默认 `false` | — | 允许在运行时整体替换选项文字 |
+| `option_text_max_bytes` | `int` | — | 默认 128; 1…65535 | — | 每项动态文字的 UTF-8 字节上限，不含 NUL |
 | `items` | `string_list` | — | — | — | 规范化后的下拉选项标签 |
 | `item_height` | `int` | — | 0…65535 | — | 条目行高 |
 | `open_direction` | `enum` | — | 默认 down; `down`, `up` | — | 选项面板展开方向 |
@@ -2505,14 +2650,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -2613,14 +2765,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |
@@ -2722,14 +2881,21 @@
 | `morph` | `int` | — | 0…100 | — | SVG 形变进度（百分比）；生成运行时设置接口 |
 | `svg_element` | `string` | — | — | — | SVG 元素 ID；按绘制边界导入为独立图片 |
 | `tint` | `color` | — | — | — | SVG 轮廓颜色；生成运行时颜色设置接口 |
-| `image` | `path` | — | — | 是 | 图片文件路径（位图或编译式 SVG） |
+| `image` | `path` | — | — | 是 | 图片、动图、视频（可选 FFmpeg）或编译 SVG 的文件路径 |
+| `video_start_ms` | `int` | — | 0…4294967295 | — | 视频片段起点，单位毫秒 |
+| `video_duration_ms` | `int` | — | 1…4294967295 | — | 视频片段时长，单位毫秒；省略则导入到结尾 |
+| `video_fit` | `enum` | — | `contain`, `cover`, `stretch` | — | 构建期视频宽高比适配；contain 使用黑色补边 |
+| `video_loop_count` | `int` | — | 0…65535 | — | 视频播放次数（默认 1；0 无限循环） |
+| `video_max_decoded_bytes` | `int` | — | 1…9223372036854775807 | — | 主机保留的 RGBA 像素预算（默认 256 MiB，不代表进程总内存） |
+| `video_max_frames` | `int` | — | 1…65535 | — | 最大视频解码帧数（默认 4096） |
 | `codec` | `enum` | — | `raw`, `lossless`, `jpeg`, `auto`, `speed`, `size`, `store`, `qoi`, `rle16`, `rle16_a8`, `rle32`, `default`, `hardware_jpeg` | — | 图片编码格式 |
+| `dither` | `bool` | — | — | — | 减轻图片和动图的 RGB565 色阶；覆盖 Profile 的 image_dither |
 | `quality` | `int` | — | 1…100 | — | JPEG 质量 1–100（省略时使用 Profile 默认值） |
 | `jpeg_quality` | `int` | — | 1…100 | — | 旧版 JPEG 质量字段别名 |
 | `compress` | `bool` | — | — | — | 图片压缩开关（兼容字段；优先使用 codec） |
 | `cache_policy` | `enum` | — | `mmap_direct`, `mmap`, `decode_lru`, `lru`, `preload` | — | 图片缓存策略：mmap_direct、decode_lru 或 preload |
 | `store_scale` | `number` | — | 0.05…1.0 | — | 编码时应用的预缩放比例 |
-| `max_fps` | `int` | — | 0…120 | — | GIF/动画帧率上限（0 表示不限制） |
+| `max_fps` | `int` | — | 0…120 | — | 动画导入帧率上限；视频默认 30，显式 0 保留源时间戳 |
 | `fit` | `enum` | — | 默认 stretch; `stretch`, `fill`, `contain`, `cover` | — | 图片适配模式 |
 | `position_x` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的水平对齐位置 |
 | `position_y` | `number` | — | 默认 0.5; 0.0…1.0 | — | 图片适配的垂直对齐位置 |

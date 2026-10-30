@@ -71,6 +71,7 @@ struct gsp_ui_core {
     uint8_t api_version;
     bool read_timeout;
     bool component_motion_enabled, component_events_enabled, keyboard_text_enabled;
+    bool dropdown_text_enabled;
     bool draining_canvas, canvas_queue_closed;
     char read_header[4096];
     size_t header_used, body_size, body_used;
@@ -79,6 +80,8 @@ struct gsp_ui_core {
     struct bridge_fence fences[FENCE_LIMIT];
     struct bridge_media *media;
     struct bridge_images *images;
+    struct esp_gsp_update_receipt *updates;
+    bool updates_enabled;
     uint16_t scene;
     uint64_t scene_generation;
     esp_gsp_event_cb_t callback;
@@ -103,6 +106,14 @@ struct bridge_media **bridge_media_slot(esp_gsp_handle_t ui)
 struct bridge_images **bridge_images_slot(esp_gsp_handle_t ui)
 {
     return ui ? &ui->images : NULL;
+}
+struct esp_gsp_update_receipt **bridge_updates_slot(esp_gsp_handle_t ui)
+{
+    return ui ? &ui->updates : NULL;
+}
+bool bridge_updates_enabled(esp_gsp_handle_t ui)
+{
+    return ui && ui->updates_enabled;
 }
 bool bridge_images_enabled(esp_gsp_handle_t ui)
 {
@@ -140,6 +151,11 @@ bool bridge_component_motion_enabled(esp_gsp_handle_t ui)
 bool bridge_keyboard_text_enabled(esp_gsp_handle_t ui)
 {
     return ui && ui->keyboard_text_enabled;
+}
+
+bool bridge_dropdown_text_enabled(esp_gsp_handle_t ui)
+{
+    return ui && ui->dropdown_text_enabled;
 }
 void bridge_set_pointer_observer(esp_gsp_handle_t ui,
                                  esp_gsp_pointer_observer_cb_t cb, void *user_ctx)
@@ -324,7 +340,8 @@ static const char *field(const char *json, const char *key)
     return NULL;
 }
 
-bool bridge_json_hex(const char *json, const char *key, char *out, size_t capacity)
+static bool json_hex(const char *json, const char *key, char *out, size_t capacity,
+                     bool exact)
 {
     if (out == NULL || capacity == 0) {
         return false;
@@ -335,7 +352,8 @@ bool bridge_json_hex(const char *json, const char *key, char *out, size_t capaci
         return false;
     }
     const char *end = strchr(p, '"');
-    if (end == NULL || ((size_t)(end - p) & 1U) != 0 || (size_t)(end - p) / 2 >= capacity) {
+    if (end == NULL || ((size_t)(end - p) & 1U) != 0 ||
+            (exact ? (size_t)(end - p) / 2 != capacity : (size_t)(end - p) / 2 >= capacity)) {
         return false;
     }
     size_t length = (size_t)(end - p) / 2;
@@ -354,7 +372,43 @@ bool bridge_json_hex(const char *json, const char *key, char *out, size_t capaci
         }
         out[i] = (char)((values[0] << 4) | values[1]);
     }
-    out[length] = '\0';
+    if (!exact) {
+        out[length] = '\0';
+    }
+    return true;
+}
+
+bool bridge_json_hex(const char *json, const char *key, char *out, size_t capacity)
+{
+    return json_hex(json, key, out, capacity, false);
+}
+
+bool bridge_json_hex_bytes(const char *json, const char *key, uint8_t *out, size_t size)
+{
+    return json_hex(json, key, (char *)out, size, true);
+}
+
+bool bridge_json_token(const char *json, const char *key, char *out, size_t capacity)
+{
+    const char *p = field(json, key);
+    if (p == NULL || *p++ != '"' || out == NULL || capacity == 0) {
+        return false;
+    }
+    size_t size = 0;
+    while (p[size] != '"') {
+        unsigned char byte = (unsigned char)p[size];
+        if (size + 1 >= capacity ||
+                !((byte >= '0' && byte <= '9') || (byte >= 'a' && byte <= 'z') ||
+                  (byte >= 'A' && byte <= 'Z') || byte == '-' || byte == '_')) {
+            return false;
+        }
+        ++size;
+    }
+    if (size == 0) {
+        return false;
+    }
+    memcpy(out, p, size);
+    out[size] = 0;
     return true;
 }
 
@@ -959,6 +1013,25 @@ esp_gsp_err_t bridge_scalar(esp_gsp_handle_t ui, unsigned op, const uint32_t arg
     return rc;
 }
 
+static void apply_capabilities(esp_gsp_handle_t ui, const char *caps)
+{
+    ui->scene = (uint16_t)bridge_json_number(caps, "current_scene", 0);
+    ui->media_enabled = bridge_json_number(caps, "bridge_media_version", 0) == 1;
+    ui->image_enabled = bridge_json_number(caps, "bridge_image_version", 0) == 1;
+    ui->widget_enabled = bridge_json_number(caps, "bridge_widget_version", 0) == 1;
+    ui->fence_enabled = bridge_json_number(caps, "bridge_fence_version", 0) == 1;
+    ui->pointer_enabled = bridge_json_number(caps, "bridge_pointer_version", 0) == 1;
+    ui->canvas_patch_enabled = bridge_json_number(caps, "bridge_canvas_patch_version", 0) == 1;
+    int64_t api_version = bridge_json_number(caps, "bridge_api_version", 1);
+    ui->api_version = api_version >= GSP_SIM_BRIDGE_API_VERSION ?
+                      GSP_SIM_BRIDGE_API_VERSION : api_version > 0 ? (uint8_t)api_version : 1;
+    ui->component_motion_enabled = bridge_json_number(caps, "component_motion_version", 0) == 1;
+    ui->keyboard_text_enabled = bridge_json_number(caps, "bridge_keyboard_text_version", 0) == 1;
+    ui->dropdown_text_enabled = bridge_json_number(caps, "bridge_dropdown_text_version", 0) == 1;
+    ui->updates_enabled = bridge_json_number(caps, "update_receipts_version", 0) == 1;
+    ui->component_events_enabled = bridge_json_number(caps, "component_events_version", 0) == 1;
+}
+
 esp_gsp_err_t gsp_sim_bridge_open(const char *endpoint, esp_gsp_handle_t *out)
 {
     if (!endpoint || !out) {
@@ -1028,19 +1101,7 @@ esp_gsp_err_t gsp_sim_bridge_open(const char *endpoint, esp_gsp_handle_t *out)
         fprintf(stderr, "sim_bridge: host requires compatible bridge_version=1 and abi_version=1\n");
         free(caps); gsp_sim_bridge_close(ui); return ESP_GSP_ERR_NOT_SUPPORTED;
     }
-    ui->scene = (uint16_t)bridge_json_number(caps, "current_scene", 0);
-    ui->media_enabled = bridge_json_number(caps, "bridge_media_version", 0) == 1;
-    ui->image_enabled = bridge_json_number(caps, "bridge_image_version", 0) == 1;
-    ui->widget_enabled = bridge_json_number(caps, "bridge_widget_version", 0) == 1;
-    ui->fence_enabled = bridge_json_number(caps, "bridge_fence_version", 0) == 1;
-    ui->pointer_enabled = bridge_json_number(caps, "bridge_pointer_version", 0) == 1;
-    ui->canvas_patch_enabled = bridge_json_number(caps, "bridge_canvas_patch_version", 0) == 1;
-    int64_t api_version = bridge_json_number(caps, "bridge_api_version", 1);
-    ui->api_version = api_version >= GSP_SIM_BRIDGE_API_VERSION ?
-                      GSP_SIM_BRIDGE_API_VERSION : api_version > 0 ? (uint8_t)api_version : 1;
-    ui->component_motion_enabled = bridge_json_number(caps, "component_motion_version", 0) == 1;
-    ui->keyboard_text_enabled = bridge_json_number(caps, "bridge_keyboard_text_version", 0) == 1;
-    ui->component_events_enabled = bridge_json_number(caps, "component_events_version", 0) == 1;
+    apply_capabilities(ui, caps);
     free(caps);
     *out = ui;
     return ESP_GSP_OK;
@@ -1073,18 +1134,7 @@ esp_gsp_err_t bridge_open_inproc(const gsp_sim_host_api_v1_t *host,
         gsp_sim_bridge_close(ui);
         return ESP_GSP_ERR_NOT_SUPPORTED;
     }
-    ui->scene = (uint16_t)bridge_json_number(caps, "current_scene", 0);
-    ui->media_enabled = bridge_json_number(caps, "bridge_media_version", 0) == 1;
-    ui->image_enabled = bridge_json_number(caps, "bridge_image_version", 0) == 1;
-    ui->widget_enabled = bridge_json_number(caps, "bridge_widget_version", 0) == 1;
-    ui->fence_enabled = bridge_json_number(caps, "bridge_fence_version", 0) == 1;
-    ui->pointer_enabled = bridge_json_number(caps, "bridge_pointer_version", 0) == 1;
-    ui->canvas_patch_enabled = bridge_json_number(caps, "bridge_canvas_patch_version", 0) == 1;
-    int64_t api_version = bridge_json_number(caps, "bridge_api_version", 1);
-    ui->api_version = api_version >= 3 ? 3 : api_version >= 2 ? 2 : 1;
-    ui->component_motion_enabled = bridge_json_number(caps, "component_motion_version", 0) == 1;
-    ui->keyboard_text_enabled = bridge_json_number(caps, "bridge_keyboard_text_version", 0) == 1;
-    ui->component_events_enabled = bridge_json_number(caps, "component_events_version", 0) == 1;
+    apply_capabilities(ui, caps);
     free(caps);
     *out = ui;
     return ESP_GSP_OK;
@@ -1274,6 +1324,7 @@ esp_gsp_err_t gsp_sim_bridge_poll(esp_gsp_handle_t ui, uint32_t timeout_ms)
     esp_gsp_err_t media_rc = ui->failed ? ESP_GSP_FAIL : bridge_media_poll(ui);
     if (!ui->failed) {
         bridge_images_poll(ui);
+        bridge_updates_poll(ui);
     }
     ui->polling = false;
     if (media_rc != ESP_GSP_OK) {
@@ -1290,6 +1341,8 @@ void bridge_payloads_shutdown(esp_gsp_handle_t ui)
     ui->image_enabled = false;
     ui->widget_enabled = false;
     ui->drawing = true;
+    ui->updates_enabled = false;
+    bridge_updates_close(ui);
     bridge_images_close(ui, ui->failed ? GSP_ERR_IO : GSP_ERR_CANCELLED);
     ui->drawing = false;
 }
@@ -1360,6 +1413,8 @@ void gsp_sim_bridge_close(esp_gsp_handle_t ui)
         socket_close(ui->socket);
     }
     bridge_media_close(ui);
+    ui->updates_enabled = false;
+    bridge_updates_close(ui);
     bridge_images_close(ui, status);
     free(ui->read_body);
     free(ui->inproc_buffer);

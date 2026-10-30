@@ -121,6 +121,8 @@ Hiding a widget or parent group does not pause file IO or decoding. Call
 `esp_gsp_assets_stop()` or `esp_gsp_assets_stop_target()` when hiding it, then
 show it again when visible; playback restarts from the beginning.
 
+Video inputs use the same `video_*` fields and `max_fps` behavior as [scene video import](media-and-data.md#video-import). When dimensions are omitted, the importer uses display dimensions after rotation and sample-aspect correction.
+
 ## Encoding independent of storage
 
 Embedded and external assets share raster preprocessing, native pixel conversion

@@ -9,10 +9,8 @@ static const char *const notes[] = {
     "Rich crema. A bold little ritual.", "Silky milk. A mellow espresso heart.",
     "Velvety foam. Balanced espresso."
 };
-static const char *const profiles[] = {
-    "DARK / INTENSE", "SILKY / CARAMEL", "BALANCED / VELVET"
-};
 static const char *const strengths[] = {"Mild", "Balanced", "Strong"};
+static void begin_preparation(esp_gsp_handle_t ui, coffee_ui_t *s);
 
 static void select_drink(coffee_ui_t *s, unsigned drink)
 {
@@ -31,18 +29,10 @@ static void record(coffee_ui_t *s, esp_gsp_err_t rc)
 
 static void page(esp_gsp_handle_t ui, coffee_ui_t *s, unsigned target)
 {
-    record(s, esp_gsp_page_flow_set_page(ui, GSP_COFFEE_OBJ_KEY_JOURNEY, target, true));
-}
-
-static void motion(esp_gsp_handle_t ui, coffee_ui_t *s, bool playing)
-{
-    if (s->motion_active == playing) {
-        return;
-    }
-    s->motion_active = playing;
-    record(s, gsp_coffee_brew_ring_set_playing(ui, playing));
-    record(s, gsp_coffee_extraction_set_playing(ui, playing));
-    record(s, gsp_coffee_steam_set_playing(ui, playing));
+    uint16_t current = 0;
+    record(s, esp_gsp_page_flow_get_page(ui, GSP_COFFEE_OBJ_KEY_JOURNEY, &current));
+    bool adjacent = current + 1 == target || target + 1 == current;
+    record(s, esp_gsp_page_flow_set_page(ui, GSP_COFFEE_OBJ_KEY_JOURNEY, target, adjacent));
 }
 
 static void set_recipe_enabled(esp_gsp_handle_t ui, coffee_ui_t *s, bool enabled)
@@ -50,7 +40,10 @@ static void set_recipe_enabled(esp_gsp_handle_t ui, coffee_ui_t *s, bool enabled
     /* PageFlow remains available while brewing, but all recipe mutations are
      * disabled as well as rejected in event(). This keeps the busy lock
      * visible and prevents a drag from changing a queued recipe. */
-    record(s, esp_gsp_component_set_enabled(ui, GSP_COFFEE_OBJ_KEY_DRINK_CAROUSEL, enabled));
+    record(s, esp_gsp_component_set_enabled(ui, GSP_COFFEE_OBJ_KEY_EXPLORE_SELECT0, enabled));
+    record(s, esp_gsp_component_set_enabled(ui, GSP_COFFEE_OBJ_KEY_EXPLORE_SELECT1, enabled));
+    record(s, esp_gsp_component_set_enabled(ui, GSP_COFFEE_OBJ_KEY_EXPLORE_SELECT2, enabled));
+    record(s, esp_gsp_component_set_enabled(ui, GSP_COFFEE_OBJ_KEY_SUPPLIES, enabled));
     record(s, esp_gsp_component_set_enabled(ui, GSP_COFFEE_OBJ_KEY_ESPRESSO, enabled));
     record(s, esp_gsp_component_set_enabled(ui, GSP_COFFEE_OBJ_KEY_LATTE, enabled));
     record(s, esp_gsp_component_set_enabled(ui, GSP_COFFEE_OBJ_KEY_CAPPUCCINO, enabled));
@@ -68,10 +61,24 @@ static void render(esp_gsp_handle_t ui, coffee_ui_t *s)
     VIS(hero0, s->drink == 0);
     VIS(hero1, s->drink == 1);
     VIS(hero2, s->drink == 2);
+    VIS(collection_cup0, s->drink == 0);
+    VIS(collection_cup1, s->drink == 1);
+    VIS(collection_cup2, s->drink == 2);
     VIS(selected0, s->drink == 0);
     VIS(selected1, s->drink == 1);
     VIS(selected2, s->drink == 2);
-    SET(primary, s->brewing ? "View preparation" : "Prepare coffee");
+    VIS(explore_selected0, s->drink == 0);
+    VIS(explore_selected1, s->drink == 1);
+    VIS(explore_selected2, s->drink == 2);
+    SET(primary, s->brewing ? "View preparation" : "Brew now");
+    SET(quick_brew, s->brewing ? "View preparation" : "Brew now");
+    SET(collection_drink, drinks[s->drink]);
+    SET(collection_note, notes[s->drink]);
+    snprintf(value, sizeof(value), "%u ml", s->amount);
+    SET(collection_volume, value);
+    snprintf(value, sizeof(value), "%u C", s->temperature);
+    SET(collection_temperature, value);
+    SET(collection_strength, strengths[s->strength]);
     SET(drink, drinks[s->drink]);
     SET(description, notes[s->drink]);
     snprintf(value, sizeof(value), "%u ml", s->amount);
@@ -81,14 +88,16 @@ static void render(esp_gsp_handle_t ui, coffee_ui_t *s)
     SET(temperature, value);
     SET(water, s->water ? "Water tank: FULL" : "Water empty - tap to refill");
     SET(beans, s->beans ? "Bean hopper: FULL" : "Beans empty - tap to refill");
-    SET(supply_note, (!s->water || !s->beans) ?
-        "Refill both supplies before preparing coffee." :
-        "Keep your water and beans topped up.");
+    SET(supply_note, !s->water && !s->beans ? "Refill water and beans to continue." :
+        !s->water ? "Refill the water tank to continue." :
+        !s->beans ? "Refill the bean hopper to continue." :
+        s->pending_brew ? "Supplies ready. Continue with your recipe." :
+        "Fresh water. Fresh beans. Ready for your next cup.");
+    VIS(close_supplies, !s->pending_brew);
+    VIS(abort_supplies, s->pending_brew);
+    VIS(retry_brew, s->pending_brew);
+    record(s, esp_gsp_component_set_enabled(ui, GSP_COFFEE_OBJ_KEY_RETRY_BREW, s->water && s->beans));
     SET(explore_drink, drinks[s->drink]);
-    SET(explore_note, profiles[s->drink]);
-    snprintf(value, sizeof(value), "%u ml  /  %s", s->amount, strengths[s->strength]);
-    SET(explore_meta, value);
-    record(s, gsp_coffee_drink_carousel_set_value(ui, (int32_t)s->drink));
     record(s, gsp_coffee_amount_slider_set_value(ui, s->amount));
     record(s, gsp_coffee_strength_slider_set_value(ui, s->strength));
     record(s, gsp_coffee_temperature_slider_set_value(ui, s->temperature));
@@ -99,11 +108,8 @@ static void render(esp_gsp_handle_t ui, coffee_ui_t *s)
     record(s, gsp_coffee_supply_panel_set_enabled(ui, s->supplies));
     set_recipe_enabled(ui, s, !s->brewing);
     VIS(brew_ring, s->brewing || s->done);
-    VIS(extraction, s->brewing);
-    VIS(steam, s->brewing);
-    motion(ui, s, s->brewing);
     SET(brew_action, s->brewing ? "Cancel preparation" :
-        s->done ? "Enjoy another moment" : "Return to recipe");
+        s->done ? "Choose another drink" : "Return to recipe");
 }
 
 static void progress(esp_gsp_handle_t ui, coffee_ui_t *s)
@@ -111,16 +117,15 @@ static void progress(esp_gsp_handle_t ui, coffee_ui_t *s)
     char value[80];
     unsigned duration = s->drink == 0 ? 18 : 24;
     unsigned percent = s->elapsed * 100 / duration;
-    record(s, gsp_coffee_progress_set_value(ui, percent));
     record(s, gsp_coffee_brew_ring_set_value(ui, percent));
     snprintf(value, sizeof(value), "%u%%", percent);
     SET(percent, s->done ? "ENJOY" : s->brewing ? value : "READY");
-    SET(status_title, s->done ? "Your moment is ready" :
-        s->brewing ? "Making your moment" : "Ready when you are");
+    SET(status_title, s->done ? "Ready to enjoy" :
+        s->brewing ? "Preparing coffee" : "Ready when you are");
     SET(stage, s->done ? "Perfectly prepared, just for you" :
         !s->brewing ? "Personalise your recipe first" :
         s->elapsed < 4 ? "01 / Grinding fresh beans" :
-        s->elapsed < 8 ? "02 / Warming to perfection" :
+        s->elapsed < 8 ? "02 / Heating water" :
         s->elapsed < 18 ? "03 / Extracting espresso" :
         "04 / Finishing with silky foam");
     snprintf(value, sizeof(value), "%s / %u ml / %u C",
@@ -141,18 +146,36 @@ static void navigation_tick(esp_gsp_handle_t ui, void *ctx)
         record(s, result);
         if (result == ESP_GSP_OK && !state.value && !state.target &&
                 !state.dragging && !state.settling) {
-            s->supplies = false;
+            s->supplies = s->pending_brew = false;
             render(ui, s);
         }
     }
     record(s, esp_gsp_page_flow_get_page(ui, GSP_COFFEE_OBJ_KEY_JOURNEY, &s->page));
-    motion(ui, s, s->brewing && s->page == 2);
 }
 
 static void tick(esp_gsp_handle_t ui, void *ctx)
 {
     coffee_ui_t *s = ctx;
     if (!s->brewing) {
+        if (s->showcase && ++s->showcase_seconds >= 6) {
+            s->showcase_seconds = 0;
+            switch (s->showcase_step) {
+            case 0: page(ui, s, 3); break;
+            case 1:
+                select_drink(s, (s->drink + 1) % 3);
+                page(ui, s, 1);
+                break;
+            case 2: begin_preparation(ui, s); break;
+            default:
+                s->done = false;
+                s->elapsed = 0;
+                page(ui, s, 0);
+                break;
+            }
+            s->showcase_step = (s->showcase_step + 1) % 4;
+            render(ui, s);
+            progress(ui, s);
+        }
         return;
     }
     if (++s->elapsed >= (s->drink == 0 ? 18U : 24U)) {
@@ -175,6 +198,21 @@ static void open_supplies(esp_gsp_handle_t ui, coffee_ui_t *s)
     }
 }
 
+static void begin_preparation(esp_gsp_handle_t ui, coffee_ui_t *s)
+{
+    if (!s->water || !s->beans) {
+        s->pending_brew = true;
+        open_supplies(ui, s);
+        return;
+    }
+    s->pending_brew = false;
+    s->done = false;
+    s->brewing = true;
+    s->elapsed = 0;
+    page(ui, s, 2);
+    progress(ui, s);
+}
+
 static void event(esp_gsp_handle_t ui, const esp_gsp_event_t *ev, void *ctx)
 {
     coffee_ui_t *s = ctx;
@@ -187,8 +225,12 @@ static void event(esp_gsp_handle_t ui, const esp_gsp_event_t *ev, void *ctx)
             s->water = !s->water;
         } else if (call.action == GSP_COFFEE_ACTION_BEANS) {
             s->beans = !s->beans;
-        } else if (call.action == GSP_COFFEE_ACTION_CLOSE_SUPPLIES) {
+        } else if (call.action == GSP_COFFEE_ACTION_RETRY_BREW && s->pending_brew && s->water && s->beans) {
             s->supplies = false;
+            record(s, esp_gsp_drawer_close(ui, GSP_COFFEE_OBJ_KEY_SUPPLY_PANEL, false));
+            begin_preparation(ui, s);
+        } else if (call.action == GSP_COFFEE_ACTION_CLOSE_SUPPLIES) {
+            s->supplies = s->pending_brew = false;
             esp_gsp_component_motion_t state;
             esp_gsp_err_t result = esp_gsp_component_get_motion(ui, GSP_COFFEE_OBJ_KEY_SUPPLY_PANEL, &state);
             record(s, result);
@@ -198,50 +240,29 @@ static void event(esp_gsp_handle_t ui, const esp_gsp_event_t *ev, void *ctx)
             }
         }
     } else if (call.action == GSP_COFFEE_ACTION_BREW_ACTION) {
+        unsigned destination = s->done ? 0 : 1;
         s->brewing = s->done = false;
         s->elapsed = 0;
-        page(ui, s, 1);
+        page(ui, s, destination);
         progress(ui, s);
     } else if (s->brewing && call.action == GSP_COFFEE_ACTION_PRIMARY) {
         page(ui, s, 2);
+    } else if (call.action == GSP_COFFEE_ACTION_CUSTOMISE ||
+               call.action == GSP_COFFEE_ACTION_EXPLORE_RECIPE) {
+        page(ui, s, 1);
+    } else if (call.action == GSP_COFFEE_ACTION_EXPLORE) {
+        page(ui, s, 3);
+    } else if (call.action == GSP_COFFEE_ACTION_BACK ||
+               call.action == GSP_COFFEE_ACTION_EXPLORE_COLLECTION) {
+        page(ui, s, 0);
     } else if (!s->brewing) {
         int32_t value = 0;
         switch (call.action) {
         case GSP_COFFEE_ACTION_PRIMARY:
-            if (!s->water || !s->beans) {
-                open_supplies(ui, s);
-            } else {
-                s->done = false;
-                s->brewing = true;
-                s->elapsed = 0;
-                page(ui, s, 2);
-                progress(ui, s);
-            }
+            begin_preparation(ui, s);
             break;
         case GSP_COFFEE_ACTION_SUPPLIES:
             open_supplies(ui, s);
-            break;
-        case GSP_COFFEE_ACTION_CUSTOMISE:
-            page(ui, s, 1);
-            break;
-        case GSP_COFFEE_ACTION_EXPLORE:
-            page(ui, s, 3);
-            break;
-        case GSP_COFFEE_ACTION_EXPLORE_RECIPE:
-            page(ui, s, 1);
-            break;
-        case GSP_COFFEE_ACTION_EXPLORE_COLLECTION:
-            page(ui, s, 0);
-            break;
-        case GSP_COFFEE_ACTION_BACK:
-            page(ui, s, 0);
-            break;
-        case GSP_COFFEE_ACTION_CAROUSEL_SELECT:
-            /* Carousel CALL args are authored; selection is committed state. */
-            record(s, gsp_coffee_drink_carousel_get_value(ui, &value));
-            if (s->last_error == ESP_GSP_OK && value >= 0 && value < 3) {
-                select_drink(s, (unsigned)value);
-            }
             break;
         case GSP_COFFEE_ACTION_ESPRESSO:
             select_drink(s, 0);
@@ -271,7 +292,6 @@ static void event(esp_gsp_handle_t ui, const esp_gsp_event_t *ev, void *ctx)
     if (!s->brewing && (call.action == GSP_COFFEE_ACTION_ESPRESSO ||
                         call.action == GSP_COFFEE_ACTION_LATTE ||
                         call.action == GSP_COFFEE_ACTION_CAPPUCCINO ||
-                        call.action == GSP_COFFEE_ACTION_CAROUSEL_SELECT ||
                         call.action == GSP_COFFEE_ACTION_AMOUNT_CHANGE ||
                         call.action == GSP_COFFEE_ACTION_STRENGTH_CHANGE ||
                         call.action == GSP_COFFEE_ACTION_TEMPERATURE_CHANGE)) {
@@ -280,6 +300,15 @@ static void event(esp_gsp_handle_t ui, const esp_gsp_event_t *ev, void *ctx)
     }
     render(ui, s);
     progress(ui, s);
+}
+
+void coffee_ui_set_showcase(coffee_ui_t *s, bool enabled)
+{
+    if (!s) {
+        return;
+    }
+    s->showcase = enabled;
+    s->showcase_step = s->showcase_seconds = 0;
 }
 
 esp_gsp_err_t coffee_ui_init(esp_gsp_handle_t ui, coffee_ui_t *s)
@@ -293,7 +322,6 @@ esp_gsp_err_t coffee_ui_init(esp_gsp_handle_t ui, coffee_ui_t *s)
     s->strength = 1;
     s->temperature = 92;
     s->water = s->beans = true;
-    s->motion_active = true; /* Force authored effects to stop during setup. */
     render(ui, s);
     progress(ui, s);
     record(s, esp_gsp_on_event(ui, event, s));

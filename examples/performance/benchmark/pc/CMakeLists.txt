@@ -23,6 +23,10 @@ endif()
 if(NOT EXISTS "${ESP_GSP_COMPONENT_DIR}/tools/sim_bridge/CMakeLists.txt")
     message(FATAL_ERROR "Install espressif/esp-gsp first, or set ESP_GSP_COMPONENT_DIR to its component directory")
 endif()
+set(ESP_GSP_EXAMPLE_ASSETS_SUBTREE "performance/benchmark")
+set(ESP_GSP_EXAMPLE_ASSETS_SENTINEL "scenes/bench_industrial.png")
+set(ESP_GSP_EXAMPLE_ASSETS_DESTINATION "${CMAKE_CURRENT_LIST_DIR}/..")
+set(ESP_GSP_EXAMPLE_ASSETS_FONTS "DejaVuSans.ttf")
 add_subdirectory("${ESP_GSP_COMPONENT_DIR}/tools/sim_bridge" sim_bridge)
 gsp_add_backend(benchmark_backend
     SOURCES ../main/bench_workload.c platform_pc.c

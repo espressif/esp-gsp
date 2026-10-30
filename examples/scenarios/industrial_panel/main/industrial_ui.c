@@ -6,9 +6,9 @@
 #define CHECK(call) do { esp_gsp_err_t rc = (call); if (rc != ESP_GSP_OK) return rc; } while (0)
 
 enum {
-    TREND_PLOT_LEFT = 60,
+    TREND_PLOT_LEFT = 64,
     TREND_PLOT_TOP = 232,
-    TREND_PLOT_WIDTH = 598,
+    TREND_PLOT_WIDTH = 528,
     TREND_PLOT_HEIGHT = 166,
 };
 
@@ -47,20 +47,26 @@ static esp_gsp_err_t alerts_availability(esp_gsp_handle_t ui, bool editing)
 }
 static esp_gsp_err_t status(esp_gsp_handle_t ui, industrial_ui_t *s)
 {
-    if (s->alerts_active) {
-        char text[48];
-        snprintf(text, sizeof(text), "%d.%d bar", s->pressure / 10, s->pressure % 10);
-        CHECK(gsp_industrial_alert_pressure_set_text(ui, text));
-        snprintf(text, sizeof(text), "TARGET  %d.%d bar", s->target / 10, s->target % 10);
-        CHECK(gsp_industrial_alert_target_set_text(ui, text));
-        CHECK(gsp_industrial_alert_state_set_text(ui, s->alarm ?
-                (s->acknowledged ? "High pressure / Acknowledged" : "High pressure / Action required") :
-                "Normal / No active alarm"));
-        CHECK(gsp_industrial_alert_ack_set_enabled(ui, s->alarm && !s->acknowledged));
-    }
+    /* Prepare the closed drawer too: publishing its first values after the
+     * opening capture would immediately discard that capture. */
+    char text[48];
+    snprintf(text, sizeof(text), "%d.%d bar", s->pressure / 10, s->pressure % 10);
+    CHECK(gsp_industrial_alert_pressure_set_text(ui, text));
+    snprintf(text, sizeof(text), "TARGET  %d.%d bar", s->target / 10, s->target % 10);
+    CHECK(gsp_industrial_alert_target_set_text(ui, text));
+    CHECK(gsp_industrial_alert_state_set_text(ui, s->alarm ?
+            (s->acknowledged ? "High pressure / Acknowledged" : "High pressure / Action required") :
+            "Normal / No active alarm"));
+    CHECK(gsp_industrial_care_alert_count_set_text(ui, s->alarm ? "1" : "0"));
+    bool actionable = s->alarm && !s->acknowledged;
+    const char *ack = !s->alarm ? "All clear" : s->acknowledged ? "Acknowledged" : "Acknowledge alert";
+    CHECK(gsp_industrial_care_ack_set_enabled(ui, actionable));
+    CHECK(gsp_industrial_alert_ack_set_enabled(ui, actionable));
+    CHECK(gsp_industrial_care_ack_set_text(ui, ack));
+    CHECK(gsp_industrial_alert_ack_set_text(ui, ack));
     CHECK(gsp_industrial_status_set_text(ui, s->alarm ? (s->acknowledged ? "HIGH PRESSURE / ACKNOWLEDGED" : "HIGH PRESSURE / Review alert") : "RUNNING / All systems nominal"));
     CHECK(gsp_industrial_alarm_text_set_text(ui, s->alarm ? (s->acknowledged ? "High pressure\nAcknowledged" : "High pressure\nAction required") : "No active alarm"));
-    CHECK(gsp_industrial_alarm_detail_set_text(ui, s->alarm ? "Pressure exceeds 7.2 bar.\nReview the regulator setpoint." : "Pressure is within the operating band.\nRaise target above 7.2 bar to test an alert."));
+    CHECK(gsp_industrial_alarm_detail_set_text(ui, s->alarm ? "Pressure exceeds 7.2 bar.\nReview the regulator setpoint." : "Pressure is within the operating band.\nNo intervention is required."));
     return ESP_GSP_OK;
 }
 
@@ -109,31 +115,25 @@ static esp_gsp_err_t apply(esp_gsp_handle_t ui, industrial_ui_t *s)
     CHECK(alerts_availability(ui, s->editing));
     esp_gsp_component_motion_t motion;
     CHECK(esp_gsp_component_get_motion(ui, GSP_INDUSTRIAL_OBJ_KEY_SETTINGS_PAGE, &motion));
-    if (motion.target != s->editing) {
-        bool animated = !motion.dragging;
-        CHECK(s->editing ? esp_gsp_drawer_open(ui, GSP_INDUSTRIAL_OBJ_KEY_SETTINGS_PAGE, animated) : esp_gsp_drawer_close(ui, GSP_INDUSTRIAL_OBJ_KEY_SETTINGS_PAGE, animated));
-    }
     bool uncovered = !s->editing && !s->alerts_active;
-    CHECK(gsp_industrial_scan_set_visible(ui, s->page == 1 && uncovered));
     snprintf(text, sizeof(text), "TARGET  %d.%d bar", s->target / 10, s->target % 10);
     CHECK(gsp_industrial_target_set_text(ui, text));
+    CHECK(gsp_industrial_process_target_set_text(ui, text));
     snprintf(text, sizeof(text), "%d.%d bar", s->draft / 10, s->draft % 10);
     CHECK(gsp_industrial_draft_set_text(ui, text));
     CHECK(gsp_industrial_draft_slider_set_value(ui, s->draft));
     CHECK(gsp_industrial_draft_hint_set_text(ui, s->draft > 72 ?
             "Above alarm threshold / Apply to commit" : "Preview only / Apply to commit"));
-    CHECK(gsp_industrial_live_0_set_playing(ui, s->page == 0 && uncovered));
-    CHECK(gsp_industrial_live_1_set_playing(ui, s->page == 1 && uncovered));
-    CHECK(gsp_industrial_live_2_set_playing(ui, s->page == 2 && uncovered));
-    CHECK(gsp_industrial_live_3_set_playing(ui, s->page == 3 && uncovered));
-    CHECK(gsp_industrial_flow_153_set_playing(ui, s->page == 1 && uncovered));
-    CHECK(gsp_industrial_flow_365_set_playing(ui, s->page == 1 && uncovered));
-    CHECK(gsp_industrial_flow_581_set_playing(ui, s->page == 1 && uncovered));
-    CHECK(gsp_industrial_health_ring_set_playing(ui, s->page == 2 && uncovered));
     if (s->page == 3 && uncovered) {
         CHECK(trend_inspection(ui, s));
     }
-    return status(ui, s);
+    CHECK(status(ui, s));
+    /* Capture only after the drawer's labels, draft and controls are ready. */
+    if (motion.target != s->editing) {
+        bool animated = !motion.dragging;
+        CHECK(s->editing ? esp_gsp_drawer_open(ui, GSP_INDUSTRIAL_OBJ_KEY_SETTINGS_PAGE, animated) : esp_gsp_drawer_close(ui, GSP_INDUSTRIAL_OBJ_KEY_SETTINGS_PAGE, animated));
+    }
+    return ESP_GSP_OK;
 }
 static void event(esp_gsp_handle_t ui, const esp_gsp_event_t *e, void *ctx)
 {
@@ -219,9 +219,42 @@ static void event(esp_gsp_handle_t ui, const esp_gsp_event_t *e, void *ctx)
     }
     s->last_error = apply(ui, s);
 }
-static esp_gsp_err_t advance(esp_gsp_handle_t ui, industrial_ui_t *s)
+static esp_gsp_err_t drawers_moving(esp_gsp_handle_t ui, bool *moving)
+{
+    esp_gsp_component_motion_t alerts, settings;
+    CHECK(esp_gsp_component_get_motion(ui, GSP_INDUSTRIAL_OBJ_KEY_ALERTS_PAGE, &alerts));
+    CHECK(esp_gsp_component_get_motion(ui, GSP_INDUSTRIAL_OBJ_KEY_SETTINGS_PAGE, &settings));
+    *moving = alerts.dragging || alerts.settling || settings.dragging || settings.settling;
+    return ESP_GSP_OK;
+}
+
+static esp_gsp_err_t refresh_model(esp_gsp_handle_t ui, industrial_ui_t *s)
 {
     char text[32];
+    snprintf(text, sizeof(text), "%d.%d", s->pressure / 10, s->pressure % 10);
+    CHECK(gsp_industrial_pressure_set_text(ui, text));
+    CHECK(gsp_industrial_process_pressure_set_text(ui, text));
+    CHECK(gsp_industrial_pressure_arc_set_value(ui, s->pressure));
+    snprintf(text, sizeof(text), "%u", 1460 + s->seconds % 9 * 5);
+    CHECK(gsp_industrial_rpm_set_text(ui, text));
+    snprintf(text, sizeof(text), "94.%u%%", s->seconds % 7);
+    CHECK(gsp_industrial_efficiency_set_text(ui, text));
+    for (unsigned i = INDUSTRIAL_TREND_SAMPLES - s->pending_samples;
+            i < INDUSTRIAL_TREND_SAMPLES; ++i) {
+        CHECK(gsp_industrial_trend_append(ui, s->history[i]));
+        CHECK(gsp_industrial_trend_inspector_append(ui, s->history[i]));
+    }
+    if (s->page == 3 && !s->editing && !s->alerts_active) {
+        CHECK(trend_inspection(ui, s));
+    }
+    CHECK(status(ui, s));
+    s->pending_samples = 0;
+    s->model_dirty = false;
+    return ESP_GSP_OK;
+}
+
+static esp_gsp_err_t advance(esp_gsp_handle_t ui, industrial_ui_t *s)
+{
     ++s->seconds;
     int desired = s->target + (int)(s->seconds % 7) - 3;
     if (s->pressure < desired) {
@@ -238,15 +271,6 @@ static esp_gsp_err_t advance(esp_gsp_handle_t ui, industrial_ui_t *s)
     if (!before && s->alarm) {
         s->acknowledged = false;
     }
-    snprintf(text, sizeof(text), "%d.%d", s->pressure / 10, s->pressure % 10);
-    CHECK(gsp_industrial_pressure_set_text(ui, text));
-    CHECK(gsp_industrial_pressure_arc_set_value(ui, s->pressure));
-    snprintf(text, sizeof(text), "%u", 1460 + s->seconds % 9 * 5);
-    CHECK(gsp_industrial_rpm_set_text(ui, text));
-    snprintf(text, sizeof(text), "94.%u%%", s->seconds % 7);
-    CHECK(gsp_industrial_efficiency_set_text(ui, text));
-    CHECK(gsp_industrial_trend_append(ui, s->pressure));
-    CHECK(gsp_industrial_trend_inspector_append(ui, s->pressure));
     for (unsigned i = 1; i < INDUSTRIAL_TREND_SAMPLES; ++i) {
         s->history[i - 1] = s->history[i];
     }
@@ -254,10 +278,15 @@ static esp_gsp_err_t advance(esp_gsp_handle_t ui, industrial_ui_t *s)
     if (s->selected_sample > 0 && s->selected_sample < INDUSTRIAL_TREND_SAMPLES - 1) {
         --s->selected_sample;
     }
-    if (s->page == 3 && !s->editing && !s->alerts_active) {
-        CHECK(trend_inspection(ui, s));
+    if (s->pending_samples < INDUSTRIAL_TREND_SAMPLES) {
+        ++s->pending_samples;
     }
-    return status(ui, s);
+    s->model_dirty = true;
+    bool moving;
+    CHECK(drawers_moving(ui, &moving));
+    /* Keep receiving data while dragging, publish once motion finishes. */
+    /* Alarm transitions remain immediate even if they retire the snapshot. */
+    return moving && before == s->alarm ? ESP_GSP_OK : refresh_model(ui, s);
 }
 static void tick(esp_gsp_handle_t ui, void *ctx)
 {
@@ -305,7 +334,16 @@ static void tick(esp_gsp_handle_t ui, void *ctx)
         s->alerts_dragging = alerts.dragging;
         if (active != s->alerts_active) {
             s->alerts_active = active;
-            s->last_error = apply(ui, s);
+            if (!alerts.dragging && !alerts.settling) {
+                s->last_error = apply(ui, s);
+            }
+        }
+    }
+    if (s->last_error == ESP_GSP_OK && s->model_dirty) {
+        bool moving;
+        s->last_error = drawers_moving(ui, &moving);
+        if (s->last_error == ESP_GSP_OK && !moving) {
+            s->last_error = refresh_model(ui, s);
         }
     }
 }

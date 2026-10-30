@@ -18,6 +18,12 @@ if(NOT DEFINED ASSET_OFFLINE OR "${ASSET_OFFLINE}" STREQUAL "")
     set(ASSET_OFFLINE OFF)
 endif()
 
+foreach(font IN LISTS ASSET_FONTS)
+    if(NOT font MATCHES "^[A-Za-z0-9_.-]+\\.(ttf|otf)$")
+        message(FATAL_ERROR "Invalid example font filename: ${font}")
+    endif()
+endforeach()
+
 string(TOLOWER "${ASSET_SHA256}" expected_sha256)
 file(MAKE_DIRECTORY "${ASSET_CACHE_ROOT}")
 set(download_part "${ASSET_ARCHIVE}.part")
@@ -75,7 +81,15 @@ if(ASSET_DOWNLOAD_ONLY)
 endif()
 
 if(EXISTS "${ASSET_STAMP}" AND EXISTS "${ASSET_SENTINEL}")
-    return()
+    set(fonts_ready ON)
+    foreach(font IN LISTS ASSET_FONTS)
+        if(NOT EXISTS "${ASSET_DESTINATION}/fonts/${font}")
+            set(fonts_ready OFF)
+        endif()
+    endforeach()
+    if(fonts_ready)
+        return()
+    endif()
 endif()
 
 set(stage "${ASSET_CACHE_ROOT}/extract-${ASSET_SHA256}")
@@ -91,6 +105,16 @@ if(NOT EXISTS "${asset_source}")
         "Example asset archive has no requested example subtree: "
         "${ASSET_ARCHIVE}")
 endif()
+
+foreach(font IN LISTS ASSET_FONTS)
+    set(font_source "${stage}/examples/common/fonts/${font}")
+    # The component retains the default font once; it need not be in the
+    # remote archive when already copied by gsp_example_assets_prepare.
+    if(NOT EXISTS "${font_source}" AND
+            NOT EXISTS "${ASSET_DESTINATION}/fonts/${font}")
+        message(FATAL_ERROR "Example asset archive has no requested font: ${font}")
+    endif()
+endforeach()
 
 set(asset_widgets "${ASSET_WIDGETS}")
 if("${ASSET_SUBTREE}" STREQUAL "performance/benchmark" OR
@@ -114,6 +138,12 @@ endif()
 # Copy only after the archive has downloaded and extracted successfully. A
 # failed build leaves no success stamp, so the next build retries safely.
 file(COPY "${asset_source}/" DESTINATION "${ASSET_DESTINATION}")
+foreach(font IN LISTS ASSET_FONTS)
+    set(font_source "${stage}/examples/common/fonts/${font}")
+    if(EXISTS "${font_source}")
+        file(COPY "${font_source}" DESTINATION "${ASSET_DESTINATION}/fonts")
+    endif()
+endforeach()
 if(NOT EXISTS "${ASSET_SENTINEL}")
     message(FATAL_ERROR
         "Example asset archive did not restore the requested sentinel")

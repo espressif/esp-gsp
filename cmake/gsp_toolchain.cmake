@@ -136,6 +136,14 @@ function(esp_gsp_resolve_gspc gsp_root output_command output_dependencies output
                 "of GSPC. Installing/upgrading the manager cannot provide a missing "
                 "release artifact. ${compiler_help}")
         endif()
+        if(NOT manager_output STREQUAL "gspc ${gspc_version}")
+            message(FATAL_ERROR
+                "gsp_add_bundle: esp-gsp-tools returned '${manager_output}', "
+                "expected gspc ${gspc_version} from ${version_file}. "
+                "Reinstall that compiler version's managed cache or obtain "
+                "the matching release artifact; an older cached compiler "
+                "cannot satisfy this pin. ${compiler_help}")
+        endif()
         set(gspc_dependencies "${ESP_GSP_PYTHON_EXECUTABLE}" "${version_file}")
         set(source "esp-gsp-tools ${gspc_version} (${version_file})")
     endif()

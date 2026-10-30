@@ -199,3 +199,10 @@ callback, like the other state getters.
 Include `esp_gsp_debug.h` and call `esp_gsp_drag_snapshot_stats()`. `attempts` counts opportunities, `started` counts successful starts, `reused` counts reused list endpoint windows, and `active` reports an active drag snapshot. `skipped[]` distinguishes disabled policy, invisibility, no movement, unsupported capability, retry suppression, backend resource limits and other backend errors. `last_backend_error` retains the backend error code.
 
 These counters are separate from scene-transition `esp_gsp_transition_stats()`. Live rendering remains the fallback. Read counters from a serialized app callback and compare deltas around the operation being diagnosed.
+
+For a regression comparison, keep the scene, gesture, viewport and pixel format
+the same. Check both the rendered frames and `started`/`skipped[]` deltas: correct
+pixels can still accompany a lost snapshot optimization. Use `active` while the
+operation is running; a completed operation normally reports it as false. A
+parent clip or destination-dependent paint can intentionally require live
+rendering. Snapshot admission and host frame counts do not measure device FPS.

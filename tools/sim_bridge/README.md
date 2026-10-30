@@ -675,6 +675,17 @@ font and image dependencies through GSPC's depfile, so unchanged builds reuse
 the Bundle and generated headers. Compatible older tools omit the optional
 context field.
 
+### Required update groups
+
+Include `esp_gsp_updates.h` to submit a group with an explicit completion target.
+Keep polling, then query the receipt or consume its terminal callback; only
+`ESP_GSP_UPDATE_COMPLETE` confirms the requested goal. Release the caller's
+receipt reference after use. Simulator receipts reach `RENDERED`; query
+capabilities before choosing a stage. Hardware display confirmation is provided
+by device backends. See [target-frame receipts](../../docs/en/guide/update-receipts.md)
+for deadlines, cancellation and input ownership. `esp_gsp_flush()` remains a
+queue/render-attempt barrier.
+
 ### Dynamic data and images
 
 These mappings additionally require `capabilities.bridge_media_version: 1`.

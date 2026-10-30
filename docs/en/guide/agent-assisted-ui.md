@@ -34,6 +34,13 @@ Skill reads. Without installing the Skill, follow this guide and use
 
 ## Give it a useful requirement
 
+For a reference design, provide the independent image, original assets, font
+files, logical dimensions and required states/actions. Native scene authoring
+does not require an editor plugin. Keep interactive controls and dynamic text
+native; use separate images for static decoration. Compare captured states
+against the independent design and verify actual input plus application state.
+Runtime text changes do not automatically reflow sibling objects.
+
 Provide the project path and describe the desired page behavior. The Skill
 reads existing target, display, bundle and tool settings from the project.
 For a new project, include the display size or orientation when it is relevant.
@@ -160,6 +167,14 @@ input hits. CLI
 `compile`/`pack --inspect --api-header ...` adds the same optional facts to the
 application API sidecar.
 
+For navigation or drawing-order changes, exercise the runtime with pointer input
+or the component navigation API and compare intermediate frames, including a
+reversal before the animation finishes. Inspect parent clipping and independent
+foreground paint. Also compare [snapshot counters](runtime-api.md#drag-snapshot-diagnostics)
+when checking performance regressions; a correct final screenshot does not prove
+that the optimized path ran. Keep host validation and physical display/FPS
+acceptance as separate results.
+
 When an ESP-IDF build already exists, run `gspc doctor <project> --build
 <build-dir>` first. Use its observed target and component contract for the
 agent workflow; an unavailable build description must remain an unknown rather
@@ -266,3 +281,12 @@ simulator, then follow [Display integration](display.md) to check the board.
 
 The Skill reads the selected component's schema, headers and examples and follows
 the language used in your request.
+
+## Observe grouped UI results
+
+Use the [target-frame receipt RPC](update-receipts.md#simulator-and-ai-operation)
+when several updates must share a completion target. Preserve the returned
+opaque receipt ID, require a `COMPLETE` outcome, then compare the relevant
+pixels with the reference. Backend capability and the reached stage identify
+which display evidence is available. Release the receipt with `release_update`
+after verification, including when the goal or visual check fails.

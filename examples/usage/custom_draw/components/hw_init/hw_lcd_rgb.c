@@ -10,6 +10,7 @@
 
 #if CONFIG_EXAMPLE_LCD_INTERFACE_RGB || CONFIG_EXAMPLE_LCD_INTERFACE_RGB24
 
+#include "hw_lcd_frame_buffers.h"
 #include "driver/gpio.h"
 #include "esp_lcd_panel_rgb.h"
 #include "esp_log.h"
@@ -160,7 +161,7 @@ esp_err_t hw_lcd_init(
                 .pclk_active_neg = true,
             },
         },
-        .num_fbs = 3,
+        .num_fbs = HW_LCD_FRAME_BUFFERS,
         .flags.fb_in_psram = 1,
 #if CONFIG_IDF_TARGET_ESP32S3
         .bounce_buffer_size_px = HW_LCD_H_RES * HW_LCD_BOUNCE_BUFFER_HEIGHT,
@@ -192,7 +193,7 @@ esp_err_t hw_lcd_init(
             .rotation = HW_DISPLAY_ROTATION,
         },
         .fb = {
-            .mode = ESP_DISPLAY_PRESENT_MODE_AUTO,
+            .mode = HW_LCD_FRAME_BUFFER_MODE,
         },
     };
     return ESP_OK;

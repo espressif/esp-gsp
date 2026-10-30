@@ -10,6 +10,107 @@
 完整使用路径见 [API 参考](api.md)、[生命周期与线程](../guide/lifecycle.md)和
 [应用结构与所有权](../guide/application-structures.md)。
 
+## 目标帧更新回执
+
+组合必需更新，查询目标状态及关联帧实际到达的完成阶段。
+
+### `esp_gsp_update_capabilities()`
+
+查询当前显示后端支持的目标组完成阶段和容量限制。
+
+- **头文件:** `include/esp_gsp_updates.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_update_capabilities(esp_gsp_handle_t gsp, esp_gsp_update_capabilities_t *out);
+```
+
+### `esp_gsp_update_submit()`
+
+提交一组必须共同完成的更新，返回关联目标帧的回执。
+
+- **头文件:** `include/esp_gsp_updates.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_update_submit(esp_gsp_handle_t gsp, const esp_gsp_update_command_t *commands, size_t count, const esp_gsp_update_options_t *options, esp_gsp_update_receipt_t **out_receipt);
+```
+
+<details><summary>完整接口契约（英文）</summary>
+
+Submit one required group without waiting for queue space. Commands and
+UTF-8 strings are copied; COPY image inputs are copied once. On an immediate
+error out_receipt is NULL and BORROW/TAKE ownership remains with the caller.
+Unsupported completion stages are rejected before acceptance.
+Receipt IDs are not reused; exhaustion rejects admission with INVALID_STATE.
+out_receipt is installed before an accepted command can notify, including
+when the render task runs before this function returns.
+
+Pure PROPERTY groups retain the existing atomic property transaction.
+Mixed groups execute in order and report partial failure without rollback.
+APPLIED requires every operation, including image publication, to succeed.
+A target overwritten before its matching frame is SUPERSEDED.
+An unchanged target may reuse a matching, previously committed frame.
+A failed render attempt terminates the receipt without stopping ordinary
+rendering. timeout_ms includes queueing and pauses; expiry is observed on
+the next UI service, without undoing state or releasing in-flight data.
+
+</details>
+
+### `esp_gsp_update_query()`
+
+读取回执的一致状态快照，支持在 UI 停止后查询。
+
+- **头文件:** `include/esp_gsp_updates.h`
+- **返回类型:** `bool`
+
+```c
+bool esp_gsp_update_query(const esp_gsp_update_receipt_t *receipt, esp_gsp_update_status_t *out);
+```
+
+<details><summary>完整接口契约（英文）</summary>
+
+Query while owning a receipt reference, including after its UI has stopped.
+A contended snapshot returns false without changing out; retry later.
+
+</details>
+
+### `esp_gsp_update_cancel()`
+
+请求取消尚未完成的目标组，保留已应用的状态。
+
+- **头文件:** `include/esp_gsp_updates.h`
+- **返回类型:** `void`
+
+```c
+void esp_gsp_update_cancel(esp_gsp_update_receipt_t *receipt);
+```
+
+<details><summary>完整接口契约（英文）</summary>
+
+Request cancellation. Terminal cancellation is observed through query or
+notification; it does not undo previously applied state or reclaim data
+still referenced by a decoder, transfer or display buffer.
+
+</details>
+
+### `esp_gsp_update_release()`
+
+释放调用方的回执引用，不取消已接受的更新。
+
+- **头文件:** `include/esp_gsp_updates.h`
+- **返回类型:** `void`
+
+```c
+void esp_gsp_update_release(esp_gsp_update_receipt_t *receipt);
+```
+
+<details><summary>完整接口契约（英文）</summary>
+
+Release the caller's reference. This does not cancel accepted work.
+
+</details>
+
 ## 生命周期与同步
 
 实例由平台适配层创建；停止和刷新函数定义应用与渲染任务之间的同步边界。
@@ -84,6 +185,9 @@ the display backend has completed the following render attempt.
 This is a low-frequency synchronization fence for tests, screenshots and
 orderly application state changes. Normal UI updates should remain
 asynchronous. It must not be called from a render- or decode-task callback.
+ESP-IDF waits on a runtime-owned completion semaphore and leaves the calling
+task's notifications intact. Keep the runtime alive throughout this call;
+stop or replacement must be caller-serialized.
 
 Parameter `timeout_ms`: Maximum total wait, including command queue admission.
 Zero performs a non-blocking check/submit.
@@ -669,6 +773,69 @@ esp_gsp_err_t esp_gsp_component_set_text(esp_gsp_handle_t gsp, gsp_component_key
 <details><summary>完整接口契约（英文）</summary>
 
 Structured content setters resolve the generated property bind by key.
+
+</details>
+
+### `esp_gsp_dropdown_set_options_text()`
+
+整体替换启用动态文案的下拉选项文字，保持索引和选择不变。
+
+- **头文件:** `include/esp_gsp.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_dropdown_set_options_text(esp_gsp_handle_t gsp, gsp_component_key_t key, const char *const *options, size_t count);
+```
+
+<details><summary>完整接口契约（英文）</summary>
+
+Replaces every label of a Dropdown authored with dynamic_options=true.
+Count must match its compiled option count; indices, selection and callbacks
+are unchanged. Strings are strict UTF-8, bounded by option_text_max_bytes
+(excluding NUL), and copied before return. The render task prepares the
+entire replacement before publishing; failure preserves the old labels.
+OK means accepted, as for other queued setters. Asynchronous apply/drop
+failures are reported by esp_gsp_update_error_stats(). A queued replacement
+is tied to its submission scene and is dropped if navigation supersedes it.
+Getters below read committed labels from the UI task or a caller-serialized
+portable app; they must not race the render task or app destruction.
+
+</details>
+
+### `esp_gsp_dropdown_get_option_count()`
+
+读取下拉控件编译时固定的选项数量。
+
+- **头文件:** `include/esp_gsp.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_dropdown_get_option_count(esp_gsp_handle_t gsp, gsp_component_key_t key, size_t *out_count);
+```
+
+<details><summary>完整接口契约（英文）</summary>
+
+Reads the fixed option count; also supports static Dropdowns.
+
+</details>
+
+### `esp_gsp_dropdown_get_option_text()`
+
+回读一项已提交的 UTF-8 文案，容量不足时保留输出缓冲区。
+
+- **头文件:** `include/esp_gsp.h`
+- **返回类型:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_dropdown_get_option_text(esp_gsp_handle_t gsp, gsp_component_key_t key, uint16_t index, char *out_text, size_t capacity, size_t *out_size);
+```
+
+<details><summary>完整接口契约（英文）</summary>
+
+Copies one committed UTF-8 label, including NUL. out_size, when non-NULL,
+receives required bytes including NUL. NULL output with capacity=0 queries
+that size. An insufficient buffer returns INVALID_SIZE without truncation
+or modifying it. Static Dropdowns return their compiled labels.
 
 </details>
 
@@ -2980,6 +3147,17 @@ Same, driving a widget's first VALUE slot.
 static inline esp_gsp_esp_lcd_config_t esp_gsp_esp_lcd_config_init(void);
 ```
 
+### `esp_gsp_esp_lcd_session_result_init()`
+
+初始化 Session 所有权结果并设置结构大小。
+
+- **头文件:** `include/esp_gsp_esp_lcd.h`
+- **返回类型:** `esp_gsp_esp_lcd_session_result_t`
+
+```c
+static inline esp_gsp_esp_lcd_session_result_t esp_gsp_esp_lcd_session_result_init(void);
+```
+
 ### `esp_gsp_esp_lcd_pause()`
 
 静默活动 UI，并等待共享显示提交完成。
@@ -2998,6 +3176,9 @@ Quiesce the active GSP render task without destroying its UI state.
 On success no new GSP frame can be submitted until
 esp_gsp_esp_lcd_resume_paused() is called. The function also waits for the
 shared presenter transfer/present fences to retire.
+Decoded image caches are released while the scene and source ownership are
+retained. Resume prepares the current scene again before rendering; a paused
+UI is not a prepared image-cache snapshot for direct renderer calls.
 ESP_ERR_NOT_FINISHED means pause rollback could not restore the original
 app: *out_pause contains a valid token for retry with resume_paused(). This
 does not certify quiescence; do not hand the display to another producer.
@@ -3046,6 +3227,58 @@ ESP_ERR_NOT_FINISHED means rollback to the hub also failed: *out_session
 contains a valid session with no temporary app. Retain it and retry with
 esp_gsp_esp_lcd_resume(session, NULL, ...) or destroy it. Other failures do
 not transfer a session to the caller.
+
+</details>
+
+### `esp_gsp_esp_lcd_trim_session()`
+
+回收挂起 Hub 的非活动快照图集，保留 Session 与 UI 所有权。
+
+- **头文件:** `include/esp_gsp_esp_lcd.h`
+- **返回类型:** `esp_err_t`
+
+```c
+esp_err_t esp_gsp_esp_lcd_trim_session(esp_gsp_esp_lcd_session_t *session, uint32_t timeout_ms, size_t *out_released_bytes);
+```
+
+<details><summary>完整接口契约（英文）</summary>
+
+Opt-in release of the inactive viewport snapshot atlas on a suspended Hub.
+Call before start_on_session(), while the session has no temporary app.
+Scenes, component state, borrowed sources, fonts and display buffers remain
+owned as before. Ordinary pause/suspend retain their existing cache policy.
+
+Runs on the resident render task after Presenter transfer/present and
+accelerator fences. timeout_ms bounds the Presenter wait; task dispatch and
+accelerator synchronization can take longer. Call from an application task,
+serializing all lifecycle calls on the session/runtime. Zero timeout is invalid.
+
+Optional out_released_bytes counts atlas payload, excluding allocator overhead;
+it is set to zero before validation and on failure. Repeated successful calls
+release zero bytes. Every result retains the session/token and UI ownership;
+retry or resume after failure. ESP_ERR_NOT_FINISHED means accelerator reads
+could not be confirmed retired; no atlas is freed. Success invalidates cached
+pixels and forces a complete resumed frame; later gestures recapture normally.
+
+</details>
+
+### `esp_gsp_esp_lcd_trim_paused()`
+
+回收暂停 UI 的非活动快照图集，保留 Pause Token 与 UI 所有权。
+
+- **头文件:** `include/esp_gsp_esp_lcd.h`
+- **返回类型:** `esp_err_t`
+
+```c
+esp_err_t esp_gsp_esp_lcd_trim_paused(esp_gsp_esp_lcd_pause_t *pause, uint32_t timeout_ms, size_t *out_released_bytes);
+```
+
+<details><summary>完整接口契约（英文）</summary>
+
+Same atlas-only operation for the exact UI retained by pause(). The pause
+token is never consumed; resume_paused() is still required. A token returned
+with ESP_ERR_NOT_FINISHED is accepted only if its runtime is actually paused
+and all fences can now retire. See trim_session() for context and timeouts.
 
 </details>
 
@@ -3135,6 +3368,86 @@ when no temporary app is active, including recovery after
 ESP_ERR_NOT_FINISHED. A pause failure leaves the temporary app alive and
 returns that error. ESP_ERR_NOT_FINISHED means the temporary app is gone
 but hub recovery failed; retain the session and retry with app=NULL.
+
+</details>
+
+### `esp_gsp_esp_lcd_start_on_session_ex()`
+
+在挂起 Hub 上启动应用，并回写 Session 所有权与操作结果。
+
+- **头文件:** `include/esp_gsp_esp_lcd.h`
+- **返回类型:** `esp_err_t`
+
+```c
+esp_err_t esp_gsp_esp_lcd_start_on_session_ex(esp_gsp_esp_lcd_session_t **inout_session, const esp_gsp_config_t *app_config, esp_gsp_handle_t *out_gsp, esp_gsp_esp_lcd_session_result_t *result);
+```
+
+<details><summary>完整接口契约（英文）</summary>
+
+Ownership-aware alternatives to the legacy session operations.
+*inout_session is set to NULL exactly when the SDK consumes the Token;
+otherwise it remains owned by the caller. Optional result must be initialized
+with ESP_GSP_ESP_LCD_SESSION_RESULT_INIT() and the exact struct_size.
+A size mismatch rejects the call before any effects and leaves result intact.
+With a valid size every return resets/populates result, including validation
+failure. A NULL result keeps the same error codes and pointer ownership update.
+
+Error codes alone are insufficient for legacy replace(): pause failure and
+startup failure followed by successful Hub recovery can return the same code.
+Use outcome and the public App/Hub handles, never probe a consumed Token.
+On EMPTY after replace/resume clear the destroyed old App Handle before retry.
+All lifecycle calls on the runtime still require application-task serialization.
+
+</details>
+
+### `esp_gsp_esp_lcd_start_on_session_prepared_ex()`
+
+在首帧前准备应用，并回写 Session 所有权与操作结果。
+
+- **头文件:** `include/esp_gsp_esp_lcd.h`
+- **返回类型:** `esp_err_t`
+
+```c
+esp_err_t esp_gsp_esp_lcd_start_on_session_prepared_ex(esp_gsp_esp_lcd_session_t **inout_session, const esp_gsp_config_t *app_config, esp_gsp_esp_lcd_prepare_cb_t prepare, void *prepare_ctx, esp_gsp_handle_t *out_gsp, esp_gsp_esp_lcd_session_result_t *result);
+```
+
+<details><summary>完整接口契约（英文）</summary>
+
+Start an App with a prepare callback before its first frame and report Session ownership.
+
+</details>
+
+### `esp_gsp_esp_lcd_replace_on_session_prepared_ex()`
+
+替换临时应用，并回写 Session 所有权与新旧应用结果。
+
+- **头文件:** `include/esp_gsp_esp_lcd.h`
+- **返回类型:** `esp_err_t`
+
+```c
+esp_err_t esp_gsp_esp_lcd_replace_on_session_prepared_ex(esp_gsp_esp_lcd_session_t **inout_session, esp_gsp_handle_t current_app, const esp_gsp_config_t *next_config, esp_gsp_esp_lcd_prepare_cb_t prepare, void *prepare_ctx, esp_gsp_handle_t *out_gsp, esp_gsp_esp_lcd_session_result_t *result);
+```
+
+<details><summary>完整接口契约（英文）</summary>
+
+Replace the temporary App, prepare the replacement before its first frame and report Session ownership.
+
+</details>
+
+### `esp_gsp_esp_lcd_resume_ex()`
+
+恢复 Hub，并明确报告 Session 是否已被消费。
+
+- **头文件:** `include/esp_gsp_esp_lcd.h`
+- **返回类型:** `esp_err_t`
+
+```c
+esp_err_t esp_gsp_esp_lcd_resume_ex(esp_gsp_esp_lcd_session_t **inout_session, esp_gsp_handle_t app, esp_gsp_handle_t *out_hub, esp_gsp_esp_lcd_session_result_t *result);
+```
+
+<details><summary>完整接口契约（英文）</summary>
+
+Stop the temporary App, resume the Hub and report Session ownership.
 
 </details>
 
@@ -3365,8 +3678,9 @@ bool esp_gsp_update_error_stats(esp_gsp_handle_t gsp, esp_gsp_update_error_stats
 <details><summary>完整接口契约（英文）</summary>
 
 Snapshot set_many/set_properties failures and wrappers routed through them
-(including set_position), including asynchronous apply/drop errors. Legacy
-bind setters and other API families are not included.
+(including set_position), plus Dropdown option-text apply/drop errors.
+Dropdown errors identify the component; property=0 denotes the option group.
+Legacy bind setters and other API families are not included.
 Available in ordinary builds without profiling. Successful setters do not
 clear the last error. A property absent from the compiled runtime directory
 cannot be distinguished from an unsupported property: consult the compiler's

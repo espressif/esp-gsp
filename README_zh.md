@@ -36,7 +36,7 @@ ESP-GSP 适合这样的产品：界面结构在编译时就已确定，但文字
 
 <!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.8.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.9.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -60,7 +60,7 @@ python -m pip install -U esp-gsp-tools
 
 <!-- gsp-version:dependency-command -->
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.8.0"
+idf.py add-dependency "espressif/esp-gsp^1.9.0"
 python -m pip install -U esp-gsp-tools
 ```
 <!-- /gsp-version:dependency-command -->

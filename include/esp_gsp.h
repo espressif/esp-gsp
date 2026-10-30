@@ -129,7 +129,11 @@ typedef struct {
      *  without a floor (internal-RAM targets can have far less than 128 KiB
      *  free; a raised floor would exceed the reachable heap and turn every
      *  decode into a permanent failure). Increase only when all compiled
-     *  startup images and active runtime images cannot fit. */
+     *  startup images and active runtime images cannot fit.
+     *  This applies per scene and also serves as the aggregate scene-retention
+     *  target. Current/incoming scenes coexist during preparation, so it is
+     *  not an application peak limit. Display buffers and codec workspace
+     *  require separate budgets. */
     size_t image_cache_bytes;
 } esp_gsp_config_t;
 
@@ -336,6 +340,9 @@ esp_gsp_err_t esp_gsp_stop(esp_gsp_handle_t gsp);
  * This is a low-frequency synchronization fence for tests, screenshots and
  * orderly application state changes. Normal UI updates should remain
  * asynchronous. It must not be called from a render- or decode-task callback.
+ * ESP-IDF waits on a runtime-owned completion semaphore and leaves the calling
+ * task's notifications intact. Keep the runtime alive throughout this call;
+ * stop or replacement must be caller-serialized.
  *
  * @param timeout_ms Maximum total wait, including command queue admission.
  *                   Zero performs a non-blocking check/submit.
@@ -614,6 +621,29 @@ esp_gsp_err_t esp_gsp_component_set_visible(esp_gsp_handle_t gsp,
 esp_gsp_err_t esp_gsp_component_set_text(esp_gsp_handle_t gsp,
         gsp_component_key_t key,
         const char *text);
+/** Replaces every label of a Dropdown authored with dynamic_options=true.
+ * Count must match its compiled option count; indices, selection and callbacks
+ * are unchanged. Strings are strict UTF-8, bounded by option_text_max_bytes
+ * (excluding NUL), and copied before return. The render task prepares the
+ * entire replacement before publishing; failure preserves the old labels.
+ * OK means accepted, as for other queued setters. Asynchronous apply/drop
+ * failures are reported by esp_gsp_update_error_stats(). A queued replacement
+ * is tied to its submission scene and is dropped if navigation supersedes it.
+ * Getters below read committed labels from the UI task or a caller-serialized
+ * portable app; they must not race the render task or app destruction. */
+esp_gsp_err_t esp_gsp_dropdown_set_options_text(
+    esp_gsp_handle_t gsp, gsp_component_key_t key,
+    const char *const *options, size_t count);
+/** Reads the fixed option count; also supports static Dropdowns. */
+esp_gsp_err_t esp_gsp_dropdown_get_option_count(
+    esp_gsp_handle_t gsp, gsp_component_key_t key, size_t *out_count);
+/** Copies one committed UTF-8 label, including NUL. out_size, when non-NULL,
+ * receives required bytes including NUL. NULL output with capacity=0 queries
+ * that size. An insufficient buffer returns INVALID_SIZE without truncation
+ * or modifying it. Static Dropdowns return their compiled labels. */
+esp_gsp_err_t esp_gsp_dropdown_get_option_text(
+    esp_gsp_handle_t gsp, gsp_component_key_t key, uint16_t index,
+    char *out_text, size_t capacity, size_t *out_size);
 esp_gsp_err_t esp_gsp_component_set_image(esp_gsp_handle_t gsp,
         gsp_component_key_t key,
         const void *data, size_t size);
@@ -733,9 +763,10 @@ typedef struct {
     void *release_ctx;
     esp_gsp_image_complete_cb_t on_complete;
     void *complete_ctx;
-    /** Reuses decoded pixels for identical immutable content. Change the
-     *  nonzero key when the encoded content changes; zero keeps legacy
-     *  per-submit caching. */
+    /** Reuses decoded pixels for identical immutable content when the image
+     *  cache is enabled. Change a nonzero key when encoded content changes;
+     *  zero keeps legacy per-submit caching. COPY still copies encoded input
+     *  on each call, including decoded-cache hits. */
     uint32_t cache_key;
 } esp_gsp_image_options_t;
 

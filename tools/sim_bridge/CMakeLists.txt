@@ -8,7 +8,7 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/gsp_compatibility.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/gsp_context.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/gsp_generated.cmake")
 
-add_library(gsp_sim_bridge STATIC src/transport.c src/api.c src/media.c src/images.c src/assets.c)
+add_library(gsp_sim_bridge STATIC src/transport.c src/api.c src/media.c src/images.c src/assets.c src/updates.c)
 add_library(esp_gsp::sim_bridge ALIAS gsp_sim_bridge)
 set_target_properties(gsp_sim_bridge PROPERTIES
     POSITION_INDEPENDENT_CODE ON

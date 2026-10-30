@@ -86,6 +86,7 @@ typedef enum {
     GSP_COMPONENT_KIND_MESSAGE_LIST = 8,
     GSP_COMPONENT_KIND_GRID = 9,
     GSP_COMPONENT_KIND_DROPDOWN = 10,
+    GSP_COMPONENT_KIND_DROPDOWN_DYNAMIC = 11,
 } gsp_component_kind_t;
 
 typedef enum {
@@ -270,6 +271,14 @@ typedef struct {
     uint16_t option_count;
     const char *const *options;
 } gsp_dropdown_config_t;
+
+/** Tagged by DROPDOWN_DYNAMIC. Keep the static config's layout unchanged so
+ * old generated/static directories remain source and binary compatible. */
+typedef struct {
+    gsp_dropdown_config_t base;
+    const uint16_t *option_text_binds;
+    uint16_t option_text_max_bytes;
+} gsp_dropdown_text_config_t;
 
 /** Typed property value (bounded tagged union; structured content
  *  keeps component-specific typed APIs). */

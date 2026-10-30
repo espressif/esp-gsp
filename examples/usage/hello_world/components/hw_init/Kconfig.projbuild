@@ -38,6 +38,23 @@ menu "Example HW Init"
             depends on IDF_TARGET_ESP32C3
     endchoice
 
+    config EXAMPLE_LCD_FRAME_BUFFERS
+        int "Native LCD frame buffers"
+        depends on EXAMPLE_LCD_INTERFACE_MIPI_DSI || EXAMPLE_LCD_INTERFACE_RGB || EXAMPLE_LCD_INTERFACE_RGB24
+        range 2 3
+        default 3
+        help
+            Number of native frame buffers allocated by the example RGB/DSI
+            panel driver. Three preserves the existing AUTO presenter profile.
+            Two selects DOUBLE_PARTIAL in the presenter as well as allocating
+            two driver buffers; changing only the driver count is insufficient.
+
+            Two saves one width * height * native-color-bytes buffer in PSRAM,
+            but can increase frame-buffer waits and tail latency. Keep three
+            when queue slack is more important than RAM. Validate panel output
+            under the application's workload before choosing two. This option
+            does not change SPI/QSPI panels with their own display GRAM.
+
     choice EXAMPLE_DISPLAY_ROTATION
         prompt "Display rotation"
         default EXAMPLE_DISPLAY_ROTATION_0

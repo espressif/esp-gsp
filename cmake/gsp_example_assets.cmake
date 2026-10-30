@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: LicenseRef-Espressif-Modified-MIT
 #
-# Scenario media is restored from the pinned archive when it is absent from a
+# Example media is restored from the pinned archive when it is absent from a
 # source checkout or an extracted example package.
 
 set(ESP_GSP_EXAMPLE_ASSETS_DEFAULT_URL
-    "https://dl.espressif.com/AE/esp-dev-kits/esp-gsp-scenario-assets-0c56282d434d.tar.gz")
+    "https://dl.espressif.com/AE/esp-dev-kits/esp-gsp-scenario-assets-5cd0cc7ea9bd.tar.gz")
 set(ESP_GSP_EXAMPLE_ASSETS_DEFAULT_SHA256
-    "0c56282d434d24e8e6997e5d98db95b907c13b381ab8aba6db2ad124dc4ec0a0")
+    "5cd0cc7ea9bd86fe7b64edcb21bfe1349f2e0785b16391585be2b7c4d9f48ca7")
 
 # Standalone source-preview preparation uses the same archive and extractor as
 # device builds. Including this module from a project only defines the helper.
@@ -19,7 +19,7 @@ if(CMAKE_SCRIPT_MODE_FILE STREQUAL CMAKE_CURRENT_LIST_FILE)
     set(ASSET_SHA256 "${ESP_GSP_EXAMPLE_ASSETS_DEFAULT_SHA256}")
     set(ASSET_ARCHIVE "${ASSET_CACHE_ROOT}/assets-${ASSET_SHA256}.tar.gz")
     set(ASSET_DESTINATION "${asset_component_root}/examples")
-    set(ASSET_SENTINEL "${ASSET_DESTINATION}/scenarios/coffee_machine/scenes/assets/coffee_hero.png")
+    set(ASSET_SENTINEL "${ASSET_DESTINATION}/scenarios/coffee_machine/scenes/assets/coffee_brew.png")
     set(ASSET_STAMP "${ASSET_CACHE_ROOT}/assets-${ASSET_SHA256}-preview.stamp")
     set(ASSET_SUBTREE "")
     set(ASSET_WIDGETS "")
@@ -35,9 +35,10 @@ function(gsp_example_assets_prepare component_root out_target)
 
     set(asset_subtree "")
     set(asset_widgets "")
+    set(asset_fonts "${ESP_GSP_EXAMPLE_ASSETS_FONTS}")
     set(asset_destination "${component_root}/examples")
     set(asset_sentinel
-        "${component_root}/examples/scenarios/coffee_machine/scenes/assets/coffee_hero.png")
+        "${component_root}/examples/scenarios/coffee_machine/scenes/assets/coffee_brew.png")
     if(DEFINED ESP_GSP_EXAMPLE_ASSETS_SUBTREE AND
             NOT "${ESP_GSP_EXAMPLE_ASSETS_SUBTREE}" STREQUAL "")
         if(NOT DEFINED ESP_GSP_EXAMPLE_ASSETS_SENTINEL OR
@@ -80,12 +81,30 @@ function(gsp_example_assets_prepare component_root out_target)
         endif()
     endif()
 
+    # A bundled shared font is copied locally; other fonts come from the
+    # same verified archive as the example's images.
+    foreach(font IN LISTS asset_fonts)
+        if(NOT font MATCHES "^[A-Za-z0-9_.-]+\\.(ttf|otf)$")
+            message(FATAL_ERROR "Invalid example font filename: ${font}")
+        endif()
+        set(shared_font "${component_root}/examples/common/fonts/${font}")
+        if(EXISTS "${shared_font}")
+            file(MAKE_DIRECTORY "${asset_destination}/fonts")
+            configure_file("${shared_font}" "${asset_destination}/fonts/${font}" COPYONLY)
+        endif()
+    endforeach()
+
     set(force_fetch OFF)
     if(DEFINED ESP_GSP_EXAMPLE_ASSETS_FETCH AND ESP_GSP_EXAMPLE_ASSETS_FETCH)
         set(force_fetch ON)
     endif()
     if(NOT force_fetch AND EXISTS "${asset_sentinel}")
         set(asset_media_ready ON)
+        foreach(font IN LISTS asset_fonts)
+            if(NOT EXISTS "${asset_destination}/fonts/${font}")
+                set(asset_media_ready OFF)
+            endif()
+        endforeach()
         foreach(widget IN LISTS asset_widgets)
             if("${widget}" STREQUAL "image")
                 set(widget_sentinel
@@ -144,6 +163,7 @@ function(gsp_example_assets_prepare component_root out_target)
                 "-DASSET_SENTINEL=${asset_sentinel}"
                 "-DASSET_SUBTREE=${asset_subtree}"
                 "-DASSET_WIDGETS=${asset_widgets}"
+                "-DASSET_FONTS=${asset_fonts}"
                 "-DASSET_STAMP=${stamp}"
                 "-DASSET_CACHE_ROOT=${cache_root}"
                 "-DASSET_OFFLINE=${ESP_GSP_EXAMPLE_ASSETS_OFFLINE}"

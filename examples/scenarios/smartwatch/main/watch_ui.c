@@ -37,10 +37,81 @@ static esp_gsp_err_t drawer_state(esp_gsp_handle_t ui, gsp_component_key_t key, 
 }
 static esp_gsp_err_t update_indicator(esp_gsp_handle_t ui, unsigned page)
 {
-    char text[16];
-    snprintf(text, sizeof(text), "%u / %u", page + 1, WATCH_PAGE_COUNT);
-    return gsp_watch_indicator_set_text(ui, text);
+    CHECK(gsp_watch_page_dot0_set_visible(ui, page == 0));
+    CHECK(gsp_watch_page_dot1_set_visible(ui, page == 1));
+    CHECK(gsp_watch_page_dot2_set_visible(ui, page == 2));
+    CHECK(gsp_watch_page_dot3_set_visible(ui, page == 3));
+    CHECK(gsp_watch_page_dot4_set_visible(ui, page == 4));
+    CHECK(gsp_watch_page_dot5_set_visible(ui, page == 5));
+    return ESP_GSP_OK;
 }
+enum { BREATH_DURATION_MS = 60000, BREATH_CYCLE_MS = 10000, BREATH_IN_MS = 4000 };
+
+static unsigned breath_value(const watch_ui_t *s)
+{
+    if (s->breath_elapsed_ms >= BREATH_DURATION_MS) {
+        return 100;
+    }
+    unsigned phase = s->breath_elapsed_ms % BREATH_CYCLE_MS;
+    return phase < BREATH_IN_MS ? phase * 100 / BREATH_IN_MS :
+           (BREATH_CYCLE_MS - phase) * 100 / (BREATH_CYCLE_MS - BREATH_IN_MS);
+}
+
+static esp_gsp_err_t render_breath(esp_gsp_handle_t ui, const watch_ui_t *s)
+{
+    char count[16], remaining[40];
+    bool complete = s->breath_elapsed_ms >= BREATH_DURATION_MS;
+    unsigned phase = s->breath_elapsed_ms % BREATH_CYCLE_MS;
+    const char *status = complete ? "Complete" : !s->breath_running ? "Ready" :
+                         s->breath_paused ? "Paused" : phase < BREATH_IN_MS ? "Inhale" : "Exhale";
+    if (!s->breath_running) {
+        snprintf(count, sizeof(count), "60");
+        snprintf(remaining, sizeof(remaining), "%s", complete ? "A quiet minute, complete." : "4 s in / 6 s out");
+    } else {
+        unsigned end = phase < BREATH_IN_MS ? BREATH_IN_MS : BREATH_CYCLE_MS;
+        snprintf(count, sizeof(count), "%u", (end - phase + 999) / 1000);
+        snprintf(remaining, sizeof(remaining), "%u s remaining", (BREATH_DURATION_MS - s->breath_elapsed_ms + 999) / 1000);
+    }
+    CHECK(gsp_watch_breath_status_set_text(ui, status));
+    CHECK(gsp_watch_breath_count_set_text(ui, count));
+    CHECK(gsp_watch_breath_remaining_set_text(ui, remaining));
+    CHECK(gsp_watch_breath_toggle_set_text(ui, complete ? "Again" : !s->breath_running ? "Start" : s->breath_paused ? "Resume" : "Pause"));
+    CHECK(gsp_watch_breath_ring_set_value(ui, breath_value(s)));
+    return ESP_GSP_OK;
+}
+
+static void sample_breath(watch_ui_t *s)
+{
+    uint64_t elapsed = 50; /* Deterministic scheduler time in the native runner. */
+    if (s->clock_ms) {
+        uint64_t now = s->clock_ms();
+        elapsed = now >= s->breath_sample_ms ? now - s->breath_sample_ms : 0;
+        s->breath_sample_ms = now;
+    }
+    unsigned left = BREATH_DURATION_MS - s->breath_elapsed_ms;
+    s->breath_elapsed_ms += elapsed >= left ? left : (unsigned)elapsed;
+    if (s->breath_elapsed_ms == BREATH_DURATION_MS) {
+        s->breath_running = s->breath_paused = false;
+    }
+}
+
+static esp_gsp_err_t advance_breath(esp_gsp_handle_t ui, watch_ui_t *s)
+{
+    if (!s->breath_running || s->breath_paused || s->page != 5 || s->detail) {
+        return ESP_GSP_OK;
+    }
+    unsigned before = s->breath_elapsed_ms;
+    unsigned value = breath_value(s);
+    sample_breath(s);
+    if (before / 1000 != s->breath_elapsed_ms / 1000) {
+        return render_breath(ui, s);
+    }
+    if (value != breath_value(s)) {
+        CHECK(gsp_watch_breath_ring_set_value(ui, breath_value(s)));
+    }
+    return ESP_GSP_OK;
+}
+
 static esp_gsp_err_t apply(esp_gsp_handle_t ui, watch_ui_t *s)
 {
     if (!s->detail) {
@@ -48,30 +119,54 @@ static esp_gsp_err_t apply(esp_gsp_handle_t ui, watch_ui_t *s)
     }
     CHECK(drawer_state(ui, GSP_WATCH_OBJ_KEY_MESSAGE_PAGE, s->detail == 1));
     CHECK(drawer_state(ui, GSP_WATCH_OBJ_KEY_DETAIL_PAGE, s->detail == 2));
-    CHECK(gsp_watch_orb_set_charging(ui, s->page == 3 && !s->detail && s->battery < 100));
-    CHECK(gsp_watch_breath_glow_set_playing(ui, s->page == 5 && !s->detail && !s->breath_paused));
-    CHECK(gsp_watch_breath_status_set_text(ui, s->breath_paused ? "PAUSED" : "BREATHE"));
-    CHECK(gsp_watch_breath_toggle_set_text(ui, s->breath_paused ? "Resume" : "Pause"));
+    if (s->breath_running && (s->page != 5 || s->detail)) {
+        s->breath_paused = true;
+    }
+    CHECK(render_breath(ui, s));
     CHECK(gsp_watch_charge_status_set_text(ui, s->battery < 100 ? "CHARGING" : "READY TO EXPLORE"));
     CHECK(gsp_watch_unread_set_text(ui, s->replied ? "REPLY SENT" : "1 NEW MESSAGE"));
     return ESP_GSP_OK;
 }
+static const struct {
+    const char *name, *title, *distance, *time, *stats;
+} routes[] = {
+    {"Ridge walk", "RIDGE WALK", "4.8 km", "32 min", "32 MIN   /   286 KCAL"},
+    {"Coast walk", "COAST WALK", "3.2 km", "24 min", "24 MIN   /   192 KCAL"},
+    {"Forest walk", "FOREST WALK", "6.1 km", "48 min", "48 MIN   /   364 KCAL"}
+};
+
+static esp_gsp_err_t route_selection(esp_gsp_handle_t ui, unsigned route)
+{
+    if (route >= sizeof(routes) / sizeof(routes[0])) {
+        return ESP_GSP_ERR_INVALID_ARG;
+    }
+    CHECK(gsp_watch_trail_title_set_text(ui, routes[route].name));
+    CHECK(gsp_watch_trail_distance_set_text(ui, routes[route].distance));
+    CHECK(gsp_watch_trail_time_set_text(ui, routes[route].time));
+    CHECK(gsp_watch_trail_ridge_set_visible(ui, route == 0));
+    CHECK(gsp_watch_trail_coast_set_visible(ui, route == 1));
+    CHECK(gsp_watch_trail_forest_set_visible(ui, route == 2));
+    const gsp_component_key_t choices[] = {
+        GSP_WATCH_OBJ_KEY_ROUTE_SELECT0,
+        GSP_WATCH_OBJ_KEY_ROUTE_SELECT1,
+        GSP_WATCH_OBJ_KEY_ROUTE_SELECT2
+    };
+    for (unsigned i = 0; i < sizeof(choices) / sizeof(choices[0]); ++i) {
+        CHECK(esp_gsp_component_set_color_rgb888(ui, choices[i],
+                route == i ? 0x3B5546 : 0x16261F));
+    }
+    return ESP_GSP_OK;
+}
+
 static esp_gsp_err_t route_summary(esp_gsp_handle_t ui, unsigned route)
 {
-    static const struct {
-        const char *title, *distance, *stats;
-    } routes[] = {
-        {"RIDGE WALK", "4.8 km", "32 MIN   /   286 KCAL"},
-        {"COAST WALK", "3.2 km", "24 MIN   /   192 KCAL"},
-        {"FOREST WALK", "6.1 km", "48 MIN   /   364 KCAL"}
-    };
     if (route >= sizeof(routes) / sizeof(routes[0])) {
         return ESP_GSP_ERR_INVALID_ARG;
     }
     CHECK(gsp_watch_route_title_set_text(ui, routes[route].title));
     CHECK(gsp_watch_route_distance_set_text(ui, routes[route].distance));
     CHECK(gsp_watch_route_stats_set_text(ui, routes[route].stats));
-    CHECK(esp_gsp_component_set_visible(ui, GSP_WATCH_OBJ_KEY_ROUTE_PHOTO, route == 0));
+    CHECK(esp_gsp_component_set_visible(ui, GSP_WATCH_OBJ_KEY_ROUTE_RIDGE, route == 0));
     CHECK(esp_gsp_component_set_visible(ui, GSP_WATCH_OBJ_KEY_ROUTE_COAST, route == 1));
     CHECK(esp_gsp_component_set_visible(ui, GSP_WATCH_OBJ_KEY_ROUTE_FOREST, route == 2));
     return ESP_GSP_OK;
@@ -114,30 +209,31 @@ static void event(esp_gsp_handle_t ui, const esp_gsp_event_t *e, void *ctx)
     } else if (gsp_watch_event_is_reply(e)) {
         s->replied = true;
         s->detail = 0;
-    } else if (gsp_watch_event_is_trail_select(e)) {
-        static const char *const titles[] = {"Ridge / 4.8 km", "Coast / 3.2 km", "Forest / 6.1 km"};
-        uint32_t selected;
-        s->last_error = gsp_watch_trails_get_selected(ui, &selected);
-        if (s->last_error == ESP_GSP_OK && selected < sizeof(titles) / sizeof(titles[0])) {
+    } else if (gsp_watch_event_is_route_ridge(e) ||
+               gsp_watch_event_is_route_coast(e) || gsp_watch_event_is_route_forest(e)) {
+        unsigned selected = gsp_watch_event_is_route_ridge(e) ? 0 :
+                            gsp_watch_event_is_route_coast(e) ? 1 : 2;
+        s->last_error = route_selection(ui, selected);
+        if (s->last_error == ESP_GSP_OK) {
             s->trail = selected;
-            s->last_error = gsp_watch_trail_title_set_text(ui, titles[selected]);
-        }
-        return;
-    } else if (gsp_watch_event_is_breath_level_change(e)) {
-        int32_t value;
-        s->last_error = gsp_watch_breath_slider_get_value(ui, &value);
-        if (s->last_error == ESP_GSP_OK) {
-            s->glow = (unsigned)value;
-            s->last_error = gsp_watch_breath_glow_set_value(ui, value);
-        }
-        if (s->last_error == ESP_GSP_OK) {
-            char text[20];
-            snprintf(text, sizeof(text), "GLOW %u%%", s->glow);
-            s->last_error = gsp_watch_breath_level_set_text(ui, text);
         }
         return;
     } else if (gsp_watch_event_is_breath_pause(e)) {
-        s->breath_paused = !s->breath_paused;
+        if (!s->breath_running) {
+            s->breath_elapsed_ms = 0;
+            s->breath_running = true;
+            s->breath_paused = false;
+        } else {
+            if (!s->breath_paused && s->clock_ms) {
+                sample_breath(s);
+            }
+            if (s->breath_running) {
+                s->breath_paused = !s->breath_paused;
+            }
+        }
+        if (s->clock_ms) {
+            s->breath_sample_ms = s->clock_ms();
+        }
     } else {
         return;
     }
@@ -176,7 +272,7 @@ static esp_gsp_err_t advance(esp_gsp_handle_t ui, watch_ui_t *s)
         snprintf(text, sizeof(text), "%u%%", s->battery);
         CHECK(gsp_watch_battery_set_text(ui, text));
         CHECK(gsp_watch_charge_button_set_text(ui, text));
-        CHECK(gsp_watch_orb_set_value(ui, s->battery));
+        CHECK(gsp_watch_battery_ring_set_value(ui, s->battery));
         CHECK(apply(ui, s));
     }
     return ESP_GSP_OK;
@@ -227,6 +323,7 @@ static void poll_page(esp_gsp_handle_t ui, void *ctx)
     if (s->last_error != ESP_GSP_OK) {
         return;
     }
+    s->last_error = advance_breath(ui, s);
 }
 static void tick(esp_gsp_handle_t ui, void *ctx)
 {
@@ -235,16 +332,16 @@ static void tick(esp_gsp_handle_t ui, void *ctx)
         s->last_error = advance(ui, s);
     }
 }
-esp_gsp_err_t watch_ui_init(esp_gsp_handle_t ui, watch_ui_t *s)
+esp_gsp_err_t watch_ui_init(esp_gsp_handle_t ui, watch_ui_t *s, watch_clock_ms_t clock_ms)
 {
     if (!ui || !s) {
         return ESP_GSP_ERR_INVALID_ARG;
     }
     *s = (watch_ui_t) {
-        .battery = 74, .glow = 70
+        .battery = 74, .clock_ms = clock_ms
     };
-    CHECK(gsp_watch_breath_glow_set_value(ui, s->glow));
     CHECK(apply(ui, s));
+    CHECK(route_selection(ui, s->trail));
     CHECK(update_indicator(ui, s->page));
     CHECK(esp_gsp_on_event(ui, event, s));
     s->timer = esp_gsp_timer_create(ui, 1000, tick, s);

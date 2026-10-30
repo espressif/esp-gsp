@@ -139,6 +139,10 @@ deferred until the draw callback has returned.
 Image decode completion may also run on the decode task. Completion and
 release callbacks must not assume application-task context.
 
+Replacing or resuming a temporary app waits for its active decode and source
+release before destroying the app. Keep these callbacks short; this wait does
+not hold the render task's cache lock.
+
 ## Image and canvas ownership
 
 - `esp_gsp_set_image()` copies the encoded input before returning.
@@ -225,6 +229,22 @@ runtime, scene and component state remain owned by the returned session, while
 decoded image surfaces are released. Do not submit work through the suspended
 hub handle.
 
+Before `esp_gsp_esp_lcd_start_on_session*()`, an application needing more memory
+can explicitly call `esp_gsp_esp_lcd_trim_session(session, timeout_ms,
+&released_bytes)` on the suspended session. Use `esp_gsp_esp_lcd_trim_paused()`
+for a Pause Token. This releases only the inactive viewport snapshot atlas;
+UI state, fonts, borrowed sources and display buffers remain owned as before.
+Without this call, the existing cache-reuse policy is unchanged. The optional
+byte count excludes allocator overhead and does not guarantee a contiguous
+allocation of that size elsewhere.
+
+Trim executes on the paused render task after Presenter and accelerator fences.
+Failure retains the atlas and token for retry or resume; `ESP_ERR_NOT_FINISHED`
+means accelerator reads could not be confirmed complete. `timeout_ms` bounds the
+Presenter wait, not dispatch or accelerator synchronization. Serialize lifecycle
+calls from an application task. Resume still uses the original API, redraws a
+full first frame, and later gestures recapture their snapshots normally.
+
 If suspend returns `ESP_ERR_NOT_FINISHED`, its rollback could not restore the
 hub and `out_session` still receives a valid session with no temporary app.
 Retain that token and retry `esp_gsp_esp_lcd_resume(session, NULL, &hub)`, or
@@ -257,6 +277,33 @@ was destroyed but hub recovery failed, resume returns `ESP_ERR_NOT_FINISHED`;
 `out_hub` is NULL. Retry with `app = NULL`, not the destroyed handle. Replacement startup follows
 the same recovery and token rules as `start_on_session()`.
 
+For reliable error ownership use the `_ex` session operations. Legacy
+`replace_on_session_prepared()` can return the same error and NULL new-App
+output when pausing the old App fails, or when starting the replacement fails
+and the SDK restores the Hub. Those cases have different App/Token lifetimes.
+
+Initialize `esp_gsp_esp_lcd_session_result_t` with
+`ESP_GSP_ESP_LCD_SESSION_RESULT_INIT()` and pass the address of your owned
+Session pointer. `_ex` sets that pointer to NULL exactly when the Token is
+consumed. `result.outcome` distinguishes unchanged inputs, a retained previous
+App, a started new App, an empty retained Session and a resumed Hub. `app` and
+`hub` provide the handles appropriate to that outcome; UNCHANGED preserves
+input lifetimes and does not make NULL output handles evidence of destruction.
+
+On APP_RETAINED keep the old App's callback contexts. After replacement reaches
+APP_STARTED, EMPTY or HUB_RESUMED, a supplied old temporary GSP App is destroyed;
+keep the newly started App's contexts on APP_STARTED. An empty Session retries
+through `esp_gsp_esp_lcd_resume_ex(&session, NULL, &hub, &result)`. A resumed Hub
+remains alive even though its Session Token was consumed; do not release its
+borrowed sources until the normal stop contract completes.
+
+`stage` and `operation_error` identify the primary failure. `recovery_error`
+retains the raw automatic Hub-recovery error after start/replace failure; it is
+ESP_OK when no recovery was attempted. Results describe lifetimes and runtime
+activation, not physical presentation. Serialize lifecycle calls as before.
+Wrong result `struct_size` is rejected before effects and leaves result intact;
+use the initializer and do not interpret a stale result after a size rejection.
+
 If no temporary app is active, `esp_gsp_esp_lcd_session_destroy()` destroys
 the suspended hub and display host instead of resuming them. A session with an
 active temporary app cannot be destroyed.
@@ -264,3 +311,9 @@ Destroy consumes the session only on success. A failure retains its resources
 for another destroy attempt; once destruction has been requested, do not start
 or resume an app on that session. Keep borrowed assets and display resources
 alive until destruction succeeds.
+
+## Target-frame completion
+
+Use [Target-frame Update Receipts](update-receipts.md) to distinguish accepted,
+applied, rendered, transferred and hardware-confirmed updates. For static
+stack analysis of application-owned tasks, see [Compiler Stack Evidence](stack-usage.md).

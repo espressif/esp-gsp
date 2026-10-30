@@ -12,6 +12,76 @@ and synchronization rules.
 See the [API map](api.md), [Lifecycle and threading](../guide/lifecycle.md), and
 [Application structures](../guide/application-structures.md) for complete usage flows.
 
+## Target-frame update receipts
+
+Group required updates and observe their actual completion stage.
+
+### `esp_gsp_update_capabilities()`
+
+Use the update capabilities operation.
+
+- **Header:** `include/esp_gsp_updates.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_update_capabilities(esp_gsp_handle_t gsp, esp_gsp_update_capabilities_t *out);
+```
+
+### `esp_gsp_update_submit()`
+
+Submit one required group without waiting for queue space. Commands and UTF-8 strings are copied; COPY image inputs are copied once. On an immediate error out_receipt is NULL and BORROW/TAKE ownership remains with the caller. Unsupported completion stages are rejected before acceptance. Receipt IDs are not reused; exhaustion rejects admission with INVALID_STATE. out_receipt is installed before an accepted command can notify, including when the render task runs before this function returns.
+
+- **Header:** `include/esp_gsp_updates.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_update_submit(esp_gsp_handle_t gsp, const esp_gsp_update_command_t *commands, size_t count, const esp_gsp_update_options_t *options, esp_gsp_update_receipt_t **out_receipt);
+```
+
+**Contract details**
+
+Pure PROPERTY groups retain the existing atomic property transaction.
+Mixed groups execute in order and report partial failure without rollback.
+APPLIED requires every operation, including image publication, to succeed.
+A target overwritten before its matching frame is SUPERSEDED.
+An unchanged target may reuse a matching, previously committed frame.
+A failed render attempt terminates the receipt without stopping ordinary
+rendering. timeout_ms includes queueing and pauses; expiry is observed on
+the next UI service, without undoing state or releasing in-flight data.
+
+### `esp_gsp_update_query()`
+
+Query while owning a receipt reference, including after its UI has stopped. A contended snapshot returns false without changing out; retry later.
+
+- **Header:** `include/esp_gsp_updates.h`
+- **Return type:** `bool`
+
+```c
+bool esp_gsp_update_query(const esp_gsp_update_receipt_t *receipt, esp_gsp_update_status_t *out);
+```
+
+### `esp_gsp_update_cancel()`
+
+Request cancellation. Terminal cancellation is observed through query or notification; it does not undo previously applied state or reclaim data still referenced by a decoder, transfer or display buffer.
+
+- **Header:** `include/esp_gsp_updates.h`
+- **Return type:** `void`
+
+```c
+void esp_gsp_update_cancel(esp_gsp_update_receipt_t *receipt);
+```
+
+### `esp_gsp_update_release()`
+
+Release the caller's reference. This does not cancel accepted work.
+
+- **Header:** `include/esp_gsp_updates.h`
+- **Return type:** `void`
+
+```c
+void esp_gsp_update_release(esp_gsp_update_receipt_t *receipt);
+```
+
 ## Lifecycle and synchronization
 
 Create platform-owned instances through the platform adapter. Stop and flush calls define the application synchronization boundary.
@@ -65,6 +135,9 @@ esp_gsp_err_t esp_gsp_flush(esp_gsp_handle_t gsp, uint32_t timeout_ms);
 This is a low-frequency synchronization fence for tests, screenshots and
 orderly application state changes. Normal UI updates should remain
 asynchronous. It must not be called from a render- or decode-task callback.
+ESP-IDF waits on a runtime-owned completion semaphore and leaves the calling
+task's notifications intact. Keep the runtime alive throughout this call;
+stop or replacement must be caller-serialized.
 
 Parameter `timeout_ms`: Maximum total wait, including command queue admission.
 Zero performs a non-blocking check/submit.
@@ -483,6 +556,39 @@ Structured content setters resolve the generated property bind by key.
 
 ```c
 esp_gsp_err_t esp_gsp_component_set_text(esp_gsp_handle_t gsp, gsp_component_key_t key, const char *text);
+```
+
+### `esp_gsp_dropdown_set_options_text()`
+
+Replaces every label of a Dropdown authored with dynamic_options=true. Count must match its compiled option count; indices, selection and callbacks are unchanged. Strings are strict UTF-8, bounded by option_text_max_bytes (excluding NUL), and copied before return. The render task prepares the entire replacement before publishing; failure preserves the old labels. OK means accepted, as for other queued setters. Asynchronous apply/drop failures are reported by esp_gsp_update_error_stats(). A queued replacement is tied to its submission scene and is dropped if navigation supersedes it. Getters below read committed labels from the UI task or a caller-serialized portable app; they must not race the render task or app destruction.
+
+- **Header:** `include/esp_gsp.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_dropdown_set_options_text(esp_gsp_handle_t gsp, gsp_component_key_t key, const char *const *options, size_t count);
+```
+
+### `esp_gsp_dropdown_get_option_count()`
+
+Reads the fixed option count; also supports static Dropdowns.
+
+- **Header:** `include/esp_gsp.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_dropdown_get_option_count(esp_gsp_handle_t gsp, gsp_component_key_t key, size_t *out_count);
+```
+
+### `esp_gsp_dropdown_get_option_text()`
+
+Copies one committed UTF-8 label, including NUL. out_size, when non-NULL, receives required bytes including NUL. NULL output with capacity=0 queries that size. An insufficient buffer returns INVALID_SIZE without truncation or modifying it. Static Dropdowns return their compiled labels.
+
+- **Header:** `include/esp_gsp.h`
+- **Return type:** `esp_gsp_err_t`
+
+```c
+esp_gsp_err_t esp_gsp_dropdown_get_option_text(esp_gsp_handle_t gsp, gsp_component_key_t key, uint16_t index, char *out_text, size_t capacity, size_t *out_size);
 ```
 
 ### `esp_gsp_component_set_image()`
@@ -2026,6 +2132,17 @@ Use the esp lcd config init operation.
 static inline esp_gsp_esp_lcd_config_t esp_gsp_esp_lcd_config_init(void);
 ```
 
+### `esp_gsp_esp_lcd_session_result_init()`
+
+Use the esp lcd session result init operation.
+
+- **Header:** `include/esp_gsp_esp_lcd.h`
+- **Return type:** `esp_gsp_esp_lcd_session_result_t`
+
+```c
+static inline esp_gsp_esp_lcd_session_result_t esp_gsp_esp_lcd_session_result_init(void);
+```
+
 ### `esp_gsp_esp_lcd_pause()`
 
 Quiesce the active GSP render task without destroying its UI state.
@@ -2042,6 +2159,9 @@ esp_err_t esp_gsp_esp_lcd_pause(esp_gsp_handle_t gsp, uint32_t timeout_ms, esp_g
 On success no new GSP frame can be submitted until
 esp_gsp_esp_lcd_resume_paused() is called. The function also waits for the
 shared presenter transfer/present fences to retire.
+Decoded image caches are released while the scene and source ownership are
+retained. Resume prepares the current scene again before rendering; a paused
+UI is not a prepared image-cache snapshot for direct renderer calls.
 ESP_ERR_NOT_FINISHED means pause rollback could not restore the original
 app: *out_pause contains a valid token for retry with resume_paused(). This
 does not certify quiescence; do not hand the display to another producer.
@@ -2068,6 +2188,42 @@ Pause a UI while retaining its scenes and component state. Its render task and L
 
 ```c
 esp_err_t esp_gsp_esp_lcd_suspend(esp_gsp_handle_t hub, esp_gsp_esp_lcd_session_t **out_session);
+```
+
+### `esp_gsp_esp_lcd_trim_session()`
+
+Opt-in release of the inactive viewport snapshot atlas on a suspended Hub. Call before start_on_session(), while the session has no temporary app. Scenes, component state, borrowed sources, fonts and display buffers remain owned as before. Ordinary pause/suspend retain their existing cache policy.
+
+- **Header:** `include/esp_gsp_esp_lcd.h`
+- **Return type:** `esp_err_t`
+
+```c
+esp_err_t esp_gsp_esp_lcd_trim_session(esp_gsp_esp_lcd_session_t *session, uint32_t timeout_ms, size_t *out_released_bytes);
+```
+
+**Contract details**
+
+Runs on the resident render task after Presenter transfer/present and
+accelerator fences. timeout_ms bounds the Presenter wait; task dispatch and
+accelerator synchronization can take longer. Call from an application task,
+serializing all lifecycle calls on the session/runtime. Zero timeout is invalid.
+
+Optional out_released_bytes counts atlas payload, excluding allocator overhead;
+it is set to zero before validation and on failure. Repeated successful calls
+release zero bytes. Every result retains the session/token and UI ownership;
+retry or resume after failure. ESP_ERR_NOT_FINISHED means accelerator reads
+could not be confirmed retired; no atlas is freed. Success invalidates cached
+pixels and forces a complete resumed frame; later gestures recapture normally.
+
+### `esp_gsp_esp_lcd_trim_paused()`
+
+Same atlas-only operation for the exact UI retained by pause(). The pause token is never consumed; resume_paused() is still required. A token returned with ESP_ERR_NOT_FINISHED is accepted only if its runtime is actually paused and all fences can now retire. See trim_session() for context and timeouts.
+
+- **Header:** `include/esp_gsp_esp_lcd.h`
+- **Return type:** `esp_err_t`
+
+```c
+esp_err_t esp_gsp_esp_lcd_trim_paused(esp_gsp_esp_lcd_pause_t *pause, uint32_t timeout_ms, size_t *out_released_bytes);
 ```
 
 ### `esp_gsp_esp_lcd_start_on_session()`
@@ -2112,6 +2268,58 @@ Stop the temporary app, then resume the retained hub and force its first frame t
 
 ```c
 esp_err_t esp_gsp_esp_lcd_resume(esp_gsp_esp_lcd_session_t *session, esp_gsp_handle_t app, esp_gsp_handle_t *out_hub);
+```
+
+### `esp_gsp_esp_lcd_start_on_session_ex()`
+
+Ownership-aware alternatives to the legacy session operations. *inout_session is set to NULL exactly when the SDK consumes the Token; otherwise it remains owned by the caller. Optional result must be initialized with ESP_GSP_ESP_LCD_SESSION_RESULT_INIT() and the exact struct_size. A size mismatch rejects the call before any effects and leaves result intact. With a valid size every return resets/populates result, including validation failure. A NULL result keeps the same error codes and pointer ownership update.
+
+- **Header:** `include/esp_gsp_esp_lcd.h`
+- **Return type:** `esp_err_t`
+
+```c
+esp_err_t esp_gsp_esp_lcd_start_on_session_ex(esp_gsp_esp_lcd_session_t **inout_session, const esp_gsp_config_t *app_config, esp_gsp_handle_t *out_gsp, esp_gsp_esp_lcd_session_result_t *result);
+```
+
+**Contract details**
+
+Error codes alone are insufficient for legacy replace(): pause failure and
+startup failure followed by successful Hub recovery can return the same code.
+Use outcome and the public App/Hub handles, never probe a consumed Token.
+On EMPTY after replace/resume clear the destroyed old App Handle before retry.
+All lifecycle calls on the runtime still require application-task serialization.
+
+### `esp_gsp_esp_lcd_start_on_session_prepared_ex()`
+
+Start an App with a prepare callback before its first frame and report Session ownership.
+
+- **Header:** `include/esp_gsp_esp_lcd.h`
+- **Return type:** `esp_err_t`
+
+```c
+esp_err_t esp_gsp_esp_lcd_start_on_session_prepared_ex(esp_gsp_esp_lcd_session_t **inout_session, const esp_gsp_config_t *app_config, esp_gsp_esp_lcd_prepare_cb_t prepare, void *prepare_ctx, esp_gsp_handle_t *out_gsp, esp_gsp_esp_lcd_session_result_t *result);
+```
+
+### `esp_gsp_esp_lcd_replace_on_session_prepared_ex()`
+
+Replace the temporary App, prepare the replacement before its first frame and report Session ownership.
+
+- **Header:** `include/esp_gsp_esp_lcd.h`
+- **Return type:** `esp_err_t`
+
+```c
+esp_err_t esp_gsp_esp_lcd_replace_on_session_prepared_ex(esp_gsp_esp_lcd_session_t **inout_session, esp_gsp_handle_t current_app, const esp_gsp_config_t *next_config, esp_gsp_esp_lcd_prepare_cb_t prepare, void *prepare_ctx, esp_gsp_handle_t *out_gsp, esp_gsp_esp_lcd_session_result_t *result);
+```
+
+### `esp_gsp_esp_lcd_resume_ex()`
+
+Stop the temporary App, resume the Hub and report Session ownership.
+
+- **Header:** `include/esp_gsp_esp_lcd.h`
+- **Return type:** `esp_err_t`
+
+```c
+esp_err_t esp_gsp_esp_lcd_resume_ex(esp_gsp_esp_lcd_session_t **inout_session, esp_gsp_handle_t app, esp_gsp_handle_t *out_hub, esp_gsp_esp_lcd_session_result_t *result);
 ```
 
 ### `esp_gsp_esp_lcd_session_destroy()`
@@ -2246,7 +2454,7 @@ bool esp_gsp_image_memory_stats(esp_gsp_image_memory_stats_t *out_stats, size_t 
 
 ### `esp_gsp_update_error_stats()`
 
-Snapshot set_many/set_properties failures and wrappers routed through them (including set_position), including asynchronous apply/drop errors. Legacy bind setters and other API families are not included. Available in ordinary builds without profiling. Successful setters do not clear the last error. A property absent from the compiled runtime directory cannot be distinguished from an unsupported property: consult the compiler's schema and declare supported x/y fields dynamic before calling set_position.
+Snapshot set_many/set_properties failures and wrappers routed through them (including set_position), plus Dropdown option-text apply/drop errors. Dropdown errors identify the component; property=0 denotes the option group. Legacy bind setters and other API families are not included. Available in ordinary builds without profiling. Successful setters do not clear the last error. A property absent from the compiled runtime directory cannot be distinguished from an unsupported property: consult the compiler's schema and declare supported x/y fields dynamic before calling set_position.
 
 - **Header:** `include/esp_gsp_debug.h`
 - **Return type:** `bool`

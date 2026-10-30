@@ -1,38 +1,44 @@
 # Field watch / 360×360
 
-![Watch face](preview.png)
+![Current native simulator screen](showcase/home.png)
 
 An outdoor watch for the ESP32-S3 QSPI touch profile, RGB565, octal PSRAM and
-rotation 0. Six full-screen PageFlow pages combine a retained vector dial and
-seconds marker, activity rings, notifications, a procedural charging halo,
-a perspective landscape carousel and an interactive breathing glow.
+rotation 0. A 72-pixel clock leads the English type scale;
+clock, heart-rate and battery bindings declare their numeric glyphs. Six full-screen PageFlow pages combine a retained vector dial and
+seconds marker, a step-goal summary, notifications, a battery progress ring,
+a route selector and a one-minute guided breathing session.
 
-![Native simulator drag preview](preview_swipe.gif)
+![Native route selector](showcase/routes.png)
 
-![Route gallery](preview_gallery.png)
-![Adjustable breathing effect](preview_breathe.png)
+The route selector gives the map, distance and estimated walking time the
+main visual area. Ridge, Coast and Forest use retained vector maps shared
+with their detail views; selecting a route updates the selected map and summary.
 
 ## Controls
 
 - Swipe horizontally between the dial, activity, notifications, charging,
-  adventures and breathing. The sequence wraps in both directions.
-- **View trail** opens a Drawer with the ridge photograph and walk summary;
+  routes and breathing. The sequence wraps in both directions.
+- **View trail** opens a Drawer with the ridge map and walk summary;
   **Done** closes it.
 - **Read message** opens the contact invitation. **On my way** records a local
   reply and returns to the inbox.
 - Tap the dial battery pill to open charging. **Undock** returns to the dial.
-  The halo stops at 100% or when leaving the charging page.
-- Drag the landscape carousel to select a ridge, coast or forest route. Swipe
-  below the carousel to change pages without changing the selected route.
-  **View route** opens its illustration, distance and activity estimate;
-  **Done** returns to the selected route.
-- Drag the breathing slider to adjust glow intensity. **Pause / Resume**
-  controls the pulse; leaving the page stops it without discarding the setting.
+  The ring follows battery percentage without an ambient glow.
+- Tap **Ridge**, **Coast** or **Forest** to select a route. The map, distance,
+  estimated time and selected tab update together. **View route** opens the
+  same map with the walk summary; **Done** returns to the selected route.
+  Horizontal swipes navigate the full-screen pages, including over the map.
+- On **One quiet minute**, **Start** begins six 4-second inhale / 6-second
+  exhale cycles. The thin ring follows the current phase and a countdown gives
+  its remaining seconds. **Pause / Resume** preserves progress. Leaving the
+  page pauses the session; completion remains visible until **Again** is selected.
 
 Time starts at 10:08. Activity, heart rate, weather and charging are simulated;
 charging advances one percentage point per three seconds. UI events and timers
 use `main/watch_ui.c`; page observation runs at 50 ms, separately from the
-one-second model timer.
+one-second model timer. Device and public PC backends use a monotonic clock
+for the breathing session, so delayed callbacks catch up. Native scene checks
+use deterministic scheduler time; the controller test injects explicit delays.
 
 ## Build
 
@@ -67,6 +73,10 @@ latency or end-to-end frame rate. The probe returns to the dial and stops.
 Build with `-D WATCH_DEMO_PROBE=OFF` for normal manual interaction.
 
 
-Artwork sources are listed in [assets](scenes/assets/README.md).
-The three compact landscape illustrations in `scenes/artwork/` are original
-SVG source assets, compiled into the carousel's image set.
+Artwork sources are listed in [assets](scenes/assets/README.md) and
+[route artwork](scenes/artwork/README.md).
+The Activity page uses one dominant step count, a goal bar and separate active /
+standing summaries. Notifications use a sender monogram and a high-contrast
+message card; the reply view reuses retained contour/route artwork. All UI text
+is English, with baked Ubuntu Regular/Light subsets. The map in
+`scenes/artwork/ridge-route.svg` is illustrative demo artwork, not navigation data.
