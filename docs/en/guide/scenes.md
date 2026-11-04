@@ -80,7 +80,22 @@ Compiler-owned virtual collection content can use the GSB 2.20
 
 A scene's `components` map, or JSON files loaded with `--components-dir`, defines
 parameterized subtrees. Each definition has an `objects` array and an optional
-`params` array of required argument names. A whole string such as `"$title"` is
+`params` array. Parameter names must be nonempty and unique within the definition.
+A `params` entry is either a required argument name or an object:
+
+```json
+{"name": "tone", "label": "Tone", "type": "enum", "options": ["info", "warn"], "default": "info"}
+```
+
+An object entry requires `name`. A `default` makes the argument optional; use
+sites that omit it receive the default. `type` is one of `string`, `number`,
+`integer`, `boolean`, `color`, `image`, `font` or `enum`; arguments and defaults
+must match it, and `enum` requires a non-empty `options` string array. `label`
+and `description` on a parameter, and `label`, `description` and `category` on
+the definition, are authoring metadata for editors and do not affect output.
+`gspc schema --authoring` lists these keys under `authoring.component`.
+
+A whole string such as `"$title"` is
 replaced by the corresponding argument, preserving its JSON type. Strings that
 do not start with `$` also support textual substitution, for example
 `"Reading: $value"`; non-string arguments become JSON text in this form. A string

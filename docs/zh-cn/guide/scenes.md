@@ -57,8 +57,20 @@ Grid/换行和组件展开能力最初在 GSPC 0.7.0 / ESP-GSP 1.6.0 引入。�
 ### 定义组件
 
 在场景的 `components` 映射中，或通过 `--components-dir` 加载的 JSON 文件里，
-可以定义参数化子树。每份定义包含一个 `objects` 数组，以及可选的 `params` 必填
-参数名称数组。
+可以定义参数化子树。每份定义包含一个 `objects` 数组，以及可选的 `params` 数组。
+参数名必须非空，且在同一份定义中不能重复。`params` 的每一项可以是必填参数名，
+也可以是对象：
+
+```json
+{"name": "tone", "label": "色调", "type": "enum", "options": ["info", "warn"], "default": "info"}
+```
+
+对象形式必须包含 `name`。声明 `default` 后参数变为可选，使用处省略时取默认值。
+`type` 取 `string`、`number`、`integer`、`boolean`、`color`、`image`、`font`、
+`enum` 之一，实参和默认值都必须符合该类型；`enum` 还需要非空的 `options` 字符串
+数组。参数上的 `label`、`description`，以及定义上的 `label`、`description`、
+`category` 是供编辑器使用的元数据，不影响编译输出。`gspc schema --authoring` 在
+`authoring.component` 下列出这些键。
 
 **参数替换规则：**
 

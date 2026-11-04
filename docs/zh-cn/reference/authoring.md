@@ -1,6 +1,6 @@
 # ESP-GSP 场景编写参考
 
-GSPC 版本：0.10.0。
+GSPC 版本：0.10.1。
 
 本页是 JSON 场景的完整字段参考。学习单个控件时优先使用
 [控件库](../components/index.md)中的可运行示例。
@@ -175,7 +175,7 @@ GSPC 版本：0.10.0。
 | `dynamic_color` | `bool` | — | — | — | 模板成员公开每实例独立颜色槽 |
 | `dynamic_image` | `bool` | — | — | — | 模板图片公开每实例独立资源槽 |
 | `thickness` | `int` | — | 0…65535 | — | 描边粗细；省略时为 max(min(w,h)/8, 2)，0 会限制为 1 |
-| `interactive` | `bool` | — | 默认 `true` | — | 允许指针交互 |
+| `interactive` | `bool` | — | 默认 `true` | — | 允许指针调节数值；需要显式设置 bind（bind_target 省略或为 value）；false 禁用输入动作 |
 
 ### 按钮（`button`）
 

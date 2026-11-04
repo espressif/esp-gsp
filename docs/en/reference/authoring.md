@@ -1,6 +1,6 @@
 # ESP-GSP Authoring Reference
 
-GSPC version: 0.10.0.
+GSPC version: 0.10.1.
 
 Declare runtime-update fields using the dynamic forms listed in the tables. See [dynamic property scope](../guide/scenes.md#dynamic-property-scope) for declaration forms and object-versus-subtree behavior.
 
@@ -1187,7 +1187,7 @@ Supports events: `click`, `press`, `release`, `long`, `cancel`
 | `dynamic_color` | bool | — | template member exposes a per-instance color slot |
 | `dynamic_image` | bool | — | template image exposes a per-instance resource slot |
 | `thickness` | int | — | stroke thickness; omitted = max(min(w,h)/8, 2); 0 clamps to 1 [0..65535] |
-| `interactive` | bool | `true` | allow pointer interaction |
+| `interactive` | bool | `true` | allow pointer value interaction; requires explicit bind (bind_target omitted or value); false disables input actions |
 
 ### `needle`
 

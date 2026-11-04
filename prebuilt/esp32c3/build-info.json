@@ -1,7 +1,7 @@
 {
   "archive": {
     "file": "libesp-gsp.a",
-    "sha256": "dc0bab4d6834d8530d88b8dbec939c44263af02674a40cdb4ba6cefb610fa987"
+    "sha256": "ab4cd2e799f6e8e5b57126a2618ba432f7fdd15bc8aa37dd049887f0d3b53996"
   },
   "build": {
     "assertions": "enabled",
@@ -21,7 +21,7 @@
   },
   "component": {
     "name": "espressif/esp-gsp",
-    "version": "1.9.0"
+    "version": "1.9.1"
   },
   "esp_idf": {
     "commit": "fff9895c82d744c7237be8847347bdd1b07c6643",
@@ -30,7 +30,7 @@
   },
   "schema_version": 1,
   "source": {
-    "commit": "1ba1758faaf5d6034dec415a6403845b91a01a59",
+    "commit": "e98519ed8a33ef705d249f2b56bcdc5698bc0468",
     "dirty": false
   },
   "target": {

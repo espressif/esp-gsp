@@ -7,7 +7,7 @@
 
 <!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.9.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.9.1:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -47,7 +47,7 @@ Bundle 创建和资源校验运行在启动 ESP-GSP 的那个任务上。新工�
 <!-- gsp-version:dependency-command -->
 ```sh
 cd /path/to/your/esp-idf-project
-idf.py add-dependency "espressif/esp-gsp^1.9.0"
+idf.py add-dependency "espressif/esp-gsp^1.9.1"
 ```
 <!-- /gsp-version:dependency-command -->
 
@@ -56,7 +56,7 @@ idf.py add-dependency "espressif/esp-gsp^1.9.0"
 <!-- gsp-version:dependency-manifest -->
 ```yaml
 dependencies:
-  espressif/esp-gsp: "^1.9.0"
+  espressif/esp-gsp: "^1.9.1"
 ```
 <!-- /gsp-version:dependency-manifest -->
 
@@ -66,7 +66,7 @@ dependencies:
 ```yaml
 dependencies:
   espressif/esp-gsp:
-    version: "^1.9.0"
+    version: "^1.9.1"
     override_path: /absolute/path/to/esp-gsp
 ```
 <!-- /gsp-version:local-override -->
@@ -88,7 +88,7 @@ python -m pip install -U esp-gsp-tools
 
 <!-- gsp-version:compiler-pin -->
 ```sh
-echo '0.10.0' > .gspc_version
+echo '0.10.1' > .gspc_version
 idf.py build
 ```
 <!-- /gsp-version:compiler-pin -->

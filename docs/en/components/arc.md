@@ -23,7 +23,11 @@ These commands compile the example and open it in the ESP-GSP simulator browser 
 
 ## Runtime behavior
 
-With `interactive: true` (the default), clicking or dragging updates the retained value. Set `interactive: false` for a display-only arc. Application code can update the value through the generated setter.
+Clicking or dragging updates the retained value only when the arc has an explicit value `bind` and `interactive` is `true` (the default). Omit `bind_target` or set it to `"value"` so that `bind` targets the arc's value.
+
+Without an explicit value `bind`, the arc does not generate built-in click or drag value actions, even with `interactive: true`. A `name` alone does not enable dragging. Set `interactive: false` to disable pointer interaction, including authored `callback` and `events` actions, while keeping the value available to application code through the generated setter.
+
+The example below omits `bind`, so its arcs only display their values. Add `"bind": "level"` to the named arc to enable clicking and dragging; optionally write `"interactive": true` explicitly. Dragging changes the value, not the widget's position.
 
 `start_angle` is measured clockwise from the top: right is 90°, bottom 180°, left 270°. `sweep` is a clockwise span of 1–360°; increasing value from min to max fills in that direction.
 
@@ -170,7 +174,7 @@ These signatures come from the actual compiler output for this JSON.
 | `max_instances` | `int` | — | 1…65535 | — | maximum simultaneously live template instances; included in the automatic pool requirement |
 | `dynamic_color` | `bool` | — | — | — | template member exposes a per-instance color slot |
 | `dynamic_image` | `bool` | — | — | — | template image exposes a per-instance resource slot |
-| `interactive` | `bool` | — | default `true` | — | allow pointer interaction |
+| `interactive` | `bool` | — | default `true` | — | allow pointer value interaction; requires explicit bind (bind_target omitted or value); false disables input actions |
 
 </details>
 

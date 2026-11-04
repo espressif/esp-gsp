@@ -1162,7 +1162,7 @@ Current GSPC registry coverage.
 | `dynamic_color` | `bool` | no | no | — | template member exposes a per-instance color slot |
 | `dynamic_image` | `bool` | no | no | — | template image exposes a per-instance resource slot |
 | `thickness` | `int` | no | no | — | stroke thickness; omitted = max(min(w,h)/8, 2); 0 clamps to 1 |
-| `interactive` | `bool` | no | no | `true` | allow pointer interaction |
+| `interactive` | `bool` | no | no | `true` | allow pointer value interaction; requires explicit bind (bind_target omitted or value); false disables input actions |
 
 ### `needle`
 

@@ -599,7 +599,8 @@ revision 标志不负责同步后台生产者。返回的文本须至少保持�
 `gspc compatibility` 中的 `compiler_features.video_import: 1`。GSPC 按需调用
 主机端 `ffmpeg` 和 `ffprobe`；安装 FFmpeg，或通过 `GSPC_FFMPEG` 和
 `GSPC_FFPROBE` 指定可执行文件路径。普通图片和 GIF/APNG/WebP 动图无需这些工具。
-要求 FFmpeg 4.4 或更新版本，实际容器及视频编码兼容范围取决于所用 FFmpeg 构建。
+支持 FFmpeg 4.4 及更新版本（包括 8.x），实际容器及视频编码兼容范围取决于所用
+FFmpeg 构建。
 
 ```json
 {"type":"image","name":"intro","x":0,"y":0,"w":240,"h":240,

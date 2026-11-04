@@ -866,8 +866,9 @@ For exact callback and shutdown behavior, see
 Local MP4, AVI, MOV, WebM and MKV files can be imported through the same `image`
 field. GSPC uses optional host tools `ffmpeg` and `ffprobe`; install FFmpeg or
 set `GSPC_FFMPEG` and `GSPC_FFPROBE` to their executable paths. Ordinary images
-and GIF/APNG/WebP animations do not need either tool. FFmpeg 4.4 or newer is
-required; actual container/codec support depends on that FFmpeg build.
+and GIF/APNG/WebP animations do not need either tool. FFmpeg 4.4 or newer,
+including 8.x, is supported; actual container/codec support depends on that
+FFmpeg build.
 Check `compiler_features.video_import: 1` in `gspc compatibility` when using a
 separately installed compiler.
 

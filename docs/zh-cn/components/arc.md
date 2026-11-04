@@ -23,7 +23,11 @@ gsp_sim_host \
 
 ## 运行方式
 
-`interactive: true`（默认）时，点击或拖动会更新控件保留的数值；设为 `false` 时仅显示数值。应用代码可通过生成的 setter 更新数值。
+只有显式设置数值 `bind`，且 `interactive` 为 `true`（默认）时，点击或拖动才会更新控件保留的数值。`bind_target` 应省略或设为 `"value"`，使 `bind` 绑定圆弧的数值。
+
+未显式设置数值 `bind` 时，即使设置 `interactive: true`，也不会生成内置的点击或拖动数值动作；仅设置 `name` 不能启用拖动。`interactive: false` 会禁用指针交互，包括声明的 `callback` 和 `events` 动作；应用代码仍可通过生成的 setter 更新数值。
+
+下方示例未设置 `bind`，因此两个圆弧仅显示数值。给命名圆弧添加 `"bind": "level"` 即可启用点击和拖动，也可显式写出 `"interactive": true`。拖动改变的是数值，不会移动控件位置。
 
 `start_angle` 的 0° 在正上方，正方向为顺时针：右 90°、下 180°、左 270°。`sweep` 为 1–360° 的顺时针跨度；value 从 min 到 max 时填充沿这个方向增长。
 
@@ -170,7 +174,7 @@ size_t gsp_arc_docs_dynamic_image_slots(void)
 | `max_instances` | `int` | — | 1…65535 | — | 同时存活模板实例的最大数量；计入自动推导的资源池需求 |
 | `dynamic_color` | `bool` | — | — | — | 模板成员公开每实例独立颜色槽 |
 | `dynamic_image` | `bool` | — | — | — | 模板图片公开每实例独立资源槽 |
-| `interactive` | `bool` | — | 默认 `true` | — | 允许指针交互 |
+| `interactive` | `bool` | — | 默认 `true` | — | 允许指针调节数值；需要显式设置 bind（bind_target 省略或为 value）；false 禁用输入动作 |
 
 </details>
 

@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.9.1
+
+Use with GSPC 0.10.1, simulator 1.9.1 and esp_display_present ^1.2.0.
+
+- Update the matching compiler release with typed component parameters, defaults and editor metadata.
+- Preserve component parameter error locations and expose structured daemon request errors.
+- Add compiler source semantics, verified component detach and transform checks, and asset inspection for editor integrations.
+- Expose optional browser simulator geometry queries with current world/clipped bounds, runtime revision and frame identity for editor picking.
+- Fix overlapping List/Wheel drag selection to follow authored paint order instead of list pool order.
+- Add bilingual GUI Editor download, operation and agent collaboration guides; clarify Arc value-binding requirements for pointer interaction.
+
+Runtime/simulator ABI and binary format versions are unchanged.
+
 ## 1.9.0
 
 Use with GSPC 0.10.0, simulator 1.9.0 and esp_display_present ^1.2.0.

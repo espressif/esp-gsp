@@ -4,9 +4,31 @@
       "allows_nested_instances": false,
       "definition_keys": [
         "params",
-        "objects"
+        "objects",
+        "label",
+        "description",
+        "category"
       ],
       "instance_key": "use",
+      "param_default_makes_optional": true,
+      "param_keys": [
+        "name",
+        "label",
+        "description",
+        "type",
+        "options",
+        "default"
+      ],
+      "param_types": [
+        "string",
+        "number",
+        "integer",
+        "boolean",
+        "color",
+        "image",
+        "font",
+        "enum"
+      ],
       "requires_nonempty_objects": true,
       "root_overrides": [
         "x",
@@ -137,9 +159,9 @@
     "authoring",
     "canvas_resource_views"
   ],
-  "compiler_version": "0.10.0",
+  "compiler_version": "0.10.1",
   "protocol_version": 1,
-  "registry_hash": "crc32:a650fc18",
+  "registry_hash": "crc32:e7e1bf78",
   "schema_version": 2,
   "widgets": {
     "arc": {
@@ -404,7 +426,7 @@
         },
         "interactive": {
           "default": true,
-          "doc": "allow pointer interaction",
+          "doc": "allow pointer value interaction; requires explicit bind (bind_target omitted or value); false disables input actions",
           "type": "bool"
         },
         "jpeg_quality": {
