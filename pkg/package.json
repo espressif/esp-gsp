@@ -1,0 +1,22 @@
+{
+  "name": "gsp-wasm",
+  "type": "module",
+  "description": "GSPC compiler bindings for JavaScript",
+  "version": "0.11.0",
+  "license": "LicenseRef-Espressif-Modified-MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/espressif/esp-gsp"
+  },
+  "files": [
+    "gspc_wasm_bg.wasm",
+    "gspc_wasm.js",
+    "gspc_wasm.d.ts"
+  ],
+  "main": "gspc_wasm.js",
+  "types": "gspc_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ],
+  "private": true
+}

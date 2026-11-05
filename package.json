@@ -1,0 +1,39 @@
+{
+  "name": "gspc-wasm",
+  "version": "0.11.0",
+  "description": "GSPC resource compiler for browsers and Node.js",
+  "type": "module",
+  "types": "./web/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./web/index.d.ts",
+      "node": "./node.js",
+      "default": "./web/index.js"
+    },
+    "./worker": {
+      "node": "./node-worker.js",
+      "default": "./web/worker.js"
+    },
+    "./wasm": "./pkg/gspc_wasm_bg.wasm",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "node.js",
+    "node-worker.js",
+    "web/*.js",
+    "web/*.d.ts",
+    "web/package.json",
+    "pkg/gspc_wasm*",
+    "pkg/package.json",
+    "manifest.json",
+    "THIRD_PARTY_LICENSES.txt",
+    "README.md"
+  ],
+  "license": "LicenseRef-Espressif-Modified-MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/espressif/esp-gsp.git"
+  },
+  "engines": { "node": ">=18.20" },
+  "publishConfig": { "access": "public" }
+}
