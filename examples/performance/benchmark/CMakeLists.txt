@@ -50,6 +50,11 @@ target_compile_definitions(${gsp_framework} PRIVATE GSP_PROFILE_SERVICE=1)
 option(GSP_BENCH_DIAGNOSTICS
        "Enable intrusive per-opcode render profiling" OFF)
 if(GSP_BENCH_DIAGNOSTICS)
+    get_target_property(gsp_prebuilt ${gsp_framework} ESP_GSP_PREBUILT)
+    if(gsp_prebuilt)
+        message(FATAL_ERROR
+            "GSP_BENCH_DIAGNOSTICS requires an ESP-GSP source build; the prebuilt library has no per-opcode profiler")
+    endif()
     target_compile_definitions(${gsp_framework} PRIVATE GSP_PROFILE_RENDER=1)
     idf_component_get_property(benchmark_main main COMPONENT_LIB)
     target_compile_definitions(${benchmark_main} PRIVATE

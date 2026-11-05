@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: LicenseRef-Espressif-Modified-MIT
 
 import importlib.util
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -254,6 +255,32 @@ bench: measurement end
                             if not line.startswith(("bench: ui[", "bench: aggregate ui")))
             path.write_text(old)
             self.assertEqual(compare_logs.parse_log(path).ui_pages, {})
+
+            off = (content.replace("protocol=27", "protocol=28")
+                   .replace("ui_timing=step", "ui_timing=off service_profile=off")
+                   .replace("service_steps=200 service_us=10000", "service_steps=0 service_us=0")
+                   .replace("bench: ui[rect x1] steps=200 step_us=500000", "bench: ui[rect x1] steps=0 step_us=0")
+                   .replace("aggregate ui step_us=500000", "aggregate ui step_us=0")
+                   .replace("rect x1 25.0 50.0 5.0 15.0 50.0 0.0 4", "rect x1 25.0 50.0 5.0 15.0 0.0 0.0 4"))
+            path.write_text(off)
+            run = compare_logs.parse_log(path)
+            self.assertEqual(run.ui_pages, {})
+            self.assertEqual(dict(run.config)["service_profile"], "off")
+            self.assertIsNone(run.pages["rect x1"].service_us)
+            self.assertIsNone(run.pages["rect x1"].commands_s)
+            output = subprocess.run(
+                [sys.executable, str(MODULE_PATH), "--pair", "prebuilt", str(path), str(path), "--details"],
+                check=True, capture_output=True, text=True).stdout
+            self.assertIn("| — | — | — |", output)
+            self.assertNotIn("UI-step work", output)
+            for broken in (off.replace("service_profile=off", "service_profile=unknown"),
+                           off.replace("ui_timing=off", "ui_timing=step"),
+                           off.replace("steps=0 step_us=0", "steps=1 step_us=0"),
+                           off.replace("service_steps=0", "service_steps=1"),
+                           off.replace("protocol=28", "protocol=27")):
+                path.write_text(broken)
+                with self.assertRaises(ValueError):
+                    compare_logs.parse_log(path)
 
     def test_protocol_18_requires_consistent_pressure_evidence(self):
         content = """

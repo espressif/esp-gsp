@@ -15,12 +15,7 @@ validates and reloads the complete batch when the writer finishes.
 - The collaboration CLI script `gsp-agent.cjs`. It is available from:
   - **Installed application** — shipped in the app's `resources/` directory.
   - **Source checkout** — `scripts/gsp-agent.cjs` in the editor repository.
-  - **Standalone download** — [Download collaboration scripts](https://dl.espressif.com/AE/gsp/gsp-editor/).
-
-> [!NOTE]
-> If the current release does not include a standalone script package, use
-> the copy shipped inside the installed application or the source checkout.
-> A separate downloadable script bundle will be provided in a future release.
+  - **Standalone download** — [Download collaboration scripts](index.md#download).
 
 ## Quick start
 

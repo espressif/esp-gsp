@@ -253,6 +253,9 @@ otherwise the package marker: first reuse an exact-version `gspc` on PATH,
 then use the manager's versioned cache/download. A mismatched PATH executable is
 reported and skipped; all selected compilers must pass format/ABI checks.
 
+CMake detects creation, edits and removal of either version marker on the next
+build, including changes between the project override and component default.
+
 For offline builds, put a matching compiler on PATH, set `GSPC_EXECUTABLE`, or
 prepopulate the manager cache while online. On failure, use the reported Python
 installation command or compiler path. A manager package version is independent

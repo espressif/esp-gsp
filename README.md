@@ -26,6 +26,7 @@ products that need predictable memory use and reviewable UI sources.
 | UI features | Controls, layouts, lists, grids, templates, navigation, media and Canvas |
 | Input | Tap, drag, scroll, flick and optional application-owned two-contact pinch |
 | Display paths | RGB, MIPI-DSI, SPI and QSPI with safe software fallbacks |
+| Visual editor | ESP-GSP Studio provides canvas editing, live WASM preview, structured scene editing and agent collaboration |
 
 ## Requirements
 
@@ -39,7 +40,7 @@ Create the smallest complete example directly from the ESP Component Registry:
 
 <!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.9.1:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.10.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -66,7 +67,7 @@ From the ESP-IDF project root:
 
 <!-- gsp-version:dependency-command -->
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.9.1"
+idf.py add-dependency "espressif/esp-gsp^1.10.0"
 python -m pip install -U esp-gsp-tools
 ```
 <!-- /gsp-version:dependency-command -->
@@ -124,6 +125,7 @@ integration and display startup code.
 | Connect application state | [Runtime and generated API](docs/en/guide/runtime-api.md) |
 | Configure memory and features | [Configuration](docs/en/configuration/index.md) and [Kconfig](docs/en/reference/kconfig.md) |
 | Integrate a display | [Display presentation](docs/en/guide/display.md) |
+| Design and preview scenes visually | [ESP-GSP Studio](docs/en/editor/index.md) |
 | Preview without hardware | [Simulator preview](docs/en/configuration/simulator-preview.md) |
 | Diagnose a problem | [Troubleshooting](docs/en/configuration/troubleshooting.md) |
 | Look up exact C declarations | [Function reference](docs/en/reference/api-functions.md) |

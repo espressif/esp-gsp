@@ -17,7 +17,7 @@ members: all of them use `esp_gsp_config_set()` and stable field IDs.
 |---|---|---|
 | `struct_size` | generated/config initializer sets the current structure size | never set it manually to another value |
 | `schema_version` | initializer selects the current schema | never change it; mismatches are rejected |
-| `abi_version` | initializer selects the current ABI | never change it; 0.1.x objects must be rebuilt |
+| `abi_version` | initializer selects the current ABI | never change it; an ABI change requires rebuilding GSPC, the core, project-config bridge and callers together |
 | `reserved_config` | zero | reserved for a future ABI revision |
 | `overrides` | eight empty inline entries and no extension table | normally leave it to `esp_gsp_config_set()`; bind a caller-owned read-only extension table only when more than eight fields differ |
 | `bundle`, `bundle_size` | supplied by the generated configuration | constructing an advanced configuration without the generated header |
@@ -470,3 +470,41 @@ Protocol constants (format offsets, codec ids, driver extension strides,
 `ESP_GSP_IMAGE_REFS_PER_SLOT`, animation handle encoding) are fixed ABI and
 wire-format definitions. Keep them consistent between the compiler, runtime
 and prebuilt library.
+
+## Optional gradient row cache
+
+ESP32-C3 and the host renderer currently support this cache. Other ESP targets
+keep their original interpreter and ignore a nonzero budget with a startup warning.
+
+`ESP_GSP_FIELD_GRADIENT_CACHE_BYTES` reserves an optional cache shared by all
+scenes of one UI instance. Its default is zero (disabled). Enable it when
+horizontal gradients repeatedly cross small render stripes:
+
+```c
+esp_gsp_config_t config = gsp_product_config();
+esp_gsp_config_set_result_t result = esp_gsp_config_set(
+    &config, ESP_GSP_FIELD_GRADIENT_CACHE_BYTES, 2048);
+if (result != ESP_GSP_CONFIG_SET_OK) {
+    return ESP_ERR_INVALID_ARG;
+}
+```
+
+The budget includes cache metadata, excludes allocator overhead, and is separate
+from image caches and display buffers. ESP targets allocate internal RAM once
+during UI creation and free it during UI destruction. No eligible horizontal
+gradient means no allocation; allocation failure preserves uncached rendering.
+The allocation is capped at the widest eligible scene's row requirement.
+
+Opaque RGB565 horizontal gradients retain four Bayer-phase rows (8 bytes per
+pixel); RGB888 retains one row (3 bytes per pixel), plus metadata. A 2 KiB budget
+covers a 240-pixel RGB565 row set on 32-bit ESP targets. Wider regions that do
+not fit, partial opacity and vertical gradients use the original path. The first
+admitted gradient stays pinned for the frame to avoid replacing it on every
+stripe. Resolved colors, interpolation geometry and clip interval are part of
+the key, so the optimization preserves existing pixels, including RGB565 dithering.
+
+Configuration ABI 4 requires rebuilding GSPC, the core, project-config bridge
+and callers together. Existing ABI-3 prebuilt archives do not match the new
+policy layout, and the build helper rejects an ABI-3 compiler. The GSPB/GSR
+asset formats and configuration schema version remain unchanged, so existing
+schema-2 bundles remain usable after rebuilding.

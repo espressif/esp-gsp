@@ -89,6 +89,13 @@ Rendering optimizations apply automatically, including native RGB888 image
 opacity. Evaluate frame production and display submission separately when
 comparing performance; no additional application API is required.
 
+When ESP32-S31 executes instructions from PSRAM, the acceleration fence is
+placed in internal instruction memory to reduce cache contention. Its small
+internal-memory cost depends on link alignment; selection and synchronization
+of hardware acceleration are unchanged.
+For source builds with compile-time LTO enabled, this placement is skipped to
+avoid disabling the component's LTO. Prebuilt consumers can still use it.
+
 For P4 prebuilt builds, configure the ESP-IDF silicon revision to match the
 board. `CONFIG_ESP32P4_SELECTS_REV_LESS_V3` selects the pre-v3 library;
 other P4 builds select the v3-or-later library. Reconfigure and rebuild after

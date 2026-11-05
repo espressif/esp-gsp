@@ -39,7 +39,7 @@ if(GSP_SIM_BRIDGE_BUILD_TESTS)
     target_link_libraries(bridge_inproc_close_test PRIVATE esp_gsp::sim_bridge)
     target_include_directories(bridge_inproc_close_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
     add_test(NAME bridge_transport
-        COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_transport.py"
+        COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/transport_integration.py"
             "$<TARGET_FILE:bridge_test_client>")
     add_test(NAME bridge_inproc_close COMMAND bridge_inproc_close_test)
     add_executable(bridge_assets_publication_test tests/assets_publication.c src/assets.c)

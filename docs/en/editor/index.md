@@ -6,7 +6,10 @@ structural editing and agent collaboration.
 
 ## Download
 
-Visit https://dl.espressif.com/AE/gsp/gsp-editor/
+- Windows x64 - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.11.0-win-x64.exe>
+- Linux x64 AppImage - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.11.0-linux-x86_64.AppImage>
+- Linux x64 DEB - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.11.0-linux-amd64.deb>
+- Collaboration scripts - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.10.1-scripts.zip>
 
 ## Open a project
 
@@ -54,6 +57,10 @@ versions, platform and verification status. Native project compatibility uses
 the required compiler version and format/ABI contracts. Unsupported native
 requirements disable content editing but leave source and recovery accessible.
 
+The bundled toolchain uses configuration ABI 3. ESP-GSP 1.10.0 / GSPC 0.11.0
+use ABI 4 and need an editor and toolchain that support it; see the
+[compatibility contract](../reference/compatibility.md).
+
 ## Build context
 
 For projects with an existing ESP-IDF build, open project settings →
@@ -68,6 +75,6 @@ claim to reproduce the device build.
 
 ## Next steps
 
-- [Basic operations](operations/) — common editing workflows.
-- [Agent collaboration](collaboration/) — use CLI or MCP to hand off editing
+- [Basic operations](operations.md) — common editing workflows.
+- [Agent collaboration](collaboration.md) — use CLI or MCP to hand off editing
   to an AI agent.

@@ -13,7 +13,8 @@ and look up fields and APIs in the reference pages.
 4. [Scene structure and naming](guide/scenes.md)
 5. [Runtime and typed API](guide/runtime-api.md)
 6. [Widget library](components/index.md)
-7. [Agent-assisted UI development](guide/agent-assisted-ui.md)
+7. [GUI Editor](editor/index.md)
+8. [Agent-assisted UI development](guide/agent-assisted-ui.md)
 
 ## Build an application
 

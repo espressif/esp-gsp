@@ -120,6 +120,15 @@ sums those per-case totals. `compare_logs.py --details` displays their changes.
 `bench: viewport[case]` records attempted, started, reused and skipped snapshots,
 plus the final active state and fallback reason, using the existing debug counters.
 
+Release prebuilt libraries may omit service profiling. In that case the
+fingerprint reports `service_profile=off ui_timing=off`, and service and UI-step
+values are unavailable; their raw counters are zero placeholders. The comparison
+tool treats them as unavailable. Frame, render and submit measurements remain
+available.
+Compare runs only when these settings match.
+`GSP_BENCH_DIAGNOSTICS=ON` requires a source build because the release library
+does not include per-opcode render profiling.
+
 The ordinary render-path `busy_us` already contains raster and submission time;
 do not add those three fields together. UI `step_us` is disjoint from ordinary
 rendering and command/input `service_us`, but contains its inline property-update
@@ -181,6 +190,11 @@ The dropdown case repeatedly opens the menu, selects the next of three output
 pipeline labels, and checks the selected index. These labels are demo choices;
 they do not reconfigure the display hardware. A valid result requires positive
 verified selections and zero errors.
+
+Protocol 28 drives each grid drag over 600 ms using wall time, sampling at
+most once per 16 ms and resting for one second after release. Slower render
+loops can complete the gesture with fewer samples. Compare aggregate scores
+only with the same protocol because the grid workload changed.
 
 Protocol 25 drives the messages page from the 1 ms pressure callback, advancing
 once per completed frame. Each step moves one quarter of the logical screen

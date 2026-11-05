@@ -29,6 +29,17 @@ function(esp_gsp_resolve_gspc gsp_root output_command output_dependencies output
             get_filename_component(project_root "${CMAKE_SOURCE_DIR}" ABSOLUTE)
         endif()
 
+        # Compiler selection must follow edits, new project overrides and
+        # removal of either pin without requiring a manual reconfigure.
+        if(NOT CMAKE_SCRIPT_MODE_FILE)
+            foreach(version_path IN ITEMS
+                    "${project_root}/.gspc_version" "${gsp_root}/.gspc_version")
+                string(REGEX REPLACE "([?*]|\\[|\\])" "[\\1]" version_pattern "${version_path}")
+                file(GLOB version_files CONFIGURE_DEPENDS LIST_DIRECTORIES FALSE "${version_pattern}")
+                set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${version_files})
+            endforeach()
+        endif()
+
         # The consuming IDF project may deliberately select a different
         # compiler than the one used to build the component archive.
         set(version_file "")

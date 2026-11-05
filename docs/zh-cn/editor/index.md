@@ -5,7 +5,10 @@ WASM 预览、属性检查、结构化编辑和 Agent 协作功能。
 
 ## 下载
 
-请访问 https://dl.espressif.com/AE/gsp/gsp-editor/
+- Windows x64 - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.11.0-win-x64.exe>
+- Linux x64 AppImage - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.11.0-linux-x86_64.AppImage>
+- Linux x64 DEB - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.11.0-linux-amd64.deb>
+- Collaboration scripts - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.10.1-scripts.zip>
 
 ## 打开工程
 
@@ -47,6 +50,9 @@ ESP-GSP Studio 附带固定工具链（当前为 GSP/simulator 1.9.1 + GSPC 0.10
 编译器版本和格式/ABI 契约。不受支持的原生需求会禁用内容编辑，但源码和恢复
 功能仍可访问。
 
+随包工具链使用配置 ABI 3。ESP-GSP 1.10.0 / GSPC 0.11.0 使用 ABI 4，
+需要支持 ABI 4 的编辑器和配套工具链；参见[兼容性契约](../reference/compatibility.md)。
+
 ## 构建上下文
 
 对于已有 ESP-IDF 构建的工程，打开工程设置 → **编译与预览配置**，选择构建目录
@@ -58,5 +64,5 @@ ESP-GSP Studio 附带固定工具链（当前为 GSP/simulator 1.9.1 + GSPC 0.10
 
 ## 下一步
 
-- [基本操作](operations/) — 常用编辑工作流。
-- [Agent 协作](collaboration/) — 使用 CLI 或 MCP 将编辑交给 AI Agent。
+- [基本操作](operations.md) — 常用编辑工作流。
+- [Agent 协作](collaboration.md) — 使用 CLI 或 MCP 将编辑交给 AI Agent。

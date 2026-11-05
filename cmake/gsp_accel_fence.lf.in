@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Espressif Systems (Shanghai) CO LTD
+# SPDX-License-Identifier: LicenseRef-Espressif-Modified-MIT
+
+# This is a performance placement, not a cache-off or interrupt-safety claim.
+[mapping:gsp_accel_fence]
+archive: @gsp_accel_fence_archive@
+entries:
+    gsp_accel:gsp_accel_sync_rect (noflash)

@@ -1,4 +1,4 @@
-version: 1.9.1
+version: 1.10.0
 targets:
 - esp32c3
 - esp32s3
@@ -32,6 +32,7 @@ files:
   - .gspc_version
   - cmake/gsp_example_assets.cmake
   - cmake/gsp_fetch_example_assets.cmake
+  - cmake/gsp_accel_fence.lf.in
   - examples/README.md
   - examples/usage/hello_world/**/*
   - examples/usage/external_assets/**/*

@@ -22,9 +22,9 @@ it does not write the highest variant into every artifact.
 
 | Item | Current value | Link |
 |---|---:|---|
-| ESP-GSP component | `1.9.1` | [Component Registry](https://components.espressif.com/components/espressif/esp-gsp/versions/1.9.1/readme) |
-| ESP-GSP simulator | `1.9.1` | [Binary (manifest)](https://dl.espressif.com/AE/gsp/sim/v1.9.1/manifest.json) |
-| Recommended GSPC | `0.10.1` | [Binary (manifest)](https://dl.espressif.com/AE/gsp/gspc/v0.10.1/manifest.json) |
+| ESP-GSP component | `1.10.0` | [Component Registry](https://components.espressif.com/components/espressif/esp-gsp/versions/1.10.0/readme) |
+| ESP-GSP simulator | `1.10.0` | [Binary (manifest)](https://dl.espressif.com/AE/gsp/sim/v1.10.0/manifest.json) |
+| Recommended GSPC | `0.11.0` | [Binary (manifest)](https://dl.espressif.com/AE/gsp/gspc/v0.11.0/manifest.json) |
 | GSB | `2.7 / 2.22` |  |
 | GRB | `1.4 / 1.9` |  |
 | GFB | `1.2` |  |
@@ -33,9 +33,16 @@ it does not write the highest variant into every artifact.
 | GSR | `1.0` |  |
 | GMD | `1.2 / 1.4` |  |
 | GSR requirements record (contract / output) | `2 / 3` |  |
-| Configuration Schema / ABI | `2 / 3` |  |
+| Configuration Schema / ABI | `2 / 4` |  |
 | GMD runtime ABI | `1.0` |  |
 | Simulator ABI | `1` |  |
+
+Use GSPC `0.11.0` with ESP-GSP/simulator `1.10.0`, including
+the browser compiler and browser/WASI simulator backends. When upgrading from
+a different configuration ABI, update project `.gspc_version` pins and rebuild
+GSPC, the core, project-config bridge and callers together. Prebuilt libraries
+with a different configuration ABI cannot be mixed in the same application.
+Existing compiled resources remain subject to the binary-format contract below.
 
 ## GSB versions and scene compatibility
 
@@ -63,7 +70,7 @@ on an older runtime. Current compilers list feature versions separately in
 
 For a 1.6.0 application, keep GSPC 0.7.0 and simulator 1.6.0 when reproducing
 existing behavior. To use this release's scene features, regenerate with GSPC
-0.10.1 and use ESP-GSP/simulator 1.9.1, as described in
+0.11.0 and use ESP-GSP/simulator 1.10.0, as described in
 the [upgrade notes](../../../CHANGELOG.md#upgrading-from-170).
 
 The GSR record row distinguishes the baseline reported by `gspc compatibility`
@@ -77,13 +84,13 @@ download the archive directly. Each archive has a detached Ed25519 signature at
 the same URL with a `.sig` suffix; use `esp-gsp-tools` as shown below when you
 want automatic platform selection, signature verification, and caching.
 
-| Platform | GSPC `0.10.1` | Simulator `1.9.1` |
+| Platform | GSPC `0.11.0` | Simulator `1.10.0` |
 |---|---|---|
-| Linux ARM64 | [gspc-0.10.1-linux-aarch64.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.10.1/gspc-0.10.1-linux-aarch64.tar.gz) | [sim-1.9.1-linux-aarch64.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.9.1/sim-1.9.1-linux-aarch64.tar.gz) |
-| Linux x86_64 | [gspc-0.10.1-linux-x86_64.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.10.1/gspc-0.10.1-linux-x86_64.tar.gz) | [sim-1.9.1-linux-x86_64.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.9.1/sim-1.9.1-linux-x86_64.tar.gz) |
-| Windows x86_64 | [gspc-0.10.1-windows-x86_64.zip](https://dl.espressif.com/AE/gsp/gspc/v0.10.1/gspc-0.10.1-windows-x86_64.zip) | [sim-1.9.1-windows-x86_64.zip](https://dl.espressif.com/AE/gsp/sim/v1.9.1/sim-1.9.1-windows-x86_64.zip) |
-| Windows ARM64 | [gspc-0.10.1-windows-aarch64.zip](https://dl.espressif.com/AE/gsp/gspc/v0.10.1/gspc-0.10.1-windows-aarch64.zip) | [sim-1.9.1-windows-aarch64.zip](https://dl.espressif.com/AE/gsp/sim/v1.9.1/sim-1.9.1-windows-aarch64.zip) |
-| macOS Universal 2 | [gspc-0.10.1-macos-universal2.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.10.1/gspc-0.10.1-macos-universal2.tar.gz) | [sim-1.9.1-macos-universal2.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.9.1/sim-1.9.1-macos-universal2.tar.gz) |
+| Linux ARM64 | [gspc-0.11.0-linux-aarch64.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.11.0/gspc-0.11.0-linux-aarch64.tar.gz) | [sim-1.10.0-linux-aarch64.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.10.0/sim-1.10.0-linux-aarch64.tar.gz) |
+| Linux x86_64 | [gspc-0.11.0-linux-x86_64.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.11.0/gspc-0.11.0-linux-x86_64.tar.gz) | [sim-1.10.0-linux-x86_64.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.10.0/sim-1.10.0-linux-x86_64.tar.gz) |
+| Windows x86_64 | [gspc-0.11.0-windows-x86_64.zip](https://dl.espressif.com/AE/gsp/gspc/v0.11.0/gspc-0.11.0-windows-x86_64.zip) | [sim-1.10.0-windows-x86_64.zip](https://dl.espressif.com/AE/gsp/sim/v1.10.0/sim-1.10.0-windows-x86_64.zip) |
+| Windows ARM64 | [gspc-0.11.0-windows-aarch64.zip](https://dl.espressif.com/AE/gsp/gspc/v0.11.0/gspc-0.11.0-windows-aarch64.zip) | [sim-1.10.0-windows-aarch64.zip](https://dl.espressif.com/AE/gsp/sim/v1.10.0/sim-1.10.0-windows-aarch64.zip) |
+| macOS Universal 2 | [gspc-0.11.0-macos-universal2.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.11.0/gspc-0.11.0-macos-universal2.tar.gz) | [sim-1.10.0-macos-universal2.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.10.0/sim-1.10.0-macos-universal2.tar.gz) |
 
 Run `python -m gsp.execute --version '<GSPC version>' gspc compatibility` after
 installing `esp-gsp-tools` to inspect the selected compiler. The command returns
@@ -108,8 +115,8 @@ shell; these functions select the versions in the table above for this session:
 
 ```sh
 python -m pip install -U esp-gsp-tools
-gspc() { python -m gsp.execute --version 0.10.1 gspc "$@"; }
-gsp_sim_host() { python -m gsp.execute --version 1.9.1 sim "$@"; }
+gspc() { python -m gsp.execute --version 0.11.0 gspc "$@"; }
+gsp_sim_host() { python -m gsp.execute --version 1.10.0 sim "$@"; }
 ```
 
 In other shells, use `python -m gsp.execute --version VERSION gspc` or

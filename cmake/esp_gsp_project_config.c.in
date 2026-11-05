@@ -301,6 +301,11 @@ static const esp_gsp_project_config_t s_project_config = {
 #else
         .drawer_edge_slop_px = 24,
 #endif
+#ifdef CONFIG_ESP_GSP_GRADIENT_CACHE_BYTES
+        .gradient_cache_bytes = CONFIG_ESP_GSP_GRADIENT_CACHE_BYTES,
+#else
+        .gradient_cache_bytes = 0,
+#endif
     },
     .capacity = {
 #ifdef CONFIG_ESP_GSP_MAX_SCENES

@@ -96,7 +96,8 @@ set(gsp_srcs
     "src/runtime/gsp_transform.c"
     "src/renderer/kernel_rgb565/gsp_kernel_rgb565.c"
     "src/renderer/kernel_rgb888/gsp_kernel_rgb888.c"
-    "src/renderer/kernel_argb8888/gsp_kernel_argb8888.c")
+    "src/renderer/kernel_argb8888/gsp_kernel_argb8888.c"
+    "src/renderer/gsp_gradient_cache.c")
 set(gsp_priv_include_dirs
     "priv_include"
     "src/ui"
@@ -216,7 +217,23 @@ endif()
 if(NOT ESP_GSP_BUILD_PREBUILT AND NOT gsp_use_prebuilt)
     list(APPEND gsp_srcs "adapters/esp_idf/esp_gsp_idf_touch.c")
 endif()
+
+# Resolve this performance placement using the consumer's PSRAM configuration,
+# including when the core itself comes from a prebuilt archive.
+set(gsp_accel_fence_fragment)
+if(CONFIG_IDF_TARGET_ESP32S31 AND CONFIG_SPIRAM_FETCH_INSTRUCTIONS AND
+        (gsp_use_prebuilt OR NOT CONFIG_COMPILER_LTO_COMPILETIME))
+    if(gsp_use_prebuilt)
+        set(gsp_accel_fence_archive "libesp-gsp.a")
+    else()
+        set(gsp_accel_fence_archive "lib${COMPONENT_NAME}.a")
+    endif()
+    set(gsp_accel_fence_fragment "${CMAKE_CURRENT_BINARY_DIR}/gsp_accel_fence.lf")
+    configure_file("${CMAKE_CURRENT_LIST_DIR}/cmake/gsp_accel_fence.lf.in"
+        "${gsp_accel_fence_fragment}" @ONLY)
+endif()
 idf_component_register(
+    LDFRAGMENTS ${gsp_accel_fence_fragment}
     SRCS ${gsp_srcs}
     INCLUDE_DIRS "include"
     PRIV_INCLUDE_DIRS ${gsp_priv_include_dirs}
@@ -265,7 +282,14 @@ if(gsp_use_prebuilt)
     if(gsp_public_links)
         target_link_libraries(gsp_prebuilt INTERFACE ${gsp_public_links})
     endif()
-    target_link_libraries(${COMPONENT_LIB} INTERFACE gsp_prebuilt)
+    if(gsp_accel_fence_fragment)
+        # ldgen must see the imported archive and distinguish it from the
+        # component's empty anchor archive when both have the same basename.
+        set_target_properties(${COMPONENT_LIB} PROPERTIES OUTPUT_NAME "${COMPONENT_NAME}-anchor")
+        target_link_libraries(${COMPONENT_LIB} PUBLIC gsp_prebuilt)
+    else()
+        target_link_libraries(${COMPONENT_LIB} INTERFACE gsp_prebuilt)
+    endif()
     set_property(TARGET ${COMPONENT_LIB}
         PROPERTY ESP_GSP_PREBUILT TRUE)
     set_property(TARGET ${COMPONENT_LIB}

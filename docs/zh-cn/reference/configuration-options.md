@@ -63,6 +63,7 @@
 | `CONFIG_ESP_GSP_IMAGE_CACHE_AUTO_MIN_BYTES` | 有 PSRAM 时图片缓存自动预算下限 | `65536` | `int` / `0..16777216` | 可配置 | 否 |
 | `CONFIG_ESP_GSP_IMAGE_CACHE_AUTO_MAX_BYTES` | 图片缓存自动预算上限 | `4194304` | `int` / `0..67108864` | 可配置 | 否 |
 | `CONFIG_ESP_GSP_IMAGE_CACHE_HOST_DEFAULT_BYTES` | 非 ESP 主机的图片缓存默认预算 | `2097152` | `int` / `0..67108864` | 可配置 | 否 |
+| `CONFIG_ESP_GSP_GRADIENT_CACHE_BYTES` | 共享水平渐变缓存预算（字节） | `0` | `int` / `0..65536` | 可配置 | 否 |
 ## 高级设置（可选） / 工程运行时默认值 / 运行时任务 / 渲染任务
 
 | 配置或能力 | 作用 | 默认值 | 类型 / 范围 | 预编译组件 | JSON 自适应 |

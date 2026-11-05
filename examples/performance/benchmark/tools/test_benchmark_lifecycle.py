@@ -23,6 +23,64 @@ def function(source, signature):
 
 
 class BenchmarkLifecycleTests(unittest.TestCase):
+    def test_grid_drag_finishes_at_fast_and_slow_callback_rates(self):
+        compiler = shutil.which("cc")
+        if compiler is None:
+            self.skipTest("C compiler unavailable")
+        callback = function(MAIN.read_text(), "static void drive_grid(")
+        prelude = r'''
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+typedef void *esp_gsp_handle_t;
+#define ESP_GSP_OK 0
+#define BENCH_W 800
+#define BENCH_H 480
+static int64_t now_us, s_grid_press_us, s_grid_next_event_us;
+static bool s_grid_pressed, pointer_down, fail_release;
+static uint32_t s_grid_drags, s_grid_errors, releases;
+static int16_t first_y, last_y;
+static int64_t esp_timer_get_time(void) { return now_us; }
+static int esp_gsp_inject_touch(void *ui, int16_t x, int16_t y, bool pressed) {
+    (void)ui; (void)x;
+    if (pressed) {
+        if (!pointer_down) { first_y=y; pointer_down=true; }
+        last_y=y;
+    } else {
+        if (fail_release) { fail_release=false; return 1; }
+        assert(pointer_down && first_y != last_y);
+        assert((releases & 1U) ? last_y > first_y : last_y < first_y);
+        pointer_down=false; ++releases;
+    }
+    return ESP_GSP_OK;
+}
+'''
+        assertions = r'''
+int main(void) {
+    const int64_t periods[] = {4000, 200000, 900000};
+    for (unsigned i=0; i<sizeof(periods)/sizeof(periods[0]); ++i) {
+        now_us=0; s_grid_press_us=0; s_grid_next_event_us=0;
+        s_grid_pressed=false; pointer_down=false;
+        s_grid_drags=0; s_grid_errors=0; releases=0;
+        while (now_us<5000000) { drive_grid(0); now_us+=periods[i]; }
+        assert(s_grid_drags > 0 && s_grid_drags == releases && s_grid_errors == 0);
+    }
+    now_us=0; s_grid_next_event_us=0; s_grid_pressed=false; pointer_down=false;
+    s_grid_drags=0; s_grid_errors=0; releases=0;
+    drive_grid(0); fail_release=true; now_us=600000; drive_grid(0);
+    assert(s_grid_pressed && pointer_down && s_grid_drags==0 && s_grid_errors==1);
+    now_us+=16000; drive_grid(0);
+    assert(!s_grid_pressed && !pointer_down && s_grid_drags==1 && releases==1);
+    return 0;
+}
+'''
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "grid.c"
+            path.write_text(prelude + callback + assertions)
+            binary = Path(directory) / "grid"
+            subprocess.run([compiler, "-std=c11", "-Wall", "-Wextra", "-Werror", str(path), "-o", str(binary)], check=True)
+            subprocess.run([str(binary)], check=True)
+
     def test_prepare_is_unscored_and_tweens_follow_page_clock(self):
         compiler = shutil.which("cc")
         if compiler is None:
@@ -36,6 +94,7 @@ class BenchmarkLifecycleTests(unittest.TestCase):
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 typedef void *esp_gsp_handle_t;
 typedef int esp_gsp_err_t;
 typedef struct { bool timing_available; uint32_t steps; uint64_t step_us; } esp_gsp_property_stats_t;
@@ -55,7 +114,7 @@ typedef struct { bool timing_available; uint32_t steps; uint64_t step_us; } esp_
 #define GSP_BIND_PRESSURE_BG 4
 static struct { uint16_t bind; } s_pages[1];
 static unsigned s_page, tween_calls, work_calls, tween_phase;
-static bool s_page_preparing, s_results_active, s_page_waiting_for_scene;
+static bool s_page_preparing, s_results_active, s_page_waiting_for_scene, s_ui_timing_available=true;
 static int64_t now_us, s_page_start_us, s_next_tween_us;
 static uint32_t frames, iterations, commands;
 static uint64_t busy_us, render_us, submit_us, service_us;
@@ -121,6 +180,10 @@ int main(void) {
         assert(properties.step_us-s_page_start_properties.step_us==700);
         assert(busy_us-s_page_start_busy_us==1300 && frames-s_page_start_frames==2);
     }
+    s_ui_timing_available=false; s_page_preparing=true;
+    s_page_start_properties.steps=123;
+    start_page_measurement(NULL);
+    assert(!s_page_preparing && s_page_start_properties.steps==0);
     return 0;
 }
 '''

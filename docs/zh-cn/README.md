@@ -12,7 +12,8 @@
 4. [场景结构与命名](guide/scenes.md)
 5. [运行时与生成 API](guide/runtime-api.md)
 6. [完整控件库](components/index.md)
-7. [Agent 辅助 UI 开发](guide/agent-assisted-ui.md)
+7. [可视化编辑器](editor/index.md)
+8. [Agent 辅助 UI 开发](guide/agent-assisted-ui.md)
 
 ## 开发应用
 

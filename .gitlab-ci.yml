@@ -40,7 +40,7 @@ push-to-github:
         git remote add github git@github.com:espressif/esp-gsp.git
       fi
       if [ "$CI_PIPELINE_SOURCE" = "web" ] && $[[ inputs.force_push ]]; then
-        git push github "HEAD:${CI_COMMIT_REF_NAME}" --force
+        git push github "HEAD:refs/heads/${CI_COMMIT_REF_NAME}" --force
       else
-        git push github "HEAD:${CI_COMMIT_REF_NAME}"
+        git push github "HEAD:refs/heads/${CI_COMMIT_REF_NAME}"
       fi

@@ -18,10 +18,11 @@ intermediate project format is involved.
 - From the widget palette, drag a widget onto the canvas.
 - Or right-click the canvas / object tree and choose **Add** from the context
   menu.
+- Drag an image from the asset panel onto the canvas to create an image widget.
 
-Widgets are placed at the drop position. Use the property inspector on the
-right to fine-tune position (`x`, `y`), size (`w`, `h`) and all type-specific
-fields.
+Dropped widgets enter the topmost container at the drop position, or the scene
+root if there is none; hold **Alt** to place them at the root. Use the property
+inspector to fine-tune position (`x`, `y`), size (`w`, `h`) and type-specific fields.
 
 ## Selecting and transforming
 

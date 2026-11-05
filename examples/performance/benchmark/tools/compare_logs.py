@@ -518,16 +518,33 @@ def parse_log(path: Path) -> Run:
             elif requests:
                 raise ValueError(f"{path}: unexpected repaint load on {name!r}")
     if protocol >= 27:
-        if config_map.get("reset") != "page" or config_map.get("ui_timing") != "step":
+        timing = config_map.get("ui_timing")
+        allowed_timing = {"step", "off"} if protocol >= 28 else {"step"}
+        service_profile = config_map.get("service_profile")
+        if config_map.get("reset") != "page" or timing not in allowed_timing:
             raise ValueError(f"{path}: missing deterministic page reset or UI timing configuration")
-        if set(ui_pages) != set(pages) or any(item.steps == 0 or item.step_us == 0
-                                              for item in ui_pages.values()):
+        if protocol >= 28 and service_profile not in {"on", "off"}:
+            raise ValueError(f"{path}: missing service profiling configuration")
+        if protocol >= 28 and service_profile == "off" and timing != "off":
+            raise ValueError(f"{path}: UI timing requires service profiling")
+        if protocol >= 28 and service_profile == "off" and any(
+                item.service_steps or item.service_us or item.commands for item in raw_pages.values()):
+            raise ValueError(f"{path}: unavailable service counters must be zero")
+        if set(ui_pages) != set(pages):
             raise ValueError(f"{path}: missing per-page UI-step timing")
+        if timing == "step" and any(item.steps == 0 or item.step_us == 0
+                                    for item in ui_pages.values()):
+            raise ValueError(f"{path}: missing per-page UI-step timing")
+        if timing == "off" and any(item.steps != 0 or item.step_us != 0
+                                   for item in ui_pages.values()):
+            raise ValueError(f"{path}: unavailable UI-step timing must be zero")
         if set(viewport_pages) != set(pages) or any(item["started"] > item["attempts"]
                                                    for item in viewport_pages.values()):
             raise ValueError(f"{path}: missing or invalid viewport snapshot counters")
         if raw_ui_step_us is None or sum(item.step_us for item in ui_pages.values()) != raw_ui_step_us:
             raise ValueError(f"{path}: UI-step aggregate does not equal page totals")
+        if timing == "off":
+            ui_pages = {}
     if protocol >= 26 and "page flow" in pages:
         if page_flow_result is None or page_flow_result[0] < 3 or \
                 page_flow_result[1] != 7 or page_flow_result[2] != 0:
@@ -749,6 +766,9 @@ def parse_log(path: Path) -> Run:
                 raw_busy_us):
             raise ValueError(
                 f"{path}: aggregate raw counters do not equal page totals")
+    if config_map.get("service_profile") == "off":
+        pages = {name: dataclasses.replace(page, service_us=None, commands_s=None)
+                 for name, page in pages.items()}
     if active_fps is not None:
         return Run(versions[-1], active_fps, "aggregate_active_fps",
                    wall_fps, legacy_fps, pages, transitions, config, raw_frames,
@@ -828,6 +848,7 @@ def main() -> int:
             print("| Page | Baseline busy FPS | Current busy FPS | Delta | "
                   "Baseline service us | Current service us | Delta |")
             print("|---|---:|---:|---:|---:|---:|---:|")
+            service_profile = dict(baseline.config or ()).get("service_profile")
             for name, old in baseline.pages.items():
                 new = current.pages.get(name)
                 if new is None:
@@ -835,7 +856,8 @@ def main() -> int:
                           "— | — | — |")
                     continue
                 delta = percent(new.busy_fps, old.busy_fps)
-                if old.service_us is None or new.service_us is None:
+                if (service_profile == "off" or
+                        old.service_us is None or new.service_us is None):
                     service = "— | — | —"
                 else:
                     service_delta = percent(new.service_us, old.service_us) \

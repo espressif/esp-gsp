@@ -23,6 +23,7 @@ ESP-GSP 适合这样的产品：界面结构在编译时就已确定，但文字
 | UI 能力 | 控件、布局、List、Grid、模板、导航、媒体和 Canvas |
 | 输入 | 点击、拖动、滚动、滑动，以及可选的应用层双点手势 |
 | 显示路径 | 支持 RGB、MIPI-DSI、SPI、QSPI，并保留软件回退路径 |
+| 可视化编辑器 | ESP-GSP Studio 提供画布编辑、实时 WASM 预览、结构化场景编辑和 Agent 协作 |
 
 ## 使用条件
 
@@ -36,7 +37,7 @@ ESP-GSP 适合这样的产品：界面结构在编译时就已确定，但文字
 
 <!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.9.1:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.10.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -60,7 +61,7 @@ python -m pip install -U esp-gsp-tools
 
 <!-- gsp-version:dependency-command -->
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.9.1"
+idf.py add-dependency "espressif/esp-gsp^1.10.0"
 python -m pip install -U esp-gsp-tools
 ```
 <!-- /gsp-version:dependency-command -->
@@ -123,6 +124,7 @@ gsp_add_bundle(${COMPONENT_LIB})
 | 连接应用状态 | [运行时与生成 API](docs/zh-cn/guide/runtime-api.md) |
 | 配置内存和功能 | [配置模型](docs/zh-cn/configuration/index.md) 与 [Kconfig](docs/zh-cn/reference/kconfig.md) |
 | 集成显示链路 | [显示集成](docs/zh-cn/guide/display.md) |
+| 可视化设计和预览场景 | [ESP-GSP Studio 可视化编辑器](docs/zh-cn/editor/index.md) |
 | 不用硬件就预览 | [模拟器预览](docs/zh-cn/configuration/simulator-preview.md) |
 | 排查问题 | [故障排查](docs/zh-cn/configuration/troubleshooting.md) |
 | 查询 C 函数声明 | [公共函数参考](docs/zh-cn/reference/api-functions.md) |

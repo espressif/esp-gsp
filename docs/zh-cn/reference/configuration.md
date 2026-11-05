@@ -20,7 +20,7 @@
 |---|---|---|
 | `struct_size` | 初始化器填写当前结构大小 | 不要手工改写 |
 | `schema_version` | 初始化器选择当前 Schema | 不要手工改写；不匹配会失败 |
-| `abi_version` | 初始化器选择当前 ABI | 不要手工改写；旧 Bundle 应重新编译 |
+| `abi_version` | 初始化器选择当前 ABI | 不要手工改写；ABI 变化时配套重建 GSPC、核心库、工程配置桥接层和调用者 |
 | `reserved_config` | 保持为 0 | 保留字段 |
 | `overrides` | 八个空的内联条目 | 通常只通过 `esp_gsp_config_set()` 修改 |
 | `bundle`、`bundle_size` | 由生成配置提供 | 仅高级加载器自行构造配置时设置 |
@@ -261,6 +261,37 @@ Profile 时还需设置 `image_cache_enabled: true`。移除
 
 即使关闭图片缓存，矢量绘制仍需要额外内存。应使用应用的实际素材和转场测量峰值；
 相关内存由框架自动管理。
+
+## 可选渐变行缓存
+
+目前缓存只接入 ESP32-C3 和 Host。其他 ESP 目标保留原有解释器，非零预算会产生启动提示，
+不申请缓存。
+
+通过 `ESP_GSP_FIELD_GRADIENT_CACHE_BYTES` 设置每个 UI 实例共享的渐变缓存预算。
+默认值为零，保持关闭。水平渐变需要反复绘制到较小条带时，可按实测启用：
+
+```c
+esp_gsp_config_t config = gsp_product_config();
+esp_gsp_config_set_result_t result = esp_gsp_config_set(
+    &config, ESP_GSP_FIELD_GRADIENT_CACHE_BYTES, 2048);
+if (result != ESP_GSP_CONFIG_SET_OK) {
+    return ESP_ERR_INVALID_ARG;
+}
+```
+
+预算包含缓存元数据，不包含分配器开销，与图片缓存和显示缓冲区分开计算。所有场景
+共享一份缓存，ESP 目标在 UI 创建时申请内部 RAM，在销毁时释放。没有可用水平渐变
+就不申请；分配失败时保持原渲染路径。实际申请值不超过最宽可用场景的行数据需求。
+
+不透明 RGB565 水平渐变保存四个 Bayer 相位行，每个像素宽度需要 8 字节；RGB888
+保存一行，每个像素宽度需要 3 字节，另加元数据。在 32 位 ESP 目标上，2 KiB 可容纳
+240 像素宽的 RGB565 相位行。区域太宽、透明度不足 255 或竖向渐变会回退。
+每帧固定首个进入缓存的渐变，避免多个渐变在条带间反复替换。键包含解析后的颜色、
+插值几何和裁剪区间，因此不会改变既有像素及 RGB565 抖动结果。
+
+配置 ABI 4 要求 GSPC、核心库、工程配置桥接层和调用方一起重新编译，不能
+混用现有 ABI 3 预编译库；构建工具也会拒绝 ABI 3 的编译器。GSPB/GSR 资源格式和
+配置 Schema 版本没有改变，重新编译后仍可加载已有的 Schema 2 资源包。
 
 ## 相关文档
 

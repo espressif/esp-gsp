@@ -201,10 +201,14 @@ below the working set can increase repeated encoding.
 These controls require `compiler_features.image_encoding_cache: 1` in the
 compiler's compatibility or doctor report; older tools can compile without them.
 
-The current `*.execution.json` contract is schema version 2. It reflects the
-resource reachability and nullable decode-size fields emitted by the current
-GSPC; consumers should select the schema by `schema_version` rather than by
-the GSPC product version.
+The current `*.execution.json` contract is schema version 3. It adds optional
+`animation.spatial_compaction` metadata to the resource reachability and nullable
+decode-size fields. Consumers should select the schema by `schema_version`
+rather than by the GSPC product version: use
+`config/schemas/resource-execution-plan.schema.json` for version 3 and the
+preserved `resource-execution-plan-v2.schema.json` in the same directory for
+older version 2 reports. Update strict report readers before using GSPC 0.11.0;
+the report change does not alter compiled binary resource formats.
 
 The strict schema accepts all four Profile policies: `default`, `auto`, `speed`
 and `size`, plus the `animation_speed_hardware_jpeg` flag. Resource rows and
@@ -912,6 +916,37 @@ and resolved tool executables are included in build dependencies. Reconfigure
 CMake after changing tool selection through environment variables or `PATH`.
 Measure target playback separately; an import frame rate is not a device FPS
 promise. These options apply only to video inputs.
+
+### Uniform-color and row-uniform animation frames
+
+With `codec: "size"`, a decorative Image with fixed stretch geometry can store
+an animation as 1×1 frames when every compiled frame has one uniform RGBA color.
+When colors vary only between rows, it can instead store one RGBA sample per
+row as 1×H frames. All frames must meet the same condition. The authored display
+rectangle, frame durations and loop count stay the same. Compaction uses
+lossless encoding; RGB565 dithering runs before eligibility is checked, so a
+spatial dither pattern is never discarded to make a row uniform.
+
+The execution report's `animation.spatial_compaction` record explains the
+representation, source/stored dimensions and canvas bytes before/after.
+Here `source_dimensions` means the compiled frame after resizing and dithering,
+before compaction; it does not report the original file's dimensions.
+Canvas savings do not include context, allocator or decoder overhead, and they
+do not predict device FPS. The renderer reuses native row fills and alpha
+blending; unsupported transforms, formats and overlapping buffers retain their
+normal sampling paths.
+
+For opaque frames, a full-size native blit can be faster than stretching a
+column. Compaction can replace a hardware copy with a fill, scale or CPU draw,
+depending on the chip, geometry and configured acceleration thresholds.
+`size` prioritizes the smaller canvas; use `auto` to retain the original
+representation, and measure both decode and render time on the target.
+
+This optimization is limited to GIF/APNG/WebP images without a `name`, binding,
+callback, dynamic geometry/opacity or runtime transform. Default/`auto` policies,
+named/swappable images, templates, external asset exports, video imports and
+explicit `animation_codec` requests keep their original geometry. Existing
+binary formats and runtime interfaces are used.
 
 ## JPEG animation frames
 

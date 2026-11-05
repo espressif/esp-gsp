@@ -159,7 +159,7 @@
     "authoring",
     "canvas_resource_views"
   ],
-  "compiler_version": "0.10.1",
+  "compiler_version": "0.11.0",
   "protocol_version": 1,
   "registry_hash": "crc32:e7e1bf78",
   "schema_version": 2,

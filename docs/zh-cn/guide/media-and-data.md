@@ -210,9 +210,12 @@ Profile 的 `image_cache_budget_bytes` 则控制设备解码缓存。宿主预�
 这些控制要求编译器的 compatibility 或 doctor 报告声明
 `compiler_features.image_encoding_cache: 1`；旧工具可继续编译，无需使用这些选项。
 
-当前 `*.execution.json` 合同为 schema version 2，包含当前 GSPC 输出的资源可达性
-和可为空的解码大小字段。消费者应根据 `schema_version` 选择 schema，而不要根据
-GSPC 的产品版本选择。
+当前 `*.execution.json` 契约为 Schema 3，在资源可达性和可为空的解码大小字段之外，
+增加可选的 `animation.spatial_compaction` 元数据。消费者应根据 `schema_version`
+选择 Schema，而不要根据 GSPC 产品版本选择：版本 3 使用
+`config/schemas/resource-execution-plan.schema.json`，旧版本 2 使用同目录保留的
+`resource-execution-plan-v2.schema.json`。升级 GSPC 0.11.0 前应更新严格解析报告的工具；
+报告变化不改变编译后二进制资源格式。
 
 严格 Schema 接受 Profile 的 `default`、`auto`、`speed`、`size` 四种策略和
 `animation_speed_hardware_jpeg` 开关。资源和来源变体的 `uses` 包含可为空的创作对象
@@ -634,6 +637,30 @@ FFmpeg 构建。
 [外部资源清单](external-assets.md) 使用相同字段。构建依赖包含视频和实际使用的
 工具可执行文件；通过环境变量或 `PATH` 改换工具后应重新配置 CMake。导入帧率不
 代表设备播放 FPS，播放性能需要在目标设备上测量。这些选项仅适用于视频输入。
+
+### 纯色与每行同色动画的预编译优化
+
+使用 `codec: "size"` 时，固定 stretch 几何的装饰 Image 如果每个编译帧都只有一种
+均匀 RGBA 颜色，可保存为 1×1 帧动画。如果颜色只在行之间变化，则可将每行保存为
+一个 RGBA 样本，形成 1×H 帧。所有帧必须满足同一条件，显示区域、帧时长和循环次数
+保持不变。紧凑表示采用无损编码；RGB565 抖色先于识别执行，不会为压缩而丢弃空间
+抖色图案。
+
+执行报告中的 `animation.spatial_compaction` 说明表示类型、原始及存储尺寸，以及
+优化前后的画布字节数。画布节省不包含上下文、分配器和解码器开销，也不代表设备
+FPS。渲染器复用原生逐行填充和 alpha 混合；不适用的变换、格式和重叠缓冲区保留
+原有采样路径。
+
+其中 `source_dimensions` 指完成缩放与抖色、尚未压缩表示的编译帧尺寸，并非原始文件
+尺寸。
+
+不透明帧的整幅原生拷贝可能比拉伸单列更快。紧凑表示可能将硬件拷贝改为填充、缩放或
+CPU 绘制，实际路径取决于芯片、几何尺寸和配置的加速阈值。`size` 优先缩小画布；使用
+`auto` 可保留原有表示，实际取舍需在目标设备同时测量解码和渲染耗时。
+
+此优化只用于没有 `name`、绑定、回调、动态几何/透明度或运行时变换的 GIF/APNG/WebP
+Image。默认/`auto` 策略、具名或可替换图片、模板、外部资源导出、视频导入及显式
+`animation_codec` 请求保留原有几何。使用既有二进制格式和运行时接口。
 
 ## JPEG 动画帧
 

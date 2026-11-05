@@ -10,8 +10,8 @@ extern "C" {
 #endif
 
 #define ESP_GSP_CONFIG_SCHEMA_VERSION 2U
-#define ESP_GSP_CONFIG_ABI_VERSION 3U
-#define ESP_GSP_CONFIG_FIELD_COUNT 94U
+#define ESP_GSP_CONFIG_ABI_VERSION 4U
+#define ESP_GSP_CONFIG_FIELD_COUNT 95U
 #define ESP_GSP_CONFIG_INLINE_OVERRIDES 8U
 
 typedef enum {
@@ -109,6 +109,7 @@ typedef enum {
     ESP_GSP_FIELD_SWIPE_VELOCITY_NUMERATOR = 91,
     ESP_GSP_FIELD_SWIPE_VELOCITY_DENOMINATOR = 92,
     ESP_GSP_FIELD_DRAWER_EDGE_SLOP_PX = 93,
+    ESP_GSP_FIELD_GRADIENT_CACHE_BYTES = 94,
 } esp_gsp_config_field_id_t;
 
 typedef enum {
@@ -200,6 +201,7 @@ typedef struct {
     uint32_t swipe_velocity_numerator;
     uint32_t swipe_velocity_denominator;
     uint32_t drawer_edge_slop_px;
+    uint32_t gradient_cache_bytes;
 } esp_gsp_policy_t;
 
 typedef struct {
@@ -542,6 +544,7 @@ static inline uint64_t esp_gsp_config_value(
     case ESP_GSP_FIELD_SWIPE_VELOCITY_NUMERATOR: return config->policy.swipe_velocity_numerator;
     case ESP_GSP_FIELD_SWIPE_VELOCITY_DENOMINATOR: return config->policy.swipe_velocity_denominator;
     case ESP_GSP_FIELD_DRAWER_EDGE_SLOP_PX: return config->policy.drawer_edge_slop_px;
+    case ESP_GSP_FIELD_GRADIENT_CACHE_BYTES: return config->policy.gradient_cache_bytes;
     case ESP_GSP_FIELD_MAX_SCENES: return config->capacity.max_scenes;
     case ESP_GSP_FIELD_MAX_TIMERS: return config->capacity.max_timers;
     case ESP_GSP_FIELD_MAX_WIDGETS: return config->capacity.max_widgets;
@@ -636,6 +639,7 @@ static inline uint64_t esp_gsp_project_config_value(
     case ESP_GSP_FIELD_SWIPE_VELOCITY_NUMERATOR: return config->policy.swipe_velocity_numerator;
     case ESP_GSP_FIELD_SWIPE_VELOCITY_DENOMINATOR: return config->policy.swipe_velocity_denominator;
     case ESP_GSP_FIELD_DRAWER_EDGE_SLOP_PX: return config->policy.drawer_edge_slop_px;
+    case ESP_GSP_FIELD_GRADIENT_CACHE_BYTES: return config->policy.gradient_cache_bytes;
     case ESP_GSP_FIELD_MAX_SCENES: return config->capacity.max_scenes;
     case ESP_GSP_FIELD_MAX_TIMERS: return config->capacity.max_timers;
     case ESP_GSP_FIELD_MAX_WIDGETS: return config->capacity.max_widgets;
@@ -778,6 +782,7 @@ static inline bool esp_gsp_effective_config_set(
     case ESP_GSP_FIELD_SWIPE_VELOCITY_NUMERATOR: config->policy.swipe_velocity_numerator = value; return true;
     case ESP_GSP_FIELD_SWIPE_VELOCITY_DENOMINATOR: config->policy.swipe_velocity_denominator = value; return true;
     case ESP_GSP_FIELD_DRAWER_EDGE_SLOP_PX: config->policy.drawer_edge_slop_px = value; return true;
+    case ESP_GSP_FIELD_GRADIENT_CACHE_BYTES: config->policy.gradient_cache_bytes = value; return true;
     case ESP_GSP_FIELD_MAX_SCENES: config->capacity.max_scenes = value; return true;
     case ESP_GSP_FIELD_MAX_TIMERS: config->capacity.max_timers = value; return true;
     case ESP_GSP_FIELD_MAX_WIDGETS: config->capacity.max_widgets = value; return true;

@@ -421,6 +421,17 @@ Non-ESP automatic image-cache budget
 
 Default used where heap-capability discovery is unavailable, such as host integrations. This is a budget, not an eager allocation.
 
+### `CONFIG_ESP_GSP_GRADIENT_CACHE_BYTES`
+
+Shared horizontal-gradient cache budget in bytes
+
+- Project default: `0`
+- Type/range: `int` / `0..65536`
+- Prebuilt component: configurable
+- JSON AUTO-derived: no
+
+Optional ESP32-C3 CPU gradient-row cache shared by all scenes of one UI instance. Other ESP targets retain uncached rendering. Zero disables it. The budget includes metadata; the instance allocates at most the rows needed for its widest native horizontal gradient. ESP targets use internal RAM. Allocation failure keeps uncached rendering. RGB565 needs four Bayer-phase rows (8 bytes per pixel), RGB888 one row (3 bytes per pixel), plus metadata. Only opaque horizontal gradients use the cache; tune from same-board stripe-rendering measurements.
+
 ## Advanced settings (optional) / Project runtime defaults / Runtime tasks / Render task
 
 ### `CONFIG_ESP_GSP_RENDER_TASK_STACK_PSRAM`

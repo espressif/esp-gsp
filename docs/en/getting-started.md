@@ -9,7 +9,7 @@ maintained example:
 
 <!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.9.1:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.10.0:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -54,7 +54,7 @@ From the ESP-IDF project root:
 
 <!-- gsp-version:dependency-command -->
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.9.1"
+idf.py add-dependency "espressif/esp-gsp^1.10.0"
 ```
 <!-- /gsp-version:dependency-command -->
 
@@ -63,7 +63,7 @@ The equivalent component manifest entry is:
 <!-- gsp-version:dependency-manifest -->
 ```yaml
 dependencies:
-  espressif/esp-gsp: "^1.9.1"
+  espressif/esp-gsp: "^1.10.0"
 ```
 <!-- /gsp-version:dependency-manifest -->
 
@@ -89,15 +89,20 @@ root — the project marker takes precedence over the component marker:
 
 <!-- gsp-version:compiler-pin -->
 ```sh
-echo '0.10.1' > .gspc_version
+echo '0.11.0' > .gspc_version
 idf.py build
 ```
 <!-- /gsp-version:compiler-pin -->
 
-GSPC 0.10.0 adds dynamic Dropdown captions and control geometry used by
-ESP-GSP 1.9.0. If an older project pins 0.9.0, update that project marker to use
-these features; upgrading the component does not rewrite project pins. The
-default resolver skips older PATH tools and rejects a managed binary whose
+Creating, editing or removing either version marker is detected on the next
+build. CMake reselects the compiler and checks compatibility; an explicit
+`GSPC_EXECUTABLE` still takes priority.
+
+Use the compiler selected above with this component. When upgrading, update
+older project pins as well; upgrading the component does not rewrite them.
+A configuration ABI change also requires rebuilding the core, project-config
+bridge and callers together; see [configuration](reference/configuration.md).
+The default resolver skips older PATH tools and rejects a managed binary whose
 reported version differs from the requested pin. Older versioned caches stay
 available to their existing projects.
 

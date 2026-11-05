@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.10.0
+
+Use with GSPC 0.11.0, simulator 1.10.0 and esp_display_present ^1.2.0.
+
+- Add browser/Worker and Node.js compilation, with signed archives and npm packages.
+- Compact uniform and row-uniform animations with `codec: "size"`.
+- Accelerate constant rows, C3 RGB565 blends, S3 RGB888 fills and shimmer spans.
+- Add an opt-in C3 horizontal-gradient cache, disabled by default.
+- Track compiler pins and button artwork; reuse unchanged source compiler builds.
+- Reduce S31 PSRAM-XIP fence contention and fix Benchmark grid and prebuilt support.
+
+Configuration ABI 4 requires a clean rebuild of GSPC, the core, project-config
+bridge and callers; ABI-3 libraries cannot be mixed. Pin `.gspc_version` to 0.11.0.
+Execution reports use schema 3; schema 2 remains available for older reports.
+Compiled resource formats are unchanged.
+
 ## 1.9.1
 
 Use with GSPC 0.10.1, simulator 1.9.1 and esp_display_present ^1.2.0.
