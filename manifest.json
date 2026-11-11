@@ -1,22 +1,22 @@
 {
   "product": "gspc-browser",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "api_version": 1,
   "config": {
     "abi_version": 4,
     "schema_version": 2
   },
-  "source_commit": "7a622ca9136a0e87034773293914b345abafb49f",
+  "source_commit": "b4621698c8670827080a646fb0002e12e643228b",
   "files": {
-    "package.json": "b86f4c2e46a363af1eb61d3e794d9b6873742a3baca3fbda358e107a5380347f",
+    "package.json": "248b24c2d1d885a9402a668b6fb27e3b5396fd631886623cc0b6f374c1c21511",
     "README.md": "74f123b865c74736ea9c000efff8840be600cf9101811afa9efe47ae137edd4c",
     "node.js": "7b1d4f23e9ee534b0e515761816b1b9e0f461f28a564abcf48d1030cfabed73a",
     "node-worker.js": "6b2cd0a862fbf4dfbfb16e9a9798b73c18b4403eadde5d7b877062eee5498bac",
     "pkg/gspc_wasm.js": "ee9a33b043827db1ab4fbbae79578570d1f1f650b4527e8a423bb5b46d865720",
-    "pkg/gspc_wasm_bg.wasm": "7e191d4f50822289f4fa9771eec30caead1987e818b3c0757f088f6bf89a6231",
+    "pkg/gspc_wasm_bg.wasm": "e2244ce229db729bc42963cb70bf3b1e6a275e04d1e6977e4be3b2c3c47463c8",
     "pkg/gspc_wasm.d.ts": "451eddd35192eb541d6710db1616815e8942d25a9e4a2648519800e62993068b",
     "pkg/gspc_wasm_bg.wasm.d.ts": "4f49fddfd463487fbfac58ffe10af75814c1c26c283c8058684f7c65c8e6f3d3",
-    "pkg/package.json": "fb3b6fe0356ccc951e36888e157a6ca2177b9a869dc4232d298e7e5cf20c2b6d",
+    "pkg/package.json": "1eb8403734b9784342f17f732cf71b13c0d4f53dcb18e3ef72012a4f1c73b6f2",
     "web/index.js": "8738532ff8f2763245a8556eefb492d91e51f801a92b59d057b474cc7a5add30",
     "web/index.d.ts": "18fe6c948280899d6660f09c2eb5c9f694c50d9fd7e5b24b38545c9288c00f5d",
     "web/worker.js": "cbc8d8422ea49923820bfe0f746c257bf39beb43ae425630a2a9ba56afb9a959",

@@ -1,6 +1,6 @@
 {
   "name": "gspc-wasm",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "GSPC resource compiler for browsers and Node.js",
   "type": "module",
   "types": "./web/index.d.ts",
