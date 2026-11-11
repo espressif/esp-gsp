@@ -15,6 +15,9 @@ GSP 场景文件，同时由编辑器提供验证、预览和恢复功能。
   - **源码仓库** — 编辑器仓库中的 `scripts/gsp-agent.cjs`。
   - **独立下载** — [下载协作脚本包](index.md#下载)。
 
+解压独立脚本包后，使用 `scripts/` 下的文件，并保持 `gsp-editor-mcp.cjs` 与
+`gsp-agent.cjs` 位于同一目录。
+
 ## 快速上手
 
 ```sh
@@ -156,7 +159,7 @@ node gsp-agent.cjs restore /path/to/project <completed-batch-id>
 适配器脚本可从以下位置获取：
 - **已安装的应用** — `resources/gsp-editor-mcp.cjs`。
 - **源码仓库** — `scripts/gsp-editor-mcp.cjs`。
-- **独立下载** — [下载协作脚本包](https://github.com/espressif/esp-gsp/releases)（占位链接）。
+- **独立下载** — [下载协作脚本包](index.md#下载)。
 
 MCP 工具包括：
 

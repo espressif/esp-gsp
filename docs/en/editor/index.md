@@ -6,10 +6,11 @@ structural editing and agent collaboration.
 
 ## Download
 
-- Windows x64 - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.11.0-win-x64.exe>
-- Linux x64 AppImage - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.11.0-linux-x86_64.AppImage>
-- Linux x64 DEB - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.11.0-linux-amd64.deb>
-- Collaboration scripts - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.10.1-scripts.zip>
+- Windows x64 - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.12.0-win-x64.exe>
+- Linux x64 AppImage - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.12.0-linux-x86_64.AppImage>
+- Linux x64 DEB - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.12.0-linux-amd64.deb>
+- Collaboration scripts - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.12.0-scripts.zip>
+- SHA-256 checksums - <https://dl.espressif.com/AE/gsp/gsp-editor/SHA256SUMS-0.12.0.txt>
 
 ## Open a project
 
@@ -48,17 +49,17 @@ and can be removed without affecting native sources.
 
 ## Bundled toolchain
 
-ESP-GSP Studio ships with a fixed toolchain (currently GSP/simulator 1.9.1 +
-GSPC 0.10.1). The bundled compiler, schema, WASM runtime and export all use
-this version. Import and version switching are not available in this release.
+ESP-GSP Studio 0.12.0 ships with GSP/simulator 1.10.1 and GSPC 0.11.1. The
+application version is independent of its bundled toolchain versions. The
+compiler, schema, WASM runtime and export use this fixed toolchain; importing
+or switching toolchains is not available in this release.
 
 Project settings → **Bundled Toolchain** (随包工具链) shows the actual
 versions, platform and verification status. Native project compatibility uses
 the required compiler version and format/ABI contracts. Unsupported native
 requirements disable content editing but leave source and recovery accessible.
 
-The bundled toolchain uses configuration ABI 3. ESP-GSP 1.10.0 / GSPC 0.11.0
-use ABI 4 and need an editor and toolchain that support it; see the
+The bundled toolchain uses configuration ABI 4; see the
 [compatibility contract](../reference/compatibility.md).
 
 ## Build context

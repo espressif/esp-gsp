@@ -21,7 +21,7 @@
   },
   "component": {
     "name": "espressif/esp-gsp",
-    "version": "1.10.1"
+    "version": "1.10.2"
   },
   "esp_idf": {
     "commit": "fff9895c82d744c7237be8847347bdd1b07c6643",
@@ -30,7 +30,7 @@
   },
   "schema_version": 1,
   "source": {
-    "commit": "b4621698c8670827080a646fb0002e12e643228b",
+    "commit": "9e194b70c49154fb5fa477cab12becfe9346df1e",
     "dirty": false
   },
   "target": {

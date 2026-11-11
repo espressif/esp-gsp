@@ -17,6 +17,9 @@ validates and reloads the complete batch when the writer finishes.
   - **Source checkout** — `scripts/gsp-agent.cjs` in the editor repository.
   - **Standalone download** — [Download collaboration scripts](index.md#download).
 
+After extracting the standalone archive, use the files under `scripts/` and
+keep `gsp-editor-mcp.cjs` beside `gsp-agent.cjs`.
+
 ## Quick start
 
 ```sh
@@ -172,7 +175,7 @@ an MCP stdio adapter:
 The adapter script is available from:
 - **Installed application** — `resources/gsp-editor-mcp.cjs`.
 - **Source checkout** — `scripts/gsp-editor-mcp.cjs`.
-- **Standalone download** — [Download collaboration scripts](https://github.com/espressif/esp-gsp/releases) (placeholder).
+- **Standalone download** — [Download collaboration scripts](index.md#download).
 
 MCP tools include:
 

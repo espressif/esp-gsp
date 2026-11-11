@@ -5,10 +5,11 @@ WASM 预览、属性检查、结构化编辑和 Agent 协作功能。
 
 ## 下载
 
-- Windows x64 - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.11.0-win-x64.exe>
-- Linux x64 AppImage - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.11.0-linux-x86_64.AppImage>
-- Linux x64 DEB - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.11.0-linux-amd64.deb>
-- Collaboration scripts - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.10.1-scripts.zip>
+- Windows x64 - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.12.0-win-x64.exe>
+- Linux x64 AppImage - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.12.0-linux-x86_64.AppImage>
+- Linux x64 DEB - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.12.0-linux-amd64.deb>
+- 协作脚本包 - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.12.0-scripts.zip>
+- SHA-256 校验清单 - <https://dl.espressif.com/AE/gsp/gsp-editor/SHA256SUMS-0.12.0.txt>
 
 ## 打开工程
 
@@ -42,16 +43,15 @@ WASM 预览、属性检查、结构化编辑和 Agent 协作功能。
 
 ## 随包工具链
 
-ESP-GSP Studio 附带固定工具链（当前为 GSP/simulator 1.9.1 + GSPC 0.10.1）。
-内置编译器、Schema、WASM 运行时和导出功能均使用此版本。当前版本不支持导入和
-版本切换。
+ESP-GSP Studio 0.12.0 附带 GSP/模拟器 1.10.1 和 GSPC 0.11.1。应用版本号与随包
+工具链版本号独立。内置编译器、Schema、WASM 运行时和导出功能均使用这套固定
+工具链，当前版本不支持导入或切换工具链。
 
 工程设置 → **随包工具链** 显示实际版本、平台和验证状态。原生工程兼容性使用
 编译器版本和格式/ABI 契约。不受支持的原生需求会禁用内容编辑，但源码和恢复
 功能仍可访问。
 
-随包工具链使用配置 ABI 3。ESP-GSP 1.10.0 / GSPC 0.11.0 使用 ABI 4，
-需要支持 ABI 4 的编辑器和配套工具链；参见[兼容性契约](../reference/compatibility.md)。
+随包工具链使用配置 ABI 4，参见[兼容性契约](../reference/compatibility.md)。
 
 ## 构建上下文
 

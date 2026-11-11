@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.2
+
+- Update packaged Editor download links and collaboration setup for Studio 0.12.0.
+
+Use with GSPC 0.11.1 and simulator 1.10.2. Runtime behavior and formats are unchanged.
+
 ## 1.10.1
 
 Use with GSPC 0.11.1, simulator 1.10.1 and esp_display_present ^1.2.0.
