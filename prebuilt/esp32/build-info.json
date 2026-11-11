@@ -1,11 +1,11 @@
 {
   "archive": {
     "file": "libesp-gsp.a",
-    "sha256": "27b36364c8a035be4d88316deabf5a0be02f1d6bc38f64d71253958700230083"
+    "sha256": "151e8c3e36c915e3f74da3a7b1ba165b2101d0db6f026d8cc3efb319c662eac9"
   },
   "build": {
     "assertions": "enabled",
-    "core_compile_units": 109,
+    "core_compile_units": 110,
     "fast_math": false,
     "lto_flag_source": "sdkconfig",
     "lto_flags": [
@@ -21,7 +21,7 @@
   },
   "component": {
     "name": "espressif/esp-gsp",
-    "version": "1.10.0"
+    "version": "1.10.1"
   },
   "esp_idf": {
     "commit": "fff9895c82d744c7237be8847347bdd1b07c6643",
@@ -30,7 +30,7 @@
   },
   "schema_version": 1,
   "source": {
-    "commit": "7a622ca9136a0e87034773293914b345abafb49f",
+    "commit": "b4621698c8670827080a646fb0002e12e643228b",
     "dirty": false
   },
   "target": {

@@ -75,7 +75,7 @@ Skill 遵循与[推荐工程工作流](workflow.md)相同的职责模型：
 1. 识别实际选中的组件、Target、GSPC、Bundle、场景和 BSP；
 2. 按需读取目标控件卡片、经过检查的示例和相关文档；尚未确定控件类型时，使用 `gspc cards --list` 查找；
 3. 布局和声明式行为放在 JSON，产品状态放在应用，面板行为放在 BSP；
-4. 通过目标配置下的 compile/preview 或所属构建验证修改，使用其诊断和 `suggestions`；只检查而不生成产物时使用 `gspc diagnose`。daemon 的 `diagnostics/pull` 默认只检查 Schema，`doctor/get` 声明支持后可使用 `level: "compile"` 检查资源和 Profile；
+4. 通过目标配置下的 compile/preview 或所属构建验证修改，使用其诊断和 `suggestions`；只检查而不生成产物时使用 `gspc diagnose`，`gspc diagnose --fix` 会就地应用唯一确定的类型、字段名和取值修复，包括其他 UI 框架的命名和颜色写法。daemon 的 `diagnostics/pull` 默认只检查 Schema，`doctor/get` 声明支持后可使用 `level: "compile"` 检查资源和 Profile；
 5. 复用同次编译生成的 Bundle 头文件和 `*.api.json`，接入其中的 API，并构建应用修改；
 6. 界面或交互有改动时，通过模拟器检查，按需查找或构建工具，加载同一次编译生成的 `--api-json`；连接应用 Backend 时，状态写入与导航仍由 Backend 负责；
 7. 汇总修改内容、构建结果和预览情况。

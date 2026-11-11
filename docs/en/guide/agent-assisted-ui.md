@@ -104,7 +104,9 @@ The Skill follows the same ownership model as the
    application, and panel behavior in the BSP;
 4. validates the edited scene through the target-configured compile/preview or
    owning build, using its diagnostics and `suggestions`;
-   `gspc diagnose` provides compilation checks when no artifacts are needed.
+   `gspc diagnose` provides compilation checks when no artifacts are needed,
+   and `gspc diagnose --fix` applies the unambiguous type, field-name and
+   value repairs, including names and color forms used by other UI toolkits.
    Daemon `diagnostics/pull` defaults to schema checks; use `level: "compile"`
    when advertised by `doctor/get`;
 5. uses bundle headers and `*.api.json` from that compile, integrates their

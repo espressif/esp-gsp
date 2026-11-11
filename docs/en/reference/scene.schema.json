@@ -104,7 +104,16 @@
         "drawer_close",
         "play_glow"
       ],
-      "top_level_source_key": "src_name"
+      "top_level_source_key": "src_name",
+      "unavailable_actions": {
+        "back": {
+          "alternatives": [
+            "call",
+            "stack_pop"
+          ],
+          "reason": "No public runtime navigation-history dispatcher"
+        }
+      }
     },
     "scene_keys": [
       "styles",
@@ -159,7 +168,7 @@
     "authoring",
     "canvas_resource_views"
   ],
-  "compiler_version": "0.11.0",
+  "compiler_version": "0.11.1",
   "protocol_version": 1,
   "registry_hash": "crc32:e7e1bf78",
   "schema_version": 2,

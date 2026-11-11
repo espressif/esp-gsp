@@ -1004,6 +1004,12 @@ Explicit `animation_codec`, the default QOI policy, alpha animations, RGB888 and
 external streaming retain their existing resource encodings. Resource reports identify the
 selected span representation as `anim_spans`.
 
+With `codec: "size"`, GSPC retains the lossless alternative until grouped
+compression and span selection finish, then compares it with JPEG. Core-player
+encodings remain available when spans cannot cover the shared decoder reserve.
+This can add compilation work and temporary memory; `auto`, `speed`, and explicit
+animation encodings keep their selection policy.
+
 For smaller embedded animations, enable `CONFIG_ESP_GSP_ENABLE_ANIM_DEFLATE=y`
 and select Profile `image_codec: size` or Image `codec: "size"`. GSPC then groups
 up to four frames into zlib streams: ordinary patches allow at most 32 KiB of

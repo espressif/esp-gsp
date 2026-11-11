@@ -17,9 +17,9 @@ GSPC 0.10.0 增加了 ESP-GSP 1.9.0 使用的动态下拉框文案和可选控�
 
 | 项目 | 当前值 | 链接 |
 |---|---:|---|
-| ESP-GSP 组件 | `1.10.0` | [Component Registry](https://components.espressif.com/components/espressif/esp-gsp/versions/1.10.0/readme) |
-| ESP-GSP 模拟器 | `1.10.0` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/sim/v1.10.0/manifest.json) |
-| 推荐 GSPC | `0.11.0` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/gspc/v0.11.0/manifest.json) |
+| ESP-GSP 组件 | `1.10.1` | [Component Registry](https://components.espressif.com/components/espressif/esp-gsp/versions/1.10.1/readme) |
+| ESP-GSP 模拟器 | `1.10.1` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/sim/v1.10.1/manifest.json) |
+| 推荐 GSPC | `0.11.1` | [下载链接 (manifest)](https://dl.espressif.com/AE/gsp/gspc/v0.11.1/manifest.json) |
 | GSB | `2.7 / 2.22` |  |
 | GRB | `1.4 / 1.9` |  |
 | GFB | `1.2` |  |
@@ -32,7 +32,7 @@ GSPC 0.10.0 增加了 ESP-GSP 1.9.0 使用的动态下拉框文案和可选控�
 | GMD 运行时 ABI | `1.0` |  |
 | 模拟器 ABI | `1` |  |
 
-GSPC `0.11.0` 与 ESP-GSP／simulator `1.10.0` 配套使用，
+GSPC `0.11.1` 与 ESP-GSP／simulator `1.10.1` 配套使用，
 包括浏览器编译器和浏览器／WASI 模拟器后端。从其他配置 ABI 升级时，应更新工程的
 `.gspc_version`，并重新构建 GSPC、核心库、工程配置桥接层和调用者。同一应用不能
 混用不同配置 ABI 的预编译库。既有编译资源的兼容范围仍由下述二进制格式契约决定。
@@ -56,8 +56,8 @@ GSB `2.22` 增加整图矢量透明度，GRB `1.6` 增加原生动画补丁。GR
 `format_variants` 单独列出功能版本，读取端仍须支持对应的运行时能力。
 
 复现 1.6.0 应用时，继续使用 GSPC 0.7.0 与 simulator 1.6.0。使用本版场景功能时，
-按[升级说明](../../../CHANGELOG.md#upgrading-from-170)用 GSPC 0.11.0 重新生成，
-并使用 ESP-GSP／simulator 1.10.0。
+按[升级说明](../../../CHANGELOG.md#upgrading-from-170)用 GSPC 0.11.1 重新生成，
+并使用 ESP-GSP／simulator 1.10.1。
 
 GSR 需求记录行区分 `gspc compatibility` 返回的基线与当前编译器生成的、包含内容
 容量的记录版本。GSR 容器版本、公共 ABI 和运行时 ABI 分别独立。
@@ -68,13 +68,13 @@ GSR 需求记录行区分 `gspc compatibility` 返回的基线与当前编译器
 都在相同 URL 的 `.sig` 后缀地址提供独立 Ed25519 签名。需要自动选择平台、校验签名
 和缓存文件时，建议使用下文的 `esp-gsp-tools`。
 
-| 平台 | GSPC `0.11.0` | 模拟器 `1.10.0` |
+| 平台 | GSPC `0.11.1` | 模拟器 `1.10.1` |
 |---|---|---|
-| Linux ARM64 | [gspc-0.11.0-linux-aarch64.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.11.0/gspc-0.11.0-linux-aarch64.tar.gz) | [sim-1.10.0-linux-aarch64.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.10.0/sim-1.10.0-linux-aarch64.tar.gz) |
-| Linux x86_64 | [gspc-0.11.0-linux-x86_64.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.11.0/gspc-0.11.0-linux-x86_64.tar.gz) | [sim-1.10.0-linux-x86_64.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.10.0/sim-1.10.0-linux-x86_64.tar.gz) |
-| Windows x86_64 | [gspc-0.11.0-windows-x86_64.zip](https://dl.espressif.com/AE/gsp/gspc/v0.11.0/gspc-0.11.0-windows-x86_64.zip) | [sim-1.10.0-windows-x86_64.zip](https://dl.espressif.com/AE/gsp/sim/v1.10.0/sim-1.10.0-windows-x86_64.zip) |
-| Windows ARM64 | [gspc-0.11.0-windows-aarch64.zip](https://dl.espressif.com/AE/gsp/gspc/v0.11.0/gspc-0.11.0-windows-aarch64.zip) | [sim-1.10.0-windows-aarch64.zip](https://dl.espressif.com/AE/gsp/sim/v1.10.0/sim-1.10.0-windows-aarch64.zip) |
-| macOS Universal 2 | [gspc-0.11.0-macos-universal2.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.11.0/gspc-0.11.0-macos-universal2.tar.gz) | [sim-1.10.0-macos-universal2.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.10.0/sim-1.10.0-macos-universal2.tar.gz) |
+| Linux ARM64 | [gspc-0.11.1-linux-aarch64.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.11.1/gspc-0.11.1-linux-aarch64.tar.gz) | [sim-1.10.1-linux-aarch64.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.10.1/sim-1.10.1-linux-aarch64.tar.gz) |
+| Linux x86_64 | [gspc-0.11.1-linux-x86_64.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.11.1/gspc-0.11.1-linux-x86_64.tar.gz) | [sim-1.10.1-linux-x86_64.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.10.1/sim-1.10.1-linux-x86_64.tar.gz) |
+| Windows x86_64 | [gspc-0.11.1-windows-x86_64.zip](https://dl.espressif.com/AE/gsp/gspc/v0.11.1/gspc-0.11.1-windows-x86_64.zip) | [sim-1.10.1-windows-x86_64.zip](https://dl.espressif.com/AE/gsp/sim/v1.10.1/sim-1.10.1-windows-x86_64.zip) |
+| Windows ARM64 | [gspc-0.11.1-windows-aarch64.zip](https://dl.espressif.com/AE/gsp/gspc/v0.11.1/gspc-0.11.1-windows-aarch64.zip) | [sim-1.10.1-windows-aarch64.zip](https://dl.espressif.com/AE/gsp/sim/v1.10.1/sim-1.10.1-windows-aarch64.zip) |
+| macOS Universal 2 | [gspc-0.11.1-macos-universal2.tar.gz](https://dl.espressif.com/AE/gsp/gspc/v0.11.1/gspc-0.11.1-macos-universal2.tar.gz) | [sim-1.10.1-macos-universal2.tar.gz](https://dl.espressif.com/AE/gsp/sim/v1.10.1/sim-1.10.1-macos-universal2.tar.gz) |
 
 上表是当前推荐组合。安装 `esp-gsp-tools` 后可运行
 `python -m gsp.execute --version '<GSPC version>' gspc compatibility` 查看机器可读
@@ -94,8 +94,8 @@ Registry 组件中的每个预编译库都带有 `prebuilt/<variant>/build-info.
 
 ```sh
 python -m pip install -U esp-gsp-tools
-gspc() { python -m gsp.execute --version 0.11.0 gspc "$@"; }
-gsp_sim_host() { python -m gsp.execute --version 1.10.0 sim "$@"; }
+gspc() { python -m gsp.execute --version 0.11.1 gspc "$@"; }
+gsp_sim_host() { python -m gsp.execute --version 1.10.1 sim "$@"; }
 ```
 
 其他 shell 可使用 `python -m gsp.execute --version VERSION gspc` 或

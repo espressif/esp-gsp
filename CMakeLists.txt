@@ -97,7 +97,8 @@ set(gsp_srcs
     "src/renderer/kernel_rgb565/gsp_kernel_rgb565.c"
     "src/renderer/kernel_rgb888/gsp_kernel_rgb888.c"
     "src/renderer/kernel_argb8888/gsp_kernel_argb8888.c"
-    "src/renderer/gsp_gradient_cache.c")
+    "src/renderer/gsp_gradient_cache.c"
+    "src/renderer/gsp_edge_alpha.c")
 set(gsp_priv_include_dirs
     "priv_include"
     "src/ui"
@@ -258,8 +259,21 @@ configure_file(
     "${CMAKE_CURRENT_LIST_DIR}/cmake/esp_gsp_project_config.c.in"
     "${gsp_project_config_source}" COPYONLY)
 add_library(esp_gsp_project_config OBJECT "${gsp_project_config_source}"
-    "${CMAKE_CURRENT_LIST_DIR}/adapters/esp_idf/esp_gsp_idf_dma2d.c")
-target_link_libraries(esp_gsp_project_config PRIVATE idf::esp_driver_dma)
+    "${CMAKE_CURRENT_LIST_DIR}/adapters/esp_idf/esp_gsp_idf_dma2d.c"
+    "${CMAKE_CURRENT_LIST_DIR}/adapters/esp_idf/esp_gsp_idf_ppa.c")
+target_link_libraries(esp_gsp_project_config PRIVATE idf::esp_driver_dma idf::esp_mm)
+if(CONFIG_SOC_PPA_SUPPORTED)
+    idf_component_get_property(gsp_ppa_dir esp_driver_ppa COMPONENT_DIR)
+    set(gsp_ppa_header "${gsp_ppa_dir}/src/ppa_priv.h")
+    if(EXISTS "${gsp_ppa_header}")
+        set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${gsp_ppa_header}")
+        file(STRINGS "${gsp_ppa_header}" gsp_ppa_per_buffer_alignment REGEX "int_mem_align")
+        if(gsp_ppa_per_buffer_alignment)
+            target_compile_definitions(esp_gsp_project_config PRIVATE
+                ESP_GSP_PPA_HAS_PER_BUFFER_ALIGNMENT=1)
+        endif()
+    endif()
+endif()
 target_include_directories(esp_gsp_project_config PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/include"
     "${CMAKE_BINARY_DIR}/config")

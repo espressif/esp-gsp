@@ -35,6 +35,12 @@ baseline into object coordinates. Keep native dynamic text and the charset
 needed for future values. GSP layout constraints are evaluated during compile;
 runtime text changes do not implicitly reflow sibling objects.
 
+When compatibility advertises `font_text_metrics: 1`, use
+`gspc asset-info <font.ttf> --text '<sample text>' --font-size 16` to inspect
+line height, advance widths, baseline-relative ink bounds and missing codepoints.
+These are unwrapped lines with no alignment, ellipsis or text-box clipping;
+the final scene compile and preview remain the layout check.
+
 For design-fidelity acceptance, freeze independent reference images, original
 asset/font hashes, states and critical visual regions. Without independent
 references, continue implementation and behavior checks, and leave fidelity

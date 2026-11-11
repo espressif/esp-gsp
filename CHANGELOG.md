@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.10.1
+
+Use with GSPC 0.11.1, simulator 1.10.1 and esp_display_present ^1.2.0.
+
+- Improve authoring queries, font metrics and safe draft repair.
+- Reduce font, raster, scroll snapshot and image encoding work; compare final animation encodings under `size`.
+- Fix PPA/JPEG hardware boundary handling.
+
+Resource formats and configuration ABI 4 are unchanged. Rebuild target archives for delivery.
+Shared rotation fixes are delivered separately in esp_display_present.
+
 ## 1.10.0
 
 Use with GSPC 0.11.0, simulator 1.10.0 and esp_display_present ^1.2.0.

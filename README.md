@@ -40,7 +40,7 @@ Create the smallest complete example directly from the ESP Component Registry:
 
 <!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.10.0:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.10.1:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -67,7 +67,7 @@ From the ESP-IDF project root:
 
 <!-- gsp-version:dependency-command -->
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.10.0"
+idf.py add-dependency "espressif/esp-gsp^1.10.1"
 python -m pip install -U esp-gsp-tools
 ```
 <!-- /gsp-version:dependency-command -->

@@ -703,6 +703,10 @@ Image。默认/`auto` 策略、具名或可替换图片、模板、外部资源�
 显式 `animation_codec`、默认 QOI 策略、透明动画、
 RGB888 与外置流式资源保留既有资源编码。资源报告以 `anim_spans` 标识选中的表示。
 
+使用 `codec: "size"` 时，GSPC 会保留无损候选，在分组压缩和 Span 评估后与 JPEG
+比较。Span 的收益不足以覆盖共享解码器余量时，仍可选择核心播放器支持的较小编码。
+这会增加编译工作和临时内存；`auto`、`speed` 与显式动画编码保留各自的选择策略。
+
 内嵌动图需要进一步缩减体积时，可启用 `CONFIG_ESP_GSP_ENABLE_ANIM_DEFLATE=y`，并选择
 Profile `image_codec: size` 或 Image `codec: "size"`。当节省空间达到 8 KiB 和 10%，且
 画布与工作区满足场景动画预算时，GSPC 会将最多 4 帧分组压缩为 zlib 流。普通补丁
