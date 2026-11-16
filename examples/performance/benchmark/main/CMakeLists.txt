@@ -10,10 +10,19 @@ if(EXISTS "${gsp_source_root}/tools/gspc/Cargo.toml")
     get_filename_component(gsp_component "${gsp_source_root}" NAME)
 endif()
 
+set(bench_console_requires "")
+idf_build_get_property(bench_idf_target IDF_TARGET)
+if(bench_idf_target STREQUAL "esp32c3")
+    list(APPEND bench_console_requires esp_driver_usb_serial_jtag)
+endif()
+if(bench_idf_target STREQUAL "esp32s31")
+    list(APPEND bench_console_requires esp_driver_gpio esp_driver_ledc)
+endif()
+
 idf_component_register(
-    SRCS "app_main.c" "bench_present_modes.c" "bench_workload.c"
+    SRCS "app_main.c" "bench_present_modes.c" "bench_workload.c" "bench_cpu.c" "bench_mosaico_power.c"
     INCLUDE_DIRS "."
-    PRIV_REQUIRES ${gsp_component} esp_timer esp_lcd hw_init esp_display_present
+    PRIV_REQUIRES ${gsp_component} esp_timer esp_lcd hw_init esp_display_present ${bench_console_requires}
 )
 
 idf_build_get_property(build_components BUILD_COMPONENTS)
@@ -26,7 +35,18 @@ target_include_directories(${COMPONENT_LIB} PRIVATE
     "${present_dir}/private_include")
 
 set(bench_pixel_format rgb565)
-if(GSP_BENCH_RGB888)
+if(GSP_BENCH_BOARD_PROFILE STREQUAL "C5_CO5300")
+    set(bench_scene ../scenes/bench_square_466.json)
+    set(bench_alt_scene ../scenes/bench_alt_square_466.json)
+elseif(GSP_BENCH_BOARD_PROFILE STREQUAL "P4_EYE_SPI")
+    set(bench_scene ../scenes/bench_240.json)
+    set(bench_alt_scene ../scenes/bench_alt_240.json)
+elseif(GSP_BENCH_BOARD_PROFILE STREQUAL "S31_MOSAICO" OR
+       GSP_BENCH_BOARD_PROFILE STREQUAL "S31_GC9503" OR
+       CONFIG_EXAMPLE_LCD_INTERFACE_QSPI_CO5300)
+    set(bench_scene ../scenes/bench_square_480.json)
+    set(bench_alt_scene ../scenes/bench_alt_square_480.json)
+elseif(GSP_BENCH_RGB888)
     set(bench_pixel_format rgb888)
     if(CONFIG_EXAMPLE_LCD_INTERFACE_MIPI_DSI)
         set(bench_scene ../scenes/bench_rgb888_1024.json)

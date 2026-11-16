@@ -4,13 +4,34 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-set(EXTRA_COMPONENT_DIRS "components")
+set(GSP_BENCH_BOARD_PROFILE "" CACHE STRING
+    "Optional local board: C5_CO5300, P4_EYE_SPI, S31_GC9503, or S31_MOSAICO")
+set_property(CACHE GSP_BENCH_BOARD_PROFILE PROPERTY STRINGS
+    "" C5_CO5300 P4_EYE_SPI S31_GC9503 S31_MOSAICO)
+set(bench_local_board_profiles C5_CO5300 P4_EYE_SPI S31_GC9503 S31_MOSAICO)
+if(GSP_BENCH_BOARD_PROFILE)
+    if(NOT GSP_BENCH_BOARD_PROFILE IN_LIST bench_local_board_profiles)
+        message(FATAL_ERROR "Unknown GSP_BENCH_BOARD_PROFILE=${GSP_BENCH_BOARD_PROFILE}")
+    endif()
+    # Keep the established eight-board profiles on the shared common layer.
+    # These extra fixtures replace only hw_init, without changing the core.
+    set(EXTRA_COMPONENT_DIRS "boards/hw_init")
+    # Keep the packaged fallback from overriding the selected board.
+    list(APPEND EXTRA_COMPONENT_EXCLUDE_DIRS
+        "${CMAKE_CURRENT_LIST_DIR}/components/hw_init")
+else()
+    set(EXTRA_COMPONENT_DIRS "components")
+endif()
+set(SUPPORTED_TARGETS esp32c3 esp32c5 esp32s3 esp32p4 esp32s31)
+
 set(ESP_GSP_EXAMPLE_ASSETS_SUBTREE "performance/benchmark")
 set(ESP_GSP_EXAMPLE_ASSETS_SENTINEL "scenes/bench_industrial.png")
 set(ESP_GSP_EXAMPLE_ASSETS_FONTS "DejaVuSans.ttf")
-set(SUPPORTED_TARGETS esp32c3 esp32s3 esp32p4 esp32s31)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+# Component requirements are expanded in a separate `cmake -P` process.
+# Export the selection before project() so it reaches that process as well.
+idf_build_set_property(GSP_BENCH_BOARD_PROFILE "${GSP_BENCH_BOARD_PROFILE}")
 project(gsp_benchmark)
 
 option(GSP_BENCH_FULL_REPAINT
@@ -64,6 +85,9 @@ endif()
 option(GSP_BENCH_RGB888
        "Run a native RGB888 benchmark bundle and panel" OFF)
 if(GSP_BENCH_RGB888)
+    if(GSP_BENCH_BOARD_PROFILE)
+        message(FATAL_ERROR "Benchmark-local board profiles use RGB565")
+    endif()
     if(NOT CONFIG_EXAMPLE_LCD_INTERFACE_MIPI_DSI AND
        NOT CONFIG_EXAMPLE_LCD_INTERFACE_RGB24)
         message(FATAL_ERROR "GSP_BENCH_RGB888 needs MIPI-DPI or 24-bit RGB")

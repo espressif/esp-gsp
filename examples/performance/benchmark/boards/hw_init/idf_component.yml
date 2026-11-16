@@ -1,0 +1,24 @@
+version: "0.1.0"
+description: Benchmark-only adapters for additional local display fixtures.
+dependencies:
+  idf: ">=6.0"
+  espressif/esp_display_present:
+    version: "^1.2.0"
+    public: true
+  espressif/esp_lcd_touch:
+    version: "^1"
+    public: true
+  espressif/esp_lcd_co5300:
+    version: "2.2.0"
+    rules:
+      - if: "target in [esp32c5, esp32s31]"
+  espressif/esp_lcd_gc9503:
+    # Use the local 3.0.1 driver; its Registry target metadata excludes S31.
+    version: "3.0.1"
+    override_path: "esp_lcd_gc9503"
+    rules:
+      - if: "target == esp32s31"
+  espressif/esp_lcd_panel_io_additions:
+    version: "^1.0.1"
+    rules:
+      - if: "target == esp32s31"

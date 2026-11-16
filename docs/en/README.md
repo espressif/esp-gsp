@@ -20,6 +20,8 @@ and look up fields and APIs in the reference pages.
 
 | Task | Guide or reference |
 |---|---|
+| View interface performance and resource statistics | [Performance statistics](guide/performance.md) |
+| View benchmarks by chip, interface and resolution | [Hardware performance statistics](guide/hardware-benchmark.md) |
 | Choose what belongs in JSON, application code, or the BSP | [Recommended workflow](guide/workflow.md) |
 | Create or revise a UI with Codex | [Agent-assisted UI development](guide/agent-assisted-ui.md) |
 | Author hierarchy, styles, actions, and templates | [Scene JSON guide](guide/scenes.md) |

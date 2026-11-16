@@ -3,7 +3,8 @@
 ESP-GSP provides an installable coding-agent Skill for turning product requirements,
 reference images, or existing designs into validated scene JSON and generated
 C API integration. The Skill uses the GSPC and ESP-GSP version selected by the
-application and reads its schema, API reference and examples.
+application and reads its schema, API reference and examples. It also supports
+migrating existing LVGL scenes into native GSP implementations.
 
 ## Install the Skill
 
@@ -31,6 +32,29 @@ component archive. A project using the managed component still has the
 bilingual documentation, widget examples, and generated references that the
 Skill reads. Without installing the Skill, follow this guide and use
 `gspc doctor`, `gspc cards`, and `gspc diagnose` directly.
+
+## Migrate an LVGL scene
+
+Provide the source project path and the page or flow to migrate. The Skill reads
+its callers, selected LVGL headers/configuration and build metadata; you do not
+need to identify the version beforehand. You can request an assessment, a single
+page or a complete migration.
+
+```text
+Use $esp-gsp-ui to migrate the Settings page in /path/to/lvgl-project to native
+GSP scenes and C integration. Preserve brightness submission, Wi-Fi state and
+Back/re-entry behavior. Keep the existing visual intent. Build the affected
+application and verify actual input and state; report any remaining gaps.
+```
+
+Provide original assets and LVGL captures when available. Keep requested redesign
+separate from preserved appearance. Missing captures leave visual fidelity
+unverified; device FPS and resource gains require comparable measurements.
+
+The Skill's `references/lvgl-migration.md` covers semantic differences and
+integration checks. The source checkout's `examples/usage/design_reference`
+provides a teaching example and optional LVGL baseline runner; it is not a
+universal converter or a customer performance benchmark.
 
 ## Give it a useful requirement
 

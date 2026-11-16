@@ -37,7 +37,7 @@ ESP-GSP 适合这样的产品：界面结构在编译时就已确定，但文字
 
 <!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.10.2:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.10.3:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -61,7 +61,7 @@ python -m pip install -U esp-gsp-tools
 
 <!-- gsp-version:dependency-command -->
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.10.2"
+idf.py add-dependency "espressif/esp-gsp^1.10.3"
 python -m pip install -U esp-gsp-tools
 ```
 <!-- /gsp-version:dependency-command -->
@@ -117,6 +117,8 @@ gsp_add_bundle(${COMPONENT_LIB})
 | 你想做什么 | 从这里开始 |
 |---|---|
 | 安装并运行第一个场景 | [中文快速入门](docs/zh-cn/getting-started.md) |
+| 查看帧率、CPU 和资源数据 | [性能数据统计](docs/zh-cn/guide/performance.md) |
+| 按芯片、接口和分辨率查看基准 | [硬件性能统计](docs/zh-cn/guide/hardware-benchmark.md) |
 | 理解推荐的开发流程 | [工程工作流](docs/zh-cn/guide/workflow.md) |
 | 用 AI Agent 编写和验证界面 | [Agent 辅助 UI 开发](docs/zh-cn/guide/agent-assisted-ui.md) |
 | 编写 JSON、选择字段 | [场景指南](docs/zh-cn/guide/scenes.md) 与 [字段参考](docs/zh-cn/reference/authoring.md) |

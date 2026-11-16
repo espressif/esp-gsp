@@ -1,0 +1,4 @@
+# P4-EYE rev3.2 ST7789 SPI240, RGB565, mode3, 80MHz.
+# Select with -D GSP_BENCH_BOARD_PROFILE=P4_EYE_SPI and target esp32p4.
+# The normal P4 target fragment supplies HEX PSRAM/XIP/cache settings.
+CONFIG_ESP32P4_REV_MIN_301=y

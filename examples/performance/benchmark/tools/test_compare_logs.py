@@ -19,6 +19,197 @@ SPEC.loader.exec_module(compare_logs)
 
 
 class ParseLogTest(unittest.TestCase):
+    @staticmethod
+    def cpu_protocol_29_fixture():
+        return """
+I (1) app_init: App version: cpu-test
+bench: run mode=soak case=P_RECT1 name="rect x1" category=primitives dwell_ms=4000
+bench: config protocol=29 pressure=native pressure_ms=1 touch=disabled queue_metric=drained hud=results-only bundle_crc=1234abcd logical=240x240 reset=page ui_timing=off service_profile=off cpu=freertos_idle_v1 cpu_clock=esp_timer cpu_bits=64 cpu_cores=2 cpu_tasks=64 cpu_scope=case_windows
+bench: warm-up lap done, measuring
+bench: cpu[rect x1] valid=1 busy_bp=6250 cores=2 windows=1 window_us=4000000 total_us=4000000 idle_us=3000000 core_idle_us=1000000,2000000 snapshot_us=150 start_us=10000000 end_us=14000000
+bench: pressure[rect x1] mode=native period_ms=1 ticks=200 requests=0 accepted=0 rejected=0 errors=0
+bench: detail[rect x1] frames=100 elapsed_us=4000000 busy_us=2000000 render_us=500000 submit_us=1500000 service_steps=0 service_us=0 commands=0 busy=20.000ms internal_peak=0 psram_peak=0
+bench: ui[rect x1] steps=0 step_us=0
+bench: viewport[rect x1] attempts=0 started=0 reused=0 skipped=0 active=0 reason=0 error=0
+bench: ---- summary ----
+bench: rect x1 25.0 50.0 5.0 15.0 0.0 0.0 4
+bench: aggregate wall throughput 25.0 fps
+bench: aggregate active throughput 50.0 fps
+bench: aggregate raw frames=100 wall_us=4000000 busy_us=2000000
+bench: aggregate ui step_us=0
+bench: aggregate cpu valid=1 busy_bp=6250 cores=2 windows=1 window_us=4000000 total_us=4000000 idle_us=3000000 core_idle_us=1000000,2000000 snapshot_us=150
+bench: codecs qoi=0/0 rle16=0/0 png=0/0 failed=0 scale_hw=0 scale_sw=0
+bench: dynamic image request=0 queued=0 published=0 failed=0 cancelled=0 probe=0us
+bench: measurement end
+"""
+
+    def test_protocol_29_requires_valid_cpu_samples_and_fingerprint(self):
+        content = self.cpu_protocol_29_fixture()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "cpu.log"
+            path.write_text(content)
+            run = compare_logs.parse_log(path)
+            self.assertEqual(run.cpu_aggregate.busy_percent, 62.5)
+            self.assertEqual(run.cpu_pages["rect x1"].core_idle_us, (1000000, 2000000))
+            self.assertTrue(run.cpu_aggregate.valid)
+            self.assertIsNone(run.pages["rect x1"].service_us)
+            output = subprocess.run(
+                [sys.executable, str(MODULE_PATH), "--pair", "cpu", str(path), str(path), "--details"],
+                check=True, capture_output=True, text=True).stdout
+            self.assertIn("62.50%", output)
+            self.assertIn("all-core CPU busy", output)
+            page_line = next(line for line in content.splitlines() if line.startswith("bench: cpu["))
+            aggregate = next(line for line in content.splitlines() if line.startswith("bench: aggregate cpu"))
+            for broken in (content.replace(page_line + "\n", ""),
+                           content.replace(aggregate + "\n", ""),
+                           content.replace(page_line, page_line + "\n" + page_line),
+                           content.replace(aggregate, aggregate + "\n" + aggregate),
+                           content.replace("cpu_bits=64", "cpu_bits=32"),
+                           content.replace("cpu_cores=2", "cpu_cores=1"),
+                           content.replace("cpu_clock=esp_timer", "cpu_clock=cpu_clock"),
+                           content.replace("cpu=freertos_idle_v1", "cpu=unknown"),
+                           content.replace("cpu_tasks=64", "cpu_tasks=0"),
+                           content.replace("cpu_scope=case_windows", "cpu_scope=whole_lap"),
+                           content.replace("valid=1 busy_bp=6250", "valid=0 busy_bp=-1"),
+                           content.replace("busy_bp=6250", "busy_bp=6251"),
+                           content.replace("core_idle_us=1000000,2000000", "core_idle_us=3000000"),
+                           content.replace("idle_us=3000000", "idle_us=3000001"),
+                           content.replace("window_us=4000000", "window_us=3999999"),
+                           content.replace("total_us=4000000", "total_us=3999999"),
+                           content.replace("total_us=4000000", "total_us=0"),
+                           content.replace("end_us=14000000", "end_us=9999999"),
+                           content.replace("snapshot_us=150", "snapshot_us=4000001"),
+                           content.replace(page_line, page_line.replace("4000000", "5000000")
+                                           .replace("14000000", "15000000").replace("busy_bp=6250", "busy_bp=7000")),
+                           content.replace(aggregate, aggregate.replace("core_idle_us=1000000,2000000", "core_idle_us=2000000,1000000")),
+                           content.replace(aggregate, aggregate.replace("snapshot_us=150", "snapshot_us=151"))):
+                with self.subTest(broken=broken):
+                    path.write_text(broken)
+                    with self.assertRaises(ValueError):
+                        compare_logs.parse_log(path)
+            # Protocol 28 keeps its original semantics and accepts logs without CPU records.
+            legacy = "\n".join(line for line in content.replace("protocol=29", "protocol=28").splitlines()
+                               if not line.startswith(("bench: cpu[", "bench: aggregate cpu")))
+            path.write_text(legacy)
+            old = compare_logs.parse_log(path)
+            self.assertEqual(old.cpu_pages, {})
+            self.assertIsNone(old.cpu_aggregate)
+
+    def test_protocol_30_requires_explicit_tick_adjustment_and_keeps_protocol_29_strict(self):
+        content = (self.cpu_protocol_29_fixture().replace("protocol=29", "protocol=30")
+                   .replace("cpu=freertos_idle_v1", "cpu=freertos_idle_v2 cpu_tick_hz=1000 cpu_tolerance_us=1000 cpu_adjust=per_core_tick_clamp_v1")
+                   .replace("snapshot_us=150", "tolerance_us=1000 idle_adjust_us=0 core_idle_adjust_us=0,0 snapshot_us=150"))
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "tick-adjustment.log"
+            path.write_text(content)
+            sample = compare_logs.parse_log(path).cpu_pages["rect x1"]
+            self.assertEqual(sample.tolerance_us, 1000)
+            self.assertEqual(sample.core_idle_adjust_us, (0, 0))
+            clipped = (content.replace("busy_bp=6250", "busy_bp=3750")
+                       .replace("idle_us=3000000", "idle_us=5000015")
+                       .replace("core_idle_us=1000000,2000000", "core_idle_us=1000000,4000015")
+                       .replace("idle_adjust_us=0 core_idle_adjust_us=0,0", "idle_adjust_us=15 core_idle_adjust_us=0,15"))
+            path.write_text(clipped)
+            run = compare_logs.parse_log(path)
+            self.assertEqual(run.cpu_pages["rect x1"].idle_us, 5000015)
+            self.assertEqual(run.cpu_aggregate.idle_adjust_us, 15)
+            self.assertEqual(run.cpu_aggregate.busy_percent, 37.5)
+            for broken in (content.replace("cpu_tick_hz=1000", "cpu_tick_hz=0"),
+                           content.replace("cpu_tolerance_us=1000", "cpu_tolerance_us=1001"),
+                           content.replace("cpu_adjust=per_core_tick_clamp_v1", "cpu_adjust=none"),
+                           content.replace("cpu=freertos_idle_v2", "cpu=freertos_idle_v1"),
+                           content.replace("tolerance_us=1000 idle_adjust_us=0 core_idle_adjust_us=0,0 ", ""),
+                           content.replace("core_idle_adjust_us=0,0", "core_idle_adjust_us=0"),
+                           content.replace("tolerance_us=1000 idle_adjust_us=0", "tolerance_us=999 idle_adjust_us=0"),
+                           content.replace("idle_adjust_us=0 core_idle_adjust_us=0,0", "idle_adjust_us=1 core_idle_adjust_us=0,0")):
+                with self.subTest(broken=broken):
+                    path.write_text(broken)
+                    with self.assertRaises(ValueError):
+                        compare_logs.parse_log(path)
+
+    def test_cpu_tick_adjustment_replays_s3_endpoint_and_rejects_unbounded_excess(self):
+        path = Path("s3-idle-endpoint.log")
+        fields = (" valid=1 busy_bp=454 cores=2 windows=1 window_us=3009985 total_us=3009985"
+                  " idle_us=5746432 core_idle_us=2736432,3010000 tolerance_us=1000 idle_adjust_us=15"
+                  " core_idle_adjust_us=0,15 snapshot_us=150 start_us=10000000 end_us=13009985")
+        sample = compare_logs.parse_cpu_fields(fields, path, 2, aggregate=False, tolerance_us=1000)
+        self.assertEqual(sample.idle_us, 5746432)
+        self.assertEqual(sample.core_idle_us, (2736432, 3010000))
+        self.assertEqual(sample.idle_used_us, 5746417)
+        self.assertEqual(sample.core_idle_adjust_us, (0, 15))
+        self.assertAlmostEqual(sample.busy_adjustment_percentage_points, 100 * 15 / (2 * 3009985))
+        boundary = (" valid=1 busy_bp=0 cores=1 windows=1 window_us=3000000 total_us=3000000"
+                    " idle_us=3001000 core_idle_us=3001000 tolerance_us=1000 idle_adjust_us=1000"
+                    " core_idle_adjust_us=1000 snapshot_us=1 start_us=10000000 end_us=13000000")
+        self.assertEqual(compare_logs.parse_cpu_fields(boundary, path, 1, aggregate=False, tolerance_us=1000).idle_used_us, 3000000)
+        for broken in (boundary.replace("3001000", "3001001").replace("idle_adjust_us=1000", "idle_adjust_us=1001"),
+                       fields.replace("idle_adjust_us=15 core_idle_adjust_us=0,15", "idle_adjust_us=14 core_idle_adjust_us=0,14"),
+                       fields.replace("idle_adjust_us=15 core_idle_adjust_us=0,15", "idle_adjust_us=16 core_idle_adjust_us=0,16"),
+                       fields.replace("idle_adjust_us=15 core_idle_adjust_us=0,15", "idle_adjust_us=15 core_idle_adjust_us=15,0")):
+            with self.subTest(broken=broken):
+                with self.assertRaises(ValueError):
+                    compare_logs.parse_cpu_fields(broken, path, 1 if broken.startswith(" valid=1 busy_bp=0 cores=1") else 2,
+                                                  aggregate=False, tolerance_us=1000)
+        # The historical strict format still rejects the same raw idle excess.
+        legacy = fields.replace(" tolerance_us=1000 idle_adjust_us=15 core_idle_adjust_us=0,15", "")
+        with self.assertRaises(ValueError):
+            compare_logs.parse_cpu_fields(legacy, path, 2, aggregate=False)
+
+    def test_adjusted_cpu_aggregate_sums_case_adjustments_before_percentage(self):
+        config = {"protocol": "30", "cpu": "freertos_idle_v2", "cpu_clock": "esp_timer", "cpu_bits": "64",
+                  "cpu_cores": "2", "cpu_tasks": "64", "cpu_scope": "case_windows", "cpu_tick_hz": "1000",
+                  "cpu_tolerance_us": "1000", "cpu_adjust": "per_core_tick_clamp_v1"}
+        records = [
+            "bench: cpu[short] valid=1 busy_bp=4000 cores=2 windows=1 window_us=1000 total_us=1000 idle_us=1700 core_idle_us=1500,200 tolerance_us=1000 idle_adjust_us=500 core_idle_adjust_us=500,0 snapshot_us=2 start_us=10000 end_us=11000",
+            "bench: cpu[long] valid=1 busy_bp=5000 cores=2 windows=1 window_us=3000 total_us=3000 idle_us=3000 core_idle_us=0,3000 tolerance_us=1000 idle_adjust_us=0 core_idle_adjust_us=0,0 snapshot_us=3 start_us=20000 end_us=23000"]
+        aggregate = [" valid=1 busy_bp=4750 cores=2 windows=2 window_us=4000 total_us=4000 idle_us=4700 core_idle_us=1500,3200 tolerance_us=1000 idle_adjust_us=500 core_idle_adjust_us=500,0 snapshot_us=5"]
+        raw = {name: compare_logs.RawPage(1, duration, 1, 0, 0, 0, 0, 0)
+               for name, duration in (("short", 1000), ("long", 3000))}
+        path = Path("weighted-adjusted-cpu.log")
+        _, total = compare_logs.validate_cpu_records(path, records, aggregate, config, raw, 4000)
+        self.assertEqual(total.busy_percent, 47.5)
+        self.assertEqual(total.idle_used_us, 4200)
+        self.assertEqual(total.idle_adjust_us, 500)
+        # Aggregate raw counters no longer exceed total capacity per core, but
+        # dropping their per-case adjustment would incorrectly report 41.25%.
+        wrong = [aggregate[0].replace("busy_bp=4750", "busy_bp=4125")
+                 .replace("idle_adjust_us=500 core_idle_adjust_us=500,0", "idle_adjust_us=0 core_idle_adjust_us=0,0")]
+        with self.assertRaises(ValueError):
+            compare_logs.validate_cpu_records(path, records, wrong, config, raw, 4000)
+
+    def test_cpu_aggregate_uses_disjoint_raw_deltas_and_all_cores(self):
+        config = {"cpu": "freertos_idle_v1", "cpu_clock": "esp_timer", "cpu_bits": "64",
+                  "cpu_cores": "2", "cpu_tasks": "64", "cpu_scope": "case_windows"}
+        records = [
+            "bench: cpu[short] valid=1 busy_bp=10000 cores=2 windows=1 window_us=1000000 total_us=1000000 idle_us=0 core_idle_us=0,0 snapshot_us=20 start_us=1000000 end_us=2000000",
+            "bench: cpu[long] valid=1 busy_bp=0 cores=2 windows=1 window_us=3000000 total_us=3000000 idle_us=6000000 core_idle_us=3000000,3000000 snapshot_us=30 start_us=3000000 end_us=6000000",
+        ]
+        aggregate = [" valid=1 busy_bp=2500 cores=2 windows=2 window_us=4000000 total_us=4000000 idle_us=6000000 core_idle_us=3000000,3000000 snapshot_us=50"]
+        raw = {name: compare_logs.RawPage(1, duration, 1, 0, 0, 0, 0, 0)
+               for name, duration in (("short", 1000000), ("long", 3000000))}
+        validate = compare_logs.validate_cpu_records
+        path = Path("weighted-cpu.log")
+        pages, total = validate(path, records, aggregate, config, raw, 4000000)
+        self.assertEqual(total.busy_percent, 25.0)
+        self.assertNotEqual(total.busy_percent, sum(item.busy_percent for item in pages.values()) / 2)
+        # The gap between case endpoints is excluded, and a percentage average is rejected.
+        for bad_records, bad_aggregate, bad_wall in (
+                (records, [aggregate[0].replace("busy_bp=2500", "busy_bp=5000")], 4000000),
+                (records, [aggregate[0].replace("windows=2", "windows=1")], 4000000),
+                (records, [aggregate[0].replace("snapshot_us=50", "snapshot_us=49")], 4000000),
+                (records, aggregate, 5000000),
+                ([records[0], records[1].replace("start_us=3000000 end_us=6000000", "start_us=1500000 end_us=4500000")], aggregate, 4000000),
+                (list(reversed(records)), aggregate, 4000000),
+                ([records[0].replace("core_idle_us=0,0", "core_idle_us=1000001,0")], aggregate, 4000000)):
+            with self.subTest(records=bad_records, aggregate=bad_aggregate, wall=bad_wall):
+                with self.assertRaises(ValueError):
+                    validate(path, bad_records, bad_aggregate, config, raw, bad_wall)
+        # A single-core sample needs no extra divide by the multicore count.
+        sample = compare_logs.parse_cpu_fields(
+            " valid=1 busy_bp=7500 cores=1 windows=1 window_us=4000 total_us=4000 idle_us=1000 core_idle_us=1000 snapshot_us=2 start_us=10000 end_us=14000",
+            path, 1, aggregate=False)
+        self.assertEqual(sample.busy_percent, 75.0)
+
     def test_page_flow_requires_completed_cycle(self):
         content = '''
 I (1) app_init: App version: pageflow-regression

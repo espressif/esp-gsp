@@ -62,8 +62,11 @@ menu "Example HW Init"
             Panel-level rotation: the scene renders in its logical
             orientation and rotates into the panel at present time.
             90/270 need a scene whose resolution matches the
-            transposed panel (square panels work with any angle; the
-            RGB benchmark ships a portrait 480x800 bundle).
+            transposed panel (the RGB benchmark ships a portrait
+            480x800 bundle).
+            Non-zero rotation requires a supported framebuffer mode or
+            TE-synchronized GRAM composition. SPI GRAM profiles without
+            TE support only 0 degrees, including square panels.
 
         config EXAMPLE_DISPLAY_ROTATION_0
             bool "0"

@@ -102,6 +102,11 @@ Keep callbacks non-blocking and follow COPY, BORROW, and TAKE ownership. Treat
 setters as asynchronous submissions on ESP-IDF. Use `esp_gsp_flush()` only for
 an explicit synchronization boundary.
 
+For input callbacks, check the widget's new-state contract. A boolean CALL can
+have a static argument, and an immediate getter may still see pre-input state.
+For a simple click toggle, update retained application state and project it back;
+verify both off and on transitions, including re-entry.
+
 A navigation submission does not activate the destination immediately. Restore
 destination state and attach its keyboard from `ESP_GSP_EVENT_SCENE_CHANGED`,
 checking `event->scene_id`, rather than calling destination setters immediately

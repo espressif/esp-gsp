@@ -70,6 +70,22 @@ test. Full-repaint runs measure sustained composition pressure;
 native runs measure the authored update patterns. Do not combine their scores
 or describe full repaint as evidence of dirty-region efficiency.
 
+## Data collection and publication
+
+Collect two independent boots per mode in native/full/full/native order. Each
+boot must complete its warm-up and all 58 measured cases. Retain the complete
+serial logs, build/configuration hashes and device identity checks together.
+The [offline tools](tools/README.md) validate this evidence, export the public
+CSV/JSON matrix and render the bilingual hardware statistics pages. They do
+not flash, reset or monitor devices.
+
+Published results retain the GSP, compiler and SDK identities captured during
+measurement. Reproducing those results requires the recorded versions and
+configuration; new runs from this branch need their own provenance. The
+published [framework comparison](../../../docs/en/guide/performance.md) and
+[hardware matrix](../../../docs/en/guide/hardware-benchmark.md) keep their
+measurement groups and resource costs separate.
+
 ## Native C UI backend
 
 `pc/` directly compiles `main/bench_workload.c` with
@@ -107,6 +123,65 @@ below for benchmark results.
 - `qcmd/s`: commands drained from the queue per measured second. Calls made
   inline on the render task are not counted. The raw log field remains
   `commands` for compatibility; this is not total applied update rate.
+- `CPU busy`: whole-system scheduled non-idle runtime, normalized over every
+  configured core. Protocol 30 samples the FreeRTOS idle-task runtime counters
+  and the 64-bit ESP_TIMER total counter at each case boundary. The formula is
+  `100 * (cores * total_us - (idle_us - idle_adjust_us)) / (cores * total_us)`.
+  One fully busy core
+  on a two-core build contributes 50%. This is separate from render busy time,
+  active throughput and UI-step time; it also includes other scheduled tasks.
+
+`bench: cpu[case]` reports `valid`, `busy_bp` (hundredths of one percent),
+`cores`, `windows`, `window_us`, `total_us`, summed `idle_us`, each core's
+`core_idle_us`, `tolerance_us`, summed `idle_adjust_us`, each core's
+`core_idle_adjust_us`, `snapshot_us`, and absolute `start_us`/`end_us` endpoints.
+`idle_us` and `core_idle_us` always retain the raw measured deltas. A runtime
+counter updated at task switches can place an idle endpoint slightly beyond
+the ESP_TIMER window. Protocol 30 permits this excess only up to one configured
+FreeRTOS tick (`ceil(1000000 / FREERTOS_HZ)` microseconds; 1000 us at 1000 Hz).
+For each core, the adjustment must equal `max(raw_idle_us - total_us, 0)`;
+only that excess is removed from the idle value used in the CPU formula.
+No adjustment is applied to raw deltas that fit within the window.
+The change in reported busy percentage caused by adjustment is exactly
+`100 * idle_adjust_us / (cores * total_us)` percentage points, bounded by
+`100 * tolerance_us / total_us` for one window. This bound audits the clipping
+effect; it does not bound interrupt attribution or all scheduler sampling error.
+CPU and FPS wall windows share the same ESP_TIMER endpoints after page
+preparation and before result logging. Asynchronous setup work can still
+overlap the window. `bench: aggregate cpu` sums the disjoint case windows and
+their raw idle deltas and per-window adjustments, then calculates utilization
+from the summed capacity;
+it does not average per-case percentages or include gaps between cases.
+The aggregate never reapplies clipping to cumulative counters: even when summed
+raw idle fits within summed capacity, its per-window adjustments remain included.
+`compare_logs.py` reports aggregate CPU busy and, with `--details`, each case;
+CPU changes use percentage points. Python consumers can read `Run.cpu_pages`
+and `Run.cpu_aggregate` (`CpuSample.busy_percent` plus the raw and adjustment
+fields; `idle_used_us` and `busy_adjustment_percentage_points` are derived).
+
+CPU instrumentation enables `FREERTOS_GENERATE_RUN_TIME_STATS`,
+`FREERTOS_RUN_TIME_COUNTER_TYPE_U64` and
+`FREERTOS_RUN_TIME_STATS_USING_ESP_TIMER` in the benchmark configuration.
+It adds runtime-counter updates at task context switches and two system-state
+snapshots per case. Snapshot scratch storage is a static array of 64
+`TaskStatus_t` entries; sampling allocates no heap memory. Each snapshot scans
+task state and stack high-water marks while the kernel protects its task lists.
+`snapshot_us` records the combined duration of both boundary captures; boundary
+overhead is partly inside the measured interval and is not subtracted.
+FreeRTOS accounts runtime on task switches, so endpoint idle counters have
+scheduler-resolution error, and interrupt time is attributed to the interrupted
+task. This is an idle-based utilization estimate, not an ISR-time trace.
+
+Every configured core must have exactly one matching idle-task handle in each
+snapshot. Missing/overflowed snapshots, backwards counters, idle excess above
+the one-tick limit and invalid windows produce `valid=0 busy_bp=-1`.
+The parser rejects these runs instead of reporting zero utilization. Protocol
+30 requires complete CPU records and checks their raw and adjustment arithmetic,
+per-core bounds, disjoint endpoints and FPS-window agreement. Protocol 29 retains
+its strict unadjusted CPU validation; earlier protocols keep CPU unavailable.
+The fingerprint records CPU method, clock, counter width, core count, scratch
+capacity, scope, tick frequency and adjustment rule. Compare performance only
+with matching instrumentation; the 58 workloads are unchanged by protocol 30.
 
 Native animation phase and dirty-region size can change the work per submitted
 frame. Compare `bench: detail` frame counts with `bench: regions` output pixels,
@@ -316,6 +391,9 @@ idf.py --preview -B build_esp32s31_rgb888 \
   set-target esp32s31 build
 ```
 
+Additional C5, P4-EYE, S31 RGB480 and Mosaico configurations are listed in the
+[benchmark board adapters](boards/hw_init/README.md).
+
 ESP-IDF automatically applies `sdkconfig.defaults.<target>` after the base
 file. The SPI and RGB888 commands add another profile fragment on top. See the
 [Kconfig guide](../../../docs/en/reference/kconfig.md) for the loading and precedence rules.
@@ -490,6 +568,26 @@ and alpha coverage.
 See [asset provenance and generation prompts](scenes/ASSETS.md). Replacing
 artwork changes the workload and invalidates comparisons to the old bundle.
 
+
+## Additional board profiles
+
+`GSP_BENCH_BOARD_PROFILE` selects benchmark-local LCD wiring and power setup:
+
+| Profile | Target | Display | Defaults fragment |
+| --- | --- | --- | --- |
+| `C5_CO5300` | `esp32c5` | QSPI, 466×466 RGB565 | `sdkconfig.defaults.c5_co5300` |
+| `P4_EYE_SPI` | `esp32p4` | SPI, 240×240 RGB565 | `sdkconfig.defaults.p4_eye_spi` |
+| `S31_GC9503` | `esp32s31` | RGB, 480×480 RGB565 | `sdkconfig.defaults.s31_gc9503` |
+| `S31_MOSAICO` | `esp32s31` | QSPI, 480×480 RGB565 | `sdkconfig.defaults.s31_mosaico` |
+
+Mosaico selects CLK/RST from its board-version eFuse, releases the power-switch
+GPIO and soft-starts the peripheral supply. Its PSRAM-backed presenter uses
+PSRAM DMA, with TE on GPIO43. C5 disables PSRAM XIP in both modes to retain
+snapshot and fade workspace in its 4 MiB PSRAM. Neither profile disables
+transition snapshots.
+
+The C3 fixture uses a buffered USB Serial/JTAG console with a 2 KiB TX ring.
+Its driver and buffer are included in the firmware's measured resource cost.
 
 ## Capture a board matrix
 

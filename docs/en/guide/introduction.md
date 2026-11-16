@@ -14,6 +14,11 @@ through generated C functions, while the BSP configures the display and touch ha
 | Typed integration | Stable names generate setters, getters, event predicates, and component adapters. |
 | Portable rendering | The same core runs through WebAssembly for local preview and ESP-LCD on the device. |
 
+For fixed designs combining preset assets with changing foreground data,
+ahead-of-time preparation can improve frame rates or reduce CPU load at the same
+rate. See [Performance statistics](performance.md) for framework comparisons and
+[Hardware performance statistics](hardware-benchmark.md) for benchmarks across chips and displays.
+
 ## Ownership boundaries
 
 | Concern | Owner |

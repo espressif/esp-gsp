@@ -1,0 +1,7 @@
+version: "3.0.1"
+description: Retained GC9503 consumer driver for the benchmark S31 fixture.
+license: "Apache-2.0"
+targets:
+  - esp32s31
+dependencies:
+  idf: ">=6.0"

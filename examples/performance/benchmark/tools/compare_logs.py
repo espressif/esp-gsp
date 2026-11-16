@@ -106,6 +106,17 @@ VIEWPORT_RE = re.compile(
     r" reused=(?P<reused>\d+) skipped=(?P<skipped>\d+) active=(?P<active>[01])"
     r" reason=(?P<reason>\d+) error=(?P<error>-?\d+)$")
 AGGREGATE_UI_RE = re.compile(r"^bench: aggregate ui step_us=(?P<step_us>\d+)$")
+CPU_RE = re.compile(r"^bench: cpu\[(?P<name>.+)\](?P<fields>.*)$")
+CPU_FIELDS_RE = re.compile(
+    r" valid=(?P<valid>[01]) busy_bp=(?P<busy_bp>-?\d+)"
+    r" cores=(?P<cores>\d+) windows=(?P<windows>\d+)"
+    r" window_us=(?P<window_us>\d+) total_us=(?P<total_us>\d+)"
+    r" idle_us=(?P<idle_us>\d+) core_idle_us=(?P<core_idle_us>\d+(?:,\d+)*)"
+    r"(?: tolerance_us=(?P<tolerance_us>\d+) idle_adjust_us=(?P<idle_adjust_us>\d+)"
+    r" core_idle_adjust_us=(?P<core_idle_adjust_us>\d+(?:,\d+)*))?"
+    r" snapshot_us=(?P<snapshot_us>\d+)"
+    r"(?: start_us=(?P<start_us>\d+) end_us=(?P<end_us>\d+))?$"
+)
 ERROR_COUNTER_RE = re.compile(
     r"^bench: (?:components commands=\d+|dynamic qoi accepted=\d+|"
     r"image scale updates=\d+ commands=\d+|"
@@ -180,6 +191,42 @@ class UiPage:
 
 
 @dataclasses.dataclass(frozen=True)
+class CpuSample:
+    """Whole-system non-idle runtime, normalized over all configured cores.
+
+    total_us is one ESP_TIMER delta; available core time is total_us * cores.
+    Aggregate samples sum disjoint windows, rather than averaging percentages.
+    """
+
+    valid: bool
+    busy_bp: int
+    cores: int
+    windows: int
+    window_us: int
+    total_us: int
+    idle_us: int
+    core_idle_us: tuple[int, ...]
+    snapshot_us: int
+    start_us: int | None = None
+    end_us: int | None = None
+    tolerance_us: int = 0
+    idle_adjust_us: int = 0
+    core_idle_adjust_us: tuple[int, ...] = ()
+
+    @property
+    def busy_percent(self) -> float:
+        return self.busy_bp / 100.0
+
+    @property
+    def idle_used_us(self) -> int:
+        return self.idle_us - self.idle_adjust_us
+
+    @property
+    def busy_adjustment_percentage_points(self) -> float:
+        return 100.0 * self.idle_adjust_us / (self.total_us * self.cores)
+
+
+@dataclasses.dataclass(frozen=True)
 class Transition:
     count: int
     errors: int
@@ -214,11 +261,114 @@ class Run:
     ui_pages: dict[str, UiPage] = dataclasses.field(default_factory=dict)
     raw_ui_step_us: int | None = None
     viewport_pages: dict[str, dict[str, int]] = dataclasses.field(default_factory=dict)
+    cpu_pages: dict[str, CpuSample] = dataclasses.field(default_factory=dict)
+    cpu_aggregate: CpuSample | None = None
 
     @property
     def weighted_fps(self) -> float:
         """Compatibility accessor for callers consuming historical logs."""
         return self.score_fps
+
+
+def parse_cpu_fields(fields: str, path: Path, cores: int, *, aggregate: bool,
+                     tolerance_us: int | None = None) -> CpuSample:
+    match = CPU_FIELDS_RE.fullmatch(fields)
+    if match is None:
+        raise ValueError(f"{path}: malformed CPU record")
+    values = match.groupdict()
+    core_idle = tuple(map(int, values.pop("core_idle_us").split(",")))
+    adjustment_fields = {key: values.pop(key) for key in
+                         ("tolerance_us", "idle_adjust_us", "core_idle_adjust_us")}
+    adjusted = adjustment_fields["tolerance_us"] is not None
+    if adjusted != (tolerance_us is not None):
+        raise ValueError(f"{path}: missing or unexpected CPU endpoint adjustment fields")
+    core_adjust = tuple(map(int, adjustment_fields["core_idle_adjust_us"].split(","))) if adjusted else (0,) * cores
+    sample = CpuSample(valid=bool(int(values.pop("valid"))), core_idle_us=core_idle,
+                       tolerance_us=int(adjustment_fields["tolerance_us"]) if adjusted else 0,
+                       idle_adjust_us=int(adjustment_fields["idle_adjust_us"]) if adjusted else 0,
+                       core_idle_adjust_us=core_adjust, **{
+        key: (int(value) if value is not None else None)
+        for key, value in values.items()
+    })
+    if not sample.valid or not 0 <= sample.busy_bp <= 10000:
+        raise ValueError(f"{path}: unavailable or invalid CPU sample")
+    if sample.cores != cores or len(core_idle) != cores or len(core_adjust) != cores or sample.windows < 1:
+        raise ValueError(f"{path}: CPU core/window count mismatch")
+    if adjusted and sample.tolerance_us != tolerance_us:
+        raise ValueError(f"{path}: CPU endpoint tolerance does not match configuration")
+    if not 0 < sample.total_us <= ((1 << 64) - 1) // (cores * 10000) or \
+            sample.total_us != sample.window_us or \
+            sample.snapshot_us > sample.window_us or \
+            sum(core_idle) != sample.idle_us or sum(core_adjust) != sample.idle_adjust_us or \
+            any(adjust > raw or raw - adjust > sample.total_us or
+                adjust > sample.tolerance_us * sample.windows
+                for raw, adjust in zip(core_idle, core_adjust)):
+        raise ValueError(f"{path}: invalid CPU runtime counters")
+    if not aggregate and core_adjust != tuple(max(raw - sample.total_us, 0) for raw in core_idle):
+        raise ValueError(f"{path}: CPU adjustment must equal the raw per-core endpoint excess")
+    capacity = sample.total_us * cores
+    if sample.busy_bp != (capacity - sample.idle_used_us) * 10000 // capacity:
+        raise ValueError(f"{path}: CPU utilization does not match raw counters")
+    if aggregate:
+        if sample.start_us is not None or sample.end_us is not None:
+            raise ValueError(f"{path}: aggregate CPU record has case endpoints")
+    elif sample.windows != 1 or sample.start_us is None or sample.end_us is None or \
+            sample.start_us <= 0 or not sample.start_us < sample.end_us < (1 << 64) or \
+            sample.end_us - sample.start_us != sample.total_us:
+        raise ValueError(f"{path}: invalid CPU window endpoints")
+    return sample
+
+
+def validate_cpu_records(path: Path, cpu_records: list[str], aggregate_cpu_records: list[str],
+                         config_map: dict[str, str], raw_pages: dict[str, RawPage],
+                         raw_wall_us: int | None) -> tuple[dict[str, CpuSample], CpuSample]:
+    cpu_pages: dict[str, CpuSample] = {}
+    adjusted = int(config_map.get("protocol", "29")) >= 30
+    required_cpu = {"cpu": "freertos_idle_v2" if adjusted else "freertos_idle_v1", "cpu_clock": "esp_timer",
+                    "cpu_bits": "64", "cpu_tasks": "64", "cpu_scope": "case_windows"}
+    tolerance_us = None
+    if adjusted:
+        required_cpu["cpu_adjust"] = "per_core_tick_clamp_v1"
+        try:
+            tick_hz = int(config_map["cpu_tick_hz"])
+            tolerance_us = int(config_map["cpu_tolerance_us"])
+        except (KeyError, ValueError) as error:
+            raise ValueError(f"{path}: missing or invalid CPU endpoint tolerance configuration") from error
+        if not 0 < tick_hz <= 1_000_000 or tolerance_us != (1_000_000 + tick_hz - 1) // tick_hz:
+            raise ValueError(f"{path}: CPU endpoint tolerance must be exactly one configured tick")
+    if any(config_map.get(key) != value for key, value in required_cpu.items()):
+        raise ValueError(f"{path}: missing or unsupported CPU instrumentation fingerprint")
+    try:
+        cores = int(config_map["cpu_cores"])
+    except (KeyError, ValueError) as error:
+        raise ValueError(f"{path}: missing or invalid CPU core configuration") from error
+    if cores not in (1, 2):
+        raise ValueError(f"{path}: unsupported CPU core configuration")
+    previous_end = 0
+    for record in cpu_records:
+        match = CPU_RE.fullmatch(record)
+        if match is None or match["name"] in cpu_pages:
+            raise ValueError(f"{path}: malformed or duplicate per-case CPU record")
+        name = match["name"]
+        sample = parse_cpu_fields(match["fields"], path, cores, aggregate=False, tolerance_us=tolerance_us)
+        if sample.start_us < previous_end:
+            raise ValueError(f"{path}: overlapping or non-monotonic CPU windows")
+        previous_end = sample.end_us
+        cpu_pages[name] = sample
+    if set(cpu_pages) != set(raw_pages) or len(aggregate_cpu_records) != 1:
+        raise ValueError(f"{path}: missing per-case CPU samples or aggregate")
+    if any(sample.window_us != raw_pages[name].elapsed_us
+           for name, sample in cpu_pages.items()):
+        raise ValueError(f"{path}: CPU and FPS measured windows differ")
+    cpu_aggregate = parse_cpu_fields(aggregate_cpu_records[0], path, cores, aggregate=True, tolerance_us=tolerance_us)
+    for field in ("windows", "window_us", "total_us", "idle_us", "idle_adjust_us", "snapshot_us"):
+        if getattr(cpu_aggregate, field) != sum(getattr(sample, field) for sample in cpu_pages.values()):
+            raise ValueError(f"{path}: CPU aggregate does not equal case raw counters")
+    if any(getattr(cpu_aggregate, field) != tuple(
+            sum(getattr(sample, field)[core] for sample in cpu_pages.values()) for core in range(cores))
+            for field in ("core_idle_us", "core_idle_adjust_us")) or cpu_aggregate.window_us != raw_wall_us:
+        raise ValueError(f"{path}: CPU aggregate does not equal case/core raw counters")
+    return cpu_pages, cpu_aggregate
 
 
 def parse_log(path: Path) -> Run:
@@ -274,7 +424,12 @@ def parse_log(path: Path) -> Run:
     pressure_results = {}
     capacity_results = {}
     dropdown_result = None
+    cpu_records: list[str] = []
+    aggregate_cpu_records: list[str] = []
     for line in transition_text.splitlines():
+        if line.startswith("bench: cpu["):
+            cpu_records.append(line)
+            continue
         match = VIEWPORT_RE.match(line)
         if match:
             viewport_pages[match["name"]] = {key: int(value) for key, value in match.groupdict().items() if key != "name"}
@@ -423,6 +578,9 @@ def parse_log(path: Path) -> Run:
                     config_values[f"resolved_{key}"] = value
     config = tuple(sorted(config_values.items())) if config_values else None
     for line in summary.splitlines():
+        if line.startswith("bench: aggregate cpu"):
+            aggregate_cpu_records.append(line.removeprefix("bench: aggregate cpu"))
+            continue
         match = AGGREGATE_UI_RE.match(line)
         if match:
             raw_ui_step_us = int(match["step_us"])
@@ -769,10 +927,16 @@ def parse_log(path: Path) -> Run:
     if config_map.get("service_profile") == "off":
         pages = {name: dataclasses.replace(page, service_us=None, commands_s=None)
                  for name, page in pages.items()}
+    cpu_pages: dict[str, CpuSample] = {}
+    cpu_aggregate = None
+    if protocol >= 29:
+        cpu_pages, cpu_aggregate = validate_cpu_records(
+            path, cpu_records, aggregate_cpu_records, config_map, raw_pages, raw_wall_us)
     if active_fps is not None:
         return Run(versions[-1], active_fps, "aggregate_active_fps",
                    wall_fps, legacy_fps, pages, transitions, config, raw_frames,
-                   raw_wall_us, raw_busy_us, ui_pages, raw_ui_step_us, viewport_pages)
+                   raw_wall_us, raw_busy_us, ui_pages, raw_ui_step_us, viewport_pages,
+                   cpu_pages, cpu_aggregate)
     return Run(versions[-1], legacy_fps, "legacy_weighted_busy_score",
                None, legacy_fps, pages, transitions, config, None, None, None)
 
@@ -842,6 +1006,15 @@ def main() -> int:
             f"{current.score_fps:.1f} | {delta:+.1f}% | {wall_values} |"
         )
 
+    if any(baseline.cpu_aggregate and current.cpu_aggregate for _, baseline, current in parsed):
+        print("\n| Device | Baseline CPU busy | Current CPU busy | Change (percentage points) |")
+        print("|---|---:|---:|---:|")
+        for device, baseline, current in parsed:
+            if baseline.cpu_aggregate and current.cpu_aggregate:
+                old = baseline.cpu_aggregate.busy_percent
+                new = current.cpu_aggregate.busy_percent
+                print(f"| {device} | {old:.2f}% | {new:.2f}% | {new - old:+.2f} |")
+
     if args.details:
         for device, baseline, current in parsed:
             print(f"\n### {device}\n")
@@ -877,6 +1050,14 @@ def main() -> int:
                     new = current.ui_pages[name]
                     delta = percent(new.step_us, old.step_us)
                     print(f"| {name} | {old.step_us} | {new.step_us} | {delta:+.1f}% | {old.steps} | {new.steps} |")
+            if baseline.cpu_pages and current.cpu_pages:
+                print(f"\n#### {device} all-core CPU busy\n")
+                print("| Page | Baseline CPU busy | Current CPU busy | Change (percentage points) |")
+                print("|---|---:|---:|---:|")
+                for name, old in baseline.cpu_pages.items():
+                    new = current.cpu_pages[name]
+                    print(f"| {name} | {old.busy_percent:.2f}% | {new.busy_percent:.2f}% | "
+                          f"{new.busy_percent - old.busy_percent:+.2f} |")
             if baseline.transitions:
                 print(f"\n#### {device} transition latency\n")
                 print("| Transition | Count/errors | Baseline p95 us | "

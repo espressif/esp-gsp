@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.10.3
+
+Use with GSPC 0.11.2 and simulator 1.10.3. Runtime ABI and resource formats are unchanged.
+
+- Add LVGL migration guidance; fix example Wi-Fi state and display rotation.
+- Add `gspc bundle-info` with optional release expectation checks.
+- Publish FPS, CPU and resource statistics with offline hardware benchmark data tools.
+- Reduce arc, text update and RGB565 drawing work; add static bake storage budgets.
+
 ## 1.10.2
 
 - Update packaged Editor download links and collaboration setup for Studio 0.12.0.

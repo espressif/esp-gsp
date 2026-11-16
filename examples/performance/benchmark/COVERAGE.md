@@ -46,6 +46,7 @@ acceptance columns describe the additional runtime coverage.
 | Saturation | `P_STORM` attempts nine updates per callback; every ordinary page also requests repaint in full mode. Accepted updates are not rendered frames |
 | Capacity scaling | Fixed-alpha, fixed-size rectangle tiers 1/8/32/64; geometry and count are validated. Includes shared scene overhead, not a pure blend kernel |
 | Result isolation | Physical touch is disabled by default. Real touch in diagnostic mode invalidates the log. Result cards and their display time are outside scored windows |
+| All-core CPU utilization | Protocol 30 uses 64-bit ESP_TIMER FreeRTOS runtime deltas and each core's idle-task handle. Retains raw idle deltas and explicit per-core clipping of at most one tick of endpoint excess; larger excess is invalid. Requires complete valid snapshots, monotonic counters, identical CPU/FPS windows and a raw-counter/adjustment-weighted aggregate over disjoint case windows |
 
 ## Vector feature matrix
 
@@ -101,8 +102,11 @@ local test environment, not the benchmark's supported configuration contract.
 - Canvas external-buffer push/lease ownership, filesystem/network image
   sources, dynamic font loading and deployable metadata updates are not
   separately scored by this default suite. Use their dedicated tests.
-- There is no CPU-utilization, power or optical-refresh measurement. Frame
-  throughput and renderer busy time must not be relabeled as those metrics.
+- CPU utilization is the normalized whole-system scheduled non-idle estimate
+  described in [README.md](README.md#metrics), with task-switch and boundary
+  snapshot overhead. FreeRTOS attributes interrupt runtime to the interrupted
+  task; this does not isolate ISR time. Power and optical refresh are not measured.
+  Frame throughput and renderer busy time are separate metrics.
 - Transition p50/p95 use the latest at most 16 completions; they are not
   whole-run frame-time percentiles. Heap sampling is not an exact peak trace.
 - Compare runs with the same content, resolution, panel, buffering,

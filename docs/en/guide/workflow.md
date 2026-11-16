@@ -311,6 +311,72 @@ Linked scenes share one set of `(font, size)` packs. `--max-font-packs` defaults
 matching the ESP-GSP font capacity; custom runtimes can pass their supported limit.
 The compiler reports an over-limit shared set once for the bundle.
 
+## Inspect final bundles and release expectations
+
+Use a GSPC advertising `compiler_features.bundle_inspection: 1` in its
+`compatibility` or `doctor` report for the `bundle-info` entry point:
+
+```sh
+gspc bundle-info app.gspb assets.gspb --format json
+gspc bundle-info --expect release.json --format json
+```
+
+The read-only report inspects final GSPB bytes without compilation sidecars.
+Its versioned JSON reports file/member identities, scenes, bindings, resource
+references, actual codecs/cache policies and compiled-animation frame counts,
+loop counts, per-frame intervals and cycle duration. These intervals describe
+the nominal playback timeline, not measured display cadence. Legacy zero-duration
+entries use the player's 100 ms fallback; raw values remain in
+`stored_frame_intervals_ms`. Original source paths and
+encoding-selection reasons are not inferred from the bytes. The current inspector
+marks EAF timeline metadata as not read; an unmet EAF timing expectation is
+reported as unverified, rather than as a missing asset.
+
+`resources[].animation` describes one resource member. For recognized external
+asset packages, `external_assets` separately reports the complete asset timeline
+across its consecutive frame members. Unclear grouping, zero external durations
+or inconsistent loop values remain explicit unknown/partial results; they do not
+restrict generic bundles or inherit the embedded player's 100 ms fallback.
+
+For a two-scene release, a minimal `release.json` is:
+
+```json
+{
+  "schema_version": 1,
+  "bundles": [{"path": "app.gspb", "scenes": [0, 1]}]
+}
+```
+
+Bundle paths are relative to the declaration file. With `--expect` alone, those
+paths select the inputs; explicit bundle arguments must match the declared set.
+Scene IDs are Bundle member/load IDs; `metadata_scene_id` preserves the GSB value.
+The declaration supports these optional checks for each bundle:
+
+| Field | Expected final fact |
+|---|---|
+| `identity` | Exact supplied `crc32`, `content_id`, `bytes`, `target_profile_id`, `version_major` and/or `version_minor`. |
+| `scenes` / `members` | Exact scene ID set or member `{kind, id}` set; members can also pin `content_id` and `name_hash`. Use `allow_extra_scenes` or `allow_extra_members` to allow additional entries. |
+| `bindings` | Required `{scene_id, bind_id}` entries, optionally with `bind_type` such as `i32` or `resource`. |
+| `animations` | Require the animation selected by `{member_id, resource_id}`; optionally check `frame_count`, `loop_count`, `cycle_duration_ms` and/or `frame_intervals_ms` for that member. |
+
+Maintain expectations from the application's release requirements. Copying facts
+from the inspected package into a declaration checks repeatability, but does
+not independently establish that it is the intended release. Identity fields
+pin only the fields supplied; omitting them preserves compatible asset updates.
+The command does not change the runtime's external-package replacement policy.
+
+Invalid structure, CRC, verifiable references or declared expectations return a
+nonzero exit status. With `--format json`, declaration and input-preparation
+errors after argument parsing also return a versioned failure report and stable
+diagnostic codes. Without `--expect`, success covers the inspected structure
+and relationships, not the product's required page/resource set. The report
+identifies unresolved external dependencies and its validation scope. Font
+references can resolve against supplied catalogs by asset/content ID; this
+checks availability, not runtime attachment. Unresolved fonts or legacy ordinal
+identities leave `validation.references` as `partial`. It does
+not fully decode every codec, validate appearance, measure device FPS, or verify
+runtime switching deadlines; keep those checks in the owning application.
+
 ## Review optional link modules
 
 After registering bundles with `gsp_add_bundle()` or `gsp_add_assets()`, run:

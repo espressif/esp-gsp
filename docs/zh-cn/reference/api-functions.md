@@ -274,7 +274,9 @@ esp_gsp_err_t esp_gsp_set_text(esp_gsp_handle_t gsp, uint16_t bind, const char *
 
 Shapes UTF-8 on the render task. The string is copied before return;
 short values stay inline in the command and longer values use temporary
-framework-owned storage.
+framework-owned storage. Success means the command was accepted, not that
+shaping or application succeeded; use update transactions and receipts
+when the final apply result is required.
 
 </details>
 

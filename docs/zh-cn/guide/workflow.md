@@ -223,6 +223,60 @@ getter 可能仍读到本次输入提交前的值。ESP-IDF 下 setter 成功表
 多场景链接共用一组 `(font, size)` 字体包。`--max-font-packs` 默认 32，与 ESP-GSP
 字体容量一致；使用自定义运行时时可指定对应上限。共享字体超限按 Bundle 报告一次。
 
+## 检查最终 Bundle 与发布预期
+
+以下 `bundle-info` 入口需要 GSPC 在 `compatibility` 或 `doctor` 报告中声明
+`compiler_features.bundle_inspection: 1`：
+
+```sh
+gspc bundle-info app.gspb assets.gspb --format json
+gspc bundle-info --expect release.json --format json
+```
+
+只读报告直接分析最终 GSPB 字节，不依赖编译 sidecar。带版本的 JSON 报告包含文件与
+成员身份、场景、绑定、资源引用、实际 codec/缓存策略，以及编译动画的帧数、循环次数、
+逐帧间隔和单轮时长。间隔描述标称播放时间线，不代表实测显示节奏；旧包中为零的间隔
+按播放器的 100 ms 回退值报告，原始值保留在 `stored_frame_intervals_ms`。不从最终字节
+推断原始素材路径或编码选择原因。当前检查器将 EAF 时间线标为未解析；无法核对的
+EAF 时序预期报告为未验证，不会说成素材缺失。
+
+`resources[].animation` 描述单个资源成员。对于可识别的外置资源包，`external_assets`
+另行汇总连续帧成员组成的完整素材时间线。无法确认的分组、外置零间隔或不一致的循环
+值明确保留为未知或 `partial`，不限制通用 Bundle，也不套用嵌入播放器的 100 ms 回退。
+
+对于包含两个场景的发布，最小 `release.json` 可以写为：
+
+```json
+{
+  "schema_version": 1,
+  "bundles": [{"path": "app.gspb", "scenes": [0, 1]}]
+}
+```
+
+包路径相对声明文件解析。仅传入 `--expect` 时，声明中的路径决定输入；同时显式提供
+包参数时，输入集合必须与声明一致。场景 ID 指 Bundle 成员/加载 ID，
+`metadata_scene_id` 保留 GSB 内的值。每个包支持以下可选检查：
+
+| 字段 | 预期的最终事实 |
+|---|---|
+| `identity` | 精确匹配所给的 `crc32`、`content_id`、`bytes`、`target_profile_id`、`version_major` 和/或 `version_minor`。 |
+| `scenes` / `members` | 精确匹配场景 ID 集合或成员 `{kind, id}` 集合；成员还可固定 `content_id`、`name_hash`。设置 `allow_extra_scenes`、`allow_extra_members` 可允许额外条目。 |
+| `bindings` | 要求 `{scene_id, bind_id}` 存在，可附加 `bind_type`，例如 `i32` 或 `resource`。 |
+| `animations` | 要求 `{member_id, resource_id}` 指定的动画存在；可选核对该成员的 `frame_count`、`loop_count`、`cycle_duration_ms` 和/或 `frame_intervals_ms`。 |
+
+按应用发布要求维护预期。将待检包的事实复制成声明只能检查可重复性，不能独立证明
+该包就是预期发布。身份检查只固定明确提供的字段；省略身份字段时保留兼容素材更新
+能力。此命令不改变运行时的外置包替换策略。
+
+结构、CRC、可验证引用或声明预期不符时，命令以非零状态退出。使用 `--format json`
+时，参数解析完成后的声明或输入准备错误也会输出带版本的失败报告和稳定诊断码。
+未提供 `--expect` 时，
+通过只表示已检查的结构和关系符合要求，不证明产品所需页面与资源齐全。报告会说明
+未解析的外部依赖和验证范围。字体引用可按 asset/content ID 匹配一同提供的目录；
+这只证明资源可取得，不证明应用已在运行时挂载。未解析字体或旧式顺序身份会使
+`validation.references` 保留为 `partial`。完整 codec 解码、画面、设备 FPS 与运行时
+切换时限仍由所属应用验证。
+
 ## 检查可选链接模块
 
 通过 `gsp_add_bundle()` 或 `gsp_add_assets()` 注册资源后，执行：

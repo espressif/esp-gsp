@@ -6,11 +6,11 @@ structural editing and agent collaboration.
 
 ## Download
 
-- Windows x64 - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.12.0-win-x64.exe>
-- Linux x64 AppImage - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.12.0-linux-x86_64.AppImage>
-- Linux x64 DEB - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.12.0-linux-amd64.deb>
-- Collaboration scripts - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.12.0-scripts.zip>
-- SHA-256 checksums - <https://dl.espressif.com/AE/gsp/gsp-editor/SHA256SUMS-0.12.0.txt>
+- Windows x64 - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.12.1-win-x64.exe>
+- Linux x64 AppImage - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.12.1-linux-x86_64.AppImage>
+- Linux x64 DEB - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.12.1-linux-amd64.deb>
+- Collaboration scripts - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.12.1-scripts.zip>
+- SHA-256 checksums - <https://dl.espressif.com/AE/gsp/gsp-editor/SHA256SUMS-0.12.1.txt>
 
 ## Open a project
 
@@ -49,7 +49,7 @@ and can be removed without affecting native sources.
 
 ## Bundled toolchain
 
-ESP-GSP Studio 0.12.0 ships with GSP/simulator 1.10.1 and GSPC 0.11.1. The
+ESP-GSP Studio 0.12.1 ships with GSP/simulator 1.10.3 and GSPC 0.11.2. The
 application version is independent of its bundled toolchain versions. The
 compiler, schema, WASM runtime and export use this fixed toolchain; importing
 or switching toolchains is not available in this release.

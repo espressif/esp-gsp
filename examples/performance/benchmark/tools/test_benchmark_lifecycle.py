@@ -116,6 +116,8 @@ static struct { uint16_t bind; } s_pages[1];
 static unsigned s_page, tween_calls, work_calls, tween_phase;
 static bool s_page_preparing, s_results_active, s_page_waiting_for_scene, s_ui_timing_available=true;
 static int64_t now_us, s_page_start_us, s_next_tween_us;
+typedef struct { uint64_t total_us; } bench_cpu_snapshot_t;
+static bench_cpu_snapshot_t s_page_start_cpu;
 static uint32_t frames, iterations, commands;
 static uint64_t busy_us, render_us, submit_us, service_us;
 static esp_gsp_property_stats_t properties, s_page_start_properties;
@@ -127,6 +129,9 @@ static size_t s_page_internal_start, s_page_psram_start, s_page_internal_min, s_
 static uint32_t s_pressure_ticks, s_pressure_requests, s_pressure_accepted, s_pressure_rejected, s_pressure_errors;
 static struct { uint32_t tween_tick; } s_bench_workload;
 static int64_t esp_timer_get_time(void) { return now_us; }
+static bench_cpu_snapshot_t bench_cpu_snapshot(void) {
+    return (bench_cpu_snapshot_t){ .total_us = (uint64_t)now_us };
+}
 static bool esp_gsp_property_stats(void *ui, esp_gsp_property_stats_t *out, size_t size) {
     (void)ui; (void)size; *out = properties; return true;
 }
@@ -167,6 +172,7 @@ int main(void) {
         properties=(esp_gsp_property_stats_t){true,100+lap*100,900000+lap*500000};
         start_page_measurement(NULL);
         assert(!s_page_preparing && s_page_start_frames==frames && s_page_start_busy_us==busy_us);
+        assert(s_page_start_cpu.total_us==(uint64_t)now_us && s_page_start_us==now_us);
         assert(s_page_start_properties.steps==properties.steps && s_page_start_properties.step_us==properties.step_us);
         assert(tween_phase==0 && tween_calls==prior_tweens+1);
         assert(s_next_tween_us==now_us+1000000);

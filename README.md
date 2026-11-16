@@ -40,7 +40,7 @@ Create the smallest complete example directly from the ESP Component Registry:
 
 <!-- gsp-version:registry-example -->
 ```sh
-idf.py create-project-from-example "espressif/esp-gsp=1.10.2:hello_world"
+idf.py create-project-from-example "espressif/esp-gsp=1.10.3:hello_world"
 cd hello_world
 python -m pip install -U esp-gsp-tools
 ```
@@ -67,7 +67,7 @@ From the ESP-IDF project root:
 
 <!-- gsp-version:dependency-command -->
 ```sh
-idf.py add-dependency "espressif/esp-gsp^1.10.2"
+idf.py add-dependency "espressif/esp-gsp^1.10.3"
 python -m pip install -U esp-gsp-tools
 ```
 <!-- /gsp-version:dependency-command -->
@@ -118,6 +118,8 @@ integration and display startup code.
 | Task | Start here |
 |---|---|
 | Install and run the first scene | [Getting Started](docs/en/getting-started.md) |
+| View FPS, CPU and resource data | [Performance statistics](docs/en/guide/performance.md) |
+| View benchmarks by chip, interface and resolution | [Hardware performance statistics](docs/en/guide/hardware-benchmark.md) |
 | Understand the recommended workflow | [Development workflow](docs/en/guide/workflow.md) |
 | Build and verify UI with a coding agent | [Agent-assisted UI development](docs/en/guide/agent-assisted-ui.md) |
 | Author JSON and choose fields | [Scene guide](docs/en/guide/scenes.md) and [field reference](docs/en/reference/authoring.md) |

@@ -19,6 +19,8 @@
 
 | 任务 | 相关文档 |
 |---|---|
+| 查看界面性能与资源统计 | [性能数据统计](guide/performance.md) |
+| 按芯片、接口和分辨率查看基准 | [硬件性能统计](guide/hardware-benchmark.md) |
 | 判断内容应放在 JSON、应用代码还是 BSP | [工程工作流](guide/workflow.md) |
 | 使用 Codex 创建或修改 UI | [Agent 辅助 UI 开发](guide/agent-assisted-ui.md) |
 | 编写层级、样式、动作、模板与资源 | [场景 JSON](guide/scenes.md) |

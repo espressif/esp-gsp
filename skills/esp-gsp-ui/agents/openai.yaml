@@ -1,4 +1,4 @@
 interface:
   display_name: "ESP-GSP UI"
-  short_description: "Create validated ESP-GSP scenes and integrations"
-  default_prompt: "Use $esp-gsp-ui to turn this UI requirement into validated ESP-GSP scenes and generated-API integration."
+  short_description: "Create or migrate validated ESP-GSP UI scenes"
+  default_prompt: "Use $esp-gsp-ui to create, change, or migrate this UI into validated native ESP-GSP scenes and generated-API integration."

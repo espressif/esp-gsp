@@ -23,6 +23,11 @@
 #include "esp_rom_crc.h"
 #include "hw_init.h"
 
+#if CONFIG_IDF_TARGET_ESP32C3 && CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG_ENABLED
+#include "driver/usb_serial_jtag.h"
+#include "driver/usb_serial_jtag_vfs.h"
+#endif
+
 #include "gsp/gsp_render_profile.h"
 
 #define GSP_BUNDLE_ENABLE_LEGACY_NAMES 1
@@ -31,6 +36,8 @@
 #include "bench_motion.h"
 #include "bench_present_modes.h"
 #include "bench_workload.h"
+#include "bench_cpu.h"
+#include "bench_mosaico_power.h"
 
 /* Must match the generated bundle and the CMake option GSP_BENCH_RGB888
  * (default OFF). A mismatched default would init an RGB888 panel against an
@@ -39,7 +46,7 @@
 #define GSP_BENCH_RGB888 0
 #endif
 
-#define BENCH_PROTOCOL_VERSION 28U
+#define BENCH_PROTOCOL_VERSION 30U
 #define BENCH_RESULT_ROWS ((BENCH_W >= 600 || BENCH_H >= 600) ? 6U : 3U)
 #define BENCH_RESULT_PAGE_MS 3000U
 #define BENCH_PRESSURE_PERIOD_MS 1U
@@ -76,7 +83,16 @@
 #endif
 
 /* The JSON selected by CMake defines the logical panel size. */
-#if CONFIG_EXAMPLE_LCD_INTERFACE_MIPI_DSI
+#if GSP_BENCH_BOARD_C5_CO5300
+#define BENCH_W 466
+#define BENCH_H 466
+#elif GSP_BENCH_BOARD_P4_EYE_SPI
+#define BENCH_W 240
+#define BENCH_H 240
+#elif GSP_BENCH_BOARD_S31_GC9503 || GSP_BENCH_BOARD_S31_MOSAICO || CONFIG_EXAMPLE_LCD_INTERFACE_QSPI_CO5300
+#define BENCH_W 480
+#define BENCH_H 480
+#elif CONFIG_EXAMPLE_LCD_INTERFACE_MIPI_DSI
 #define BENCH_W 1024
 #define BENCH_H 600
 #elif CONFIG_EXAMPLE_LCD_INTERFACE_RGB || CONFIG_EXAMPLE_LCD_INTERFACE_RGB24
@@ -127,6 +143,7 @@ typedef struct {
     float busy_ms;    /*!< render-path busy time per submitted frame */
     uint64_t busy_us; /*!< accumulated render-path busy time in the interval */
     uint64_t elapsed_us; /*!< exact wall time in the measured interval */
+    bench_cpu_window_t cpu;
     uint64_t render_us;
     uint64_t submit_us;
     uint64_t service_us_total;
@@ -168,6 +185,7 @@ static uint32_t s_dropdown_errors;
 static int64_t s_dropdown_ready_us;
 static bool s_scale_dynamic_decode = true;
 static int64_t s_page_start_us;
+static bench_cpu_snapshot_t s_page_start_cpu;
 static int64_t s_next_tween_us;
 static bool s_page_preparing;
 static esp_gsp_property_stats_t s_page_start_properties;
@@ -798,6 +816,9 @@ static void activate_page(esp_gsp_handle_t ui, uint8_t page)
     s_pages[page].frames = 0;
     s_pages[page].busy_ms = 0;
     s_pages[page].elapsed_us = 0;
+    s_pages[page].cpu = (bench_cpu_window_t) {
+        0
+    };
     s_pages[page].internal_peak_bytes = 0;
     s_pages[page].psram_peak_bytes = 0;
     s_pages[page].transition_count = 0;
@@ -1088,7 +1109,8 @@ static void activate_page(esp_gsp_handle_t ui, uint8_t page)
 static void start_page_measurement(esp_gsp_handle_t ui)
 {
     s_page_preparing = false;
-    s_page_start_us = esp_timer_get_time();
+    s_page_start_cpu = bench_cpu_snapshot();
+    s_page_start_us = (int64_t)s_page_start_cpu.total_us;
     s_next_tween_us = s_page_start_us + 1000000;
     memset(&s_page_start_properties, 0, sizeof(s_page_start_properties));
     if (s_ui_timing_available) {
@@ -1207,6 +1229,7 @@ static void print_summary(esp_gsp_handle_t ui)
     uint64_t total_busy_us = 0;
     uint64_t total_wall_us = 0;
     uint64_t total_ui_step_us = 0;
+    bench_cpu_window_t total_cpu = {0};
     printf("bench: ---- summary ----\n");
     printf("bench: %-20s %9s %9s %7s %7s %7s %7s %5s\n", "page",
            "wall fps", "busy fps", "rndr ms", "subm ms", "svc us",
@@ -1229,6 +1252,7 @@ static void print_summary(esp_gsp_handle_t ui)
         total_busy_us += s_pages[index].busy_us;
         total_wall_us += s_pages[index].elapsed_us;
         total_ui_step_us += s_pages[index].ui_step_us;
+        bench_cpu_accumulate(&total_cpu, &s_pages[index].cpu);
     }
     printf("bench: aggregate wall throughput %.1f fps"
            " (observed)\n",
@@ -1252,6 +1276,7 @@ static void print_summary(esp_gsp_handle_t ui)
            : 0.0);
     printf("bench: aggregate ui step_us=%llu\n",
            (unsigned long long)total_ui_step_us);
+    bench_cpu_print(NULL, &total_cpu);
     printf("bench: legacy dwell-weighted busy score %.1f fps"
            "\n",
            total_ms != 0
@@ -1553,6 +1578,11 @@ static void page_scheduler(esp_gsp_handle_t ui, void *user_ctx)
             s_transition_measure.active) {
         return;
     }
+    const bench_cpu_snapshot_t cpu_after = bench_cpu_snapshot();
+    s_pages[s_page].cpu = bench_cpu_window(s_page_start_cpu, cpu_after);
+    /* Use the same ESP_TIMER endpoints for CPU and FPS wall time. Capture
+     * before counter processing and serial output, following page setup. */
+    elapsed_us = (int64_t)cpu_after.total_us - s_page_start_us;
     esp_gsp_region_stats_t page_regions;
     esp_gsp_region_stats(ui, &page_regions);
     uint32_t frames_now;
@@ -1621,6 +1651,7 @@ static void page_scheduler(esp_gsp_handle_t ui, void *user_ctx)
         viewport_skipped += viewports.skipped[reason] - s_page_start_viewports.skipped[reason];
     }
     /* Snapshot the interval before serial output perturbs its timing. */
+    bench_cpu_print(s_pages[s_page].name, &s_pages[s_page].cpu);
     printf("bench: pressure[%s] mode=%s period_ms=%u ticks=%lu"
            " requests=%lu accepted=%lu rejected=%lu errors=%lu\n",
            s_pages[s_page].name,
@@ -2998,7 +3029,22 @@ static void benchmark_physical_pointer(esp_gsp_handle_t ui, int32_t x,
 
 void app_main(void)
 {
+#if CONFIG_IDF_TARGET_ESP32C3 && CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG_ENABLED
+    /* Keep complete audit records when the shared USB bus stalls briefly.
+     * The polled USB VFS drops characters after its fixed 50 ms timeout. */
+    if (!usb_serial_jtag_is_driver_installed()) {
+        usb_serial_jtag_driver_config_t console = USB_SERIAL_JTAG_DRIVER_CONFIG_DEFAULT();
+        console.tx_buffer_size = 2048;
+        console.rx_buffer_size = 256;
+        ESP_ERROR_CHECK(usb_serial_jtag_driver_install(&console));
+    }
+    usb_serial_jtag_vfs_use_driver();
+    printf("bench: config console=usb_serial_jtag_buffered_v1 console_txbuf=2048\n");
+#endif
     print_startup_memory("app_main entry");
+#if CONFIG_EXAMPLE_LCD_INTERFACE_QSPI_CO5300 || GSP_BENCH_BOARD_S31_MOSAICO
+    ESP_ERROR_CHECK(bench_mosaico_power_init());
+#endif
     ESP_ERROR_CHECK(benchmark_configure_run());
 
     esp_display_present_target_config_t display;
@@ -3027,7 +3073,10 @@ void app_main(void)
            " pixel=%s panel=%u mode=%u fb=%u rotation=%u te=%u"
            " drawbuf=%u/%u/%u tebuf=%u"
            " transition_snapshots=%s pressure=%s pressure_ms=%u"
-           " touch=%s queue_metric=drained hud=results-only reset=page bundle_crc=%08lx\n",
+           " touch=%s queue_metric=drained hud=results-only reset=page bundle_crc=%08lx"
+           " cpu=freertos_idle_v2 cpu_clock=esp_timer cpu_bits=64"
+           " cpu_cores=%u cpu_tasks=%u cpu_scope=case_windows"
+           " cpu_tick_hz=%u cpu_tolerance_us=%u cpu_adjust=per_core_tick_clamp_v1\n",
            BENCH_PROTOCOL_VERSION, BENCH_FRAME_PERIOD_MS,
            BENCH_FRAME_TARGET_HZ, BENCH_STRESS_PERIOD_MS,
            BENCH_STRESS_TARGET_HZ, BENCH_KEYBOARD_EVENT_MS,
@@ -3055,7 +3104,9 @@ void app_main(void)
            BENCH_PRESSURE_PERIOD_MS,
            GSP_BENCH_TOUCH_INPUT ? "diagnostic" : "disabled",
            (unsigned long)esp_rom_crc32_le(
-               0, bundle_start, (uint32_t)(bundle_end - bundle_start)));
+               0, bundle_start, (uint32_t)(bundle_end - bundle_start)),
+           (unsigned)BENCH_CPU_CORES, BENCH_CPU_MAX_TASKS,
+           (unsigned)CONFIG_FREERTOS_HZ, (unsigned)BENCH_CPU_TOLERANCE_US);
     print_startup_memory("LCD initialized");
 
     /* Path timing before UI alloc / page loop (PSRAM already up). */

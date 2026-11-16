@@ -2,7 +2,8 @@
 
 ESP-GSP 提供一份可安装的编码 Agent Skill，用于把产品需求、参考图或现有设计转换为
 经过验证的场景 JSON 和生成式 C API 集成。Skill 使用应用实际选中的 GSPC 与
-ESP-GSP 版本，并读取对应的控件 Schema、API 参考和示例。
+ESP-GSP 版本，并读取对应的控件 Schema、API 参考和示例，也支持把现有 LVGL 场景迁移为
+原生 GSP 实现。
 
 ## 安装 Skill
 
@@ -27,6 +28,24 @@ cp -R skills/esp-gsp-ui ~/.codex/skills/
 ESP-IDF 组件压缩包。使用托管组件的工程仍然包含中英文文档、控件示例与生成参考，
 Skill 会读取这些与组件版本匹配的内容。未安装 Skill 时，也可以直接按本指南运行
 `gspc doctor`、`gspc cards` 和 `gspc diagnose`。
+
+## 迁移 LVGL 场景
+
+提供原工程路径及需要迁移的页面或流程即可。Skill 会读取相关调用、实际选中的 LVGL
+头文件、配置与构建信息，无须提前确认版本。可以请求只评估、迁移单页或迁移完整应用。
+
+```text
+使用 $esp-gsp-ui，把 /path/to/lvgl-project 的设置页迁移为原生 GSP 场景和 C 集成。
+保留亮度提交时机、Wi-Fi 状态及返回重进行为，保持原有视觉意图。
+构建受影响应用，通过真实输入核对状态，并说明尚未完成的部分。
+```
+
+有原始素材和 LVGL 截图时一并提供；需要重新设计时，单独说明预期变化。缺少截图则保留
+视觉一致性未验证的结论；设备帧率与资源收益需要可比的实测数据。
+
+Skill 的 `references/lvgl-migration.md` 说明语义差异和集成检查。源码 checkout 中的
+`examples/usage/design_reference` 提供教学对照与可选 LVGL 基线 Runner，
+不作为通用转换器或客户性能基准。
 
 ## 提供有效需求
 

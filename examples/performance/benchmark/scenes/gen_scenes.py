@@ -26,7 +26,7 @@ except AttributeError:  # Pillow < 9.1
     RESAMPLE_LANCZOS = Image.LANCZOS
 
 RESOLUTIONS = [(1024, 600), (800, 480), (480, 800), (360, 360),
-               (320, 240), (240, 240)]
+               (320, 240), (240, 240), (466, 466), (480, 480)]
 FONT = "../fonts/DejaVuSans.ttf"
 
 LOREM = ("GSP / RENDER LAB. Retained scenes, native controls and explicit "
@@ -55,6 +55,7 @@ PALETTE = {
 FONT_PALETTES = {
     240: (8, 9, 11, 12, 13, 14, 16, 20),
     360: (11, 12, 13, 16, 18, 24, 30),
+    466: (12, 15, 16, 18, 21, 24, 32, 41),
     480: (12, 15, 16, 18, 21, 24, 32, 41),
     600: (12, 16, 18, 20, 23, 27, 40, 51),
     800: (12, 16, 20, 26, 30, 40, 54, 68),
@@ -1633,9 +1634,12 @@ def main():
             snapshot_repair_fixture(main_scene, args.snapshot_repair_regions, args.snapshot_repair_commands)
         if args.output_dir is not None:
             main_scene = absolute_assets(main_scene, Path.cwd())
-        name = f"bench_{width}.json"
+        # The existing bench_480 is portrait 480x800. Preserve every old
+        # filename and give the additional square fixtures explicit names.
+        suffix = f"square_{width}" if width == height and width in (466, 480) else str(width)
+        name = f"bench_{suffix}.json"
         generated[name] = json.dumps(main_scene, indent=2) + "\n"
-        alt = f"bench_alt_{width}.json"
+        alt = f"bench_alt_{suffix}.json"
         alternate = alt_scene(width, height)
         if args.output_dir is not None:
             alternate = absolute_assets(alternate, Path.cwd())

@@ -1,0 +1,6 @@
+# Mosaico CO5300 480: automatic board revision, TE43 and peripheral soft-start.
+# Select -D GSP_BENCH_BOARD_PROFILE=S31_MOSAICO with target esp32s31.
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_SPEED_250M=y
+CONFIG_SPIRAM_XIP_FROM_PSRAM=y
+CONFIG_SPIRAM_MEMTEST=n

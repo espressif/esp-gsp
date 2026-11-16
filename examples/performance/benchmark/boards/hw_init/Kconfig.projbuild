@@ -1,0 +1,13 @@
+menu "Benchmark local board"
+
+    config EXAMPLE_LCD_FRAME_BUFFERS
+        int "GC9503 native LCD frame buffers"
+        depends on IDF_TARGET_ESP32S31
+        range 2 3
+        default 2
+        help
+            Two framebuffers select the presenter's DOUBLE_PARTIAL contract.
+            Three uses AUTO and costs one
+            additional 480 * 480 * 2-byte PSRAM framebuffer.
+
+endmenu

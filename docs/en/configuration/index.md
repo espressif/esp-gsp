@@ -37,6 +37,19 @@ The report also shows the profile's internal / PSRAM allocation preferences. Whe
 
 Build-time checks cover known resource requirements. Runtime allocation failures report the requested memory and available heap. Use these diagnostics together with BSP buffer sizes to tune application budgets.
 
+## Limit static baking storage
+
+When static baking is enabled, an existing GSPC Profile can also set a per-scene native tile budget:
+
+```yaml
+static_bake_min_commands: 8
+static_bake_max_bytes: 524288
+```
+
+The limit covers aligned pixel data, not the complete Bundle. An omitted or zero limit preserves the existing behavior. GSPC bakes the longest eligible prefix within the budget and keeps the remaining draw commands. If even the minimum prefix does not fit, it keeps the original draw commands for that scene.
+
+A smaller budget can reduce Flash and PSRAM XIP payload while increasing runtime drawing work. Compare CPU and frame rate for the application.
+
 ## Specialize the runtime for an application
 
 Keep the Bundle definition in the application's `main/CMakeLists.txt` and declare

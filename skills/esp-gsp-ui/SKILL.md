@@ -1,6 +1,6 @@
 ---
 name: esp-gsp-ui
-description: Create and change ESP-GSP scenes and their ESP-IDF C integration. Use for UI requirements or reference images, widget/layout selection, dynamic data and events, GSPC diagnostics, and simulator or display troubleshooting.
+description: Create and change ESP-GSP scenes and their ESP-IDF C integration, including migration from existing LVGL projects. Use for UI requirements or reference images, widget/layout selection, dynamic data and events, GSPC diagnostics, and simulator or display troubleshooting.
 ---
 
 # ESP-GSP UI
@@ -11,6 +11,10 @@ Bundle registration, names, target, assets and build conventions.
 
 ## Select the task path
 
+- **Migrate an LVGL scene:** read [LVGL migration](references/lvgl-migration.md)
+  to discover relevant source behavior and produce native GSP integration.
+  The user need not know the LVGL version. Follow the requested scope and
+  distinguish preserved behavior from requested improvements.
 - **Create or modify a screen:** inspect the affected scenes and callers, query
   the relevant widget cards/examples, edit JSON and validate through the selected
   compile or owning build. Inspect changed visuals and interactions in preview.
@@ -113,12 +117,13 @@ preview its own `browser-exclusive` session and distinct endpoints. Keep the
 project/Bundle identity with each session. Full setup and commands are in
 [preview and automation](references/preview.md).
 
-Verify application behavior through actual input and the shared C Backend:
+For changed application behavior, use actual input through the owning project's
+test path. Reuse the shared C Backend when it covers that behavior:
 
 - Derive acceptance paths from the requested behavior and affected states,
   covering input boundaries, confirm/cancel, return/reenter and empty/error states.
 - Use optional scenario `checks`/`check` labels to track assertion coverage and
-  resolve any unverified items before completion.
+  keep failed or unverified items visible rather than counting them as passed.
 - When advertised, use `get_property` and `wait_property` for scalar runtime state,
   `wait_keyboard_text` for keyboard buffers, and callback events plus
   screenshots for behavioral and visual verification.

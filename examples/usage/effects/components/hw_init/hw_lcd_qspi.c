@@ -417,7 +417,7 @@ esp_err_t hw_lcd_init(
             .io = io,
             .panel_type = ESP_DISPLAY_PRESENT_PANEL_IO,
             .input_pixel_format = ESP_DISPLAY_PRESENT_PIXEL_FORMAT_RGB565,
-            .rotation = ESP_DISPLAY_PRESENT_ROTATE_0,
+            .rotation = HW_DISPLAY_ROTATION,
             .swap_bytes = true,
             .te_enabled = true,
             .te_sync = {
