@@ -294,6 +294,37 @@ def prepare_scenario(args: argparse.Namespace) -> None:
     args.headless = args.no_browser = True
 
 
+def report_scenario_startup_failure(args: argparse.Namespace, error: Exception,
+                                    started: float, manifest: dict | None,
+                                    prepared) -> None:
+    """Honor an explicit report directory when a valid scenario never starts."""
+    plan = getattr(args, "scenario_plan", None)
+    if args.report_dir is None or plan is None or getattr(args, "scenario_started", False):
+        return
+    try:
+        # Reuse only a directory created by this invocation. An existing path
+        # rejected during argument validation must remain untouched.
+        output = getattr(args, "scenario_output", None)
+        if output is None:
+            output = scenario.output_directory({}, args.report_dir)
+        report = {"schema_version": 1, "status": "fail", "scenario": plan,
+                  "steps": [], "error": str(error),
+                  "elapsed_seconds": round(time.monotonic() - started, 3),
+                  "evidence_scope": "scenario did not start; no runtime observations were collected"}
+        if manifest is not None:
+            report["manifest"] = manifest
+        if prepared is not None:
+            report["tool_contract"] = prepared[1]
+        if "checks" in plan:
+            report["check_coverage"] = scenario.check_coverage(plan, [])
+        with (output / "report.json").open("x", encoding="utf-8") as stream:
+            json.dump(report, stream, ensure_ascii=False, indent=2)
+            stream.write("\n")
+    except Exception:
+        # A best-effort report must not replace the original startup error.
+        pass
+
+
 def simulator_state(host: list[str], component: Path):
     """Identify this invocation's selection without retaining a tool cache."""
     try:
@@ -353,8 +384,10 @@ def run_backend(args: argparse.Namespace, manifest: dict, *, prepared=None) -> i
                 if not match:
                     raise RuntimeError("scenario requires a loopback TCP API endpoint from sim_host")
                 output = scenario.output_directory(manifest, args.report_dir)
+                args.scenario_output = output
                 print(f"Scenario report: {output / 'report.json'}", flush=True)
                 with connect(port=int(match[1])) as peer:
+                    args.scenario_started = True
                     scenario.execute(peer, plan, output, manifest, contract)
                 print(f"Scenario passed: {output / 'report.json'}", flush=True)
                 return 0
@@ -428,6 +461,8 @@ def main() -> int:
     args = parser.parse_args()
     if args.duration < 0 or args.startup_timeout <= 0:
         parser.error("duration must be nonnegative and startup-timeout must be positive")
+    started = time.monotonic()
+    manifest = prepared = None
     try:
         # Do this before an often-expensive native build.  host_command()
         # repeats the normalization for callers that use run_backend() directly.
@@ -435,7 +470,6 @@ def main() -> int:
         validate_session(args)
         args.dynamic_font = dynamic_font_path(args.dynamic_font)
         args.font_catalog = font_asset_path(args.font_catalog, "Font catalog")
-        prepared = None
 
         def before_build(manifest):
             nonlocal prepared
@@ -446,6 +480,7 @@ def main() -> int:
     except KeyboardInterrupt:
         return 130
     except (RuntimeError, OSError, ValueError, subprocess.SubprocessError) as exc:
+        report_scenario_startup_failure(args, exc, started, manifest, prepared)
         parser.exit(1, f"sim_bridge: {exc}\n")
 
 

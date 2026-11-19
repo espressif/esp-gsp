@@ -4,11 +4,39 @@
  * SPDX-License-Identifier: LicenseRef-Espressif-Modified-MIT
  */
 #include "transport.h"
+#include "esp_gsp_debug.h"
 #include "esp_gsp_extension.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+void esp_gsp_render_stats(esp_gsp_handle_t ui, uint32_t *out_frames,
+                          uint64_t *out_busy_us)
+{
+    if (out_busy_us != NULL) {
+        *out_busy_us = 0;
+    }
+    if (out_frames == NULL) {
+        return;
+    }
+    *out_frames = 0;
+    if (ui != NULL) {
+        char *reply = bridge_rpc(ui, "frame_info", "{}");
+        int64_t seq = reply ? bridge_json_number(reply, "seq", 0) : 0;
+        if (seq > 0) {
+            *out_frames = (uint32_t)seq;
+        }
+        free(reply);
+    }
+}
+
+uint32_t esp_gsp_frame_count(esp_gsp_handle_t ui)
+{
+    uint32_t frames;
+    esp_gsp_render_stats(ui, &frames, NULL);
+    return frames;
+}
 
 static esp_gsp_err_t pair(esp_gsp_handle_t ui, const char *method,
                           const char *key, uint32_t id, const char *name, int64_t value)

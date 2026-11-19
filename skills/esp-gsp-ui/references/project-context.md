@@ -102,6 +102,15 @@ Each `gspc cards` example is an authoring fragment; use its `example_path` and
 
 ## Explain an existing element when needed
 
+When `gspc authoring --help` lists the selectors, use
+`gspc authoring scenes/main.json --object panel --property bg_color` for a
+focused source report. Pass the owning Bundle's `--components-dir` if set.
+`matches` can contain multiple expanded nodes. Read the file index and JSON
+pointer in each property source. `shared_by` lists other nodes in this scene
+that resolve the same field from the same source. Check other scenes before
+editing a shared component. Source semantics describe the current authored
+values. Use the generated header and matching API sidecar for C integration.
+
 For `compiler_features.scene_inspection: 1`, daemon compile methods accept
 `inspect: {"name":"title"}` in the existing preview request, alongside its
 selected `context`, scene `path` and edited text. The optional `inspection`
@@ -128,6 +137,12 @@ build directory. Use the existing doctor report, or refresh it with
 changes. Choose the observed context whose registered scenes belong to the task.
 Multiple contexts represent separate Bundles; keep their scene sets and settings
 distinct.
+
+If listed in `gspc doctor --help`, add `--scene <path>` to see matching contexts
+and entries with an unknown scene list. On `error_code: compiler_mismatch`,
+compare `contexts[].compiler` with the running compiler. Use the toolchain
+selected by the build or rebuild with the intended toolchain. Doctor's exit
+code reports whether it produced a report. Check the context's status.
 
 The context records the effective target Profile, codec/cache choices, all
 slot and project limits, compiler passes, component inputs, registered scene

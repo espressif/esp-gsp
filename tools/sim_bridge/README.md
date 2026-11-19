@@ -632,6 +632,10 @@ leave the output unchanged. `esp_gsp_image_get_scale()` and `set_scale()` use
 the original property operations, so they also work with older hosts that
 expose the image's scale property.
 
+`esp_gsp_frame_count()` and `esp_gsp_render_stats()` read the simulator's
+published-frame counter through `frame_info`. Use frame-count deltas over
+elapsed time for a preview FPS overlay. Render busy time is reported as zero.
+
 Only exported implementations are linkable. Unsupported public C functions
 produce a link error, not a success stub. The shared headers describe the
 full device API, **not** a promise that every declaration is implemented by

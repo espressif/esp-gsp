@@ -1,6 +1,6 @@
 # ESP-GSP Authoring Reference
 
-GSPC version: 0.11.2.
+GSPC version: 0.11.3.
 
 Declare runtime-update fields using the dynamic forms listed in the tables. See [dynamic property scope](../guide/scenes.md#dynamic-property-scope) for declaration forms and object-versus-subtree behavior.
 
@@ -44,7 +44,7 @@ Declare runtime-update fields using the dynamic forms listed in the tables. See 
 | `set_text` | replace the target text bind with `param` |
 | `set_bg_color` | set the target color bind: arg is #RRGGBB (converted for the profile), or a legacy profile-native integer; alpha is not accepted |
 | `call` | invoke the named application callback |
-| `goto` | show a target layer or navigate to a scene id |
+| `goto` | show a local layer with `target` or `target_name`, or navigate using a zero-based `scene` id |
 | `back` | rejected; use call with callback back, or stack_pop |
 | `set_value` | assign the target value bind |
 | `toggle_value` | toggle the target value bind between zero and one |

@@ -87,7 +87,7 @@ typedef struct {
     uint32_t submitted_frames, queue_retries;
 } esp_gsp_assets_stats_t;
 
-/** Open a mounted SD/NAND filesystem package using the generated open helper.
+/** Open a seekable package file on a mounted filesystem using the generated open helper.
  * index_crc comes from its generated header. A matching index takes the fast
  * path; a replacement package (or index_crc=0) is fully CRC-checked in bounded
  * chunks at open. Each requested member is CRC-checked when read. No whole-pack
@@ -109,8 +109,8 @@ esp_gsp_err_t esp_gsp_assets_open(const char *path, uint32_t index_crc,
  * The target placeholder must match the exported pixel/alpha form and native
  * dimensions (opaque image-fit binds can vary dimensions). Export to the same
  * RGB565/RGB888 profile as the UI.
- * Show targets the active scene. Switching scenes cancels subsequent frames;
- * resubmit when returning to that scene.
+ * Show targets the active scene. Leaving it restores the file-service targets
+ * to their placeholders and releases their image slots. Resubmit on re-entry.
  * Hiding a page/group does not stop file IO or decoding. Stop its targets
  * when hidden and show them again when visible; show restarts playback.
  * gsp must remain alive until this service is closed. Use one service owner
@@ -176,7 +176,7 @@ esp_gsp_err_t esp_gsp_assets_close(esp_gsp_assets_t *assets);
  * On timeout status/publication/stats and another close are allowed; show is rejected.
  * Call from an application task, not a render/decode callback. Other callers
  * must be quiescent before successful close frees the handle. Published source
- * buffers survive close until UI replacement/shutdown. NULL succeeds. */
+ * buffers survive close until replacement, scene exit or UI shutdown. NULL succeeds. */
 esp_gsp_err_t esp_gsp_assets_close_wait(esp_gsp_assets_t *assets, uint32_t timeout_ms);
 #ifdef __cplusplus
 }

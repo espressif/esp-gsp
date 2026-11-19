@@ -965,7 +965,7 @@ static inline esp_gsp_asset_target_t esp_gsp_asset_widget_target(esp_gsp_widget_
 
 ### `esp_gsp_assets_open()`
 
-Open a mounted SD/NAND filesystem package using the generated open helper. index_crc comes from its generated header. A matching index takes the fast path; a replacement package (or index_crc=0) is fully CRC-checked in bounded chunks at open. Each requested member is CRC-checked when read. No whole-pack RAM copy. Call from an application task; open performs IO. File contents must stay immutable until close. Close before unmount/update. NULL config selects defaults. On failure *out_assets is NULL.
+Open a seekable package file on a mounted filesystem using the generated open helper. index_crc comes from its generated header. A matching index takes the fast path; a replacement package (or index_crc=0) is fully CRC-checked in bounded chunks at open. Each requested member is CRC-checked when read. No whole-pack RAM copy. Call from an application task; open performs IO. File contents must stay immutable until close. Close before unmount/update. NULL config selects defaults. On failure *out_assets is NULL.
 
 - **Header:** `include/esp_gsp_assets.h`
 - **Return type:** `esp_gsp_err_t`
@@ -976,7 +976,7 @@ esp_gsp_err_t esp_gsp_assets_open(const char *path, uint32_t index_crc, const es
 
 ### `esp_gsp_assets_show()`
 
-Queue an image or animation for an authored Image bind. Asset names come from the generated header. Submission returns without file IO or decoding. once plays one animation cycle; false follows the authored loop count. Existing content stays visible until a complete replacement is ready. Each target has at most one in-flight frame. New requests coalesce per bind. Animation memory follows ANIM_FRAME_MEMORY / ANIM_MAX_FRAME_BYTES and is separate from the encoded read budget. JPEG animations also work with the image cache disabled; measure playback performance on the target device. The target placeholder must match the exported pixel/alpha form and native dimensions (opaque image-fit binds can vary dimensions). Export to the same RGB565/RGB888 profile as the UI. Show targets the active scene. Switching scenes cancels subsequent frames; resubmit when returning to that scene. Hiding a page/group does not stop file IO or decoding. Stop its targets when hidden and show them again when visible; show restarts playback. gsp must remain alive until this service is closed. Use one service owner per target; do not concurrently replace it with another image producer.
+Queue an image or animation for an authored Image bind. Asset names come from the generated header. Submission returns without file IO or decoding. once plays one animation cycle; false follows the authored loop count. Existing content stays visible until a complete replacement is ready. Each target has at most one in-flight frame. New requests coalesce per bind. Animation memory follows ANIM_FRAME_MEMORY / ANIM_MAX_FRAME_BYTES and is separate from the encoded read budget. JPEG animations also work with the image cache disabled; measure playback performance on the target device. The target placeholder must match the exported pixel/alpha form and native dimensions (opaque image-fit binds can vary dimensions). Export to the same RGB565/RGB888 profile as the UI. Show targets the active scene. Leaving it restores the file-service targets to their placeholders and releases their image slots. Resubmit on re-entry. Hiding a page/group does not stop file IO or decoding. Stop its targets when hidden and show them again when visible; show restarts playback. gsp must remain alive until this service is closed. Use one service owner per target; do not concurrently replace it with another image producer.
 
 - **Header:** `include/esp_gsp_assets.h`
 - **Return type:** `esp_gsp_err_t`
@@ -1119,7 +1119,7 @@ esp_gsp_err_t esp_gsp_assets_close(esp_gsp_assets_t *assets);
 
 ### `esp_gsp_assets_close_wait()`
 
-Explicit wait budget; zero polls. Does not forcibly cancel a driver read. On timeout status/publication/stats and another close are allowed; show is rejected. Call from an application task, not a render/decode callback. Other callers must be quiescent before successful close frees the handle. Published source buffers survive close until UI replacement/shutdown. NULL succeeds.
+Explicit wait budget; zero polls. Does not forcibly cancel a driver read. On timeout status/publication/stats and another close are allowed; show is rejected. Call from an application task, not a render/decode callback. Other callers must be quiescent before successful close frees the handle. Published source buffers survive close until replacement, scene exit or UI shutdown. NULL succeeds.
 
 - **Header:** `include/esp_gsp_assets.h`
 - **Return type:** `esp_gsp_err_t`
@@ -2489,7 +2489,7 @@ uint32_t esp_gsp_frame_count(esp_gsp_handle_t gsp);
 
 ### `esp_gsp_render_stats()`
 
-Read rendered frames and cumulative render-path busy time. On ESP LCD, the frame count includes viewport snapshots, but busy time excludes their UI-step composition and idle time. Their ratio is not total rendering capacity or CPU utilization.
+Read rendered frames and cumulative render-path busy time. With sim_bridge, the frame count tracks host frame publications and busy time is zero. On ESP LCD, the frame count includes viewport snapshots, but busy time excludes their UI-step composition and idle time. Their ratio is not total rendering capacity or CPU utilization.
 
 - **Header:** `include/esp_gsp_debug.h`
 - **Return type:** `void`

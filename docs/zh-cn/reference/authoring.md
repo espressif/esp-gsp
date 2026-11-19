@@ -1,6 +1,6 @@
 # ESP-GSP 场景编写参考
 
-GSPC 版本：0.11.2。
+GSPC 版本：0.11.3。
 
 本页是 JSON 场景的完整字段参考。学习单个控件时优先使用
 [控件库](../components/index.md)中的可运行示例。
@@ -48,7 +48,7 @@ GSPC 版本：0.11.2。
 | `set_text` | 用 `param` 替换目标文字 Bind |
 | `set_bg_color` | 用 `arg` 设置目标颜色 Bind：`#RRGGBB` 按目标格式转换，整数按原生像素值解释；透明度单独配置 |
 | `call` | 调用命名的应用回调 |
-| `goto` | 显示目标 Layer 或跳转到场景 ID |
+| `goto` | 用 `target` 或 `target_name` 显示当前场景中的图层，或用 `scene` 按 `SCENES` 列表中从 0 开始的索引跳转场景 |
 | `back` | 编译期拒绝；使用 call 配合名为 back 的 callback，或使用 stack_pop |
 | `set_value` | 设置目标数值 Bind |
 | `toggle_value` | 在 0 和 1 之间切换目标数值 Bind |

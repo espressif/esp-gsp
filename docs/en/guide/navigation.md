@@ -22,8 +22,10 @@ gsp_add_bundle(${COMPONENT_LIB}
     PIXEL_FORMAT rgb565)
 ```
 
-Navigation may be triggered by an authored `goto` action or by
-`esp_gsp_goto_scene()`. Horizontal scene swiping is enabled by default and can
+Use `{"event": "click", "action": "goto", "scene": 1}` to navigate to the
+second scene in `SCENES`, or call `esp_gsp_goto_scene()`. Use `target` or
+`target_name` for a layer in the current scene.
+Horizontal scene swiping is enabled by default and can
 be disabled per scene with `"swipe": false` or at runtime with
 `esp_gsp_set_swipe_enabled()`.
 

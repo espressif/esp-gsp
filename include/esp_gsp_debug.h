@@ -128,6 +128,7 @@ bool esp_gsp_update_error_stats(esp_gsp_handle_t gsp,
 uint32_t esp_gsp_frame_count(esp_gsp_handle_t gsp);
 
 /** Read rendered frames and cumulative render-path busy time.
+ * With sim_bridge, the frame count tracks host frame publications and busy time is zero.
  * On ESP LCD, the frame count includes viewport snapshots, but busy time
  * excludes their UI-step composition and idle time. Their ratio is not
  * total rendering capacity or CPU utilization. */
@@ -331,15 +332,20 @@ bool esp_gsp_property_stats(esp_gsp_handle_t gsp,
 
 /** Cumulative image, animation and canvas pipeline counters. */
 typedef struct {
+    /** Completed worker jobs (including failures/cancellations) while the ESP-IDF
+     *  background decoder is active. Otherwise counts successful cache decodes. */
     uint32_t decoded_images;
     uint64_t decode_us;
     uint32_t max_decode_us;
     uint32_t cache_hits;
     uint32_t cache_misses;
-    /** Current decoded bytes summed across all live scene caches. */
+    /** Resident image and rasterized vector bytes across live scene caches.
+     *  Excludes in-flight decode destinations. */
     size_t cache_bytes;
     uint32_t cache_requests;
     uint32_t cache_coalesced;
+    /** LRU image evictions and explicit cache-entry removals/cancellations.
+     *  Removing a failed entry can increment this count without freeing pixels. */
     uint32_t cache_evictions;
     uint32_t cache_allocation_failures;
     uint32_t cache_decode_failures;
@@ -360,8 +366,8 @@ typedef struct {
     uint64_t animation_patch_pixels;
     uint64_t animation_copy_bytes;
     size_t animation_scratch_peak;
-    /** Sum of each live scene cache's lifetime peak. This is a conservative
-     *  bound, not a time-correlated application high-water mark. */
+    /** Sum of each live scene cache's lifetime peak, including resident pixels
+     *  and in-flight decode destinations. Scenes can peak at different times. */
     size_t cache_peak_bytes;
     uint64_t queue_wait_us;
     uint32_t max_queue_wait_us;

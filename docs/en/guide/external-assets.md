@@ -115,7 +115,7 @@ ESP_ERROR_CHECK(esp_gsp_assets_show_target_name(assets, ui,
 
 Use the binder's row token and generated slot constants. UI application validates
 row/instance generations; stale status/stop tokens cannot affect a new occupant.
-Image binds also support show_name. Scene changes cancel subsequent frames; resubmit on re-entry.
+Image binds also support show_name. When the active scene changes, its file-service images return to their placeholders and release their slots. Submit them again on re-entry.
 Use one service/image producer per target.
 Hiding a widget or parent group does not pause file IO or decoding. Call
 `esp_gsp_assets_stop()` or `esp_gsp_assets_stop_target()` when hiding it, then
@@ -209,6 +209,17 @@ esp_gsp_assets_config_t config = { .read_budget_bytes = 512 * 1024 };
 ESP_ERROR_CHECK(gsp_media_open("/sdcard/media.gspb", &config, &assets));
 ```
 
+Budget the UI's `image_cache_bytes` separately. When replacing an image, allow
+for decoded data from the old image still on screen, the replacement, and other
+simultaneously visible images. Include alignment overhead.
+
+With image caching enabled, the runtime can fill a verified single-color
+RGB565 QOI placeholder directly when its binding exclusively uses ordinary
+opaque blits. For static images that can be drawn directly, `"codec": "store"`
+trades a larger asset for less decoded cache use. The runtime draws embedded
+STORE images from the UI bundle and external STORE images from the pixel buffer
+read from storage.
+
 `esp_gsp_assets_get_stats(assets, ui, &stats)` reports encoded usage/peak/budget, index bytes, UI
 decoded memory usage/peak, delivered file bytes, load time and retries. Decoded
 memory includes this service's animation canvases/patch scratch plus the supplied
@@ -240,7 +251,7 @@ if (ret == ESP_GSP_OK) {
 Timeout does not forcibly cancel driver IO or free in-flight data. Closing handles
 reject new show requests but permit queries/retry. Keep UI commands/decodes
 progressing until successful close; other callers must quiesce before the handle
-is freed. Published sources survive close until replacement/UI destruction.
+is freed. Published sources survive close until replacement, scene exit or UI destruction.
 Change the encoded budget by closing and reopening with a new configuration.
 
 Compatible same-name assets can update independently; new names work through name

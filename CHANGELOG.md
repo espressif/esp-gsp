@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.10.4
+
+Use with GSPC 0.11.3 and simulator 1.10.4. Configuration ABI 4 and resource formats are unchanged.
+
+- Reduce RGB565 rendering, JPEG decoding and glyph lookup work. Draw eligible solid placeholders without decoding.
+- Release inactive media, allow image swaps to be retried when cache space returns, and refresh idle displays when new images are ready.
+- Keep ESP32-S31 render-task stacks out of RTC memory.
+- Expose simulator frame counts to native application backends.
+
 ## 1.10.3
 
 Use with GSPC 0.11.2 and simulator 1.10.3. Runtime ABI and resource formats are unchanged.

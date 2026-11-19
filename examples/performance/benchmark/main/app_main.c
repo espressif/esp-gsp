@@ -1360,14 +1360,16 @@ static void print_summary(esp_gsp_handle_t ui)
     BENCH_MEDIA_DELTA(canvas_frames_coalesced);
 #undef BENCH_MEDIA_DELTA
     printf("bench: measured media decoded=%lu total=%lluus"
-           " hit=%lu miss=%lu deferred=%lu\n",
+           " hit=%lu miss=%lu deferred=%lu"
+           " decoded_scope=async:worker_jobs,sync:successful_cache_decodes\n",
            (unsigned long)media.decoded_images,
            (unsigned long long)media.decode_us,
            (unsigned long)media.cache_hits,
            (unsigned long)media.cache_misses,
            (unsigned long)media.render_deferred);
     printf("bench: media lifetime_state bytes=%lu cache_peak=%lu"
-           " decode_max=%luus anim_max=%luus scratch_peak=%lu\n",
+           " decode_max=%luus anim_max=%luus scratch_peak=%lu"
+           " cache_peak_scope=sum_of_live_scene_lifetime_peaks\n",
            (unsigned long)media.cache_bytes,
            (unsigned long)media.cache_peak_bytes,
            (unsigned long)media.max_decode_us,

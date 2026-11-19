@@ -767,8 +767,10 @@ typedef struct {
     void *complete_ctx;
     /** Reuses decoded pixels for identical immutable content when the image
      *  cache is enabled. Change a nonzero key when encoded content changes;
-     *  zero keeps legacy per-submit caching. COPY still copies encoded input
-     *  on each call, including decoded-cache hits. */
+     *  zero keeps legacy per-submit caching. If the decoded-cache budget
+     *  blocked a request, the caller can retry the same key once enough space
+     *  is reclaimable, within the configured shortage retry limit. COPY still
+     *  copies encoded input on each call, including decoded-cache hits. */
     uint32_t cache_key;
 } esp_gsp_image_options_t;
 

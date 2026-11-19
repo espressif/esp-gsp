@@ -5,11 +5,13 @@ WASM 预览、属性检查、结构化编辑和 Agent 协作功能。
 
 ## 下载
 
-- Windows x64 - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.12.1-win-x64.exe>
-- Linux x64 AppImage - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.12.1-linux-x86_64.AppImage>
-- Linux x64 DEB - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.12.1-linux-amd64.deb>
-- 协作脚本包 - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.12.1-scripts.zip>
-- SHA-256 校验清单 - <https://dl.espressif.com/AE/gsp/gsp-editor/SHA256SUMS-0.12.1.txt>
+以下链接随 Studio 0.13.0 发布开放，配套 GSP/模拟器 1.10.4 和 GSPC 0.11.3。
+
+- Windows x64 - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.13.0-win-x64.exe>
+- Linux x64 AppImage - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.13.0-linux-x86_64.AppImage>
+- Linux x64 DEB - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.13.0-linux-amd64.deb>
+- 协作脚本包 - <https://dl.espressif.com/AE/gsp/gsp-editor/ESP-GSP%20Studio-0.13.0-scripts.zip>
+- SHA-256 校验清单 - <https://dl.espressif.com/AE/gsp/gsp-editor/SHA256SUMS-0.13.0.txt>
 
 ## 打开工程
 
@@ -43,7 +45,7 @@ WASM 预览、属性检查、结构化编辑和 Agent 协作功能。
 
 ## 随包工具链
 
-ESP-GSP Studio 0.12.1 附带 GSP/模拟器 1.10.3 和 GSPC 0.11.2。应用版本号与随包
+ESP-GSP Studio 0.13.0 使用 GSP/模拟器 1.10.4 和 GSPC 0.11.3。应用版本号与随包
 工具链版本号独立。内置编译器、Schema、WASM 运行时和导出功能均使用这套固定
 工具链，当前版本不支持导入或切换工具链。
 

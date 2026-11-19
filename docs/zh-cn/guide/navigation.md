@@ -14,8 +14,10 @@
 场景坐标是逻辑坐标。父节点位置、裁剪和导航变换会影响子节点。优先由视口组件管理
 页面或滚动偏移，使绘制、裁剪和输入保持一致。
 
-同一 Bundle 的场景通过 `gsp_add_bundle(SCENES ...)` 按顺序加入。可用 JSON `goto`
-动作或 `esp_gsp_goto_scene()` 切换；横向场景滑动默认启用，可通过场景 `"swipe":
+同一 Bundle 的场景通过 `gsp_add_bundle(SCENES ...)` 按顺序加入。
+用 `{"event": "click", "action": "goto", "scene": 1}` 切到 `SCENES`
+列表中的第二个场景，也可调用 `esp_gsp_goto_scene()`。`target` 和
+`target_name` 用于当前场景中的图层。横向场景滑动默认启用，可通过场景 `"swipe":
 false` 或 `esp_gsp_set_swipe_enabled()` 禁用。
 
 ## 视口组件
